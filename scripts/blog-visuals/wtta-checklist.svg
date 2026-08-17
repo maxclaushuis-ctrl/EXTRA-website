@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img"
+     aria-label="Checklist met vijf vragen voor het beoordelen van een horeca-uitzendbureau">
+  <rect width="1200" height="640" fill="#FFFFFF"/>
+
+  <text x="48" y="58" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="30" fill="#111111">Vijf vragen aan je uitzendbureau</text>
+  <text x="48" y="90" font-family="DejaVu Sans, Poppins, sans-serif" font-size="17" fill="#6B7280">Allemaal met een antwoord dat je kunt controleren</text>
+
+  <!-- 1 -->
+  <rect x="48" y="126" width="1104" height="84" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <circle cx="96" cy="168" r="20" fill="#7C3AED"/>
+  <path d="M 86 168 L 93 176 L 107 160" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="136" y="162" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">Zijn de mensen die ik krijg in loondienst bij jullie?</text>
+  <text x="136" y="188" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#6B7280">Niet: staan ze ingeschreven bij de KvK.</text>
+
+  <!-- 2 -->
+  <rect x="48" y="224" width="1104" height="84" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <circle cx="96" cy="266" r="20" fill="#7C3AED"/>
+  <path d="M 86 266 L 93 274 L 107 258" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="136" y="260" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">Melden jullie je aan vóór 31 december 2026?</text>
+  <text x="136" y="286" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#6B7280">Het overgangsrecht van de Wtta.</text>
+
+  <!-- 3 -->
+  <rect x="48" y="322" width="1104" height="84" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <circle cx="96" cy="364" r="20" fill="#7C3AED"/>
+  <path d="M 86 364 L 93 372 L 107 356" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="136" y="358" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">Hebben jullie een SNA-keurmerk of NEN 4400-1?</text>
+  <text x="136" y="384" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#6B7280">Vraag om het registratienummer, niet om een logo.</text>
+
+  <!-- 4 -->
+  <rect x="48" y="420" width="1104" height="84" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <circle cx="96" cy="462" r="20" fill="#7C3AED"/>
+  <path d="M 86 462 L 93 470 L 107 454" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="136" y="456" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">Kan ik een recente verklaring betalingsgedrag zien?</text>
+  <text x="136" y="482" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#6B7280">Van de Belastingdienst, over de afdrachten.</text>
+
+  <!-- 5 -->
+  <rect x="48" y="518" width="1104" height="84" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <circle cx="96" cy="560" r="20" fill="#7C3AED"/>
+  <path d="M 86 560 L 93 568 L 107 552" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="136" y="554" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">Werken jullie met een G-rekening?</text>
+  <text x="136" y="580" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#6B7280">Beperkt jouw aansprakelijkheid als inlener.</text>
+</svg>

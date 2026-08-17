@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img"
+     aria-label="Keurmerkschild met vinkje, symbool voor een uitzendbureau dat onafhankelijk is gecontroleerd">
+  <defs>
+    <linearGradient id="vlak" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6D28D9"/>
+      <stop offset="100%" stop-color="#4C1D95"/>
+    </linearGradient>
+    <linearGradient id="schild" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#EDE9FE"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#vlak)"/>
+
+  <g stroke="#8B5CF6" stroke-width="3" opacity="0.35" stroke-linecap="round">
+    <path d="M 70 460 L 160 550 M 160 460 L 70 550"/>
+    <path d="M 200 500 L 260 560 M 260 500 L 200 560"/>
+    <path d="M 1030 80 L 1120 170 M 1120 80 L 1030 170"/>
+  </g>
+
+  <!-- Schild -->
+  <g transform="translate(600,320)">
+    <path d="M 0 -190 L 150 -132 L 150 20 C 150 118 84 172 0 200 C -84 172 -150 118 -150 20 L -150 -132 Z"
+          fill="url(#schild)"/>
+    <path d="M 0 -190 L 150 -132 L 150 20 C 150 118 84 172 0 200 C -84 172 -150 118 -150 20 L -150 -132 Z"
+          fill="none" stroke="#DDD6FE" stroke-width="6"/>
+    <path d="M -62 6 L -18 52 L 66 -44" fill="none" stroke="#111111" stroke-width="22"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+{
+  "title": "Betrouwbaar horeca-uitzendbureau kiezen: dit verandert er",
+  "slug": "betrouwbaar-horeca-uitzendbureau-kiezen",
+  "excerpt": "Het hof noemde Temper een uitzendbureau en de Wtta maakt een toelating verplicht. Voor wie horecapersoneel inleent verschuift daarmee de vraag: niet alleen 'is er iemand beschikbaar', maar ook 'mag ik straks nog met deze partij werken'.",
+  "metaTitle": "Betrouwbaar horeca-uitzendbureau kiezen: dit verandert",
+  "metaDescription": "De Temper-uitspraak en de Wtta veranderen wat je van een uitzendbureau mag verwachten. De data die kloppen, en de vijf vragen die je je leverancier nu stelt.",
+  "focusKeyword": "betrouwbaar horeca-uitzendbureau kiezen",
+  "category": "Branche",
+  "imageUrl": "/images/betrouwbaar-horeca-uitzendbureau-kiezen.webp",
+  "imageAlt": "Keurmerkschild met vinkje, symbool voor een uitzendbureau dat onafhankelijk is gecontroleerd",
+  "author": "EXTRA Redactie",
+  "readTime": "9 min",
+  "tags": ["wetgeving", "uitzendbureau", "horeca", "wtta"],
+
+  "_notities": [
+    "Geschreven op basis van de briefing van Max (blog 1 van twee). De strategie, hoek en doelgroep zijn overgenomen; de feiten zijn opnieuw nagelopen en op drie punten gecorrigeerd — zie _feitencontrole.",
+    "De aangeleverde conceptversie noemde absolute URL's (https://www.doehetextra.nl/...). Hier relatief, conform de rest van de site en zodat npm run content:links de links kan narekenen.",
+    "De briefing stelde drie foto's voor, waaronder een accountmanager in gesprek. Die foto's bestaan niet in de repository; er zijn drie eigen visuals gemaakt in huisstijl (SVG-bronnen in scripts/blog-visuals/). Komt er later echte fotografie, dan is de hero het eerste dat vervangen mag worden.",
+    "Het artikel behandelt de Temper-uitspraak bewust als nieuwsanker en niet als vergelijking, zodat een eventuele latere Temper-alternatiefpagina niet overlapt.",
+    "metaDescription staat óók zichtbaar als cursieve intro onder de H1 (NieuwsArtikel.tsx)."
+  ],
+
+  "_feitencontrole": [
+    "GECORRIGEERD — de briefing schreef dat de Wtta sinds 1 juli 2026 deels van kracht is en dat je vanaf 1 januari 2027 alleen nog bij toegelaten bureaus mag inlenen. Dat klopt geen van beide. De wet treedt in werking op 1 januari 2027; de handhaving van de toelatingsplicht, ook richting inleners, start op 1 januari 2028. Bevestigd bij de Nederlandse Arbeidsinspectie, de ABU en Ondernemersplein.",
+    "Tijdlijn Wtta: registratie voor het overgangsrecht bij de NAU van 1 november t/m 31 december 2026; aanvraagvenster toelating 1 mei t/m 30 juni 2027; beoordeling vanaf 1 juli 2027; handhaving vanaf 1 januari 2028. Bron: ABU en Nederlandse Arbeidsinspectie.",
+    "GECORRIGEERD — de briefing schreef dat Temper cassatie 'overweegt'. Temper is in juli 2026 daadwerkelijk in cassatie gegaan bij de Hoge Raad. Bevestigd via ZiPconomy en Flexmarkt.",
+    "Temper-uitspraak: gerechtshof Amsterdam, 16 juni 2026, aangespannen door FNV en CNV, in hoger beroep tegen een uitspraak van de rechtbank uit 2024. Het hof toetste aan de lijn van de Deliveroo- en Helpling-arresten. Bevestigd via ZiPconomy en NOS.",
+    "GEPRECISEERD — het UWV-cijfer is 87 van de 93 beroepsgroepen (94%) krap óf zeer krap, over het eerste kwartaal van 2026. De briefing noemde alleen 'krap' en dateerde het op augustus; augustus is wanneer erover werd bericht, niet de meetperiode.",
+    "Het SNA-keurmerk (waaronder NEN 4400-1) mag bij de toelatingsaanvraag in de plaats komen van een apart inspectierapport. Bevestigd bij de ABU. Dit is de reden dat het certificaat nú al relevant is en niet pas in 2027.",
+    "NIET OVERGENOMEN uit de briefing: de verwijzing naar een blog 'personeelstekort-horeca-2026'. Dat artikel bestaat niet in de productiedatabase.",
+    "NIET OPGENOMEN: uitspraken over boetebedragen onder de Wtta. De hoogte is in de geraadpleegde bronnen niet genoemd en is dus niet ingevuld."
+  ]
+}
