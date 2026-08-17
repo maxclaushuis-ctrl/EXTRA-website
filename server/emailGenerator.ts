@@ -2,6 +2,7 @@
 // Server-side HTML + plain text generation for prospect campaigns.
 
 import { getEmailBannerSrc } from './mail';
+import { kolommenHtml, kolommenTekst, KOLOM_MEDIA_CSS } from './emailKolommen';
 
 export type ContactData = {
   voornaam?: string | null;
@@ -148,7 +149,7 @@ export function generateEmailHTML(
 
   // Preheader (first 100 chars of text content)
   const preheader = blokken
-    .filter(b => b.type === 'paragraaf' || b.type === 'aanhef')
+    .filter(b => b.type === 'paragraaf' || b.type === 'aanhef' || b.type === 'kolommen')
     .map(b => b.tekst || (nl ? b.nl : b.en) || '')
     .join(' ')
     .replace(/<[^>]+>/g, '')
@@ -183,7 +184,7 @@ export function generateEmailHTML(
   <style>
     body { margin:0; padding:0; background-color:${bgEmail}; font-family:${font}; }
     h1, h2, h3, .email-heading { font-family:${font} !important; font-weight:800 !important; letter-spacing:-0.01em; }
-    @media only screen and (max-width:600px) { .email-wrapper { width:100% !important; } .email-content { padding:24px 18px !important; } }
+    @media only screen and (max-width:600px) { .email-wrapper { width:100% !important; } .email-content { padding:24px 18px !important; } ${KOLOM_MEDIA_CSS} }
   </style>
 </head>
 <body>
@@ -232,6 +233,19 @@ function renderBlockHtml(blok: BuilderBlock, contact: ContactData, nl: boolean, 
       if (!blok.url) return '';
       const imgTag = `<img src="${blok.url}" alt="${blok.alt || ''}" style="max-width:100%;border-radius:8px;display:block;margin:0 auto 16px"/>`;
       return blok.link ? `<a href="${blok.link}">${imgTag}</a>` : imgTag;
+    case 'kolommen':
+      // De tekst gaat door dezelfde molen als een gewone paragraaf; het blok
+      // zelf gaat alleen over de opmaak (server/emailKolommen.ts).
+      return kolommenHtml({
+        tekstHtml: renderInlineLinks(p(blok.tekst || '')).replace(/\n/g, '<br/>'),
+        kleur: blok.kleur,
+        beeldUrl: blok.url,
+        beeldAlt: blok.alt,
+        beeldLink: blok.link,
+        beeldPositie: blok.beeldPositie,
+        verhouding: blok.verhouding,
+        verticaal: blok.verticaal,
+      });
     case 'handtekening':
       return SIGNATURE_HTML;
     case 'taalvariant':
@@ -331,6 +345,12 @@ function generatePlainTextHTML(
       case 'paragraaf':
         if (blok.tekst) paragraphs.push(renderTextAsHtml(p(blok.tekst)));
         break;
+      case 'kolommen': {
+        // In een tekstmail valt de afbeelding weg; de tekst blijft.
+        const tekst = kolommenTekst(blok.tekst);
+        if (tekst) paragraphs.push(renderTextAsHtml(p(tekst)));
+        break;
+      }
       case 'taalvariant': {
         const tekst = nl ? (blok.nl || '') : (blok.en || '');
         if (tekst) paragraphs.push(renderTextAsHtml(p(tekst)));
@@ -425,6 +445,7 @@ export function generateEmailPlainText(
       case 'lijn': return '---';
       case 'ruimte': return '';
       case 'afbeelding': return blok.url ? `[Afbeelding: ${blok.url}]` : '';
+      case 'kolommen': return p(kolommenTekst(blok.tekst));
       case 'handtekening': return SIGNATURE_TEXT;
       case 'taalvariant': return p(nl ? (blok.nl || '') : (blok.en || ''));
       case 'aanhef': {
