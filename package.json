@@ -22,6 +22,7 @@
     "sales:test": "tsx server/salesflowLogic.test.ts",
     "medewerkers:test": "tsx shared/vaardigheden.test.ts",
     "fragment:test": "tsx server/contentFragment.test.ts",
+    "www:test": "tsx server/wwwRedirect.test.ts",
     "doelgroep:test": "tsx server/campagneDoelgroep.test.ts",
     "mailgrootte:test": "tsx server/mailGrootte.test.ts",
     "mail:test": "tsx server/emailKolommen.test.ts",

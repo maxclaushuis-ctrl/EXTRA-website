@@ -185,3 +185,46 @@ export function vacatureFragment(v: VacatureFragmentInput): string {
     navigatieHtml()
   );
 }
+
+/**
+ * Fragment voor de overzichtspagina's /blog en /vacatures.
+ *
+ * Aanleiding: de Ahrefs-crawl van 17 augustus meldde negen "orphan pages" —
+ * acht vacaturepagina's en een blogartikel zonder ook maar één interne link.
+ * Dat kwam niet doordat de site niet naar ze linkt: /vacatures toont ze gewoon.
+ * Maar die lijst wordt door React opgebouwd, en het geprerenderde fragment van
+ * die pagina bevat nul links naar de losse items. Een crawler die geen
+ * JavaScript uitvoert, ziet dus een overzichtspagina zonder overzicht.
+ *
+ * Het gevolg is niet cosmetisch: een pagina zonder inkomende links krijgt geen
+ * linkwaarde en wordt trager en minder vaak gecrawld — precies wat je niet wilt
+ * bij vacatures, die maar een paar weken relevant zijn.
+ *
+ * Deze lijst wordt achter het bestaande fragment geplakt. De React-app vervangt
+ * de inhoud van #root bij het laden, dus een bezoeker ziet hem nooit; hij is er
+ * puur voor wie geen JavaScript uitvoert.
+ */
+export interface LijstItem {
+  slug: string;
+  title: string;
+  /** Optionele tweede regel, bv. locatie of categorie. */
+  bij?: string | null;
+}
+
+export function lijstFragment(
+  basis: "/blog" | "/vacatures",
+  titel: string,
+  items: LijstItem[],
+): string {
+  const bruikbaar = (items || []).filter(i => i && i.slug && i.title);
+  if (bruikbaar.length === 0) return "";
+
+  const regels = bruikbaar
+    .map(i => {
+      const label = i.bij ? `${esc(i.title)} — ${esc(i.bij)}` : esc(i.title);
+      return `<li><a href="${basis}/${encodeURIComponent(i.slug)}">${label}</a></li>`;
+    })
+    .join("");
+
+  return `<nav aria-label="${esc(titel)}"><h2>${esc(titel)}</h2><ul>${regels}</ul></nav>`;
+}

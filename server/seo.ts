@@ -25,7 +25,7 @@ import {
   type RouteMeta,
 } from "@shared/routeMeta";
 import { storage } from "./storage";
-import { blogFragment, vacatureFragment } from "./contentFragment";
+import { blogFragment, vacatureFragment, lijstFragment } from "./contentFragment";
 import { TtlCache, metCache } from "./paginaCache";
 import type { BlogPost, VacancyPost } from "@shared/schema";
 
@@ -265,6 +265,37 @@ const MAX_SLEUTELS = 200;
 const blogCache = new TtlCache<{ waarde: BlogPost | undefined }>({ ttlMs: TTL_MS, max: MAX_SLEUTELS });
 const vacatureCache = new TtlCache<{ waarde: VacancyPost | undefined }>({ ttlMs: TTL_MS, max: MAX_SLEUTELS });
 
+/**
+ * Bouwt de lijst met links voor /blog en /vacatures.
+ *
+ * Faalt zacht: kan de database niet worden bereikt, dan valt alleen de lijst
+ * weg en wordt de pagina gewoon geserveerd. Een overzichtspagina die niet laadt
+ * is erger dan eentje zonder lijst eronder.
+ */
+async function overzichtLijst(pad: string): Promise<string | null> {
+  try {
+    if (pad === "/blog" || pad === "/nieuws") {
+      const { posts } = await storage.getBlogPosts({ status: "published", limit: 200 });
+      return lijstFragment("/blog", "Alle artikelen", posts.map(p => ({
+        slug: p.slug,
+        title: p.title,
+        bij: (p as any).category ?? null,
+      })));
+    }
+    if (pad === "/vacatures") {
+      const { posts } = await storage.getVacancyPosts({ status: "published", limit: 200 });
+      return lijstFragment("/vacatures", "Alle vacatures", posts.map(v => ({
+        slug: v.slug,
+        title: v.title,
+        bij: (v as any).location ?? null,
+      })));
+    }
+  } catch (err) {
+    console.error(`[seo] overzichtslijst voor ${pad} mislukt:`, err);
+  }
+  return null;
+}
+
 export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
   const shellPath = path.resolve(distPublicDir, "index.html");
   let shellCache: string | null = null;
@@ -301,7 +332,17 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
 
     // 1. Statische route uit het manifest
     const known = ROUTE_META_BY_PATH[normalized];
-    if (known) return send(200, metaFromRoute(known), fragmentFor(normalizeMetaPath(known.path)));
+    if (known) {
+      const basis = fragmentFor(normalizeMetaPath(known.path));
+      // De overzichtspagina's krijgen hun lijst erbij. Het geprerenderde
+      // fragment bevat die niet: React bouwt de lijst pas op ná het laden,
+      // waardoor elke vacature en elk artikel voor een crawler zonder
+      // JavaScript een "orphan page" was — nul inkomende links, terwijl de
+      // pagina er in de browser gewoon naar linkt.
+      const lijst = await overzichtLijst(normalized);
+      const fragment = lijst ? `${basis ?? ""}${lijst}` : basis;
+      return send(200, metaFromRoute(known), fragment);
+    }
 
     // 2. Dynamische routes (blog/nieuws/vacatures met slug)
     for (const dyn of DYNAMIC_ROUTE_PATTERNS) {

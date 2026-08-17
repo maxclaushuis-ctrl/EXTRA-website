@@ -5,7 +5,7 @@
  * Geen test-framework: print PASS/FAIL en exit non-zero bij fouten.
  * Zelfde opzet als server/redirects.test.ts.
  */
-import { blogFragment, vacatureFragment, schoonHtml } from "./contentFragment";
+import { blogFragment, vacatureFragment, schoonHtml, lijstFragment } from "./contentFragment";
 
 let passed = 0;
 let failed = 0;
@@ -85,6 +85,38 @@ const vacKaal = vacatureFragment({ title: "Kok", slug: "kok" });
 ok("lege arrays leveren geen lege lijsten op", !vacKaal.includes("<ul></ul>"));
 ok("zonder velden geen 'undefined'", !/undefined|null/.test(vacKaal), vacKaal);
 ok("standaard-CTA valt terug", vacKaal.includes("Solliciteer op deze vacature"));
+
+console.log("\n— lijstFragment(): de overzichtspagina's —");
+{
+  const vac = lijstFragment("/vacatures", "Alle vacatures", [
+    { slug: "kok-amsterdam-marriott", title: "Kok Amsterdam", bij: "Amsterdam" },
+    { slug: "housekeeping-scheveningen-kurhaus-fulltime", title: "Housekeeping Scheveningen", bij: "Scheveningen" },
+  ]);
+  ok("elke vacature krijgt een link", (vac.match(/<a href="\/vacatures\//g) || []).length === 2);
+  ok("de slug staat in de href", vac.includes('href="/vacatures/kok-amsterdam-marriott"'));
+  ok("de titel is de anchortekst", vac.includes("Kok Amsterdam"));
+  ok("de locatie staat erbij", vac.includes("Amsterdam"));
+  ok("het is een nav met een kop", vac.includes("<nav") && vac.includes("<h2>Alle vacatures</h2>"));
+}
+{
+  const blog = lijstFragment("/blog", "Alle artikelen", [
+    { slug: "zzp-inhuren-horeca", title: "Zzp'ers inhuren in de horeca" },
+  ]);
+  ok("blogartikel krijgt een link", blog.includes('href="/blog/zzp-inhuren-horeca"'));
+  ok("zonder tweede regel geen liggend streepje", !blog.includes("—"));
+}
+{
+  ok("lege lijst levert niets op", lijstFragment("/blog", "Alle artikelen", []) === "");
+  ok("null-lijst crasht niet", lijstFragment("/blog", "Alle artikelen", null as any) === "");
+  const rommel = lijstFragment("/blog", "Alle artikelen", [
+    { slug: "", title: "Zonder slug" } as any,
+    { slug: "wel-goed", title: "Wel goed" },
+  ]);
+  ok("een item zonder slug valt eruit", (rommel.match(/<li>/g) || []).length === 1);
+  const raar = lijstFragment("/blog", "Alle artikelen", [{ slug: "a b&c", title: 'Titel met <tags> & "quotes"' }]);
+  ok("slug wordt ge-encodeerd in de URL", raar.includes("a%20b%26c"));
+  ok("titel wordt ge-escaped", raar.includes("&lt;tags&gt;") && raar.includes("&quot;"));
+}
 
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);
