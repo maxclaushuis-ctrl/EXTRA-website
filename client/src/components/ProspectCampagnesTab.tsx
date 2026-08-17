@@ -344,6 +344,184 @@ const WIZARD_PHASES = [
   { value: 'uitgesloten', label: 'Uitgesloten' },
 ];
 
+/**
+ * Doelgroep aanpassen ná het aanmaken van een campagne.
+ *
+ * Tot augustus 2026 kon de doelgroep alleen in de aanmaakwizard worden bepaald.
+ * Daarna stond hij vast: het overzicht toonde de filters als platte tekst en er
+ * was geen weg terug. In de praktijk wil je juist ná het schrijven van de mail
+ * nog schuiven — een branche erbij, een fase eraf.
+ *
+ * Bewust dezelfde chips als in de wizard, zodat het één ding blijft dat je op
+ * twee plekken tegenkomt in plaats van twee dingen die op elkaar lijken.
+ */
+function DoelgroepDialog({ campaign, open, onClose }: {
+  campaign: Campaign; open: boolean; onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const { data: uniqueTags = [] } = useQuery<string[]>({
+    queryKey: ['/api/admin/prospect-contacts/unique-tags'],
+    enabled: open,
+  });
+
+  const [typeFilter, setTypeFilter] = useState('alles');
+  const [taalFilter, setTaalFilter] = useState('alles');
+  const [brancheFilter, setBrancheFilter] = useState<string[]>([]);
+  const [functieFilter, setFunctieFilter] = useState<string[]>([]);
+  const [phaseFilter, setPhaseFilter] = useState<string[]>([]);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [count, setCount] = useState<number | null>(null);
+
+  // Bij openen: de opgeslagen filters inladen. Niet bij elke render, anders
+  // overschrijft de server-state wat de gebruiker net heeft aangeklikt.
+  useEffect(() => {
+    if (!open) return;
+    setTypeFilter(campaign.typeFilter || 'alles');
+    setTaalFilter(campaign.taalFilter || 'alles');
+    setBrancheFilter(Array.isArray(campaign.brancheFilter) ? campaign.brancheFilter : []);
+    setFunctieFilter(Array.isArray(campaign.functieFilter) ? campaign.functieFilter : []);
+    setPhaseFilter(Array.isArray(campaign.phaseFilter) ? campaign.phaseFilter : []);
+    try { setTagFilter(JSON.parse(campaign.tagFilter || '[]')); } catch { setTagFilter([]); }
+  }, [open, campaign.id]);
+
+  // Live telling, zodat je ziet wat een klik doet vóórdat je opslaat.
+  useEffect(() => {
+    if (!open) return;
+    const params = new URLSearchParams();
+    if (brancheFilter.length > 0) params.set('branche_filter', JSON.stringify(brancheFilter));
+    if (functieFilter.length > 0) params.set('functie_filter', JSON.stringify(functieFilter));
+    params.set('type_filter', typeFilter);
+    params.set('taal_filter', taalFilter);
+    if (tagFilter.length > 0) params.set('tag_filter', JSON.stringify(tagFilter));
+    if (phaseFilter.length > 0) params.set('phase_filter', JSON.stringify(phaseFilter));
+    let afgebroken = false;
+    fetchJson<{ count: number }>(`/api/admin/prospect-campaigns/segment-count?${params}`)
+      .then(r => { if (!afgebroken) setCount(r.count); })
+      .catch(() => { if (!afgebroken) setCount(null); });
+    return () => { afgebroken = true; };
+  }, [open, typeFilter, taalFilter, brancheFilter, functieFilter, phaseFilter, tagFilter]);
+
+  const opslaan = useMutation({
+    mutationFn: () => apiRequest(`/api/admin/prospect-campaigns/${campaign.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        typeFilter, taalFilter, brancheFilter, functieFilter, phaseFilter,
+        tagFilter: JSON.stringify(tagFilter),
+      }),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
+      toast({ title: 'Doelgroep bijgewerkt' });
+      onClose();
+    },
+    onError: () => toast({ title: 'Opslaan mislukt', variant: 'destructive' }),
+  });
+
+  const chip = (actief: boolean, kleur: string) =>
+    `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${actief ? kleur : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`;
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Doelgroep aanpassen</DialogTitle>
+          <DialogDescription>
+            Bepaalt wie deze campagne krijgt. Handmatig toegevoegde contacten blijven staan,
+            ook als ze buiten deze filters vallen.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5 py-2">
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Contacttype</Label>
+            <div className="flex gap-2">
+              {[{ v: 'alles', label: 'Iedereen' }, { v: 'prospect', label: 'Alleen prospects' }, { v: 'klant', label: 'Alleen klanten' }].map(opt => (
+                <button key={opt.v} type="button" onClick={() => setTypeFilter(opt.v)}
+                  className={chip(typeFilter === opt.v, 'bg-purple-100 border-purple-300 text-purple-700')}
+                  data-testid={`btn-doelgroep-type-${opt.v}`}>{opt.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Branche <span className="text-gray-400 font-normal">(leeg = alle branches)</span></Label>
+            <div className="flex flex-wrap gap-2">
+              {BRANCHES.map(b => (
+                <button key={b} type="button"
+                  onClick={() => setBrancheFilter(v => v.includes(b) ? v.filter(x => x !== b) : [...v, b])}
+                  className={chip(brancheFilter.includes(b), 'bg-blue-100 border-blue-300 text-blue-700')}>{b}</button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Pijplijn-fase <span className="text-gray-400 font-normal">(leeg = alle fases)</span></Label>
+            <div className="flex flex-wrap gap-2">
+              {WIZARD_PHASES.map(p => (
+                <button key={p.value} type="button"
+                  onClick={() => setPhaseFilter(v => v.includes(p.value) ? v.filter(x => x !== p.value) : [...v, p.value])}
+                  className={chip(phaseFilter.includes(p.value), 'bg-amber-100 border-amber-300 text-amber-700')}>{p.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Functiegroep <span className="text-gray-400 font-normal">(leeg = alle functies)</span></Label>
+            <div className="flex flex-wrap gap-2">
+              {FUNCTIEGROEPEN.map(g => (
+                <button key={g} type="button"
+                  onClick={() => setFunctieFilter(v => v.includes(g) ? v.filter(x => x !== g) : [...v, g])}
+                  className={chip(functieFilter.includes(g), 'bg-purple-100 border-purple-300 text-purple-700')}>{g}</button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Voertaal</Label>
+            <div className="flex gap-2">
+              {['alles', 'Nederlands', 'Engels', 'Anders'].map(t => (
+                <button key={t} type="button" onClick={() => setTaalFilter(t)}
+                  className={chip(taalFilter === t, 'bg-purple-100 border-purple-300 text-purple-700')}>
+                  {t === 'alles' ? 'Iedereen' : t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {uniqueTags.length > 0 && (
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Tags <span className="text-gray-400 font-normal">(leeg = geen tagfilter)</span></Label>
+              <div className="flex flex-wrap gap-2">
+                {uniqueTags.map(t => (
+                  <button key={t} type="button"
+                    onClick={() => setTagFilter(v => v.includes(t) ? v.filter(x => x !== t) : [...v, t])}
+                    className={chip(tagFilter.includes(t), 'bg-orange-100 border-orange-300 text-orange-700')}>
+                    <Tag className="h-3 w-3 inline mr-1" />{t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-lg bg-purple-50 border border-purple-100 px-3 py-2 text-sm">
+            <span className="text-slate-500">Deze filters raken nu </span>
+            <span className="font-semibold text-purple-700">{count === null ? '…' : count}</span>
+            <span className="text-slate-500"> contact{count === 1 ? '' : 'en'}.</span>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuleren</Button>
+          <Button className="bg-purple-600 hover:bg-purple-700" disabled={opslaan.isPending}
+            onClick={() => opslaan.mutate()} data-testid="btn-doelgroep-opslaan">
+            {opslaan.isPending ? 'Opslaan...' : 'Opslaan'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function CampaignWizard({ open, onClose, onCreated }: {
   open: boolean; onClose: () => void; onCreated: (campaign: Campaign) => void;
 }) {
@@ -1862,9 +2040,11 @@ export default function ProspectCampagnesTab() {
     id: number; name: string; email: string; company: string | null;
     function: string | null; branche: string | null; functiegroep: string | null;
     contactType: string | null; phase: string | null; excluded: boolean;
+    /** 'segment' = via de filters, 'handmatig' = los toegevoegd. */
+    herkomst?: 'segment' | 'handmatig';
   };
   type SegmentPreview = {
-    totaal: number; verzendBaar: number; uitgesloten: number;
+    totaal: number; verzendBaar: number; uitgesloten: number; handmatig?: number;
     contacts: SegmentPreviewItem[];
   };
   const isPlannedOrConcept = !!selectedCampaign && !['sent','voltooid','actief','gestopt'].includes(selectedCampaign.status);
@@ -1899,6 +2079,36 @@ export default function ProspectCampagnesTab() {
       verzendBaar: contacts.length - uitgesloten,
     };
   }, [segmentPreviewRaw, excludedShadow]);
+
+  const [doelgroepOpen, setDoelgroepOpen] = useState(false);
+  /** Zoekterm voor het handmatig toevoegen van een contact (Ontvangers-tab). */
+  const [contactZoek, setContactZoek] = useState('');
+
+  // Contacten om uit te kiezen. Pas zoeken vanaf twee tekens: de volledige
+  // lijst is groot en een lege zoekterm zou hem in zijn geheel binnenhalen.
+  const { data: zoekResultaten = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/prospect-contacts', 'zoek', contactZoek],
+    enabled: detailTab === 'ontvangers' && contactZoek.trim().length >= 2,
+    queryFn: () => fetchJsonList<any>(`/api/admin/prospect-contacts?search=${encodeURIComponent(contactZoek.trim())}`),
+  });
+
+  /** Handmatig toevoegen of weer weghalen. */
+  const toggleExtra = useMutation({
+    mutationFn: ({ contactId, toevoegen }: { contactId: number; toevoegen: boolean }) =>
+      apiRequest(`/api/admin/prospect-campaigns/${selectedId}/extra/${contactId}`, {
+        method: toevoegen ? 'POST' : 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns', selectedId, 'segment-preview'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
+      setContactZoek('');
+    },
+    onError: (err: any) => toast({
+      title: 'Toevoegen mislukt',
+      description: err?.message || 'Probeer het opnieuw',
+      variant: 'destructive',
+    }),
+  });
 
   const toggleExclusion = useMutation({
     mutationFn: async ({ contactId, exclude }: { contactId: number; exclude: boolean }) => {
@@ -2108,6 +2318,62 @@ export default function ProspectCampagnesTab() {
     if (tags.length > 0) parts.push(`Tags: ${tags.join(', ')}`);
     return parts.length > 0 ? parts.join(' | ') : 'Alle actieve contacten';
   }
+
+  /**
+   * Losse contacten aan de campagne toevoegen.
+   *
+   * Bewust een JSX-constante en geen eigen component: een component die hier
+   * binnen wordt gedefinieerd, wordt bij elke render opnieuw aangemaakt en
+   * daardoor opnieuw gemonteerd — dan verlies je de focus in het zoekveld bij
+   * elke toetsaanslag.
+   *
+   * Al in de lijst? Dan geen knop maar een rustige melding. Iemand twee keer
+   * toevoegen is geen fout, maar wel verwarrend.
+   */
+  const alInLijst = new Set((segmentPreview?.contacts ?? []).map(c => c.id));
+  const contactToevoeger = (
+    <div className="mt-6 border-t border-slate-100 pt-4">
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Contact toevoegen</p>
+      <div className="relative max-w-md">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+        <Input
+          value={contactZoek}
+          onChange={e => setContactZoek(e.target.value)}
+          placeholder="Zoek op naam, e-mail of bedrijf..."
+          className="pl-7 h-9 text-sm"
+          data-testid="input-contact-zoeken"
+        />
+      </div>
+      {contactZoek.trim().length >= 2 && (
+        <div className="mt-2 max-w-md border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-64 overflow-y-auto">
+          {zoekResultaten.length === 0 ? (
+            <p className="text-xs text-slate-400 px-3 py-3">Geen contacten gevonden.</p>
+          ) : zoekResultaten.slice(0, 25).map((c: any) => (
+            <div key={c.id} className="flex items-center justify-between gap-2 px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-700 truncate">{c.name || c.email}</p>
+                <p className="text-[11px] text-slate-400 truncate">{c.email}{c.company ? ` · ${c.company}` : ''}</p>
+              </div>
+              {alInLijst.has(c.id) ? (
+                <span className="text-[11px] text-slate-400 flex-shrink-0">Staat er al in</span>
+              ) : (
+                <Button size="sm" variant="outline" className="h-7 text-xs flex-shrink-0"
+                  disabled={toggleExtra.isPending}
+                  onClick={() => toggleExtra.mutate({ contactId: c.id, toevoegen: true })}
+                  data-testid={`btn-extra-toevoegen-${c.id}`}>
+                  Toevoegen
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-[11px] text-slate-400 mt-2">
+        Een handmatig toegevoegd contact krijgt de mail ook als het buiten de doelgroep valt.
+        Uitgeschreven en geblokkeerde contacten kunnen niet worden toegevoegd.
+      </p>
+    </div>
+  );
 
   function isSentStatus(status: string) { return ['sent','voltooid','actief'].includes(status); }
 
@@ -2397,6 +2663,17 @@ export default function ProspectCampagnesTab() {
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mr-2">Doelgroep:</span>
                       <span className="text-xs text-slate-700">{getSegmentSummary(selectedCampaign)}</span>
                     </div>
+                    {/* Alleen zolang de campagne nog niet verstuurd is: de doelgroep
+                        van een verzonden campagne aanpassen zou de statistieken
+                        laten slaan op een lijst die nooit is gebruikt. */}
+                    {isPlannedOrConcept && (
+                      <Button size="sm" variant="ghost"
+                        className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 flex-shrink-0"
+                        onClick={() => setDoelgroepOpen(true)}
+                        data-testid="btn-doelgroep-aanpassen">
+                        <Pencil className="h-3 w-3 mr-1" /> Aanpassen
+                      </Button>
+                    )}
                   </div>
 
                   {/* Verzendplanning sectie */}
@@ -2733,10 +3010,13 @@ export default function ProspectCampagnesTab() {
                     segLoading ? (
                       <div className="text-center py-8 text-slate-400 text-sm">Verzendlijst laden...</div>
                     ) : !segmentPreview || segmentPreview.contacts.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Users className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                        <p className="text-sm text-slate-400">Geen contacten in dit segment</p>
-                        <p className="text-xs text-slate-300 mt-1">Pas de filters in het Overzicht aan om contacten te selecteren</p>
+                      <div>
+                        <div className="text-center py-10">
+                          <Users className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                          <p className="text-sm text-slate-400">Geen contacten in dit segment</p>
+                          <p className="text-xs text-slate-300 mt-1">Pas de doelgroep aan in het Overzicht, of voeg hieronder losse contacten toe.</p>
+                        </div>
+                        {contactToevoeger}
                       </div>
                     ) : (
                       <>
@@ -2751,7 +3031,12 @@ export default function ProspectCampagnesTab() {
                               {segmentPreview.uitgesloten} uitgesloten
                             </div>
                           )}
-                          <p className="text-slate-400 text-[11px]">Live berekend op basis van de filters van deze campagne. Klik op "Uitsluiten" om een contact niet mee te laten doen.</p>
+                          {(segmentPreview.handmatig ?? 0) > 0 && (
+                            <div className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 font-medium">
+                              {segmentPreview.handmatig} handmatig toegevoegd
+                            </div>
+                          )}
+                          <p className="text-slate-400 text-[11px]">Live berekend op basis van de doelgroep van deze campagne, plus wat je handmatig hebt toegevoegd.</p>
                         </div>
                         <table className="w-full text-sm">
                           <thead>
@@ -2760,6 +3045,7 @@ export default function ProspectCampagnesTab() {
                               <th className="text-left py-2 font-medium">Bedrijf</th>
                               <th className="text-left py-2 font-medium">Functie</th>
                               <th className="text-left py-2 font-medium">Type</th>
+                              <th className="text-left py-2 font-medium">Herkomst</th>
                               <th className="text-right py-2 font-medium pr-2">Actie</th>
                             </tr>
                           </thead>
@@ -2779,6 +3065,20 @@ export default function ProspectCampagnesTab() {
                                   <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${c.contactType === 'klant' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'}`}>
                                     {c.contactType === 'klant' ? 'Klant' : 'Prospect'}
                                   </span>
+                                </td>
+                                <td className="py-2">
+                                  {c.herkomst === 'handmatig' ? (
+                                    <button
+                                      className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                                      title="Klik om de handmatige toevoeging weg te halen"
+                                      disabled={toggleExtra.isPending}
+                                      onClick={() => toggleExtra.mutate({ contactId: c.id, toevoegen: false })}
+                                      data-testid={`btn-extra-weg-${c.id}`}>
+                                      Handmatig ✕
+                                    </button>
+                                  ) : (
+                                    <span className="text-[11px] text-slate-400">Doelgroep</span>
+                                  )}
                                 </td>
                                 <td className="py-2 text-right pr-2">
                                   {c.excluded ? (
@@ -2801,6 +3101,7 @@ export default function ProspectCampagnesTab() {
                             ))}
                           </tbody>
                         </table>
+                        {contactToevoeger}
                       </>
                     )
                   ) : recipLoading ? (
@@ -2885,6 +3186,15 @@ export default function ProspectCampagnesTab() {
 
       {/* ── Wizard modal ── */}
       <CampaignWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreated={(c) => { setWizardOpen(false); setSelectedId(c.id); }} />
+
+      {/* ── Doelgroep aanpassen ── */}
+      {selectedCampaign && (
+        <DoelgroepDialog
+          campaign={selectedCampaign}
+          open={doelgroepOpen}
+          onClose={() => setDoelgroepOpen(false)}
+        />
+      )}
 
       {/* ── Genereer-varianten wizard ── */}
       {selectedCampaign && (
