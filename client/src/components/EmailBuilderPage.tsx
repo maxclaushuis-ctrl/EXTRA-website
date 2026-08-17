@@ -43,6 +43,28 @@ export function renderInlineLinksHtml(text: string): string {
   });
 }
 
+/**
+ * Uploadt een afbeelding en geeft de URL terug.
+ *
+ * Tot augustus 2026 stopte de bouwer het bestand als data:-URL rechtstreeks in
+ * het blok. Dat leest lekker weg — geen server nodig — maar het betekent dat de
+ * afbeelding als base64-tekst in élke verzonden mail meegaat. Een telefoonfoto
+ * van 3 MB maakt de mail 4 MB, en dan krijgt de ontvanger "Deze e-mail is te
+ * groot voor de beveiligingsfilters" in plaats van de mail.
+ *
+ * De server verkleint het beeld en host het; hier blijft een korte URL over.
+ */
+async function uploadAfbeelding(file: File): Promise<{ url: string; bytes: number; origineleBytes: number }> {
+  const form = new FormData();
+  form.append('afbeelding', file);
+  const res = await fetch('/api/admin/campagne-beeld', { method: 'POST', body: form, credentials: 'include' });
+  if (!res.ok) {
+    const fout = await res.json().catch(() => ({}));
+    throw new Error(fout?.message || 'Uploaden mislukt');
+  }
+  return res.json();
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type BuilderSettings = {
   achtergrond_email: string;
@@ -358,6 +380,8 @@ function TagInsertButton({ refEl, onChange }: { refEl: React.RefObject<any>; onC
 
 export function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChange: (patch: Partial<BuilderBlock>) => void }) {
   const textRef = useRef<any>(null);
+  const [uploadBezig, setUploadBezig] = useState(false);
+  const [uploadFout, setUploadFout] = useState('');
 
   if (blok.type === 'koptekst') return (
     <div className="space-y-3">
@@ -472,14 +496,22 @@ export function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChan
         <Label className="text-xs text-gray-500 mb-1 block">URL of upload</Label>
         <Input value={blok.url} onChange={e => onChange({ url: e.target.value } as any)} className="text-sm" placeholder="https://..." />
         <label className="mt-2 flex items-center gap-2 text-xs text-purple-600 cursor-pointer hover:text-purple-800">
-          <ImageIcon className="h-3 w-3" />Afbeelding uploaden
-          <input type="file" accept="image/*" className="hidden" onChange={e => {
+          <ImageIcon className="h-3 w-3" />{uploadBezig ? 'Bezig met uploaden...' : 'Afbeelding uploaden'}
+          <input type="file" accept="image/*" className="hidden" onChange={async e => {
             const file = e.target.files?.[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = ev => onChange({ url: ev.target?.result as string } as any);
-            reader.readAsDataURL(file);
+            e.target.value = '';
+            setUploadBezig(true);
+            try {
+              const r = await uploadAfbeelding(file);
+              onChange({ url: r.url } as any);
+            } catch (err: any) {
+              setUploadFout(err?.message || 'Uploaden mislukt');
+            } finally {
+              setUploadBezig(false);
+            }
           }} />
         </label>
+        {uploadFout && <p className="text-xs text-red-600 mt-1">{uploadFout}</p>}
       </div>
       <div><Label className="text-xs text-gray-500 mb-1 block">Alt-tekst</Label><Input value={blok.alt} onChange={e => onChange({ alt: e.target.value } as any)} className="text-sm" /></div>
       <div><Label className="text-xs text-gray-500 mb-1 block">Klik-link (optioneel)</Label><Input value={blok.link} onChange={e => onChange({ link: e.target.value } as any)} className="text-sm" placeholder="https://..." /></div>
@@ -520,14 +552,22 @@ export function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChan
         <Label className="text-xs text-gray-500 mb-1 block">Afbeelding: URL of upload</Label>
         <Input value={blok.url} onChange={e => onChange({ url: e.target.value } as any)} className="text-sm" placeholder="https://..." />
         <label className="mt-2 flex items-center gap-2 text-xs text-purple-600 cursor-pointer hover:text-purple-800">
-          <ImageIcon className="h-3 w-3" />Afbeelding uploaden
-          <input type="file" accept="image/*" className="hidden" onChange={e => {
+          <ImageIcon className="h-3 w-3" />{uploadBezig ? 'Bezig met uploaden...' : 'Afbeelding uploaden'}
+          <input type="file" accept="image/*" className="hidden" onChange={async e => {
             const file = e.target.files?.[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = ev => onChange({ url: ev.target?.result as string } as any);
-            reader.readAsDataURL(file);
+            e.target.value = '';
+            setUploadBezig(true);
+            try {
+              const r = await uploadAfbeelding(file);
+              onChange({ url: r.url } as any);
+            } catch (err: any) {
+              setUploadFout(err?.message || 'Uploaden mislukt');
+            } finally {
+              setUploadBezig(false);
+            }
           }} />
         </label>
+        {uploadFout && <p className="text-xs text-red-600 mt-1">{uploadFout}</p>}
       </div>
 
       <div><Label className="text-xs text-gray-500 mb-1 block">Alt-tekst</Label><Input value={blok.alt} onChange={e => onChange({ alt: e.target.value } as any)} className="text-sm" placeholder="Wat is er te zien?" /></div>
@@ -770,7 +810,22 @@ export default function EmailBuilderPage({ campaign, onClose }: { campaign: Camp
 
   const testEmailMut = useMutation({
     mutationFn: () => apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/send-test`, { email: testEmailAddress }),
-    onSuccess: () => { setShowTestEmail(false); toast({ title: `Testmail verstuurd naar ${testEmailAddress}` }); },
+    onSuccess: (res: any) => {
+      setShowTestEmail(false);
+      // De server meet de mail en zegt of hij te groot is. Dat is precies wat je
+      // bij een testmail wilt weten, in plaats van het te ontdekken aan een lege
+      // mail in je inbox.
+      const g = res?.grootte;
+      if (g && g.oordeel !== 'ruim') {
+        toast({
+          title: g.oordeel === 'te_groot' ? 'Testmail verstuurd — maar te groot' : 'Testmail verstuurd — let op de grootte',
+          description: g.melding,
+          variant: g.oordeel === 'te_groot' ? 'destructive' : 'default',
+        });
+      } else {
+        toast({ title: `Testmail verstuurd naar ${testEmailAddress}`, description: g ? `Grootte: ${g.leesbaar}` : undefined });
+      }
+    },
     onError: () => toast({ title: 'Testmail mislukt', variant: 'destructive' }),
   });
 
