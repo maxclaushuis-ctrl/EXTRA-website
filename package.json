@@ -23,6 +23,7 @@
     "medewerkers:test": "tsx shared/vaardigheden.test.ts",
     "fragment:test": "tsx server/contentFragment.test.ts",
     "doelgroep:test": "tsx server/campagneDoelgroep.test.ts",
+    "mailgrootte:test": "tsx server/mailGrootte.test.ts",
     "mail:test": "tsx server/emailKolommen.test.ts",
     "indexnow:test": "tsx server/indexnow.test.ts",
     "indexnow": "tsx scripts/indexnow.ts",

@@ -5839,6 +5839,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Testmail sturen
+  // ─── Afbeeldingen voor campagnemails ─────────────────────────────────────
+  // Vervangt het meebakken als data:-URL. Zie server/campagneBeelden.ts voor
+  // waarom dat misging (mail te groot voor de filters van de ontvanger).
+  const campagneBeeldUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 15 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const toegestaan = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (toegestaan.includes(file.mimetype)) cb(null, true);
+      else cb(new Error('Alleen JPEG, PNG, WebP of GIF'));
+    },
+  });
+  const campagneBeeldMiddleware = withUploadErrorHandler(
+    campagneBeeldUpload.single('afbeelding'),
+    15,
+    'Afbeelding',
+  );
+
+  app.post("/api/admin/campagne-beeld", adminMiddleware, campagneBeeldMiddleware, async (req: Request, res: Response) => {
+    try {
+      const file = req.file;
+      if (!file) return res.status(400).json({ message: "Geen afbeelding ontvangen" });
+
+      // Het meegestuurde mimetype is een bewering van de browser; de magic bytes
+      // zijn het bewijs. Zelfde controle als bij de kandidaatfoto's.
+      const validation = await detectAndValidateFileType(file.buffer, ['jpg', 'png', 'webp', 'gif'], 'JPG, PNG, WebP of GIF');
+      if (!validation.valid) return res.status(400).json({ message: validation.error });
+
+      const { bewaarCampagneBeeld } = await import('./campagneBeelden');
+      const resultaat = await bewaarCampagneBeeld(file.buffer, file.originalname || 'beeld', String(Date.now()));
+      return res.json(resultaat);
+    } catch (err: any) {
+      console.error("[Campagne] Afbeelding uploaden mislukt:", err);
+      return res.status(500).json({ message: err?.message || "Uploaden mislukt" });
+    }
+  });
+
+  // Publiek, zonder inlog: een mailclient haalt de afbeelding op namens de
+  // ontvanger en heeft geen sessie. Zie de toelichting in campagneBeelden.ts.
+  app.get("/campagne-beeld/:naam", async (req: Request, res: Response) => {
+    try {
+      const { haalCampagneBeeld } = await import('./campagneBeelden');
+      const buf = await haalCampagneBeeld(req.params.naam);
+      if (!buf) return res.status(404).type('text/plain').send('Niet gevonden');
+      res.set({
+        'Content-Type': 'image/jpeg',
+        // Een campagnebeeld wijzigt nooit: de bestandsnaam bevat een tijdstempel.
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      });
+      return res.send(buf);
+    } catch (err) {
+      console.error("[Campagne] Afbeelding ophalen mislukt:", err);
+      return res.status(500).type('text/plain').send('Fout');
+    }
+  });
+
   app.post("/api/admin/prospect-campaigns/:id/send-test", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const campaignId = parseInt(req.params.id);
@@ -5868,7 +5924,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!ok) return res.status(500).json({ message: "Versturen mislukt" });
-      return res.json({ success: true });
+
+      // Meteen na het versturen meten en meegeven: bij een testmail wil je
+      // juist wéten dat hij te groot is, in plaats van het te ontdekken aan een
+      // lege mail in je inbox.
+      const { meetMail } = await import('./mailGrootte');
+      const meting = meetMail(html);
+      return res.json({ success: true, grootte: meting });
     } catch (err) {
       console.error("[ProspectCampaign] Testmail fout:", err);
       return res.status(500).json({ message: "Fout" });

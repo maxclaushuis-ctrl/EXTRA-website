@@ -10,18 +10,23 @@ let mailService: MailService | null = null;
 let useMockService = false;
 let mockMailLog: any[] = [];
 
-// Banner als base64 data URI — laad eenmalig bij eerste gebruik
-let _emailBannerDataUri = '';
+/**
+ * De banner bovenaan elke mail.
+ *
+ * Stond tot augustus 2026 als data:-URL in de HTML: het bestand is 27 kB, in
+ * base64 zo'n 36 kB, en dat in élke mail. Gmail kapt de weergave af rond 102 kB,
+ * dus een derde van dat budget ging op aan de banner voordat er één woord in
+ * stond. Sinds de mailbouwer afbeeldingen host in plaats van meebakt (zie
+ * server/campagneBeelden.ts) is er geen reden meer om dat hier nog wél te doen.
+ *
+ * Nadeel van een gehoste afbeelding: wie afbeeldingen blokkeert, ziet hem niet.
+ * Dat is precies waarom er een alt-tekst "EXTRA" op staat — en het geldt toch al
+ * voor elke andere afbeelding in de mail.
+ *
+ * Let op de extensie: .jpg is 27 kB, de .png in dezelfde map is 175 kB.
+ */
 export function getEmailBannerSrc(): string {
-  if (!_emailBannerDataUri) {
-    try {
-      const p = path.join(process.cwd(), 'client', 'public', 'email-banner-extra.jpg');
-      if (fs.existsSync(p)) {
-        _emailBannerDataUri = `data:image/jpeg;base64,${fs.readFileSync(p).toString('base64')}`;
-      }
-    } catch {}
-  }
-  return _emailBannerDataUri || 'https://www.doehetextra.nl/email-banner-extra.png';
+  return 'https://www.doehetextra.nl/email-banner-extra.jpg';
 }
 
 // Gedeelde responsive CSS voor alle e-mails
