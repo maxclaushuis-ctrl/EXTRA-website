@@ -25,7 +25,7 @@ import {
 import {
   ArrowLeft, Save, Eye, Mail, Monitor, Smartphone, Plus, Trash2, X,
   ChevronDown, ChevronRight, AlertCircle, RefreshCw, Type, AlignLeft,
-  Image as ImageIcon, Minus, Square, Tag as TagIcon, Globe, User, Link as LinkIcon,
+  Image as ImageIcon, Minus, Square, Tag as TagIcon, Globe, User, Link as LinkIcon, Columns,
 } from "lucide-react";
 
 // ─── Inline-link parser (zelfde regels als server-side) ──────────────────────
@@ -62,11 +62,28 @@ export type KnopBlock = { id: string; type: 'knop'; tekst: string; url: string; 
 export type LijnBlock = { id: string; type: 'lijn'; kleur: string; dikte: number };
 export type RuimteBlock = { id: string; type: 'ruimte'; hoogte: number };
 export type AfbeeldingBlock = { id: string; type: 'afbeelding'; url: string; alt: string; uitlijning: 'left'|'center'|'right'; link: string };
+/**
+ * Twee kolommen naast elkaar: tekst en een afbeelding.
+ *
+ * Bewust één blok in plaats van een generieke kolomindeling waar je andere
+ * blokken in sleept. Dat laatste is een bouwer-in-een-bouwer, met eigen
+ * selectie, eigen slepen en eigen randgevallen. Dit is het geval dat in de
+ * praktijk voorkomt — een collega voorstellen, een case met een foto — en het
+ * is in één scherm in te vullen.
+ */
+export type KolommenBlock = {
+  id: string; type: 'kolommen';
+  tekst: string; kleur: string;
+  url: string; alt: string; link: string;
+  beeldPositie: 'links' | 'rechts';
+  verhouding: 'half' | 'beeld-klein' | 'beeld-groot';
+  verticaal: 'top' | 'midden';
+};
 export type HandtekeningBlock = { id: string; type: 'handtekening' };
 export type TaalvariantBlock = { id: string; type: 'taalvariant'; nl: string; en: string };
 export type AanhefBlock = { id: string; type: 'aanhef'; nl: string; en: string };
 
-export type BuilderBlock = KoptekstBlock | ParagraafBlock | KnopBlock | LijnBlock | RuimteBlock | AfbeeldingBlock | HandtekeningBlock | TaalvariantBlock | AanhefBlock;
+export type BuilderBlock = KoptekstBlock | ParagraafBlock | KnopBlock | LijnBlock | RuimteBlock | AfbeeldingBlock | KolommenBlock | HandtekeningBlock | TaalvariantBlock | AanhefBlock;
 
 export type BuilderContent = {
   modus: 'html' | 'plaintext';
@@ -111,6 +128,7 @@ export function makeBlock(type: BuilderBlock['type']): BuilderBlock {
     case 'lijn': return { id, type, kleur: '#e5e7eb', dikte: 1 };
     case 'ruimte': return { id, type, hoogte: 24 };
     case 'afbeelding': return { id, type, url: '', alt: '', uitlijning: 'center', link: '' };
+    case 'kolommen': return { id, type, tekst: 'Schrijf hier je tekst. De afbeelding staat ernaast.', kleur: '#374151', url: '', alt: '', link: '', beeldPositie: 'rechts', verhouding: 'half', verticaal: 'top' };
     case 'handtekening': return { id, type };
     case 'taalvariant': return { id, type, nl: 'Nederlandse versie van de tekst.', en: 'English version of the text.' };
     case 'aanhef': return { id, type, nl: 'Beste {{voornaam}},', en: 'Hi {{voornaam}},' };
@@ -193,6 +211,26 @@ export function BlockPreview({ blok, selected, onClick }: { blok: BuilderBlock; 
             <div className="text-center"><ImageIcon className="h-6 w-6 mx-auto mb-1" /><p className="text-xs">Afbeelding</p></div>
           </div>
         )
+      )}
+      {blok.type === 'kolommen' && (
+        <div className={`flex gap-3 ${blok.beeldPositie === 'links' ? 'flex-row-reverse' : ''} ${blok.verticaal === 'midden' ? 'items-center' : 'items-start'}`}>
+          <div
+            style={{
+              flex: blok.verhouding === 'beeld-klein' ? '0 0 65%' : blok.verhouding === 'beeld-groot' ? '0 0 35%' : '0 0 50%',
+              color: blok.kleur, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap',
+            }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderInlineLinksHtml(blok.tekst || '')) }}
+          />
+          <div style={{ flex: '1 1 0' }}>
+            {blok.url
+              ? <img src={blok.url} alt={blok.alt} className="w-full rounded-lg" style={{ maxHeight: '200px', objectFit: 'cover' }} />
+              : (
+                <div className="bg-gray-100 rounded-lg h-24 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300">
+                  <div className="text-center"><ImageIcon className="h-5 w-5 mx-auto mb-1" /><p className="text-[10px]">Afbeelding</p></div>
+                </div>
+              )}
+          </div>
+        </div>
       )}
       {blok.type === 'handtekening' && (
         <div className="border-t border-gray-200 pt-3 mt-2">
@@ -457,6 +495,88 @@ export function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChan
     </div>
   );
 
+  if (blok.type === 'kolommen') return (
+    <div className="space-y-4">
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <Label className="text-xs text-gray-500">Tekst</Label>
+          <div className="flex gap-1">
+            <LinkInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} currentText={blok.tekst} />
+            <TagInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} />
+          </div>
+        </div>
+        <Textarea ref={textRef} value={blok.tekst} onChange={e => onChange({ tekst: e.target.value } as any)} rows={6} className="text-sm resize-none" />
+      </div>
+
+      <div>
+        <Label className="text-xs text-gray-500 mb-1 block">Tekstkleur</Label>
+        <div className="flex items-center gap-2">
+          <input type="color" value={blok.kleur} onChange={e => onChange({ kleur: e.target.value } as any)} className="h-8 w-10 rounded border cursor-pointer" />
+          <span className="text-xs text-gray-500">{blok.kleur}</span>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-100 pt-3">
+        <Label className="text-xs text-gray-500 mb-1 block">Afbeelding: URL of upload</Label>
+        <Input value={blok.url} onChange={e => onChange({ url: e.target.value } as any)} className="text-sm" placeholder="https://..." />
+        <label className="mt-2 flex items-center gap-2 text-xs text-purple-600 cursor-pointer hover:text-purple-800">
+          <ImageIcon className="h-3 w-3" />Afbeelding uploaden
+          <input type="file" accept="image/*" className="hidden" onChange={e => {
+            const file = e.target.files?.[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => onChange({ url: ev.target?.result as string } as any);
+            reader.readAsDataURL(file);
+          }} />
+        </label>
+      </div>
+
+      <div><Label className="text-xs text-gray-500 mb-1 block">Alt-tekst</Label><Input value={blok.alt} onChange={e => onChange({ alt: e.target.value } as any)} className="text-sm" placeholder="Wat is er te zien?" /></div>
+      <div><Label className="text-xs text-gray-500 mb-1 block">Klik-link (optioneel)</Label><Input value={blok.link} onChange={e => onChange({ link: e.target.value } as any)} className="text-sm" placeholder="https://..." /></div>
+
+      <div className="border-t border-gray-100 pt-3">
+        <Label className="text-xs text-gray-500 mb-1 block">Afbeelding staat</Label>
+        <div className="flex gap-1">
+          {([['links','← Links'],['rechts','Rechts →']] as const).map(([w, l]) => (
+            <button key={w} onClick={() => onChange({ beeldPositie: w } as any)}
+              className={`flex-1 text-xs py-1.5 rounded border transition-colors ${blok.beeldPositie === w ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <Label className="text-xs text-gray-500 mb-1 block">Verdeling</Label>
+        <div className="flex gap-1">
+          {([['beeld-klein','65 / 35'],['half','50 / 50'],['beeld-groot','35 / 65']] as const).map(([w, l]) => (
+            <button key={w} onClick={() => onChange({ verhouding: w } as any)}
+              className={`flex-1 text-xs py-1.5 rounded border transition-colors ${blok.verhouding === w ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1">Tekst / afbeelding.</p>
+      </div>
+
+      <div>
+        <Label className="text-xs text-gray-500 mb-1 block">Uitlijnen</Label>
+        <div className="flex gap-1">
+          {([['top','Bovenaan'],['midden','Midden']] as const).map(([w, l]) => (
+            <button key={w} onClick={() => onChange({ verticaal: w } as any)}
+              className={`flex-1 text-xs py-1.5 rounded border transition-colors ${blok.verticaal === w ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-gray-50 rounded-lg p-2 text-[11px] text-gray-500 flex items-start gap-1.5">
+        <Columns className="h-3 w-3 mt-0.5 flex-shrink-0" />
+        <p>Op een telefoon komen de kolommen onder elkaar, in dezelfde volgorde als hierboven. Zet de afbeelding links als je wilt dat die op mobiel bovenaan staat.</p>
+      </div>
+    </div>
+  );
+
   if (blok.type === 'handtekening') return (
     <div className="space-y-2 text-sm text-gray-500">
       <p className="text-xs text-gray-400">Standaard EXTRA-handtekening:</p>
@@ -522,6 +642,7 @@ export const BLOCK_TYPES: { type: BuilderBlock['type']; label: string; icon: any
   { type: 'taalvariant',  label: 'Taalvariant',      icon: Globe,      desc: 'NL + EN versie' },
   { type: 'knop',         label: 'Knop',             icon: Square,     desc: 'Call-to-action knop' },
   { type: 'afbeelding',   label: 'Afbeelding',       icon: ImageIcon,  desc: 'Foto of banner' },
+  { type: 'kolommen',     label: 'Twee kolommen',    icon: Columns,    desc: 'Tekst naast een afbeelding' },
   { type: 'lijn',         label: 'Scheidingslijn',   icon: Minus,      desc: 'Horizontale lijn' },
   { type: 'ruimte',       label: 'Ruimte',           icon: ChevronDown,desc: 'Witruimte' },
   { type: 'handtekening', label: 'Handtekening',     icon: User,       desc: 'EXTRA handtekening' },
