@@ -5515,6 +5515,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         abWinnaarOp: abWinnaarOp || 'open_rate',
         abWinnaarNaUren: abWinnaarNaUren || 24,
         abWinnaarVariant: null,
+        excludedContactIds: [],
+        extraContactIds: [],
         alleenWerkdagen: alleenWerkdagen !== false,
         tijdvensterStart: tijdvensterStart || '08:00',
         tijdvensterEind: tijdvensterEind || '18:00',
@@ -5643,32 +5645,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
       const campaign = await storage.getProspectCampaign(id);
       if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
-      const excludedIds = new Set<number>(
-        Array.isArray((campaign as any).excludedContactIds)
-          ? ((campaign as any).excludedContactIds as number[])
-          : []
-      );
-      // Tijdelijk de exclusion uitschakelen zodat de resolver alle gematch'te
-      // contacten teruggeeft; we markeren ze daarna handmatig.
-      const campaignZonderExclusion = { ...campaign, excludedContactIds: [] as number[] };
-      const { resolveCampaignAudience } = await import('./prospectSegmentResolver');
-      const audience = await resolveCampaignAudience(campaignZonderExclusion as any);
-      const items = audience.map(c => ({
-        id: c.id,
-        name: c.name,
-        email: c.email,
-        company: c.company,
-        function: c.function,
-        branche: c.branche,
-        functiegroep: c.functiegroep,
-        contactType: c.contactType,
-        phase: (c as any).phase,
-        excluded: excludedIds.has(c.id),
-      }));
+      // doelgroepMetHerkomst geeft iedereen terug die in beeld is — uit het
+      // segment én handmatig toegevoegd — mét de vlag of hij is uitgesloten.
+      // Zo staat de voorrangslogica op één plek (server/campagneDoelgroep.ts)
+      // in plaats van hier nog een keer, net iets anders.
+      const { doelgroepMetHerkomst } = await import('./campagneDoelgroep');
+      const alleContacten = await storage.getProspectContacts({});
+      const regels = doelgroepMetHerkomst(alleContacten as any, campaign as any);
+      const items = regels.map(r => {
+        const c: any = r.contact;
+        return {
+          id: c.id,
+          name: c.name,
+          email: c.email,
+          company: c.company,
+          function: c.function,
+          branche: c.branche,
+          functiegroep: c.functiegroep,
+          contactType: c.contactType,
+          phase: c.phase,
+          excluded: r.uitgesloten,
+          herkomst: r.herkomst,
+        };
+      });
       return res.json({
         totaal: items.length,
         verzendBaar: items.filter(i => !i.excluded).length,
         uitgesloten: items.filter(i => i.excluded).length,
+        handmatig: items.filter(i => i.herkomst === 'handmatig').length,
         contacts: items,
       });
     } catch (err) {
@@ -5714,6 +5718,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ success: true, excludedContactIds: next });
     } catch (err) {
       console.error("[ProspectCampaign] Uitsluiting opheffen fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Voeg een contact handmatig toe aan deze campagne, ook als het buiten de
+  // filters valt. De tegenhanger van /exclude. Uitsluiten wint van toevoegen:
+  // staat het contact in beide lijsten, dan krijgt het geen mail (zie
+  // server/campagneDoelgroep.ts).
+  app.post("/api/admin/prospect-campaigns/:id/extra/:contactId", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contactId = parseInt(req.params.contactId);
+      if (isNaN(id) || isNaN(contactId)) return res.status(400).json({ message: "Ongeldig ID" });
+      const campaign = await storage.getProspectCampaign(id);
+      if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
+
+      const contact = await storage.getProspectContact(contactId);
+      if (!contact) return res.status(404).json({ message: "Contact niet gevonden" });
+      // Vroeg en met een duidelijke melding: iemand die zich heeft afgemeld
+      // toevoegen levert stilzwijgend niets op, en dat is verwarrend.
+      const { magMailOntvangen } = await import('./campagneDoelgroep');
+      if (!magMailOntvangen(contact as any)) {
+        return res.status(400).json({
+          message: "Dit contact kan geen mail ontvangen (uitgeschreven, geblokkeerd of geen e-mailadres).",
+        });
+      }
+
+      const extra: number[] = Array.isArray((campaign as any).extraContactIds)
+        ? ((campaign as any).extraContactIds as number[])
+        : [];
+      if (!extra.includes(contactId)) extra.push(contactId);
+      // Toevoegen heft een eerdere uitsluiting op — anders klikt iemand
+      // "toevoegen", verandert er niets, en is niet te zien waarom.
+      const uitgesloten: number[] = Array.isArray((campaign as any).excludedContactIds)
+        ? ((campaign as any).excludedContactIds as number[]).filter(cid => cid !== contactId)
+        : [];
+      await storage.updateProspectCampaign(id, {
+        extraContactIds: extra,
+        excludedContactIds: uitgesloten,
+      } as any);
+      return res.json({ success: true, extraContactIds: extra, excludedContactIds: uitgesloten });
+    } catch (err) {
+      console.error("[ProspectCampaign] Handmatig toevoegen fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Haal een handmatig toegevoegd contact er weer af. Zat het contact óók in
+  // het segment, dan blijft het gewoon in de lijst staan — dit verwijdert
+  // alleen de handmatige toevoeging, niet het contact uit de campagne.
+  app.delete("/api/admin/prospect-campaigns/:id/extra/:contactId", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contactId = parseInt(req.params.contactId);
+      if (isNaN(id) || isNaN(contactId)) return res.status(400).json({ message: "Ongeldig ID" });
+      const campaign = await storage.getProspectCampaign(id);
+      if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
+      const extra: number[] = Array.isArray((campaign as any).extraContactIds)
+        ? ((campaign as any).extraContactIds as number[])
+        : [];
+      const next = extra.filter(cid => cid !== contactId);
+      await storage.updateProspectCampaign(id, { extraContactIds: next } as any);
+      return res.json({ success: true, extraContactIds: next });
+    } catch (err) {
+      console.error("[ProspectCampaign] Handmatige toevoeging verwijderen fout:", err);
       return res.status(500).json({ message: "Fout" });
     }
   });
