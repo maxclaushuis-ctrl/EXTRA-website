@@ -2091,6 +2091,10 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   // Per-campagne uitgesloten contacten — losse blokkering van individuele
   // contacten zonder dat ze uit het hele segment hoeven (zie Ontvangers-tab).
   excludedContactIds: integer("excluded_contact_ids").array().default([]),
+  // Per-campagne handmatig toegevoegde contacten — de tegenhanger van
+  // excludedContactIds. Deze contacten krijgen de mail ook als ze niet aan de
+  // filters voldoen. Uitsluiten wint van toevoegen; zie server/campagneDoelgroep.ts.
+  extraContactIds: integer("extra_contact_ids").array().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -296,6 +296,19 @@ const AANVULLINGEN: Aanvulling[] = [
         )
       `),
   },
+  {
+    // Migratie 0020 — zie migrations/manual/0020_campagne_extra_contacten/
+    //
+    // Tegenhanger van excluded_contact_ids: contacten die handmatig aan een
+    // campagne zijn toegevoegd en de mail ook krijgen als ze buiten de filters
+    // vallen. Zie server/campagneDoelgroep.ts voor de voorrangsregels.
+    omschrijving: "prospect_campaigns: handmatig toegevoegde contacten",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE prospect_campaigns
+          ADD COLUMN IF NOT EXISTS extra_contact_ids integer[] DEFAULT '{}'
+      `),
+  },
 ];
 
 /**
