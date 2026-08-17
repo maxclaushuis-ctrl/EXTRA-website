@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img"
+     aria-label="Tijdlijn van de Wtta met de vier momenten tussen november 2026 en januari 2028">
+  <rect width="1200" height="500" fill="#FFFFFF"/>
+
+  <text x="48" y="58" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="28" fill="#111111">De Wtta in vier momenten</text>
+  <text x="48" y="88" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#6B7280">Het eerste dat telt ligt bij je leverancier, het laatste bij jou</text>
+
+  <line x1="110" y1="184" x2="1110" y2="184" stroke="#DDD6FE" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- 1 -->
+  <circle cx="180" cy="184" r="18" fill="#111111"/>
+  <text x="180" y="146" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="16" fill="#111111" text-anchor="middle">1 nov – 31 dec 2026</text>
+  <rect x="72" y="220" width="216" height="164" rx="12" fill="#111111"/>
+  <text x="96" y="256" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#FFFFFF">Aanmelden</text>
+  <text x="96" y="288" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">Je leverancier meldt</text>
+  <text x="96" y="310" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">zich bij de NAU en valt</text>
+  <text x="96" y="332" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">onder het overgangs-</text>
+  <text x="96" y="354" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">recht.</text>
+
+  <!-- 2 -->
+  <circle cx="480" cy="184" r="14" fill="#7C3AED"/>
+  <text x="480" y="146" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="16" fill="#5B21B6" text-anchor="middle">1 januari 2027</text>
+  <rect x="372" y="220" width="216" height="164" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="396" y="256" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#111111">Wet in werking</text>
+  <text x="396" y="288" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">Uitleners moeten aan</text>
+  <text x="396" y="310" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">het normenkader</text>
+  <text x="396" y="332" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">voldoen.</text>
+
+  <!-- 3 -->
+  <circle cx="780" cy="184" r="14" fill="#7C3AED"/>
+  <text x="780" y="146" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="16" fill="#5B21B6" text-anchor="middle">1 mei – 30 juni 2027</text>
+  <rect x="672" y="220" width="216" height="164" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="696" y="256" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#111111">Toelating aanvragen</text>
+  <text x="696" y="288" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">Beoordeling start</text>
+  <text x="696" y="310" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">1 juli 2027. Een SNA-</text>
+  <text x="696" y="332" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">keurmerk telt mee.</text>
+
+  <!-- 4 -->
+  <circle cx="1050" cy="184" r="18" fill="#111111"/>
+  <text x="1050" y="146" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="16" fill="#111111" text-anchor="middle">1 januari 2028</text>
+  <rect x="942" y="220" width="216" height="164" rx="12" fill="#111111"/>
+  <text x="966" y="256" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#FFFFFF">Handhaving</text>
+  <text x="966" y="288" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">Alleen nog inlenen bij</text>
+  <text x="966" y="310" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">een toegelaten uitlener.</text>
+  <text x="966" y="332" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">Boete ook voor de</text>
+  <text x="966" y="354" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">inlener.</text>
+
+  <text x="48" y="452" font-family="DejaVu Sans, Poppins, sans-serif" font-size="14" fill="#9CA3AF">NAU = Nederlandse Autoriteit Uitleenmarkt, die het openbare register bijhoudt.</text>
+</svg>
