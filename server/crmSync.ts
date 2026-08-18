@@ -38,6 +38,17 @@ import {
 } from './crmNaarMail';
 
 export interface SyncResultaat {
+  /** Aantal CRM-bedrijven dat is doorlopen. */
+  bedrijven: number;
+  /**
+   * Bedrijven zonder één contactpersoon.
+   *
+   * Staat er alleen in om het te kunnen melden, en dat is belangrijker dan het
+   * lijkt: een bedrijf zonder contactpersoon levert geen ontvanger op. Zonder
+   * dit getal lijkt een import van 337 klanten die 12 ontvangers oplevert een
+   * bug, terwijl er gewoon bij 325 bedrijven geen naam en e-mailadres staat.
+   */
+  bedrijvenZonderContact: number;
   /** Aantal CRM-contactpersonen dat is bekeken. */
   bekeken: number;
   /** Nieuwe rijen in de verzendlijst. */
@@ -59,6 +70,7 @@ export interface SyncResultaat {
 }
 
 const LEEG: Omit<SyncResultaat, 'duurMs'> = {
+  bedrijven: 0, bedrijvenZonderContact: 0,
   bekeken: 0, nieuw: 0, bijgewerkt: 0, geadopteerd: 0,
   zonderEmail: 0, dubbel: 0, adresBotsing: 0, mislukt: 0, ongewijzigd: 0,
 };
@@ -130,6 +142,10 @@ async function draaiRonde(opties: { bedrijfId?: number }): Promise<SyncResultaat
   const crmContacten = (await storage.getCrmContactsByCompanyIds(
     bedrijven.map((b) => b.id),
   )) as unknown as CrmContactInvoer[];
+
+  telling.bedrijven = bedrijven.length;
+  const metContact = new Set(crmContacten.map((c) => c.companyId));
+  telling.bedrijvenZonderContact = bedrijven.filter((b) => !metContact.has(b.id)).length;
 
   // De verzendlijst wordt altijd in zijn geheel opgehaald, ook bij één bedrijf:
   // een adres kan bij een ander bedrijf al bestaan, en dan mag er geen tweede

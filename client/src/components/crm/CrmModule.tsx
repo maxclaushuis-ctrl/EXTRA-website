@@ -1599,10 +1599,36 @@ export function CrmKlantenTab() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const { toast } = useToast();
 
   const { data: companies = [], isLoading, isError, error, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/companies', 'klanten'],
     queryFn: () => fetchJsonList<any>('/api/admin/crm/companies?isClient=true'),
+  });
+
+  /**
+   * Dubbele bedrijven samenvoegen.
+   *
+   * Stond alleen bij Leads & Prospects, terwijl een Excel-import van klanten
+   * per rij een bedrijf aanmaakt — daar ontstaan de duplicaten juist. Ze doen
+   * bovendien pijn in een mailcampagne: dezelfde contactpersoon onder zes keer
+   * hetzelfde bedrijf.
+   */
+  const dedupeMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/admin/crm/companies/dedupe', {}),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] });
+      toast({
+        title: 'Opschonen voltooid',
+        description: data?.removedCount > 0
+          ? `${data.removedCount} dubbel(e) bedrijf/bedrijven verwijderd uit ${data.groupsFound} groep(en).`
+          : 'Geen dubbele bedrijven gevonden.',
+      });
+      refetch();
+    },
+    onError: (e: any) => {
+      toast({ title: 'Opschonen mislukt', description: e?.message || 'Onbekende fout', variant: 'destructive' });
+    },
   });
 
   const filtered = useMemo(() => companies.filter((c: any) => {
@@ -1629,6 +1655,20 @@ export function CrmKlantenTab() {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => refetch()}><RefreshCw className="h-3.5 w-3.5" />Vernieuwen</Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs h-8"
+            disabled={dedupeMutation.isPending}
+            onClick={() => {
+              if (window.confirm('Dubbele bedrijven worden samengevoegd op basis van naam + stad. De oudste blijft behouden, de rest wordt verwijderd. Doorgaan?')) {
+                dedupeMutation.mutate();
+              }
+            }}
+            data-testid="btn-klanten-opschonen"
+          >
+            <Trash2 className="h-3.5 w-3.5" />{dedupeMutation.isPending ? 'Bezig...' : 'Opschonen'}
+          </Button>
           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => setImportOpen(true)}>
             <Upload className="h-3.5 w-3.5" />Importeren
           </Button>

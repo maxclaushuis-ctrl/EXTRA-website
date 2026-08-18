@@ -1534,8 +1534,28 @@ export default function ProspectContactenTab() {
   // Stats filter override
   const [statFilter, setStatFilter] = useState<null | { type?: string; status?: string }>(null);
 
+  /** Resultaat van de laatste CRM-import, om als leesbaar rapport te tonen. */
+  const [crmRapport, setCrmRapport] = useState<any>(null);
+
   const { data: contacts = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/prospect-contacts'],
+  });
+
+  /**
+   * Bestaande klanten en Leads & Prospects overhalen naar de verzendlijst.
+   *
+   * Loopt normaal vanzelf na elke wijziging in het CRM. Deze knop staat hier
+   * omdat dit de plek is waar je hem zoekt als de lijst korter is dan je
+   * verwacht — en omdat het rapport erna vertelt waaróm.
+   */
+  const crmImport = useMutation({
+    mutationFn: () => apiRequest('/api/admin/crm/sync-mail', { method: 'POST' }) as Promise<any>,
+    onSuccess: (r: any) => {
+      setCrmRapport(r);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
+      refetch();
+    },
+    onError: (err: any) => setCrmRapport({ fout: err?.message || 'Onbekende fout' }),
   });
 
   const { data: uniqueTags = [] } = useQuery<string[]>({
@@ -1617,8 +1637,8 @@ export default function ProspectContactenTab() {
         <p className="text-xs text-amber-900 leading-relaxed">
           <strong>Verzendlijst</strong> — deze lijst volgt automatisch uit het CRM.
           Nieuwe contactpersonen voeg je toe bij <em>Bestaande klanten</em> of <em>Leads &amp; Prospects</em>;
-          ze staan hier daarna vanzelf tussen. Hier beheer je wat het CRM niet kent:
-          afmeldingen, bounces, spamklachten en imports.
+          ze staan hier daarna vanzelf tussen. Mis je iemand? Klik op <strong>Uit CRM ophalen</strong>.
+          Hier beheer je wat het CRM niet kent: afmeldingen, bounces, spamklachten en imports.
         </p>
       </div>
 
@@ -1673,6 +1693,15 @@ export default function ProspectContactenTab() {
         </Select>
 
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm"
+            className="h-8 gap-1.5 text-xs border-purple-300 text-purple-700 hover:bg-purple-50"
+            disabled={crmImport.isPending}
+            onClick={() => { setCrmRapport(null); crmImport.mutate(); }}
+            title="Contactpersonen van Bestaande klanten en Leads & Prospects overhalen naar deze lijst"
+            data-testid="btn-crm-import">
+            <RefreshCw className={`h-3.5 w-3.5 ${crmImport.isPending ? 'animate-spin' : ''}`} />
+            {crmImport.isPending ? 'Bezig...' : 'Uit CRM ophalen'}
+          </Button>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setVcardOpen(true)} title="iPhone/iCloud/Google contacten-export (.vcf) importeren">
             <Upload className="h-3.5 w-3.5" />vCard (.vcf)
           </Button>
@@ -1692,6 +1721,57 @@ export default function ProspectContactenTab() {
           {filtered.length !== contacts.length && ` (gefilterd uit ${contacts.length})`}
         </p>
       </div>
+
+      {/* Rapport van de laatste CRM-import.
+          Niet als toast maar als blijvend blok: de interessante getallen zijn
+          "hoeveel bedrijven hadden geen contactpersoon" en "hoeveel hadden geen
+          e-mailadres", en die wil je rustig kunnen lezen. Een import van 337
+          klanten die 12 ontvangers oplevert ziet eruit als een storing zolang
+          je die twee getallen niet ziet. */}
+      {crmRapport && (
+        <div className="bg-white border-b px-6 py-3">
+          {crmRapport.fout ? (
+            <div className="flex items-start gap-2 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>Ophalen uit het CRM mislukt: {crmRapport.fout}</span>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-gray-600 leading-relaxed">
+                <p className="text-sm font-medium text-gray-800 mb-1">
+                  {crmRapport.bedrijven} bedrijven doorlopen, {crmRapport.bekeken} contactpersonen bekeken
+                </p>
+                <p>
+                  <strong className="text-green-700">{crmRapport.nieuw} nieuw</strong> in deze lijst
+                  {crmRapport.geadopteerd > 0 && <> · <strong>{crmRapport.geadopteerd}</strong> gekoppeld aan een contact dat er al stond</>}
+                  {crmRapport.bijgewerkt > 0 && <> · <strong>{crmRapport.bijgewerkt}</strong> bijgewerkt</>}
+                  {crmRapport.ongewijzigd > 0 && <> · {crmRapport.ongewijzigd} stonden al gelijk</>}
+                </p>
+                {(crmRapport.bedrijvenZonderContact > 0 || crmRapport.zonderEmail > 0) && (
+                  <p className="mt-1 text-amber-700">
+                    Niet meegenomen:
+                    {crmRapport.bedrijvenZonderContact > 0 && <> <strong>{crmRapport.bedrijvenZonderContact} bedrijven zonder contactpersoon</strong></>}
+                    {crmRapport.bedrijvenZonderContact > 0 && crmRapport.zonderEmail > 0 && <>,</>}
+                    {crmRapport.zonderEmail > 0 && <> <strong>{crmRapport.zonderEmail} contactpersonen zonder e-mailadres</strong></>}
+                    . Vul die aan bij het bedrijf in Bestaande klanten of Leads &amp; Prospects en haal daarna opnieuw op.
+                  </p>
+                )}
+                {(crmRapport.dubbel > 0 || crmRapport.adresBotsing > 0 || crmRapport.mislukt > 0) && (
+                  <p className="mt-1 text-gray-500">
+                    {crmRapport.dubbel > 0 && <>{crmRapport.dubbel} overgeslagen omdat het e-mailadres al bij een ander contact hoort. </>}
+                    {crmRapport.adresBotsing > 0 && <>{crmRapport.adresBotsing} adreswijziging(en) geweigerd om een afmelding niet te omzeilen. </>}
+                    {crmRapport.mislukt > 0 && <>{crmRapport.mislukt} mislukt — zie de serverlog.</>}
+                  </p>
+                )}
+              </div>
+              <button onClick={() => setCrmRapport(null)} className="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Contact list */}
       <div className="flex-1 overflow-auto">
