@@ -309,6 +309,44 @@ const AANVULLINGEN: Aanvulling[] = [
           ADD COLUMN IF NOT EXISTS extra_contact_ids integer[] DEFAULT '{}'
       `),
   },
+  {
+    // Migratie 0021a — zie migrations/manual/0021_crm_maillijst_koppeling/
+    //
+    // Moet vóór 0021b: de oude route /api/admin/prospect-contacts/import-crm
+    // vulde crm_contact_id al, zonder enige bescherming tegen duplicaten. Staat
+    // er nog zo'n duplicaat, dan mislukt het aanmaken van de unieke index — en
+    // dat zou alleen als een regel in het log te zien zijn, waarna het hele
+    // vangnet stilletjes ontbreekt.
+    //
+    // De oudste rij houdt de koppeling; de rest raakt hem kwijt en wordt bij de
+    // eerstvolgende synchronisatie opnieuw beoordeeld.
+    omschrijving: "prospect_contacts: dubbele CRM-koppelingen opruimen",
+    uitvoeren: () =>
+      db.execute(sql`
+        UPDATE prospect_contacts p
+           SET crm_contact_id = NULL
+         WHERE p.crm_contact_id IS NOT NULL
+           AND p.id <> (
+             SELECT MIN(q.id) FROM prospect_contacts q
+              WHERE q.crm_contact_id = p.crm_contact_id
+           )
+      `),
+  },
+  {
+    // Migratie 0021b — zie migrations/manual/0021_crm_maillijst_koppeling/
+    //
+    // Het CRM is sinds de samenvoeging de bron van de verzendlijst. De koppeling
+    // loopt via prospect_contacts.crm_contact_id; deze index zorgt dat één
+    // CRM-contactpersoon nooit twee verzendrijen krijgt. Zonder dat vangnet
+    // krijgt iemand alles dubbel — ook iemand die zich bij de ene rij afmeldde.
+    omschrijving: "prospect_contacts: unieke koppeling met crm_contacts",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS prospect_contacts_crm_contact_id_uidx
+          ON prospect_contacts (crm_contact_id)
+          WHERE crm_contact_id IS NOT NULL
+      `),
+  },
 ];
 
 /**

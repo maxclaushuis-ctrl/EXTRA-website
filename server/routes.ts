@@ -7,6 +7,11 @@ import path from "path";
 import fs from "fs";
 import AdmZip from "adm-zip";
 import { storage } from "./storage";
+// Het CRM is de bron van de verzendlijst; deze twee houden prospect_contacts
+// gelijk met crm_contacts. Statisch geïmporteerd en niet lui: een mislukte
+// import binnen een try-blok zou een geslaagde CRM-opslag alsnog in een 500
+// veranderen. Zie server/crmSync.ts.
+import { syncOpAchtergrond, synchroniseerCrmNaarMail, blokkeerVerwijderdeContacten } from "./crmSync";
 import { meldAan } from "./indexnow";
 import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
 import { moveCardToPhase, markNotReached } from "./salesflow";
@@ -5293,11 +5298,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Een contact uit de verzendlijst halen.
+   *
+   * Sinds het CRM de bron van deze lijst is, kan echt verwijderen averechts
+   * werken: de eerstvolgende synchronisatie maakt de rij gewoon opnieuw aan —
+   * schoon, actief, en zonder de afmelding die eraan hing. Iemand die "nee"
+   * had gezegd, zou dan weer post krijgen.
+   *
+   * Daarom wordt er niet verwijderd maar geblokkeerd zodra de rij ofwel aan het
+   * CRM hangt, ofwel een afmelding, blokkade, harde bounce of spamklacht
+   * draagt. Geblokkeerd betekent: staat er nog, telt nergens in mee, krijgt
+   * niets. Alleen een rij zonder geschiedenis en zonder CRM-herkomst gaat echt
+   * weg.
+   */
   app.delete("/api/admin/prospect-contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      const contact = await storage.getProspectContact(id);
+      if (!contact) return res.json({ success: true });
+
+      const draagtGeschiedenis =
+        !!contact.crmContactId
+        || !!contact.unsubscribed
+        || contact.contactStatus === 'uitgeschreven'
+        || contact.bounceStatus === 'hard'
+        || !!contact.spamReported;
+
+      if (draagtGeschiedenis) {
+        const datum = new Date().toISOString().slice(0, 10);
+        await storage.updateProspectContact(id, {
+          contactStatus: 'geblokkeerd',
+          notes: `${contact.notes ? `${contact.notes}\n` : ''}[${datum}] Handmatig uit de verzendlijst gehaald`,
+        } as any);
+        return res.json({
+          success: true,
+          geblokkeerd: true,
+          message: 'Contact geblokkeerd in plaats van verwijderd — de afmeld- en verzendgeschiedenis blijft bewaard.',
+        });
+      }
+
       await storage.deleteProspectContact(id);
-      return res.json({ success: true });
+      return res.json({ success: true, geblokkeerd: false });
     } catch (err) {
       return res.status(500).json({ message: "Fout" });
     }
@@ -10025,6 +10067,10 @@ ${vacancies.map(v => `  <url>
         }
       }
 
+      // Een import maakt in één keer tientallen bedrijven met contactpersonen
+      // aan; die horen daarna gewoon in de verzendlijst te staan.
+      if (created.length) syncOpAchtergrond();
+
       return res.json({
         success: true,
         createdCount: created.length,
@@ -10066,6 +10112,10 @@ ${vacancies.map(v => `  <url>
       } catch { /* geocode-falen negeren */ }
       const company = await storage.updateCrmCompany(id, body);
       if (!company) return res.status(404).json({ message: "Bedrijf niet gevonden" });
+      // Naam, stad, type en vooral isClient staan ook op de verzendrijen van
+      // de contactpersonen van dit bedrijf. Een bedrijf dat van prospect naar
+      // klant gaat, verplaatst zo zijn hele contactenlijst mee.
+      syncOpAchtergrond(id);
       return res.json(company);
     } catch (error) {
       console.error("Error updating CRM company:", error);
@@ -10076,9 +10126,21 @@ ${vacancies.map(v => `  <url>
   app.delete("/api/admin/crm/companies/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      // De contactpersonen verdwijnen mee (cascade), dus eerst hun verzendrijen
+      // blokkeren — anders blijven ze mail krijgen van een bedrijf dat niet meer
+      // bestaat.
+      let geblokkeerd = 0;
+      try {
+        const contacten = await storage.getCrmContacts(id);
+        geblokkeerd = await blokkeerVerwijderdeContacten(
+          contacten.map((c) => c.id), 'Bedrijf verwijderd uit het CRM',
+        );
+      } catch (e: any) {
+        console.error('[crm-sync] blokkeren bij verwijderen bedrijf mislukt:', e?.message || e);
+      }
       const ok = await storage.deleteCrmCompany(id);
       if (!ok) return res.status(404).json({ message: "Bedrijf niet gevonden" });
-      return res.json({ message: "Bedrijf verwijderd" });
+      return res.json({ message: "Bedrijf verwijderd", geblokkeerdeMailcontacten: geblokkeerd });
     } catch (error) {
       console.error("Error deleting CRM company:", error);
       return res.status(500).json({ message: "Fout bij verwijderen bedrijf" });
@@ -10180,6 +10242,24 @@ ${vacancies.map(v => `  <url>
     }
   });
 
+  /**
+   * Verzendlijst opnieuw gelijktrekken met het CRM.
+   *
+   * Draait normaal vanzelf na elke wijziging in het CRM. Deze knop is er voor
+   * de eerste keer, en voor het geval er ooit iets is misgegaan — hij is
+   * herhaalbaar en verandert niets aan afmeldingen, bounces of blokkades.
+   */
+  app.post("/api/admin/crm/sync-mail", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const resultaat = await synchroniseerCrmNaarMail();
+      console.log('[crm-sync] handmatig:', JSON.stringify(resultaat));
+      return res.json(resultaat);
+    } catch (error: any) {
+      console.error("Error syncing CRM to mail:", error);
+      return res.status(500).json({ message: "Synchroniseren mislukt: " + (error?.message || "onbekend") });
+    }
+  });
+
   // Contacts
   app.get("/api/admin/crm/contacts/:companyId", adminMiddleware, async (req: Request, res: Response) => {
     try {
@@ -10193,6 +10273,10 @@ ${vacancies.map(v => `  <url>
   app.post("/api/admin/crm/contacts", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const contact = await storage.createCrmContact(req.body);
+      // Het CRM is sinds de samenvoeging de bron van de verzendlijst: een
+      // nieuwe contactpersoon met een e-mailadres hoort meteen mailbaar te zijn.
+      // Zie server/crmSync.ts — dit mag het antwoord nooit ophouden of breken.
+      syncOpAchtergrond(contact?.companyId);
       return res.status(201).json(contact);
     } catch (error) {
       return res.status(500).json({ message: "Fout bij aanmaken contactpersoon" });
@@ -10203,6 +10287,7 @@ ${vacancies.map(v => `  <url>
     try {
       const contact = await storage.updateCrmContact(parseInt(req.params.id), req.body);
       if (!contact) return res.status(404).json({ message: "Contactpersoon niet gevonden" });
+      syncOpAchtergrond(contact.companyId);
       return res.json(contact);
     } catch (error) {
       return res.status(500).json({ message: "Fout bij bijwerken contactpersoon" });
@@ -10211,9 +10296,23 @@ ${vacancies.map(v => `  <url>
 
   app.delete("/api/admin/crm/contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const ok = await storage.deleteCrmContact(parseInt(req.params.id));
+      const contactId = parseInt(req.params.id);
+      // Vóór het verwijderen blokkeren, want daarna is het id weg en is niet
+      // meer te zien welke verzendrij erbij hoorde. De rij zelf blijft staan:
+      // daar hangt de mailgeschiedenis aan.
+      //
+      // Eigen vangnet: als het blokkeren halverwege misgaat, moet het
+      // verwijderen gewoon doorgaan. Anders blijft het contact in het CRM staan
+      // terwijl de verzendrij al geblokkeerd is — het slechtste van twee.
+      let geblokkeerd = 0;
+      try {
+        geblokkeerd = await blokkeerVerwijderdeContacten([contactId]);
+      } catch (e: any) {
+        console.error('[crm-sync] blokkeren bij verwijderen contactpersoon mislukt:', e?.message || e);
+      }
+      const ok = await storage.deleteCrmContact(contactId);
       if (!ok) return res.status(404).json({ message: "Contactpersoon niet gevonden" });
-      return res.json({ message: "Contactpersoon verwijderd" });
+      return res.json({ message: "Contactpersoon verwijderd", geblokkeerdeMailcontacten: geblokkeerd });
     } catch (error) {
       return res.status(500).json({ message: "Fout bij verwijderen contactpersoon" });
     }

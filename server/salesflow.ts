@@ -19,6 +19,7 @@ import { db } from "./db";
 import { log } from "./vite";
 import { sendEmail } from "./mail";
 import { beoordeelReminder, faseRegelUitRij } from "./salesflowLogic";
+import { syncOpAchtergrond } from './crmSync';
 
 export type SalesflowPhase =
   | "selectie" | "mailing_verstuurd" | "nagebeld" | "bericht_gestuurd"
@@ -271,6 +272,10 @@ export async function moveCardToPhase(opts: {
   //    vrij toegevoegd/verwijderd kunnen worden zonder deze logica te breken).
   if (rule.behavior === "deal") {
     await db.execute(sql`UPDATE crm_companies SET is_client = true, updated_at = now() WHERE id = ${card.company_id}`);
+    // Het bedrijf verhuist hiermee van Leads & Prospects naar Bestaande
+    // klanten. De contactpersonen moeten mee, anders staan ze in een campagne
+    // voor klanten nog steeds als prospect. Zie server/crmSync.ts.
+    syncOpAchtergrond(card.company_id);
   }
 
   const snooze = rule.behavior === "snooze" ? (opts.snoozeUntil ?? null) : null;
