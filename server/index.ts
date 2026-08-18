@@ -10,6 +10,7 @@ import { storage } from "./storage";
 import { pool } from "./db";
 import { sendCvReminderEmail } from "./mail";
 import { registerRedirects } from "./redirects";
+import { wwwDoelUrl } from "./wwwRedirect";
 import { registerLlmsTxt } from "./llms";
 import { scheduleSalesflowDailyJob, ensureSalesflowSchema } from "./salesflow";
 import { ensureAuthResetSchema } from "./authReset";
@@ -369,6 +370,14 @@ const OPSTART_DB_MAX_MS = 10_000;
   // nooit als unhandled rejection het proces omlegt.
   const databasewerk = opstartDatabasewerk().catch(err => {
     console.error('[start] opstart-databasewerk mislukt (niet-kritiek, app start door):', err?.message || err);
+  });
+
+  // Apex naar www, vóór al het andere: anders bestaat elke URL twee keer en
+  // levert dat twee sitemaps op met dezelfde inhoud (zie server/wwwRedirect.ts).
+  app.use((req, res, next) => {
+    const doel = wwwDoelUrl(req.headers.host, req.url);
+    if (doel) return res.redirect(301, doel);
+    next();
   });
 
   // Registreer 301 redirects vóór alle andere routes
