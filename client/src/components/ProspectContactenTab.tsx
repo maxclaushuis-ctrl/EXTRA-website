@@ -14,7 +14,7 @@ import { FUNCTIEGROEPEN } from '@shared/schema';
 import {
   Plus, Search, X, Upload, Mail, Phone, MapPin, Building2,
   Pencil, Trash2, Users, RefreshCw, ChevronRight, Filter,
-  Check, AlertCircle, Download, Tag
+  Check, AlertCircle, Download, Tag, Info
 } from 'lucide-react';
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -1606,14 +1606,30 @@ export default function ProspectContactenTab() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Wat deze pagina sinds 18 augustus 2026 is.
+          Hij stond eerst als 'Contacten' in het menu onder Campagnes en was
+          daarmee een tweede adresboek naast Bestaande klanten en Leads &
+          Prospects. Dat is hij niet meer: contactpersonen beheer je in het CRM,
+          en deze lijst volgt daaruit. Wat hier wél thuishoort en nergens anders
+          bestaat: afmeldingen, bounces, spamklachten en de losse imports. */}
+      <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5 flex items-start gap-2">
+        <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+        <p className="text-xs text-amber-900 leading-relaxed">
+          <strong>Verzendlijst</strong> — deze lijst volgt automatisch uit het CRM.
+          Nieuwe contactpersonen voeg je toe bij <em>Bestaande klanten</em> of <em>Leads &amp; Prospects</em>;
+          ze staan hier daarna vanzelf tussen. Hier beheer je wat het CRM niet kent:
+          afmeldingen, bounces, spamklachten en imports.
+        </p>
+      </div>
+
       {/* Stats bar */}
       <div className="bg-white border-b px-6 py-3">
         <div className="flex gap-3 flex-wrap">
           {[
             { label: 'Totaal', value: stats.totaal, filter: null },
             { label: 'Actief', value: stats.actief, filter: { status: 'actief' }, color: 'text-green-700' },
-            { label: 'Prospects', value: stats.prospects, filter: { type: 'prospect' }, color: 'text-purple-700' },
-            { label: 'Klanten', value: stats.klanten, filter: { type: 'klant' }, color: 'text-blue-700' },
+            { label: 'Leads & Prospects', value: stats.prospects, filter: { type: 'prospect' }, color: 'text-purple-700' },
+            { label: 'Bestaande klanten', value: stats.klanten, filter: { type: 'klant' }, color: 'text-blue-700' },
             { label: 'Uitgeschreven', value: stats.uitgeschreven, filter: { status: 'uitgeschreven' }, color: 'text-gray-500' },
           ].map(s => (
             <button key={s.label} onClick={() => handleStatClick(s.filter)}

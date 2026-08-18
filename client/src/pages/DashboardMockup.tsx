@@ -1103,8 +1103,18 @@ export default function DashboardMockup() {
           />
           {campagnesExpanded && (
             <>
+              {/* 'Contacten' stond hier tot 18 augustus 2026 als apart menu-item.
+                  Weggehaald omdat het een tweede adresboek naast Bestaande
+                  klanten en Leads & Prospects was: je onderhield dezelfde mensen
+                  twee keer, en een campagne zag alleen wat toevallig in dít
+                  lijstje stond. Contactpersonen beheer je nu in het CRM; de
+                  verzendlijst volgt daaruit (server/crmSync.ts).
+
+                  De pagina zelf bestaat nog wel — daar staan de afmeldingen,
+                  bounces en imports die het CRM niet kent. Je komt er via
+                  'Verzendlijst en afmeldingen bekijken' op de Ontvangers-tab
+                  van een campagne. */}
               {[
-                { icon: Users, label: 'Contacten', tab: 'prospect-contacten' },
                 { icon: Send, label: 'E-mail campagnes', tab: 'prospect-campagnes' },
                 { icon: MailCheck, label: 'Onboarding', tab: 'onboarding' },
                 { icon: BarChart3, label: 'Statistieken', tab: 'prospect-statistieken' },

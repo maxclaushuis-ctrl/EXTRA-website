@@ -433,9 +433,12 @@ function DoelgroepDialog({ campaign, open, onClose }: {
 
         <div className="space-y-5 py-2">
           <div>
-            <Label className="text-sm font-medium mb-2 block">Contacttype</Label>
+            <Label className="text-sm font-medium mb-2 block">Wie krijgt deze campagne?</Label>
+            {/* Dezelfde twee bakken als in het menu onder Bedrijven, met dezelfde
+                woorden. Dit filter kijkt naar is_client op het bedrijf in het CRM;
+                zie server/crmSync.ts. */}
             <div className="flex gap-2">
-              {[{ v: 'alles', label: 'Iedereen' }, { v: 'prospect', label: 'Alleen prospects' }, { v: 'klant', label: 'Alleen klanten' }].map(opt => (
+              {[{ v: 'alles', label: 'Iedereen' }, { v: 'klant', label: 'Bestaande klanten' }, { v: 'prospect', label: 'Leads & Prospects' }].map(opt => (
                 <button key={opt.v} type="button" onClick={() => setTypeFilter(opt.v)}
                   className={chip(typeFilter === opt.v, 'bg-purple-100 border-purple-300 text-purple-700')}
                   data-testid={`btn-doelgroep-type-${opt.v}`}>{opt.label}</button>
@@ -643,12 +646,12 @@ function CampaignWizard({ open, onClose, onCreated }: {
           <div className="space-y-5">
             {/* Contacttype */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Contacttype</Label>
+              <Label className="text-sm font-medium mb-2 block">Wie krijgt deze campagne?</Label>
               <div className="flex gap-2">
                 {[
                   { v: 'alles', label: 'Iedereen' },
-                  { v: 'prospect', label: 'Alleen prospects' },
-                  { v: 'klant', label: 'Alleen klanten' },
+                  { v: 'klant', label: 'Bestaande klanten' },
+                  { v: 'prospect', label: 'Leads & Prospects' },
                 ].map(opt => (
                   <button key={opt.v} onClick={() => set('typeFilter', opt.v)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${data.typeFilter === opt.v ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
@@ -2092,6 +2095,34 @@ export default function ProspectCampagnesTab() {
     queryFn: () => fetchJsonList<any>(`/api/admin/prospect-contacts?search=${encodeURIComponent(contactZoek.trim())}`),
   });
 
+  /**
+   * Verzendlijst gelijktrekken met het CRM.
+   *
+   * Gebeurt normaal vanzelf zodra je in het CRM iets wijzigt. Deze knop is er
+   * voor de eerste keer — en voor het geval je iemand zoekt die je wél in
+   * Bestaande klanten ziet staan, maar hier niet vindt.
+   */
+  const syncMaillijst = useMutation({
+    mutationFn: () => apiRequest('/api/admin/crm/sync-mail', { method: 'POST' }) as Promise<any>,
+    onSuccess: (r: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns', selectedId, 'segment-preview'] });
+      const nieuw = r?.nieuw ?? 0;
+      const bijgewerkt = (r?.bijgewerkt ?? 0) + (r?.geadopteerd ?? 0);
+      toast({
+        title: 'Verzendlijst bijgewerkt',
+        description: nieuw || bijgewerkt
+          ? `${nieuw} nieuw, ${bijgewerkt} bijgewerkt${r?.zonderEmail ? `, ${r.zonderEmail} zonder e-mailadres` : ''}.`
+          : 'Alles stond al gelijk met het CRM.',
+      });
+    },
+    onError: (err: any) => toast({
+      title: 'Bijwerken mislukt',
+      description: err?.message || 'Probeer het opnieuw',
+      variant: 'destructive',
+    }),
+  });
+
   /** Handmatig toevoegen of weer weghalen. */
   const toggleExtra = useMutation({
     mutationFn: ({ contactId, toevoegen }: { contactId: number; toevoegen: boolean }) =>
@@ -2312,7 +2343,7 @@ export default function ProspectCampagnesTab() {
     if (c.functieFilter && c.functieFilter.length > 0) {
       parts.push(`Functies: ${c.functieFilter.join(', ')}`);
     }
-    if (c.typeFilter && c.typeFilter !== 'alles') parts.push(`Type: ${c.typeFilter === 'prospect' ? 'Prospects' : 'Klanten'}`);
+    if (c.typeFilter && c.typeFilter !== 'alles') parts.push(c.typeFilter === 'prospect' ? 'Leads & Prospects' : 'Bestaande klanten');
     if (c.taalFilter && c.taalFilter !== 'alles') parts.push(`Taal: ${c.taalFilter}`);
     const tags = (() => { try { return JSON.parse(c.tagFilter || '[]'); } catch { return []; } })();
     if (tags.length > 0) parts.push(`Tags: ${tags.join(', ')}`);
@@ -2369,9 +2400,26 @@ export default function ProspectCampagnesTab() {
         </div>
       )}
       <p className="text-[11px] text-slate-400 mt-2">
+        Je zoekt hier in alle contactpersonen uit Bestaande klanten en Leads &amp; Prospects.
         Een handmatig toegevoegd contact krijgt de mail ook als het buiten de doelgroep valt.
         Uitgeschreven en geblokkeerde contacten kunnen niet worden toegevoegd.
       </p>
+      <div className="mt-2 flex items-center gap-2 flex-wrap">
+        <Button size="sm" variant="ghost"
+          className="h-7 text-[11px] text-slate-500 hover:text-purple-700 px-2"
+          disabled={syncMaillijst.isPending}
+          onClick={() => syncMaillijst.mutate()}
+          data-testid="btn-maillijst-bijwerken">
+          <RefreshCw className={`h-3 w-3 mr-1 ${syncMaillijst.isPending ? 'animate-spin' : ''}`} />
+          {syncMaillijst.isPending ? 'Bezig...' : 'Verzendlijst bijwerken vanuit CRM'}
+        </Button>
+        <button type="button"
+          className="text-[11px] text-slate-400 underline underline-offset-2 hover:text-slate-600"
+          onClick={() => window.dispatchEvent(new CustomEvent('extra:switch-tab', { detail: { tab: 'prospect-contacten' } }))}
+          data-testid="link-maillijst">
+          Verzendlijst en afmeldingen bekijken
+        </button>
+      </div>
     </div>
   );
 
@@ -2398,6 +2446,19 @@ export default function ProspectCampagnesTab() {
         >
           <Plus className="h-4 w-4 mr-2" /> Nieuwe campagne
         </Button>
+
+        {/* Toegang tot de verzendlijst.
+            Staat hier en niet alleen op de Ontvangers-tab: die tab bestaat
+            alleen bij een campagne in concept. Zonder deze link is de enige
+            plek met afmeldingen, bounces en spamklachten onbereikbaar zodra al
+            je campagnes verzonden zijn. */}
+        <button type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('extra:switch-tab', { detail: { tab: 'prospect-contacten' } }))}
+          className="w-full mb-3 text-xs text-slate-500 hover:text-purple-700 flex items-center justify-center gap-1.5 py-1"
+          data-testid="link-verzendlijst">
+          <Users className="h-3.5 w-3.5" />
+          Verzendlijst &amp; afmeldingen
+        </button>
 
         {/* Zoekveld */}
         <div className="relative mb-3">
@@ -3015,6 +3076,7 @@ export default function ProspectCampagnesTab() {
                           <Users className="h-10 w-10 text-slate-200 mx-auto mb-2" />
                           <p className="text-sm text-slate-400">Geen contacten in dit segment</p>
                           <p className="text-xs text-slate-300 mt-1">Pas de doelgroep aan in het Overzicht, of voeg hieronder losse contacten toe.</p>
+                          <p className="text-xs text-slate-300 mt-1">Staan je klanten hier niet bij? Werk de verzendlijst hieronder bij vanuit het CRM.</p>
                         </div>
                         {contactToevoeger}
                       </div>
@@ -3063,7 +3125,7 @@ export default function ProspectCampagnesTab() {
                                 </td>
                                 <td className="py-2">
                                   <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${c.contactType === 'klant' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'}`}>
-                                    {c.contactType === 'klant' ? 'Klant' : 'Prospect'}
+                                    {c.contactType === 'klant' ? 'Bestaande klant' : 'Lead / prospect'}
                                   </span>
                                 </td>
                                 <td className="py-2">

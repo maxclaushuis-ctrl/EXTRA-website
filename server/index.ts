@@ -536,6 +536,7 @@ const OPSTART_DB_MAX_MS = 10_000;
     scheduleBlogAutoPublish();
     scheduleFlowEngine();
     scheduleSalesflowDailyJob();
+    scheduleCrmMailSync();
     // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
     backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
     // WhatsApp Fase 1: 360dialog Cloud API met DB-persistentie. Zie server/whatsapp/README.md.
@@ -773,4 +774,39 @@ function scheduleFlowEngine() {
   }, 15_000);
 
   log("Flow + A/B scheduler actief (elke 5 minuten)");
+}
+
+/**
+ * Verzendlijst gelijktrekken met het CRM.
+ *
+ * Bij elke wijziging in het CRM gebeurt dit al meteen (server/routes.ts). Deze
+ * ronde is het vangnet: contactpersonen die zijn aangemaakt toen deze koppeling
+ * er nog niet was, en alles wat is misgegaan terwijl de server even niet
+ * luisterde. Herhaalbaar en zonder gevolgen als er niets te doen is.
+ *
+ * Bewust 45 seconden na de start: de opstart is al druk genoeg, en niemand
+ * wacht hierop. Daarna één keer per etmaal — vaker heeft geen zin, want de
+ * echte bijwerking loopt via de bewerkingen zelf.
+ */
+function scheduleCrmMailSync() {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  async function run() {
+    try {
+      const { synchroniseerCrmNaarMail } = await import('./crmSync');
+      const r = await synchroniseerCrmNaarMail();
+      if (r.nieuw || r.bijgewerkt || r.geadopteerd) {
+        log(`CRM → verzendlijst: ${r.nieuw} nieuw, ${r.bijgewerkt} bijgewerkt, ${r.geadopteerd} gekoppeld, ${r.zonderEmail} zonder e-mailadres (${r.duurMs} ms)`);
+      }
+    } catch (err: any) {
+      console.error('[crm-sync] periodieke ronde mislukt:', err?.message || err);
+    }
+  }
+
+  setTimeout(() => {
+    run();
+    setInterval(run, MS_PER_DAY);
+  }, 45_000);
+
+  log("CRM → verzendlijst synchronisatie actief (dagelijks)");
 }
