@@ -3,6 +3,7 @@
 
 import { getEmailBannerSrc } from './mail';
 import { kolommenHtml, kolommenTekst, KOLOM_MEDIA_CSS } from './emailKolommen';
+import { personaliseer, type PersonalisatieContact } from './personalisatie';
 
 export type ContactData = {
   voornaam?: string | null;
@@ -69,22 +70,17 @@ export function renderInlineLinks(text: string): string {
   });
 }
 
+/**
+ * Vervangt merge-tags in een stuk tekst.
+ *
+ * De vervanging zelf staat in server/personalisatie.ts. Deze functie blijft
+ * bestaan omdat hij op ruim tien plekken in dit bestand wordt aangeroepen, maar
+ * doet zelf niets meer. Dat is met opzet: er stonden drie verschillende
+ * vervangingen in de codebase (body, onderwerp, flow-mail), met verschillende
+ * terugvalwaarden en verschillende schrijfwijzen. Nu is er één.
+ */
 export function personalizeText(text: string, contact: ContactData): string {
-  const voornaam = contact.voornaam || '';
-  const achternaam = contact.achternaam || '';
-  const naam = contact.naam || [voornaam, achternaam].filter(Boolean).join(' ') || 'daar';
-  const bedrijf = contact.bedrijf || contact.company || 'uw organisatie';
-  const functietitel = contact.functietitel || '';
-  const stad = contact.stad || '';
-
-  return text
-    .replace(/\{\{voornaam\}\}/gi, voornaam || 'daar')
-    .replace(/\{\{achternaam\}\}/gi, achternaam)
-    .replace(/\{\{naam\}\}/gi, naam)
-    .replace(/\{\{bedrijf\}\}/gi, bedrijf)
-    .replace(/\{\{bedrijfsnaam\}\}/gi, bedrijf)
-    .replace(/\{\{functietitel\}\}/gi, functietitel)
-    .replace(/\{\{stad\}\}/gi, stad);
+  return personaliseer(text || '', contact as PersonalisatieContact);
 }
 
 export function generateEmailHTML(
@@ -147,13 +143,24 @@ export function generateEmailHTML(
     ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none" alt="" />`
     : '';
 
-  // Preheader (first 100 chars of text content)
-  const preheader = blokken
-    .filter(b => b.type === 'paragraaf' || b.type === 'aanhef' || b.type === 'kolommen')
-    .map(b => b.tekst || (nl ? b.nl : b.en) || '')
-    .join(' ')
-    .replace(/<[^>]+>/g, '')
-    .slice(0, 100);
+  // Preheader — de voorbeeldtekst die in de inbox naast de onderwerpregel staat.
+  //
+  // Deze werd opgebouwd uit de ruwe bloktekst, zónder de merge-tags te
+  // vervangen. Daardoor stond er bij iedereen letterlijk "Beste {{voornaam}},
+  // Fijn dat we voor {{bedrijf}}..." in de inbox — nog vóór het openen van de
+  // mail. Het was daarmee de enige plek waar een onvervangen tag écht zichtbaar
+  // werd, en meteen de meest zichtbare plek die er is.
+  //
+  // De personalisatie moet dus vóór het afkappen op 100 tekens, niet erna:
+  // anders wordt een tag halverwege doorgesneden en is hij onvervangbaar.
+  const preheader = personalizeText(
+    blokken
+      .filter(b => b.type === 'paragraaf' || b.type === 'aanhef' || b.type === 'kolommen')
+      .map(b => b.tekst || (nl ? b.nl : b.en) || '')
+      .join(' ')
+      .replace(/<[^>]+>/g, ''),
+    contact,
+  ).slice(0, 100);
 
   // EXTRA branded shell — gebruikt EXACT dezelfde banner-afbeelding als de andere mails
   const bannerSrc = getEmailBannerSrc();

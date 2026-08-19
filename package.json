@@ -21,6 +21,7 @@
     "wa:classificatie-live": "tsx scripts/wa-classificatie-live.ts",
     "sales:test": "tsx server/salesflowLogic.test.ts",
     "crmmail:test": "tsx server/crmNaarMail.test.ts",
+    "personalisatie:test": "tsx server/personalisatie.test.ts",
     "medewerkers:test": "tsx shared/vaardigheden.test.ts",
     "fragment:test": "tsx server/contentFragment.test.ts",
     "www:test": "tsx server/wwwRedirect.test.ts",

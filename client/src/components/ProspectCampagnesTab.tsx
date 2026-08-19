@@ -2039,8 +2039,18 @@ export default function ProspectCampagnesTab() {
 
   // Voor concept/geplande campagnes: bereken nu welke contacten op het
   // verzendmoment in het segment zouden zitten (incl. uitsluitingen).
+  /** Waarom een aanhef twijfelachtig is. Spiegelt server/personalisatie.ts. */
+  const TWIJFEL_UITLEG: Record<string, string> = {
+    leeg: 'geen voornaam',
+    postbusnaam: 'lijkt een afdeling',
+    initiaal: 'alleen een initiaal',
+    hoofdletters: 'in hoofdletters',
+    geen_naam: 'lijkt geen naam',
+  };
   type SegmentPreviewItem = {
-    id: number; name: string; email: string; company: string | null;
+    id: number; name: string; voornaam?: string | null; email: string; company: string | null;
+    /** Gezet door de server als "Beste {voornaam}," raar zou uitpakken. */
+    aanhefTwijfel?: string | null;
     function: string | null; branche: string | null; functiegroep: string | null;
     contactType: string | null; phase: string | null; excluded: boolean;
     /** 'segment' = via de filters, 'handmatig' = los toegevoegd. */
@@ -2049,6 +2059,20 @@ export default function ProspectCampagnesTab() {
   type SegmentPreview = {
     totaal: number; verzendBaar: number; uitgesloten: number; handmatig?: number;
     contacts: SegmentPreviewItem[];
+    /**
+     * Uitkomst van de personalisatiecontrole op de server.
+     * `tags`      welke merge-tags deze campagne gebruikt
+     * `onbekend`  wat op een tag lijkt maar niet herkend wordt — die belandt
+     *             letterlijk in de mail
+     * `ontbreekt` per veld: hoeveel ontvangers het niet ingevuld hebben
+     */
+    personalisatie?: {
+      tags: string[];
+      onbekend: string[];
+      ontbreekt: Record<string, number>;
+      /** Per reden hoeveel ontvangers een twijfelachtige aanhef krijgen. */
+      twijfel?: Record<string, number>;
+    };
   };
   const isPlannedOrConcept = !!selectedCampaign && !['sent','voltooid','actief','gestopt'].includes(selectedCampaign.status);
   const { data: segmentPreviewRaw, isLoading: segLoading } = useQuery<SegmentPreview>({
@@ -3088,6 +3112,58 @@ export default function ProspectCampagnesTab() {
                       </div>
                     ) : (
                       <>
+                        {/* Personalisatiecontrole.
+                            Staat bewust bóven de lijst en niet in een tooltip:
+                            de vraag "krijgt iedereen wel zijn eigen voornaam te
+                            zien" stel je één keer, vlak voor het verzenden, en
+                            dan wil je het antwoord meteen zien. */}
+                        {segmentPreview.personalisatie && (segmentPreview.personalisatie.onbekend.length > 0 || Object.keys(segmentPreview.personalisatie.ontbreekt).length > 0 || Object.keys(segmentPreview.personalisatie.twijfel ?? {}).length > 0) && (
+                          <div className={`mb-4 rounded-lg border px-4 py-3 ${segmentPreview.personalisatie.onbekend.length > 0 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className={`h-4 w-4 mt-0.5 flex-shrink-0 ${segmentPreview.personalisatie.onbekend.length > 0 ? 'text-red-600' : 'text-amber-600'}`} />
+                              <div className="text-xs leading-relaxed">
+                                {segmentPreview.personalisatie.onbekend.length > 0 && (
+                                  <p className="text-red-800 font-medium mb-1">
+                                    Deze tekst komt letterlijk in de mail te staan:{' '}
+                                    {segmentPreview.personalisatie.onbekend.map(t => (
+                                      <code key={t} className="bg-white border border-red-200 rounded px-1 mx-0.5">{t}</code>
+                                    ))}
+                                    — herstel dit vóór je verstuurt.
+                                  </p>
+                                )}
+                                {Object.entries(segmentPreview.personalisatie.ontbreekt).filter(([veld]) => veld !== 'voornaam').map(([veld, aantal]) => (
+                                  <p key={veld} className="text-amber-900">
+                                    <strong>{aantal}</strong> van de {segmentPreview.verzendBaar} ontvangers {aantal === 1 ? 'heeft' : 'hebben'} geen <strong>{veld}</strong>.
+                                    {veld === 'bedrijf' && ' Die lezen "uw organisatie".'}
+                                  </p>
+                                ))}
+                                {Object.entries(segmentPreview.personalisatie.twijfel ?? {}).map(([reden, aantal]) => (
+                                  <p key={reden} className="text-amber-900">
+                                    <strong>{aantal}</strong> {aantal === 1 ? 'ontvanger' : 'ontvangers'}: <strong>{TWIJFEL_UITLEG[reden] || reden}</strong>.
+                                    {reden === 'leeg' && ' Die lezen "Beste daar,".'}
+                                    {reden === 'postbusnaam' && ' Die lezen bijvoorbeeld "Beste Reserveringen,".'}
+                                    {reden === 'initiaal' && ' Die lezen bijvoorbeeld "Beste H.,".'}
+                                    {reden === 'hoofdletters' && ' Die lezen bijvoorbeeld "Beste LARS,".'}
+                                  </p>
+                                ))}
+                                {(Object.keys(segmentPreview.personalisatie.ontbreekt).length > 0 || Object.keys(segmentPreview.personalisatie.twijfel ?? {}).length > 0) && (
+                                  <p className="text-amber-700 mt-1">
+                                    Ze staan hieronder oranje gemarkeerd. Verbeter de naam bij het bedrijf in het CRM en haal de verzendlijst opnieuw op, of sluit ze uit voor deze campagne.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {segmentPreview.personalisatie && segmentPreview.personalisatie.tags.length > 0 && segmentPreview.personalisatie.onbekend.length === 0 && Object.keys(segmentPreview.personalisatie.ontbreekt).length === 0 && Object.keys(segmentPreview.personalisatie.twijfel ?? {}).length === 0 && (
+                          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <p className="text-xs text-green-800 leading-relaxed">
+                              Personalisatie is compleet: alle {segmentPreview.verzendBaar} ontvangers hebben een{' '}
+                              {segmentPreview.personalisatie.tags.join(', ')}.
+                            </p>
+                          </div>
+                        )}
                         <div className="mb-4 flex items-center gap-3 text-xs">
                           <div className="px-3 py-1.5 rounded-lg bg-purple-50 border border-purple-100">
                             <span className="text-slate-500">Verzendlijst </span>
@@ -3121,7 +3197,16 @@ export default function ProspectCampagnesTab() {
                             {segmentPreview.contacts.map(c => (
                               <tr key={c.id} className={`border-b border-slate-50 hover:bg-slate-50/50 ${c.excluded ? 'opacity-50' : ''}`}>
                                 <td className="py-2">
-                                  <p className={`font-medium text-xs ${c.excluded ? 'line-through text-slate-400' : 'text-slate-700'}`}>{c.name || c.email}</p>
+                                  <p className={`font-medium text-xs ${c.excluded ? 'line-through text-slate-400' : 'text-slate-700'}`}>
+                                    {c.name || c.email}
+                                    {c.aanhefTwijfel && !c.excluded && (
+                                      <span
+                                        className="ml-1.5 text-[10px] font-normal text-amber-700 bg-amber-50 border border-amber-200 rounded px-1"
+                                        title={`Aanhef wordt: "Beste ${c.voornaam || 'daar'},"`}>
+                                        {TWIJFEL_UITLEG[c.aanhefTwijfel] || c.aanhefTwijfel}
+                                      </span>
+                                    )}
+                                  </p>
                                   {c.name && <p className="text-xs text-slate-400">{c.email}</p>}
                                 </td>
                                 <td className="py-2 text-xs text-slate-600">{c.company || '—'}</td>
