@@ -2109,11 +2109,17 @@ export default function ProspectCampagnesTab() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns', selectedId, 'segment-preview'] });
       const nieuw = r?.nieuw ?? 0;
       const bijgewerkt = (r?.bijgewerkt ?? 0) + (r?.geadopteerd ?? 0);
+      // De twee getallen die verklaren waarom een lijst korter is dan verwacht,
+      // horen in de melding — anders lijkt het een storing.
+      const niet = [
+        r?.bedrijvenZonderContact ? `${r.bedrijvenZonderContact} bedrijven zonder contactpersoon` : '',
+        r?.zonderEmail ? `${r.zonderEmail} zonder e-mailadres` : '',
+      ].filter(Boolean).join(', ');
       toast({
         title: 'Verzendlijst bijgewerkt',
-        description: nieuw || bijgewerkt
-          ? `${nieuw} nieuw, ${bijgewerkt} bijgewerkt${r?.zonderEmail ? `, ${r.zonderEmail} zonder e-mailadres` : ''}.`
-          : 'Alles stond al gelijk met het CRM.',
+        description: (nieuw || bijgewerkt
+          ? `${nieuw} nieuw, ${bijgewerkt} bijgewerkt.`
+          : 'Alles stond al gelijk met het CRM.') + (niet ? ` Niet meegenomen: ${niet}.` : ''),
       });
     },
     onError: (err: any) => toast({
