@@ -3,7 +3,7 @@
 
 import { createHmac, timingSafeEqual, createHash } from 'crypto';
 import { storage } from './storage';
-import { generateEmailHTML, generateEmailPlainText, type ContactData } from './emailGenerator';
+import { generateEmailHTML, generateEmailPlainText, personalizeText, type ContactData } from './emailGenerator';
 import { sendEmail, sendEmailWithResult } from './mail';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -120,7 +120,9 @@ export async function prepareMail(
       contactData.achternaam = contact.achternaam || nameParts.slice(1).join(' ') || '';
       contactData.naam = contact.name || contactName || '';
       contactData.bedrijf = contact.bedrijf || contact.company || contactCompany || '';
-      contactData.functietitel = contact.functietitel || '';
+      // prospect_contacts heeft een kolom `function`, geen `functietitel`.
+      // Hierdoor bleef {{functietitel}} altijd leeg.
+      contactData.functietitel = (contact as any).functietitel || (contact as any).function || '';
       contactData.stad = contact.stad || '';
       contactData.taal = contact.taal || 'nl';
     }
@@ -156,11 +158,13 @@ export async function prepareMail(
   // Generate plain text
   const text = generateEmailPlainText(rawContent, contactData, unsubUrl);
 
-  // Personalize subject
-  const subject = (campaign.subject || '')
-    .replace(/\{\{voornaam\}\}/gi, contactData.voornaam || '')
-    .replace(/\{\{bedrijf\}\}/gi, contactData.bedrijf || '')
-    .replace(/\{\{naam\}\}/gi, contactData.naam || '');
+  // Onderwerpregel: dezelfde vervanging als de body.
+  //
+  // Stond hier eerst apart, met alleen voornaam/bedrijf/naam en zonder
+  // terugval. Gevolg: {{stad}} of {{functietitel}} in een onderwerp bleef
+  // letterlijk staan, en zonder voornaam werd het "Hi ,". Juist in een
+  // onderwerpregel valt dat op — dat is het stuk dat ook ongeopend zichtbaar is.
+  const subject = personalizeText(campaign.subject || '', contactData);
 
   return {
     to: contactEmail,
@@ -252,14 +256,11 @@ export async function sendSingleMail(mailSendId: number, baseUrl: string): Promi
 // {{naam}}, {{bedrijf}}, {{stad}}, {{functietitel}} placeholders. Click-
 // tracking, tracking-pixel en List-Unsubscribe worden net als bij
 // sendSingleMail toegevoegd.
+// Derde kopie van de vervanging, nu ook via personalizeText. Had eigen
+// terugvalwaarden (leeg in plaats van "daar"), waardoor een flow-mail zonder
+// voornaam "Hallo ," werd terwijl een bulkmail "Hallo daar," werd.
 function personalize(s: string, c: ContactData): string {
-  return (s || '')
-    .replace(/\{\{voornaam\}\}/gi, c.voornaam || '')
-    .replace(/\{\{achternaam\}\}/gi, c.achternaam || '')
-    .replace(/\{\{naam\}\}/gi, c.naam || '')
-    .replace(/\{\{bedrijf\}\}/gi, c.bedrijf || c.company || '')
-    .replace(/\{\{stad\}\}/gi, (c as any).stad || '')
-    .replace(/\{\{functietitel\}\}/gi, (c as any).functietitel || '');
+  return personalizeText(s || '', c);
 }
 
 export async function sendSingleFlowMail(
@@ -286,7 +287,7 @@ export async function sendSingleFlowMail(
         contactData.naam = contact.name || '';
         contactData.bedrijf = contact.bedrijf || contact.company || '';
         (contactData as any).stad = contact.stad || '';
-        (contactData as any).functietitel = contact.functietitel || '';
+        (contactData as any).functietitel = contact.functietitel || contact.function || '';
         contactData.taal = contact.taal || 'nl';
       }
     }

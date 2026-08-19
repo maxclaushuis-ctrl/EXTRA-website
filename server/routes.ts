@@ -5699,6 +5699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return {
           id: c.id,
           name: c.name,
+          voornaam: c.voornaam,
           email: c.email,
           company: c.company,
           function: c.function,
@@ -5710,12 +5711,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
           herkomst: r.herkomst,
         };
       });
+
+      // ── Personalisatiecontrole ────────────────────────────────────────────
+      // Welke merge-tags gebruikt deze campagne, en bij hoeveel ontvangers is
+      // het bijbehorende veld leeg? Dat laatste is de vraag die je vlak voor
+      // een verzending stelt: staat er straks bij iemand "Beste daar,".
+      //
+      // De inhoud wordt als ruwe JSON doorzocht. Dat is grof maar afdoende:
+      // de teksten van de blokken staan er letterlijk in, dus een tag wordt
+      // gevonden waar hij ook zit.
+      const { gebruikteTags, onbekendePlaceholders, ontbrekendeVelden, aanhefTwijfel } = await import('./personalisatie');
+      const teDoorzoeken = [
+        campaign.subject || '',
+        typeof campaign.contentA === 'string' ? campaign.contentA : JSON.stringify(campaign.contentA ?? ''),
+        typeof campaign.contentB === 'string' ? campaign.contentB : JSON.stringify(campaign.contentB ?? ''),
+        campaign.htmlContent || '',
+      ].join('\n');
+
+      const tags = gebruikteTags(teDoorzoeken);
+      const ontbreekt: Record<string, number> = {};
+      for (const r of regels) {
+        if (r.uitgesloten) continue;
+        for (const veld of ontbrekendeVelden(tags, r.contact as any)) {
+          ontbreekt[veld] = (ontbreekt[veld] ?? 0) + 1;
+        }
+      }
+
+      // Twijfelgevallen in de aanhef. Alleen relevant als de campagne de
+      // voornaam ook echt gebruikt — anders is het ruis.
+      const twijfel: Record<string, number> = {};
+      if (tags.includes('voornaam')) {
+        for (const item of items) {
+          if (item.excluded) continue;
+          const reden = aanhefTwijfel((item as any).voornaam);
+          if (!reden) continue;
+          (item as any).aanhefTwijfel = reden;
+          twijfel[reden] = (twijfel[reden] ?? 0) + 1;
+        }
+      }
+
       return res.json({
         totaal: items.length,
         verzendBaar: items.filter(i => !i.excluded).length,
         uitgesloten: items.filter(i => i.excluded).length,
         handmatig: items.filter(i => i.herkomst === 'handmatig').length,
         contacts: items,
+        personalisatie: {
+          tags,
+          onbekend: onbekendePlaceholders(teDoorzoeken),
+          ontbreekt,
+          twijfel,
+        },
       });
     } catch (err) {
       console.error("[ProspectCampaign] Segment-preview fout:", err);
