@@ -177,7 +177,7 @@ export default function HowWeWork() {
                   <Link href="/en/hospitality-staff-amsterdam" className="group inline-flex items-center gap-2.5 bg-white text-purple-900 font-bold text-base sm:text-lg px-7 py-4 rounded-full transition-all duration-300 shadow-xl shadow-white/10 hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5">
                     Request staff <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </Link>
-                  <Link href="/aanmelden" className="inline-flex items-center gap-2.5 border-2 border-white/25 text-white font-bold text-base sm:text-lg px-7 py-4 rounded-full hover:bg-white/10 hover:-translate-y-0.5 transition-all">
+                  <Link href="/aanmelden?lang=en" className="inline-flex items-center gap-2.5 border-2 border-white/25 text-white font-bold text-base sm:text-lg px-7 py-4 rounded-full hover:bg-white/10 hover:-translate-y-0.5 transition-all">
                     Apply now
                   </Link>
                 </div>
@@ -458,7 +458,7 @@ export default function HowWeWork() {
               ))}
             </div>
             <div className="mt-12 text-center">
-              <Link href="/aanmelden" className="inline-flex items-center gap-2.5 bg-purple-600 text-white font-bold text-lg px-8 py-4 rounded-full hover:bg-purple-700 hover:-translate-y-0.5 transition-all shadow-xl shadow-purple-200">
+              <Link href="/aanmelden?lang=en" className="inline-flex items-center gap-2.5 bg-purple-600 text-white font-bold text-lg px-8 py-4 rounded-full hover:bg-purple-700 hover:-translate-y-0.5 transition-all shadow-xl shadow-purple-200">
                 Apply directly <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
@@ -497,7 +497,7 @@ export default function HowWeWork() {
               <Link href="/en/hospitality-staff-amsterdam" className="bg-white text-purple-900 font-bold text-lg px-10 py-5 rounded-full hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-1 transition-all">
                 Request staff
               </Link>
-              <Link href="/aanmelden" className="bg-transparent border-2 border-white/30 text-white font-bold text-lg px-10 py-5 rounded-full hover:bg-white/10 hover:-translate-y-1 transition-all">
+              <Link href="/aanmelden?lang=en" className="bg-transparent border-2 border-white/30 text-white font-bold text-lg px-10 py-5 rounded-full hover:bg-white/10 hover:-translate-y-1 transition-all">
                 Apply now
               </Link>
             </div>

@@ -111,9 +111,9 @@ for (const file of files) {
   for (const m of src.matchAll(LITERAL_HREF)) {
     const rawHref = m[1];
     if (SKIP_PREFIXES.some((p) => rawHref.startsWith(p)) || rawHref === "") continue;
-    // Een #fragment áchter een pad (bijv. "/ik-zoek-extra-werk#functies") hoort
-    // niet bij de route-lookup — alleen het pad ervoor wordt gecontroleerd.
-    const href = rawHref.split("#")[0];
+    // Een #fragment of ?query áchter een pad (bijv. "/aanmelden?lang=en")
+    // hoort niet bij de route-lookup — alleen het pad ervoor telt.
+    const href = rawHref.split(/[#?]/)[0];
     if (href === "") continue;
     checked++;
     if (!isKnownRoute(href) && !resolvesToKnownRoute(href)) {
@@ -126,7 +126,7 @@ for (const file of files) {
   for (const m of src.matchAll(OBJECT_HREF)) {
     const rawHref = m[1];
     if (SKIP_PREFIXES.some((p) => rawHref.startsWith(p)) || rawHref === "") continue;
-    const href = rawHref.split("#")[0];
+    const href = rawHref.split(/[#?]/)[0];
     if (href === "") continue;
     checked++;
     if (!isKnownRoute(href) && !resolvesToKnownRoute(href)) {
@@ -139,7 +139,7 @@ for (const file of files) {
   for (const m of src.matchAll(TEMPLATE_HREF_STATIC)) {
     const rawHref = m[1];
     if (SKIP_PREFIXES.some((p) => rawHref.startsWith(p)) || rawHref === "") continue;
-    const href = rawHref.split("#")[0];
+    const href = rawHref.split(/[#?]/)[0];
     if (href === "") continue;
     checked++;
     if (!isKnownRoute(href) && !resolvesToKnownRoute(href)) {

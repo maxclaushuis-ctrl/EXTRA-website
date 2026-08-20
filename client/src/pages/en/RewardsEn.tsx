@@ -195,7 +195,7 @@ export default function RewardsEn() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
-              href="/aanmelden"
+              href="/aanmelden?lang=en"
               className="group bg-white text-purple-900 font-bold px-7 py-3.5 rounded-full hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
             >
               Start earning <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -492,11 +492,11 @@ export default function RewardsEn() {
             </h2>
             <p className="text-lg sm:text-xl text-purple-100/80 mb-10 max-w-2xl mx-auto">
               Apply today, work your first shift and start building your points balance.
-              Werken bij EXTRA loont letterlijk.
+              Working at EXTRA literally pays off.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="/aanmelden"
+                href="/aanmelden?lang=en"
                 className="w-full sm:w-auto bg-white text-purple-900 font-black px-10 py-4 rounded-full text-lg shadow-xl hover:shadow-white/20 transition-all hover:-translate-y-1"
               >
                 Apply now

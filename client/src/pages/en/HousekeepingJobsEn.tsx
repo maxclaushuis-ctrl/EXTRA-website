@@ -85,7 +85,7 @@ const roles = [
     desc: "Keep hotel rooms immaculately clean. You create the first impression guests have when they arrive.",
     bullets: ["Day shifts at top hotels", "Structure and precision", "Fixed pool per hotel"],
     color: "from-blue-600 to-indigo-700",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Hotel Cleaning",
@@ -94,7 +94,7 @@ const roles = [
     desc: "General cleaning in hotel environments. From guest rooms to communal areas and corridors.",
     bullets: ["Varied tasks", "International hotel chains", "Well-structured workday"],
     color: "from-teal-500 to-cyan-600",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Public Area Cleaning",
@@ -103,7 +103,7 @@ const roles = [
     desc: "Cleaning public spaces like the lobby, lifts, corridors and hotel restaurant. Always representing the best.",
     bullets: ["Morning and evening shifts", "High pace and visible results", "Work independently"],
     color: "from-violet-500 to-purple-700",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Linen Service",
@@ -112,7 +112,7 @@ const roles = [
     desc: "Managing and caring for hotel linen. From sorting and washing to distributing on the floors.",
     bullets: ["Organised work pace", "Backstage in top hotels", "Teamwork at the core"],
     color: "from-emerald-500 to-teal-600",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
 ];
 
@@ -219,7 +219,7 @@ export default function HousekeepingJobsEn() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+              <a href="/aanmelden?lang=en" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 Apply now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
               <a href="#roles" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
@@ -482,7 +482,7 @@ export default function HousekeepingJobsEn() {
           </div>
           <RevealSection delay={300}>
             <div className="flex justify-center mt-10">
-              <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+              <a href="/aanmelden?lang=en" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
                 Sign up <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -595,7 +595,7 @@ export default function HousekeepingJobsEn() {
             </p>
             <p className="text-purple-200 text-sm mt-0.5">Want to work as a room attendant or hotel cleaning staff at beautiful hotels in Amsterdam? Sign up with EXTRA and start housekeeping shifts quickly.</p>
           </div>
-          <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
+          <a href="/aanmelden?lang=en" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start your application <ArrowRight className="w-4 h-4" />
           </a>
         </div>
@@ -642,7 +642,7 @@ export default function HousekeepingJobsEn() {
               { label: "Front office vacancies", href: "/en/front-office-jobs" },
               { label: "EXTRAATje rewards", href: "/en/rewards" },
               { label: "How we work", href: "/en/how-we-work" },
-              { label: "Apply to EXTRA", href: "/aanmelden" },
+              { label: "Apply to EXTRA", href: "/aanmelden?lang=en" },
             ].map((link, i) => (
               <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
                 {link.label}

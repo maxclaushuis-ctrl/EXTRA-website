@@ -414,7 +414,7 @@ export default function HotelStaffingAmsterdam() {
           <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
             {getReviewsByCategory("hotels").map((review, i) => (
               <RevealSection key={review.id} delay={i * 100}>
-                <ClientReviewCard review={review} variant="light" />
+                <ClientReviewCard review={review} variant="light" lang="en" />
               </RevealSection>
             ))}
           </div>

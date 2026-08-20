@@ -85,7 +85,7 @@ const roles = [
     desc: "Front office vacancies in Amsterdam for guest-oriented staff. First point of contact for hotel guests, from check-in to a perfect welcome.",
     bullets: ["Front office vacancies Amsterdam", "Warm and professional", "International work environment"],
     color: "from-indigo-500 to-blue-700",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Hotel receptionist",
@@ -94,7 +94,7 @@ const roles = [
     desc: "Receptionist vacancies at five-star hotels in Amsterdam. Handle reservations and guide guests on arrival for a seamless hotel experience.",
     bullets: ["Hotel receptionist vacancies", "Front-desk experience", "Five-star hotel chains"],
     color: "from-purple-600 to-violet-700",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Guest service agent",
@@ -103,7 +103,7 @@ const roles = [
     desc: "Front office work in a guest service role. Supporting reception and the guest experience on a flexible basis at hotels and hospitality venues.",
     bullets: ["Flexible front office shifts", "Guest-focused work", "Hotels and hospitality venues"],
     color: "from-teal-500 to-cyan-600",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Night receptionist",
@@ -112,7 +112,7 @@ const roles = [
     desc: "Hotel receptionist in the night shift in Amsterdam. Calm, oversight and responsibility in a unique and independent role.",
     bullets: ["Hotel receptionist Amsterdam", "Independent work environment", "Build a fixed pool"],
     color: "from-slate-600 to-gray-700",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
 ];
 
@@ -219,7 +219,7 @@ export default function FrontOfficeJobsEn() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+              <a href="/aanmelden?lang=en" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 Apply now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
               <a href="#roles" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
@@ -449,7 +449,7 @@ export default function FrontOfficeJobsEn() {
           </div>
           <RevealSection delay={300}>
             <div className="flex justify-center mt-10">
-              <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+              <a href="/aanmelden?lang=en" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
                 Sign up <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -557,7 +557,7 @@ export default function FrontOfficeJobsEn() {
             </p>
             <p className="text-purple-200 text-sm mt-0.5">Want to work as a hotel receptionist or front office agent in Amsterdam? Sign up with EXTRA and start quickly with shifts at top hotels.</p>
           </div>
-          <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
+          <a href="/aanmelden?lang=en" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start your application <ArrowRight className="w-4 h-4" />
           </a>
         </div>
@@ -605,7 +605,7 @@ export default function FrontOfficeJobsEn() {
               { label: "Housekeeping jobs", href: "/en/housekeeping-jobs" },
               { label: "Chef vacancies", href: "/en/chef-jobs" },
               { label: "How does same-day pay work?", href: "/en/how-we-work" },
-              { label: "Apply to EXTRA", href: "/aanmelden" },
+              { label: "Apply to EXTRA", href: "/aanmelden?lang=en" },
             ].map((link, i) => (
               <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
                 {link.label}

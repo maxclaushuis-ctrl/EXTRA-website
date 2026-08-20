@@ -86,7 +86,7 @@ const roles = [
     desc: "Serving in restaurants, hotel dining rooms and at corporate dinners. You are the face of the evening.",
     bullets: ["Day and evening shifts", "Hotels, restaurants and events", "Professional brigades"],
     color: "from-purple-600 to-violet-700",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Bar",
@@ -95,7 +95,7 @@ const roles = [
     desc: "Pour beers, mix cocktails or make coffee at top venues. From a local bar to a rooftop terrace.",
     bullets: ["Creative and varied work", "Top hospitality venues", "All levels welcome"],
     color: "from-amber-500 to-orange-600",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Events & Catering",
@@ -104,7 +104,7 @@ const roles = [
     desc: "Work at gala dinners, festivals and corporate events. Never the same, always worth it.",
     bullets: ["Unique venues and atmosphere", "Day and evening available", "Small to large scale"],
     color: "from-blue-600 to-indigo-700",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
   {
     title: "Banqueting",
@@ -113,7 +113,7 @@ const roles = [
     desc: "Setting up, serving and clearing at hotel events. Structure, teamwork and precision.",
     bullets: ["Five-star hotel groups", "Team-oriented work", "Good guidance and support"],
     color: "from-emerald-500 to-teal-600",
-    href: "/aanmelden",
+    href: "/aanmelden?lang=en",
   },
 ];
 
@@ -219,7 +219,7 @@ export default function HospitalityWorkEn() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+              <a href="/aanmelden?lang=en" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 Apply now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
               <a href="#roles" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
@@ -482,7 +482,7 @@ export default function HospitalityWorkEn() {
           </div>
           <RevealSection delay={300}>
             <div className="flex justify-center mt-10">
-              <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+              <a href="/aanmelden?lang=en" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
                 Sign up <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -595,7 +595,7 @@ export default function HospitalityWorkEn() {
             </p>
             <p className="text-purple-200 text-sm mt-0.5">Want to work flexibly in hospitality and decide for yourself when you work? Sign up with EXTRA and start quickly with shifts at hotels, restaurants and events.</p>
           </div>
-          <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
+          <a href="/aanmelden?lang=en" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start your application <ArrowRight className="w-4 h-4" />
           </a>
         </div>
@@ -643,7 +643,7 @@ export default function HospitalityWorkEn() {
               { label: "Front office vacancies", href: "/en/front-office-jobs" },
               { label: "EXTRAATje rewards", href: "/en/rewards" },
               { label: "How we work", href: "/en/how-we-work" },
-              { label: "Apply to EXTRA", href: "/aanmelden" },
+              { label: "Apply to EXTRA", href: "/aanmelden?lang=en" },
             ].map((link, i) => (
               <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
                 {link.label}

@@ -209,7 +209,10 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
       ];
 
   const ctaLabel = isEnglish ? "Request staff" : "Personeel aanvragen";
-  const ctaHref = "/personeelsaanvraag";
+  // Het aanvraagformulier bestaat alleen in het Nederlands. Een Engelstalige
+  // opdrachtgever die daar strandt is erger dan eentje die het korte Engelse
+  // contactformulier invult — dus wijst de Engelse CTA naar /en/contact.
+  const ctaHref = isEnglish ? "/en/contact" : "/personeelsaanvraag";
 
   return (
     <nav
@@ -366,7 +369,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
               isDark ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/15"
             }`}
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? "Menu sluiten" : "Menu openen"}
+            aria-label={mobileOpen ? (isEnglish ? "Close menu" : "Menu sluiten") : (isEnglish ? "Open menu" : "Menu openen")}
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -393,7 +396,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                   <button
                     onClick={() => setActiveDropdown(activeDropdown === group.key ? null : group.key)}
                     className="p-2 text-gray-500 hover:text-purple-600"
-                    aria-label="Submenu openen"
+                    aria-label={isEnglish ? "Open submenu" : "Submenu openen"}
                   >
                     <ChevronDown
                       className={`w-4 h-4 transition-transform duration-200 ${

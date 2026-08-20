@@ -125,7 +125,7 @@ export default function ContactEn() {
                   <Link href="/personeelsaanvraag">I need hospitality staff</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="border-blue-500 text-blue-400 hover:bg-blue-500/10 rounded-full px-8">
-                  <Link href="/aanmelden">I am looking for work</Link>
+                  <Link href="/aanmelden?lang=en">I am looking for work</Link>
                 </Button>
               </div>
             </div>
