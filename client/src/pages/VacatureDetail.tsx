@@ -1,7 +1,9 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { Link, useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import PublicNav from "@/components/PublicNav";
+// Dezelfde selectie als de server gebruikt voor de no-JavaScript-versie.
+import { verwanteItems } from "@shared/verwanteLinks";
 import PublicFooter from "@/components/PublicFooter";
 import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 import {
@@ -55,6 +57,26 @@ export default function VacatureDetail() {
     staleTime: 60_000,
     retry: false,
   });
+
+  // Andere vacatures, voor het blok onderaan.
+  //
+  // Dezelfde selectie als de server onder de pagina zet voor crawlers zonder
+  // JavaScript (shared/verwanteLinks.ts). Die twee moeten hetzelfde tonen:
+  // een bezoeker hoort niet minder te zien dan een zoekmachine.
+  const { data: alleVacatures } = useQuery<any>({
+    queryKey: ['/api/vacatures'],
+    enabled: !!slug,
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  const verwant = useMemo(() => {
+    const lijst = Array.isArray(alleVacatures?.posts) ? alleVacatures.posts : [];
+    return verwanteItems(
+      lijst.map((v: any) => ({ slug: v.slug, title: v.title, groep: v.location ?? null })),
+      slug,
+    );
+  }, [alleVacatures, slug]);
 
   // FAQ uit het CMS: JSON-string [{"q":"...","a":"..."}]
   let faqs: FaqItem[] = [];
@@ -353,6 +375,34 @@ export default function VacatureDetail() {
             </div>
           </div>
         </section>
+
+        {/* Andere vacatures.
+            Lost de Ahrefs-melding "only one dofollow incoming internal link"
+            op, maar staat er vooral omdat iemand die deze vacature net niet
+            past anders doodloopt op deze pagina. */}
+        {verwant.length > 0 && (
+          <section className="py-14 bg-white border-t border-gray-100">
+            <div className="max-w-4xl mx-auto px-5">
+              <h2 className="text-2xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Andere vacatures
+              </h2>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {verwant.map(v => (
+                  <li key={v.slug}>
+                    <Link
+                      href={`/vacatures/${v.slug}`}
+                      className="block rounded-xl border border-gray-200 px-4 py-3 transition-colors hover:border-purple-300 hover:bg-purple-50/50"
+                      data-testid={`link-verwant-${v.slug}`}
+                    >
+                      <span className="block font-semibold text-gray-900 text-sm">{v.title}</span>
+                      {v.groep && <span className="block text-xs text-gray-500 mt-0.5">{v.groep}</span>}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
 
         {/* Onderste CTA */}
         <section className="relative py-20 bg-gradient-to-r from-purple-600 to-violet-700 overflow-hidden">

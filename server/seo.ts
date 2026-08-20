@@ -26,6 +26,7 @@ import {
 } from "@shared/routeMeta";
 import { storage } from "./storage";
 import { blogFragment, vacatureFragment, lijstFragment } from "./contentFragment";
+import { verwanteItems, verwantFragment } from "@shared/verwanteLinks";
 import { TtlCache, metCache } from "./paginaCache";
 import type { BlogPost, VacancyPost } from "@shared/schema";
 
@@ -296,6 +297,34 @@ async function overzichtLijst(pad: string): Promise<string | null> {
   return null;
 }
 
+/**
+ * Onderlinge links onder een detailpagina.
+ *
+ * De Ahrefs-crawl meldde negen pagina's met precies één inkomende interne link:
+ * de link vanaf het overzicht. Een doodlopende tak dus. Deze functie hangt er
+ * een blokje "Andere vacatures" / "Meer artikelen" onder, gekozen via de ring
+ * uit shared/verwanteLinks.ts — zo krijgt elke pagina er evenveel, en niet één
+ * groepje alles.
+ *
+ * Faalt zacht, net als overzichtLijst: gaat de database plat, dan valt alleen
+ * het blokje weg en wordt de pagina gewoon geserveerd.
+ */
+async function verwanteLijst(soort: "blog" | "vacature", slug: string): Promise<string> {
+  try {
+    if (soort === "vacature") {
+      const { posts } = await storage.getVacancyPosts({ status: "published", limit: 200 });
+      const items = posts.map(v => ({ slug: v.slug, title: v.title, groep: (v as any).location ?? null }));
+      return verwantFragment("/vacatures", "Andere vacatures", verwanteItems(items, slug));
+    }
+    const { posts } = await storage.getBlogPosts({ status: "published", limit: 200 });
+    const items = posts.map(p => ({ slug: p.slug, title: p.title, groep: (p as any).category ?? null }));
+    return verwantFragment("/blog", "Meer artikelen", verwanteItems(items, slug));
+  } catch (err) {
+    console.error(`[seo] verwante links voor ${soort}/${slug} mislukt:`, err);
+    return "";
+  }
+}
+
 export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
   const shellPath = path.resolve(distPublicDir, "index.html");
   let shellCache: string | null = null;
@@ -376,7 +405,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
               // altijd — zie server/contentFragment.ts), bouw hem dan uit de
               // databasevelden. Zonder deze terugval serveert elk artikel een
               // lege body aan crawlers die geen JavaScript uitvoeren.
-              fragmentFor(normalized) ?? blogFragment(post as any)
+              `${fragmentFor(normalized) ?? blogFragment(post as any)}${await verwanteLijst("blog", post.slug)}`
             );
           }
         } else if (dyn.type === "vacature") {
@@ -404,7 +433,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
                   jobPostingJsonLd(vacancy, canonicalUrl),
                 ].filter((v): v is string => !!v),
               },
-              fragmentFor(normalized) ?? vacatureFragment(vacancy as any)
+              `${fragmentFor(normalized) ?? vacatureFragment(vacancy as any)}${await verwanteLijst("vacature", vacancy.slug)}`
             );
           }
         }
