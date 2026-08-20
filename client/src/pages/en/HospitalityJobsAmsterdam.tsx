@@ -83,7 +83,7 @@ export default function HospitalityJobsAmsterdam() {
               Work at Amsterdam's best hotels, event venues and restaurants. On a proper contract, with same-day pay and real rewards for every shift you complete.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/aanmelden" className="inline-flex items-center gap-2 bg-white text-purple-900 font-bold px-8 py-4 rounded-full hover:shadow-xl hover:shadow-white/20 transition-all hover:-translate-y-1 text-base">
+              <Link href="/aanmelden?lang=en" className="inline-flex items-center gap-2 bg-white text-purple-900 font-bold px-8 py-4 rounded-full hover:shadow-xl hover:shadow-white/20 transition-all hover:-translate-y-1 text-base">
                 Apply now <ArrowRight className="w-5 h-5" />
               </Link>
               <Link href="/en/rewards" className="inline-flex items-center gap-2 border-2 border-white/40 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all">
@@ -171,7 +171,7 @@ export default function HospitalityJobsAmsterdam() {
             ))}
           </div>
           <RevealSection className="mt-14 text-center">
-            <Link href="/aanmelden" className="inline-flex items-center gap-2 bg-white text-purple-900 font-bold px-10 py-5 rounded-full hover:shadow-xl hover:shadow-white/20 transition-all hover:-translate-y-1 text-base">
+            <Link href="/aanmelden?lang=en" className="inline-flex items-center gap-2 bg-white text-purple-900 font-bold px-10 py-5 rounded-full hover:shadow-xl hover:shadow-white/20 transition-all hover:-translate-y-1 text-base">
               Apply now <ArrowRight className="w-5 h-5" />
             </Link>
           </RevealSection>

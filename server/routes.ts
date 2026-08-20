@@ -13,7 +13,7 @@ import { storage } from "./storage";
 // veranderen. Zie server/crmSync.ts.
 import { syncOpAchtergrond, synchroniseerCrmNaarMail, blokkeerVerwijderdeContacten } from "./crmSync";
 import { meldAan } from "./indexnow";
-import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
+import { ROUTE_META, SITE_ORIGIN, HREFLANG_GROUPS } from "@shared/routeMeta";
 import { moveCardToPhase, markNotReached } from "./salesflow";
 import { geocodeNlAddress } from "./geocode";
 import { verstuurWachtwoordInstelLink, stelWachtwoordIn, wachtwoordSterkGenoeg } from "./authReset";
@@ -9706,11 +9706,27 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
       const staticPages = ROUTE_META.filter(m => !m.noindex && !m.canonical)
         .map(m => ({ url: m.path, priority: m.priority || '0.5', changefreq: m.changefreq || 'monthly' }));
       const today = new Date().toISOString().split('T')[0];
+      // Taalparen als xhtml:link in de sitemap. De HTML-pagina's dragen deze
+      // hreflang-tags al in hun <head>; ze óók in de sitemap zetten is de
+      // tweede aanbevolen route van Google en helpt juist de Engelse pagina's,
+      // die minder inkomende links hebben, sneller aan hun koppeling met de
+      // Nederlandse tegenhanger. Zelfde bron als de <head>-tags
+      // (HREFLANG_GROUPS), dus ze kunnen niet uit elkaar lopen.
+      const absoluut = (pad: string) => `${baseUrl}${pad === '/' ? '/' : pad}`;
+      const alternatesVoor = (pad: string): string => {
+        const paar = HREFLANG_GROUPS.find(g => g.nl === pad || g.en === pad);
+        if (!paar) return '';
+        return [
+          `    <xhtml:link rel="alternate" hreflang="nl" href="${absoluut(paar.nl)}"/>`,
+          `    <xhtml:link rel="alternate" hreflang="en" href="${absoluut(paar.en)}"/>`,
+          `    <xhtml:link rel="alternate" hreflang="x-default" href="${absoluut(paar.nl)}"/>`,
+        ].join('\n') + '\n';
+      };
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${staticPages.map(p => `  <url>
     <loc>${baseUrl}${p.url === '/' ? '' : p.url}${p.url === '/' ? '/' : ''}</loc>
-    <lastmod>${today}</lastmod>
+${alternatesVoor(p.url)}    <lastmod>${today}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`).join('\n')}

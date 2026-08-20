@@ -564,7 +564,15 @@ export default function Aanmelden() {
     try { sessionStorage.removeItem("extra_ref"); } catch { /* niet beschikbaar */ }
   }
 
-  const lang = flow === "NL" ? "NL" : "EN";
+  // De taal volgde alleen uit de gekozen nationaliteit — maar die kies je pas
+  // ná stap 1, dus het hele eerste scherm was altijd Nederlands. Elke knop op
+  // de Engelse site komt hier binnen; die geven nu ?lang=en mee en dan begint
+  // het formulier in het Engels. Eenmalig gelezen, want de URL kan tijdens de
+  // wizard wijzigen terwijl de keuze moet blijven staan.
+  const [taalOverride] = useState<string | null>(() => {
+    try { return new URLSearchParams(window.location.search).get("lang"); } catch { return null; }
+  });
+  const lang = taalOverride === "en" ? "EN" : flow === "NL" ? "NL" : "EN";
   const t = COPY[lang];
 
   const stepNumber = step === "basics" ? 1 : step === "distance_check" ? 1 : (step === "skills" || step === "twv") ? 2 : 3;

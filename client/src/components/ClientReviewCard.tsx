@@ -18,12 +18,20 @@ const LOGOS: Record<string, string> = {
 interface ClientReviewCardProps {
   review: ClientReview;
   variant?: "light" | "dark";
+  /** 'en' op de Engelse pagina's: Engelse vertaling van de review + Engelse knoptekst. */
+  lang?: "nl" | "en";
 }
 
-export function ClientReviewCard({ review, variant = "light" }: ClientReviewCardProps) {
+export function ClientReviewCard({ review, variant = "light", lang = "nl" }: ClientReviewCardProps) {
   const [expanded, setExpanded] = useState(false);
   const logo = review.logoKey ? LOGOS[review.logoKey] : null;
   const isDark = variant === "dark";
+  const en = lang === "en";
+  // Valt terug op het origineel als er geen vertaling is — de Marriott-review
+  // is zelf al Engels en heeft er geen nodig.
+  const quote = en && review.quoteEn ? review.quoteEn : review.quote;
+  const role = en && review.roleEn ? review.roleEn : review.role;
+  const companyType = en && review.companyTypeEn ? review.companyTypeEn : review.companyType;
 
   return (
     <div
@@ -53,7 +61,7 @@ export function ClientReviewCard({ review, variant = "light" }: ClientReviewCard
             isDark ? "text-white/75 italic" : "text-gray-600 italic"
           }`}
         >
-          "{review.quote}"
+          "{quote}"
         </p>
         <button
           onClick={() => setExpanded((v) => !v)}
@@ -61,7 +69,7 @@ export function ClientReviewCard({ review, variant = "light" }: ClientReviewCard
             isDark ? "text-purple-300 hover:text-purple-100" : "text-purple-600 hover:text-purple-800"
           }`}
         >
-          {expanded ? "Lees minder" : "Lees meer"}
+          {expanded ? (en ? "Read less" : "Lees minder") : (en ? "Read more" : "Lees meer")}
         </button>
       </div>
 
@@ -75,14 +83,14 @@ export function ClientReviewCard({ review, variant = "light" }: ClientReviewCard
           {review.author}
         </p>
         <p className={`text-xs mt-0.5 ${isDark ? "text-white/50" : "text-gray-400"}`}>
-          {review.role}
+          {role}
         </p>
         <div className={`flex items-center gap-1.5 mt-2 ${isDark ? "text-purple-300" : "text-purple-600"}`}>
           <Building2 className="w-3 h-3 flex-shrink-0" />
           <p className="text-xs font-semibold">{review.company}</p>
         </div>
         <p className={`text-[10px] mt-0.5 pl-4 ${isDark ? "text-white/35" : "text-gray-300"}`}>
-          {review.companyType}
+          {companyType}
         </p>
       </div>
     </div>

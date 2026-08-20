@@ -111,7 +111,7 @@ const microPrestaties = [
 
 const challenges = [
   { icon: "🏆", title: "Shift Spinner", desc: "Complete 10 shifts in one month and rise to the next level", punten: "+250 pts" },
-  { icon: "⚡", title: "Last-minute Hero", desc: "Respond 3x within 2 hours to a call", punten: "+180 pts" },
+  { icon: "⚡", title: "Last-minute Hero", desc: "Respond to a shift call within 2 hours, three times", punten: "+180 pts" },
   { icon: "⏱️", title: "Punctuality Specialist", desc: "Arrive exactly on time for 5 shifts in a row", punten: "+150 pts" },
   { icon: "🌟", title: "Client Favorite", desc: "Receive a 9+ rating from clients", punten: "+200 pts" },
   { icon: "🤝", title: "Talent Scout", desc: "Refer a new employee and earn extra", punten: "+300 pts" },
@@ -142,7 +142,7 @@ export default function RewardsEn() {
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "EXTRAATJE is the unique points system from EXTRA where employees automatically earn points for every worked shift, challenge and micro-achievement.");
+    setMeta("description", "EXTRAATJE is the unique points system from EXTRA where employees automatically earn points for every shift worked, challenge and micro-achievement.");
     setMeta("og:title", "EXTRAATJE Rewards | Points & Benefits", true);
     setMeta("og:description", "Earn points, complete challenges and exchange them for rewards, discounts and deals. Working at EXTRA literally pays off.", true);
     setMeta("og:type", "website", true);
@@ -153,7 +153,7 @@ export default function RewardsEn() {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        { "@type": "Question", "name": "How does the EXTRAATJE points system work?", "acceptedAnswer": { "@type": "Answer", "text": "Employees automatically earn points for every worked shift, arriving on time, high ratings and completing challenges." } },
+        { "@type": "Question", "name": "How does the EXTRAATJE points system work?", "acceptedAnswer": { "@type": "Answer", "text": "Employees automatically earn points for every shift worked, arriving on time, high ratings and completing challenges." } },
         { "@type": "Question", "name": "What are challenges at EXTRA?", "acceptedAnswer": { "@type": "Answer", "text": "Challenges are optional goals that employees can achieve weekly or monthly. They provide bonus points." } },
         { "@type": "Question", "name": "What can I do with my points?", "acceptedAnswer": { "@type": "Answer", "text": "Points can be exchanged for physical rewards, exclusive discount codes from partners, or experiences." } },
       ]
@@ -190,12 +190,12 @@ export default function RewardsEn() {
             {" "}that rewards your work
           </h1>
           <p className="text-lg sm:text-xl text-purple-100/90 max-w-2xl mx-auto mb-8 leading-relaxed font-medium">
-            Employees at EXTRA automatically earn points for every worked shift,
+            Employees at EXTRA automatically earn points for every shift worked,
             completed challenge and micro-achievement. You exchange those points for real rewards.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
-              href="/aanmelden"
+              href="/aanmelden?lang=en"
               className="group bg-white text-purple-900 font-bold px-7 py-3.5 rounded-full hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
             >
               Start earning <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -240,7 +240,7 @@ export default function RewardsEn() {
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-5 text-base sm:text-lg">
                   As soon as you work a shift at EXTRA, your points balance starts to grow.
-                  The system automatically records your effort, performance and behavior, without you having to do anything.
+                  The system automatically tracks your commitment, performance and conduct, without you having to do anything.
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-8 text-base sm:text-lg">
                   The more you work, the higher your score. From <strong className="text-gray-900">BRONZE</strong> to <strong className="text-gray-900">SILVER</strong> to <strong className="text-gray-900">GOLD</strong> to <strong className="text-gray-900">DIAMOND</strong>.
@@ -465,7 +465,7 @@ export default function RewardsEn() {
         faqs={[
           {
             q: "How do I earn points exactly?",
-            a: "You earn points automatically for every worked shift. In addition, there are micro-achievements (like arriving on time, receiving high ratings) and specific challenges that provide extra points."
+            a: "You earn points automatically for every shift worked. In addition, there are micro-achievements (like arriving on time, receiving high ratings) and specific challenges that provide extra points."
           },
           {
             q: "Do my points expire?",
@@ -492,11 +492,11 @@ export default function RewardsEn() {
             </h2>
             <p className="text-lg sm:text-xl text-purple-100/80 mb-10 max-w-2xl mx-auto">
               Apply today, work your first shift and start building your points balance.
-              Werken bij EXTRA loont letterlijk.
+              Working at EXTRA literally pays off.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="/aanmelden"
+                href="/aanmelden?lang=en"
                 className="w-full sm:w-auto bg-white text-purple-900 font-black px-10 py-4 rounded-full text-lg shadow-xl hover:shadow-white/20 transition-all hover:-translate-y-1"
               >
                 Apply now

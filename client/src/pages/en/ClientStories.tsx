@@ -88,10 +88,17 @@ export default function ClientStories() {
                 <div className={`grid gap-5 sm:gap-6 ${reviews.length === 1 ? "max-w-xl mx-auto" : reviews.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-3"}`}>
                   {reviews.map((review, i) => (
                     <RevealSection key={review.id} delay={i * 100}>
-                      <ClientReviewCard review={review} variant="light" />
+                      <ClientReviewCard review={review} variant="light" lang="en" />
                     </RevealSection>
                   ))}
                 </div>
+                {/* Eerlijkheid boven gladheid: de meeste reviews zijn in het
+                    Nederlands gegeven en hier vertaald. Dat mag de lezer weten. */}
+                {reviews.some((r) => r.quoteEn) && (
+                  <p className="text-center text-xs text-gray-400 mt-6">
+                    Some testimonials have been translated from Dutch.
+                  </p>
+                )}
               </div>
             </section>
           );

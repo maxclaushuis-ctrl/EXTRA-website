@@ -125,7 +125,7 @@ const werkgeverSteps = [
 ];
 
 const medewerkerSteps = [
-  { icon: UserCheck, step: "1", title: "Apply at EXTRA", desc: "Sign up using our application form.", color: "from-purple-500 to-purple-700" },
+  { icon: UserCheck, step: "1", title: "Apply at EXTRA", desc: "Apply through our online application form.", color: "from-purple-500 to-purple-700" },
   { icon: MessageCircle, step: "2", title: "Introduction", desc: "We discuss your experience and preferences.", color: "from-violet-500 to-purple-600" },
   { icon: Briefcase, step: "3", title: "Pick up shifts", desc: "Work at hotels, events, and hospitality venues.", color: "from-indigo-500 to-purple-600" },
   { icon: Gift, step: "4", title: "Earn EXTRAATjes", desc: "You receive a rating after every shift and can earn points.", color: "from-emerald-500 to-teal-600" },
@@ -171,13 +171,13 @@ export default function HowWeWork() {
                   works
                 </h1>
                 <p className="text-lg sm:text-xl text-purple-100/70 mb-10 leading-relaxed max-w-lg">
-                  The hospitality staffing agency in Amsterdam for hotels, events, and hospitality. From initial request to a fixed pool of favorites.
+                  The hospitality staffing agency in Amsterdam for hotels, events, and hospitality. From your first request to a dedicated pool of favourites.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Link href="/en/hospitality-staff-amsterdam" className="group inline-flex items-center gap-2.5 bg-white text-purple-900 font-bold text-base sm:text-lg px-7 py-4 rounded-full transition-all duration-300 shadow-xl shadow-white/10 hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5">
                     Request staff <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </Link>
-                  <Link href="/aanmelden" className="inline-flex items-center gap-2.5 border-2 border-white/25 text-white font-bold text-base sm:text-lg px-7 py-4 rounded-full hover:bg-white/10 hover:-translate-y-0.5 transition-all">
+                  <Link href="/aanmelden?lang=en" className="inline-flex items-center gap-2.5 border-2 border-white/25 text-white font-bold text-base sm:text-lg px-7 py-4 rounded-full hover:bg-white/10 hover:-translate-y-0.5 transition-all">
                     Apply now
                   </Link>
                 </div>
@@ -200,7 +200,7 @@ export default function HowWeWork() {
                 { icon: Shield, text: "NEN 4400-1 certified" },
                 { icon: Users, text: "Always employed" },
                 { icon: Clock, text: "Response within 1 hour" },
-                { icon: Star, text: "Fixed pool of favorites" },
+                { icon: Star, text: "A dedicated pool of favourites" },
               ].map(({ icon: Icon, text }, i) => (
                 <div key={i} className="flex items-center gap-2.5 text-sm text-gray-600">
                   <Icon className="w-4 h-4 text-purple-500 shrink-0" />
@@ -220,7 +220,7 @@ export default function HowWeWork() {
                 <BarChart2 className="w-4 h-4" /> Our approach
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                How collaborating with EXTRA works
+                What working with EXTRA looks like
               </h2>
               <p className="text-lg text-gray-600 leading-relaxed max-w-3xl mx-auto">
                 EXTRA is the hospitality staffing agency in Amsterdam for hotels, events, and hospitality. We combine personal selection with smart technology, so we know exactly which staff members fit your organization.
@@ -241,7 +241,7 @@ export default function HowWeWork() {
                   Hire hospitality staff in 4 steps
                 </h2>
                 <p className="text-gray-500 mt-4 text-lg max-w-xl mx-auto">
-                  Flexible hospitality staff in Amsterdam, arranged quickly and personally.
+                  Flexible hospitality staff in Amsterdam — fast, personal, and properly arranged.
                 </p>
               </div>
             </RevealSection>
@@ -376,7 +376,7 @@ export default function HowWeWork() {
                   <Star className="w-4 h-4" /> Favorite pool
                 </span>
                 <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Build a fixed pool of favorites
+                  Build a dedicated pool of favourites
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-8 text-lg">
                   After every shift, the client can rate employees. If someone performs well, they are added to your favorite pool—a fixed pool of people who already know your organization.
@@ -415,7 +415,7 @@ export default function HowWeWork() {
                   <div className="absolute bottom-0 right-0 w-[45%] sm:w-[40%] translate-y-4 rounded-xl overflow-hidden shadow-2xl border border-white/90 ring-1 ring-purple-100/50 hover:scale-105 transition-transform duration-300">
                     <img
                       src={poulesButton}
-                      alt="Add to favorites button"
+                      alt="Add to favourites button"
                       className="w-full h-auto object-contain"
                       loading="lazy"
                       decoding="async"
@@ -458,7 +458,7 @@ export default function HowWeWork() {
               ))}
             </div>
             <div className="mt-12 text-center">
-              <Link href="/aanmelden" className="inline-flex items-center gap-2.5 bg-purple-600 text-white font-bold text-lg px-8 py-4 rounded-full hover:bg-purple-700 hover:-translate-y-0.5 transition-all shadow-xl shadow-purple-200">
+              <Link href="/aanmelden?lang=en" className="inline-flex items-center gap-2.5 bg-purple-600 text-white font-bold text-lg px-8 py-4 rounded-full hover:bg-purple-700 hover:-translate-y-0.5 transition-all shadow-xl shadow-purple-200">
                 Apply directly <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
@@ -497,7 +497,7 @@ export default function HowWeWork() {
               <Link href="/en/hospitality-staff-amsterdam" className="bg-white text-purple-900 font-bold text-lg px-10 py-5 rounded-full hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-1 transition-all">
                 Request staff
               </Link>
-              <Link href="/aanmelden" className="bg-transparent border-2 border-white/30 text-white font-bold text-lg px-10 py-5 rounded-full hover:bg-white/10 hover:-translate-y-1 transition-all">
+              <Link href="/aanmelden?lang=en" className="bg-transparent border-2 border-white/30 text-white font-bold text-lg px-10 py-5 rounded-full hover:bg-white/10 hover:-translate-y-1 transition-all">
                 Apply now
               </Link>
             </div>
