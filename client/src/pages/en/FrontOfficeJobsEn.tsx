@@ -124,7 +124,7 @@ const reviews = [
 
 const faqs = [
   { q: "Do I need experience as a receptionist?", a: "Some hospitality experience is a plus, but not always required for front office work. We look at your communication skills, professional appearance and guest-focused attitude. For some front office vacancies in Amsterdam we offer a short on-site introduction." },
-  { q: "Will I always work at the same hotel?", a: "In most cases yes. We try to match you to a fixed pool at one or more hotels, so you know the procedures and quickly feel at home as a hotel receptionist in the team." },
+  { q: "Will I always work at the same hotel?", a: "In most cases yes. We aim to place you in a regular team at one or more hotels, so you know the procedures and quickly feel at home as a hotel receptionist." },
   { q: "Can I choose my own shifts?", a: "Yes. You let us know your availability and we arrange matching front office shifts. This way you can combine the work with your studies, another job or other commitments." },
   { q: "How does payment work?", a: "After your shift you're paid out via Jixbee. The amount is usually in your account the same day. That's how front office work via EXTRA works: transparent, fast and no surprises." },
   { q: "How quickly can I start?", a: "After your sign-up and a short intake you can often start receptionist work within a week. We do our best to make the start as smooth as possible." },

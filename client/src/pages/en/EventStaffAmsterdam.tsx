@@ -341,7 +341,7 @@ export default function EventStaffAmsterdam() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {[
               { stat: "Flexible", statLabel: "scale-up on demand", title: "Scale up instantly", desc: "From intimate dinners to packed halls. EXTRA helps venues scale quickly with experienced staff who thrive under pressure.", accent: "from-purple-500 to-purple-700" },
-              { stat: "100%", statLabel: "personally screened", title: "Handpicked. Every time.", desc: "Every member of our staff has gone through a personal intake before working a single shift through EXTRA.", accent: "from-indigo-500 to-purple-600" },
+              { stat: "100%", statLabel: "personally screened", title: "Handpicked. Every time.", desc: "Every member of our staff has been interviewed in person before working a single shift through EXTRA.", accent: "from-indigo-500 to-purple-600" },
               { stat: "500+", statLabel: "events per year", title: "Real event experience", desc: "Our staff know full houses, tight timelines and high guest expectations. They've done it hundreds of times.", accent: "from-pink-500 to-rose-600" },
               { stat: "24/7", statLabel: "reachable for planners", title: "Available around the clock", desc: "Our planners are available outside office hours when you need to move fast — even on the day of the event.", accent: "from-blue-500 to-indigo-600" },
               { stat: "★ 4.8", statLabel: "average rating", title: "Continuously rated", desc: "We collect feedback after every event. Only staff who consistently perform well stay active in our pool.", accent: "from-amber-500 to-orange-500" },

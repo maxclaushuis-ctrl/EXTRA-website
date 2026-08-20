@@ -124,7 +124,7 @@ const reviews = [
 
 const faqs = [
   { q: "Do I need experience for housekeeping work?", a: "Experience is a plus, but not always required. We mainly look at your motivation, attention to detail and attitude. For some roles we offer a short on-site introduction." },
-  { q: "Will I always work at the same hotel?", a: "In most cases yes. We try to match you to a fixed pool at one or more hotels, so you know the workflow, feel at home in the team and can be deployed quickly." },
+  { q: "Will I always work at the same hotel?", a: "In most cases yes. We aim to place you in a regular team at one or more hotels, so you know the routines, feel at home in the team and can pick up shifts quickly." },
   { q: "Can I choose my own shifts?", a: "Yes. You let us know your availability and we arrange matching housekeeping shifts. This way you can combine the work with other commitments or activities." },
   { q: "How does payment work?", a: "After your shift you're paid out via Jixbee. The amount is usually in your account the same day. Transparent and fast, with no surprises." },
   { q: "How quickly can I start working?", a: "After your sign-up and a short intake, you can often start picking up shifts within a week. We make sure everything runs quickly and smoothly." },

@@ -273,7 +273,7 @@ export default function RestaurantStaffAmsterdam() {
               { icon: Utensils, title: "Waitstaff", desc: "Experienced service staff used to the pace of a busy restaurant. Self-directed, presentable and guest-focused.", tags: ["À la carte", "Buffet", "Banqueting", "Fine dining"], color: "from-purple-600 to-purple-800" },
               { icon: Zap, title: "Runners", desc: "Fast and focused runners keeping the flow between kitchen and table smooth. They hold the pace.", tags: ["Kitchen-floor", "Pass", "High pace", "Support"], color: "from-indigo-500 to-purple-600" },
               { icon: GlassWater, title: "Bartenders", desc: "Experienced bar staff for drink service. Fast, presentable and built for busy bar services.", tags: ["Cocktails", "Wine service", "Drinks", "Bar support"], color: "from-pink-500 to-purple-600" },
-              { icon: ChefHat, title: "Independent chefs", desc: "Chefs who can walk into an unfamiliar kitchen and cook. Self-directed, flexible and level 3/4 skilled.", tags: ["Independent", "Kitchen lead", "Chef level 3/4", "Flexible"], color: "from-orange-500 to-red-600" },
+              { icon: ChefHat, title: "Independent chefs", desc: "Chefs who can walk into an unfamiliar kitchen and get cooking. Independent, flexible and professionally trained.", tags: ["Independent", "Kitchen lead", "Professionally trained", "Flexible"], color: "from-orange-500 to-red-600" },
               { icon: Sparkles, title: "Sous-chefs", desc: "Experienced sous-chefs who keep the kitchen running when the head chef is away or when things get busy.", tags: ["Leadership", "Kitchen coordination", "Mise en place", "HACCP"], color: "from-blue-500 to-indigo-600" },
               { icon: Users, title: "Dishwashers & kitchen assistants", desc: "Reliable kitchen support who keep the operation flowing. Fast to deploy for cover or peak service.", tags: ["Dishwashing", "Kitchen help", "Mise en place", "Cleaning"], color: "from-green-500 to-emerald-600" },
             ].map((item, i) => (
@@ -327,8 +327,8 @@ export default function RestaurantStaffAmsterdam() {
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {[
-              { stat: "Flexible", statLabel: "cover and scale-up", title: "Ready when you need them", desc: "Sick call on a Friday? Unexpected full house? EXTRA delivers restaurant staff fast — ready to get straight to work.", accent: "from-purple-500 to-purple-700" },
-              { stat: "100%", statLabel: "personally screened", title: "Handpicked. Every time.", desc: "Every staff member goes through a personal intake before working for EXTRA. We select on attitude, service mindset and the drive that hospitality demands.", accent: "from-indigo-500 to-purple-600" },
+              { stat: "Flexible", statLabel: "cover and scale-up", title: "Ready when you need them", desc: "Someone calling in sick on a Friday? An unexpectedly full house? EXTRA gets restaurant staff to you fast — ready to get straight to work.", accent: "from-purple-500 to-purple-700" },
+              { stat: "100%", statLabel: "personally screened", title: "Handpicked. Every time.", desc: "Every staff member is interviewed in person before working for EXTRA. We select on attitude, service mindset and the drive that hospitality demands.", accent: "from-indigo-500 to-purple-600" },
               { stat: "Pace", statLabel: "used to restaurant tempo", title: "They know restaurant tempo", desc: "Our staff know the pressure of a full restaurant. A double booking, a late rush or an unfamiliar kitchen layout won't throw them.", accent: "from-pink-500 to-rose-600" },
               { stat: "24/7", statLabel: "reachable for you", title: "Always reachable", desc: "Outside office hours too. Our planners are available when you need to act fast — including early mornings, late nights and weekends.", accent: "from-blue-500 to-indigo-600" },
               { stat: "★ 4.8", statLabel: "average rating", title: "Continuously rated", desc: "We collect feedback after every shift. Only staff who consistently perform well in restaurants stay active.", accent: "from-amber-500 to-orange-500" },
@@ -394,7 +394,7 @@ export default function RestaurantStaffAmsterdam() {
           </RevealSection>
           <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
             {[
-              { company: "Restaurant Hete Peper", quote: "Sick call on a Friday afternoon and EXTRA had someone on the floor by the evening. Experienced, needed zero briefing, just got on with it. Exactly what you need.", name: "Thomas van der Berg", role: "Restaurant Manager", results: ["Friday cover solved before the evening service", "Dedicated pool set up for weekend shifts"] },
+              { company: "Restaurant Hete Peper", quote: "A sick call on a Friday afternoon, and EXTRA had someone on the floor by the evening. Experienced, needed zero briefing, just got on with it. Exactly what you need.", name: "Thomas van der Berg", role: "Restaurant Manager", results: ["Friday cover solved before the evening service", "Dedicated pool set up for weekend shifts"] },
               { company: "Restaurant Appèl", quote: "We now work with a regular group of EXTRA staff for our busy evenings. They know the menu, our way of working and what we expect. Makes an enormous difference.", name: "Sarah Konings", role: "F&B Manager", results: ["Regular preferred pool built in 6 weeks", "Less briefing time per shift"] },
               { company: "Hospitality Amsterdam", quote: "During the summer it was nearly impossible to find staff. EXTRA helped us cover every shift with flexible people who could handle the pressure. Without them it would have been chaos.", name: "Mark de Vries", role: "Operations Director", results: ["Full summer period covered with EXTRA support", "Zero uncovered shifts — quality maintained"] },
             ].map((item, i) => (
@@ -655,7 +655,7 @@ export default function RestaurantStaffAmsterdam() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16 max-w-4xl mx-auto">
               {[
                 { step: "1", title: "Every shift earns points", desc: "Staff earn points per restaurant shift. Strong performance — rated by you — means bonus points. Good work is rewarded immediately.", icon: "🏃" },
-                { step: "2", title: "More shifts, higher status", desc: "Regular returners at your restaurant build status — from Bronze to Diamond. Higher status means stronger commitment.", icon: "💎" },
+                { step: "2", title: "More shifts, higher status", desc: "Staff who regularly return to your restaurant build up status — from Bronze to Diamond. Higher status means stronger commitment.", icon: "💎" },
                 { step: "3", title: "Less drop-out, stronger teams", desc: "Staff building points at your restaurant want to come back. Fewer no-shows, a more stable team and better continuity.", icon: "🎁" },
               ].map((item, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-purple-100 p-6 sm:p-8 text-center hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 shadow-sm">

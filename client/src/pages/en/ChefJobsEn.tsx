@@ -128,7 +128,7 @@ const faqs = [
   { q: "Can I choose where I work?", a: "You let us know your preference in terms of kitchen style and location, and we find matching kitchen vacancies. You're not obliged to accept a fixed location." },
   { q: "How does payment work?", a: "After your shift you're paid out via Jixbee. The amount is usually in your account the same day. That's how chef work via EXTRA works: transparent and hassle-free." },
   { q: "Will I always work at the same location?", a: "Not necessarily. Some chefs prefer a fixed pool at a hotel or restaurant; others prefer picking up a variety of kitchen vacancies. Both are possible via EXTRA." },
-  { q: "How quickly can I start?", a: "After your sign-up and a short intake you can often pick up your first chef work shifts within a week. We aim to keep the threshold as low as possible." },
+  { q: "How quickly can I start?", a: "After signing up and a short introductory chat, you can often pick up your first chef shifts within a week. We make it as easy as possible to get started." },
 ];
 
 const allLogos = [

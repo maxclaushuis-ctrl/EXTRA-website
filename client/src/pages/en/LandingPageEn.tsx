@@ -366,7 +366,7 @@ export default function LandingPageEn() {
                 <Sparkles className="w-4 h-4" /> Our services
               </span>
               <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 sm:mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                What kind of EXTRA's do you need?
+                What kind of EXTRAs do you need?
               </h2>
               <p className="text-base sm:text-lg text-purple-100/70 leading-relaxed max-w-2xl mx-auto">
                 From kitchen to front office — always presentable and on payroll.
@@ -452,7 +452,7 @@ export default function LandingPageEn() {
                 { icon: UserCheck, step: "1", title: "Apply to EXTRA", desc: "Sign up via the application form.", color: "from-purple-500 to-purple-700" },
                 { icon: MessageCircle, step: "2", title: "Personal intake", desc: "We discuss your experience and preferences.", color: "from-violet-500 to-purple-600" },
                 { icon: Briefcase, step: "3", title: "Shifts & work", desc: "Pick shifts that suit your schedule and skills.", color: "from-indigo-500 to-purple-600" },
-                { icon: Gift, step: "4", title: "Rewards & payout", desc: "Earn EXTRAATjes and get paid fast.", color: "from-emerald-500 to-teal-600" },
+                { icon: Gift, step: "4", title: "Rewards & payout", desc: "Earn EXTRAATje rewards and get paid fast.", color: "from-emerald-500 to-teal-600" },
               ]).map((item, i) => (
                 <div key={`${howItWorksTab}-${i}`} className="relative group">
                   {i < 3 && <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-3rem)] h-0.5 bg-gradient-to-r from-purple-200 to-transparent z-0" />}
@@ -582,7 +582,7 @@ export default function LandingPageEn() {
                 Why EXTRA
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">
-                Ready for new employment legislation from 2026. Certainty for you and your staff.
+                Ready for the new Dutch employment legislation coming in 2026. Certainty for you and your staff.
               </p>
             </div>
           </RevealSection>
@@ -592,7 +592,7 @@ export default function LandingPageEn() {
               { icon: Shield, title: "All staff on payroll", desc: "No freelancer constructions. Clear contracts. Full compliance.", emoji: "🛡️" },
               { icon: Award, title: "Handpicked & rated", desc: "Feedback after every shift. Quality keeps going up.", emoji: "⭐" },
               { icon: Clock, title: "Fast & flexible deployment", desc: "Scale up for peak periods. Or a quick last-minute fix.", emoji: "⚡" },
-              { icon: Handshake, title: "Clear agreements", desc: "You know what to expect. Short lines of communication.", emoji: "🤝" },
+              { icon: Handshake, title: "Clear agreements", desc: "You know what to expect. Direct contact, fast answers.", emoji: "🤝" },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 100}>
                 <div className="group bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm">

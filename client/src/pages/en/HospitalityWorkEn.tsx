@@ -83,7 +83,7 @@ const roles = [
     title: "Service",
     sub: "Restaurants · Hotels · Events",
     img: horecaImg,
-    desc: "Serving in restaurants, hotel dining rooms and at corporate dinners. You are the face of the evening.",
+    desc: "Serving in restaurants, hotel dining rooms and at corporate dinners. You're the face of the evening.",
     bullets: ["Day and evening shifts", "Hotels, restaurants and events", "Professional brigades"],
     color: "from-purple-600 to-violet-700",
     href: "/aanmelden?lang=en",
@@ -101,7 +101,7 @@ const roles = [
     title: "Events & Catering",
     sub: "Galas · Festivals · Trade shows",
     img: cateringImg,
-    desc: "Work at gala dinners, festivals and corporate events. Never the same, always worth it.",
+    desc: "Work at gala dinners, festivals and corporate events. No two shifts are the same — and that's exactly the fun of it.",
     bullets: ["Unique venues and atmosphere", "Day and evening available", "Small to large scale"],
     color: "from-blue-600 to-indigo-700",
     href: "/aanmelden?lang=en",
@@ -111,7 +111,7 @@ const roles = [
     sub: "Hotels · Setup · Precision",
     img: hotelImg,
     desc: "Setting up, serving and clearing at hotel events. Structure, teamwork and precision.",
-    bullets: ["Five-star hotel groups", "Team-oriented work", "Good guidance and support"],
+    bullets: ["Five-star hotel groups", "Team-oriented work", "Proper support and guidance"],
     color: "from-emerald-500 to-teal-600",
     href: "/aanmelden?lang=en",
   },
@@ -124,7 +124,7 @@ const reviews = [
 ];
 
 const faqs = [
-  { q: "Do I need hospitality experience?", a: "Not always. For support roles like runner or dishwasher, no experience is required. For service and bar work, some basic experience is a plus, but we mainly look at your attitude and motivation." },
+  { q: "Do I need hospitality experience?", a: "Not always. For support roles like runner or dishwasher, no experience is required. For service and bar work, some experience helps, but isn't essential, but we mainly look at your attitude and motivation." },
   { q: "Can I choose my own shifts?", a: "Yes. Through the EXTRA app you can see which shifts are available and pick what fits you. You decide when you work." },
   { q: "How does same-day pay via Jixbee work?", a: "After your shift ends, you're paid out via Jixbee. The amount is usually in your account the same day. You don't need to register separately for this." },
   { q: "Which venues can I work at?", a: "Through EXTRA you work at hotels, restaurants and events in Amsterdam, Utrecht and The Hague. Think Hilton, Marriott, NH Hotels and various event venues." },

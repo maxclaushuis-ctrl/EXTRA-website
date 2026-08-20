@@ -183,7 +183,7 @@ export default function HotelStaffingAmsterdam() {
         { "@type": "Question", "name": "How quickly can you supply hotel staff?", "acceptedAnswer": { "@type": "Answer", "text": "At EXTRA we can often supply suitable hotel staff within 48 hours. Thanks to our fixed pool of selected hotel employees we can act quickly for absences, peak demand or last-minute requests." } },
         { "@type": "Question", "name": "Can you supply housekeeping staff?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Housekeeping is one of our core specialisations for hotels. We supply experienced room attendants who are familiar with hotel standards and quality checks." } },
         { "@type": "Question", "name": "Can you supply staff for banqueting?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. EXTRA supplies professional service and kitchen staff for banqueting and conferences in hotels. From small boardroom lunches to gala dinners for 300+ guests." } },
-        { "@type": "Question", "name": "How does it work with fixed teams per hotel?", "acceptedAnswer": { "@type": "Answer", "text": "EXTRA works with favourites pools per client. We build a fixed pool for each hotel of employees who know your location. Same faces, less explaining, higher quality." } },
+        { "@type": "Question", "name": "How does it work with fixed teams per hotel?", "acceptedAnswer": { "@type": "Answer", "text": "EXTRA works with favourites pools per client. For each hotel, we build a dedicated team of people who know your property. The same familiar faces every time, so there's less to explain and the quality keeps improving." } },
         { "@type": "Question", "name": "For which hotel roles can I hire staff?", "acceptedAnswer": { "@type": "Answer", "text": "Via EXTRA you can hire staff for: housekeeping, front office, F&B, banqueting, kitchen (chefs, sous-chefs, kitchen workers), dishwashers and room service. We always look for the best fit for your hotel and standards." } },
       ]
     });
@@ -347,7 +347,7 @@ export default function HotelStaffingAmsterdam() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
               { emoji: "🏨", title: "Familiar with hotel standards",  desc: "Our staff know the difference between three and five-star service. They work according to hotel standards, dress codes and guest relations protocols." },
-              { emoji: "🤝", title: "Fixed faces per hotel",          desc: "Through favourites pools we build a fixed pool for each hotel. Employees who know your procedures and are immediately deployable." },
+              { emoji: "🤝", title: "Familiar faces for every hotel",          desc: "Through favourites pools, we build a dedicated team for each hotel — people who know your procedures and can start without a briefing." },
               { emoji: "⭐", title: "Selected for hospitality",       desc: "Representativeness and hospitality are decisive in our selection. Everyone has had a personal interview first." },
               { emoji: "📞", title: "Fast response to absences",      desc: "Sickness or last-minute requests? EXTRA is reachable 24 hours a day and can respond quickly." },
               { emoji: "📊", title: "Data per employee per hotel",    desc: "After every shift we measure performance. So we know exactly who performs best at your location." },
@@ -513,15 +513,15 @@ export default function HotelStaffingAmsterdam() {
                 <Heart className="w-4 h-4" /> Favourites pool
               </span>
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Fixed faces per hotel, less explaining
+                Familiar faces, less onboarding
               </h2>
               <p className="text-gray-600 leading-relaxed mb-8 text-lg">
-                After every successful placement we add your favourites to your hotel pool per department. Immediately deployable for your next request: no onboarding costs, no surprises at the door.
+                After every successful placement, we add your favourites to your hotel's pool for each department. They're ready for your next request straight away: no onboarding costs, no surprises at the door.
               </p>
               <div className="space-y-4 mb-8">
                 {[
                   "Built per department: housekeeping, F&B, banqueting and front office",
-                  "Immediately deployable for your next request",
+                  "Available at short notice for your next request",
                   "Invite them yourself via the 'Invite to pool' button in your dashboard",
                   "Automatically updated after every shift based on ratings",
                 ].map((item, i) => (
@@ -698,7 +698,7 @@ export default function HotelStaffingAmsterdam() {
           { q: "How quickly can you supply hotel staff?", a: "At EXTRA we can often supply suitable hotel staff within 48 hours. Thanks to our fixed pool of selected hotel employees we can act quickly for absences, peak demand or last-minute requests. Get in touch and we'll look at what's possible straight away." },
           { q: "Can you supply housekeeping staff?", a: "Yes. Housekeeping is one of our core specialisations for hotels. We supply experienced room attendants who are familiar with hotel standards and quality checks. Via our favourites pool we build a fixed team that knows your hotel inside out." },
           { q: "Can you supply staff for banqueting and conferences?", a: "Yes. EXTRA supplies professional service and kitchen staff for banqueting, conferences and events in hotels. From small boardroom lunches to gala dinners for 300+ guests. We have experienced staff who understand how formal hotel service works." },
-          { q: "How does it work with fixed teams per hotel?", a: "EXTRA works with favourites pools per client. We build a fixed pool for each hotel of employees who know your location. Same faces, less explaining, higher quality. This applies per department: housekeeping, F&B, banqueting and front office." },
+          { q: "How does it work with fixed teams per hotel?", a: "EXTRA works with favourites pools per client. For each hotel, we build a dedicated team of people who know your property. The same familiar faces every time, so there's less to explain and the quality keeps improving. This applies per department: housekeeping, F&B, banqueting and front office." },
           { q: "For which hotel roles can I hire staff?", a: "Via EXTRA you can hire staff for: housekeeping, front office, F&B service, banqueting, kitchen (chefs, sous-chefs, kitchen workers), dishwashers and room service. We always look for the best fit for your hotel and standards." },
           { q: "How is the quality of hotel staff monitored?", a: "After every shift we measure how a staff member has performed at your hotel. Scores, compliments and complaints are recorded. That way we know who structurally performs well at your location and who we give priority to for future requests." },
         ]}
@@ -721,7 +721,7 @@ export default function HotelStaffingAmsterdam() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-purple-200 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
-              Whether you need structural support for housekeeping, temporary reinforcement for an event or want to build a fixed pool. EXTRA handles it. Fast, reliable and fully employed by us.
+              Whether you need ongoing housekeeping support, extra hands for an event or want to build a dedicated team — EXTRA takes care of it. Fast, reliable, and everyone fully employed by us.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-14">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3" style={{ boxShadow: "0 0 30px rgba(168,85,247,0.3), 0 8px 32px rgba(0,0,0,0.2)" }}>

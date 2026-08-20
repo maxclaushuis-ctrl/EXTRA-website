@@ -567,7 +567,7 @@ export default function HospitalityStaffAmsterdam() {
                 Every candidate, personally screened
               </h2>
               <p className="text-gray-600 leading-relaxed mb-8 text-lg">
-                Before a staff member arrives at your venue, they have met us in person at our office and been assessed digitally per role. You always know exactly who's coming through the door.
+                Before a staff member arrives at your venue, they have met us in person at our office and assessed digitally for each role. You always know exactly who's coming through the door.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
@@ -837,7 +837,7 @@ export default function HospitalityStaffAmsterdam() {
                 How working with EXTRA works
               </h2>
               <p className="text-base sm:text-lg text-purple-200/70 mt-4 max-w-2xl mx-auto">
-                From first request to a fixed favourites pool. Four steps.
+                From your first request to a dedicated favourites pool, in four steps.
               </p>
             </div>
           </RevealSection>
@@ -846,7 +846,7 @@ export default function HospitalityStaffAmsterdam() {
               { step: "1", icon: Phone,        title: "Tell us what you need",      desc: "Which roles, when and how many people? We immediately think along on the best approach." },
               { step: "2", icon: UserCheck,    title: "We select the right people", desc: "Based on experience, skills, ratings and favourites pool we put together the best team." },
               { step: "3", icon: CalendarCheck,title: "Your team is ready",         desc: "A tailor-made team, scheduled and ready to start. You don't have to do a thing." },
-              { step: "4", icon: TrendingUp,   title: "Evaluate & build the pool",  desc: "Feedback after every assignment. That's how we jointly build a reliable, fixed favourites pool." },
+              { step: "4", icon: TrendingUp,   title: "Evaluate & build the pool",  desc: "Feedback after every assignment. Together, we build a reliable pool of favourites." },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 100}>
                 <div className="group bg-white/[0.06] backdrop-blur-sm rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-white/[0.08] hover:border-purple-400/30 hover:bg-white/[0.10] hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full text-center">
