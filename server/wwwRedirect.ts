@@ -30,13 +30,50 @@ const DOEL_HOST = 'www.doehetextra.nl';
  * Geeft de volledige doel-URL terug, of null als er niets hoeft te gebeuren.
  *
  * `url` is het pad inclusief query-string, zoals Express het in req.url zet.
+ * `protocol` is de waarde van de x-forwarded-proto-header — zie hieronder.
+ *
+ * IN ÉÉN SPRONG, NIET IN TWEE
+ * ---------------------------
+ * De Ahrefs-crawl van 20 augustus meldt één redirectketen:
+ *
+ *     http://doehetextra.nl/  →  https://doehetextra.nl/  →  https://www.doehetextra.nl/
+ *
+ * Twee sprongen dus, en bij elke sprong lekt een beetje linkwaarde weg. De
+ * eerste sprong (http naar https, met de apex-host intact) komt niet uit deze
+ * code maar van de laag ervoor. Bereikt zo'n verzoek Express tóch — en dat
+ * gebeurt zodra de proxy alleen doorstuurt in plaats van zelf te antwoorden —
+ * dan kunnen we het in één keer goed doen: meteen naar https én www.
+ *
+ * Daarom kijkt deze functie ook naar het protocol. Alleen als de header
+ * letterlijk 'http' zegt: ontbreekt hij, dan weten we het niet en doen we niets.
+ * Dat laatste is belangrijk voor de Replit-preview en voor localhost, waar geen
+ * proxy meekijkt en een gedwongen https-redirect de boel onbruikbaar maakt.
  */
-export function wwwDoelUrl(host: string | undefined, url: string): string | null {
+export function wwwDoelUrl(
+  host: string | undefined,
+  url: string,
+  protocol?: string | string[] | undefined,
+): string | null {
   if (!host) return null;
 
   // Poort eraf (localhost-achtige situaties en proxies die :443 meesturen).
   const hostnaam = String(host).toLowerCase().split(':')[0];
-  if (hostnaam !== APEX) return null;
+
+  // Een proxy mag meerdere waarden meesturen ("http, https"); de eerste is de
+  // oorspronkelijke aanvraag van de bezoeker.
+  const ruw = Array.isArray(protocol) ? protocol[0] : protocol;
+  const proto = typeof ruw === 'string' ? ruw.split(',')[0].trim().toLowerCase() : '';
+
+  const isApex = hostnaam === APEX;
+  const isWww = hostnaam === DOEL_HOST;
+  const onbeveiligd = proto === 'http';
+
+  // Alleen onze eigen twee hostnamen. Nooit de preview, nooit localhost, nooit
+  // een hostnaam die er alleen op lijkt.
+  if (!isApex && !isWww) return null;
+
+  // www over https is de eindbestemming: niets doen, anders krijg je een lus.
+  if (isWww && !onbeveiligd) return null;
 
   const pad = url && url.startsWith('/') ? url : `/${url || ''}`;
   return `https://${DOEL_HOST}${pad}`;

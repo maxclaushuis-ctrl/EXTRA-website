@@ -375,7 +375,7 @@ const OPSTART_DB_MAX_MS = 10_000;
   // Apex naar www, vóór al het andere: anders bestaat elke URL twee keer en
   // levert dat twee sitemaps op met dezelfde inhoud (zie server/wwwRedirect.ts).
   app.use((req, res, next) => {
-    const doel = wwwDoelUrl(req.headers.host, req.url);
+    const doel = wwwDoelUrl(req.headers.host, req.url, req.headers['x-forwarded-proto']);
     if (doel) return res.redirect(301, doel);
     next();
   });

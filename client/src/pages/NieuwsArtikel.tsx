@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { Link, useParams } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
 import PublicNav from "@/components/PublicNav";
+// Dezelfde selectie als de server gebruikt voor de no-JavaScript-versie.
+import { verwanteItems } from "@shared/verwanteLinks";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Calendar, ArrowRight, Tag } from "lucide-react";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
@@ -286,6 +288,27 @@ export default function NieuwsArtikel() {
     retry: false,
   });
 
+  // Andere artikelen, voor het blok onderaan een CMS-artikel.
+  //
+  // De statische artikelen hadden dat blok al (zie `related` verderop), de
+  // artikelen uit het CMS niet — en dat is precies waarom Ahrefs
+  // /blog/betrouwbaar-horeca-uitzendbureau-kiezen meldde met één inkomende
+  // link. Dezelfde selectie als de server onder de pagina zet voor crawlers
+  // zonder JavaScript, zie shared/verwanteLinks.ts.
+  const { data: blogLijst } = useQuery<any>({
+    queryKey: ['/api/blog'],
+    staleTime: 60000,
+    retry: false,
+  });
+
+  const verwant = useMemo(() => {
+    const lijst = Array.isArray(blogLijst?.posts) ? blogLijst.posts : Array.isArray(blogLijst) ? blogLijst : [];
+    return verwanteItems(
+      lijst.map((p: any) => ({ slug: p.slug, title: p.title, groep: p.category ?? null })),
+      slug,
+    );
+  }, [blogLijst, slug]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
@@ -418,6 +441,29 @@ export default function NieuwsArtikel() {
                 [&_td]:border [&_td]:border-gray-200 [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-gray-700 [&_td]:align-top"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(dbPost.content) }}
             />
+
+            {/* Meer artikelen.
+                Stond alleen onder de statische artikelen, niet onder die uit
+                het CMS. Daardoor was elk nieuw artikel een doodlopende tak. */}
+            {verwant.length > 0 && (
+              <div className="mt-12 pt-8 border-t border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900 mb-5">Meer artikelen</h2>
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {verwant.map(a => (
+                    <li key={a.slug}>
+                      <Link
+                        href={`/blog/${a.slug}`}
+                        className="block rounded-xl border border-gray-200 px-4 py-3 transition-colors hover:border-purple-300 hover:bg-purple-50/50"
+                        data-testid={`link-verwant-${a.slug}`}
+                      >
+                        <span className="block font-semibold text-gray-900 text-sm leading-snug">{a.title}</span>
+                        {a.groep && <span className="block text-xs text-gray-500 mt-0.5">{a.groep}</span>}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Internal links CTA */}
             <div className="mt-12 pt-8 border-t border-gray-100">
