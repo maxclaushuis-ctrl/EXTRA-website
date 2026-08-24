@@ -373,6 +373,17 @@ const AANVULLINGEN: Aanvulling[] = [
       `),
   },
   {
+    // Zonder deze stap mislukt het aanmaken van de dashboardmelding bij een
+    // nieuw contactbericht: Postgres kent de enumwaarde dan nog niet en
+    // weigert de insert. Dat zou stil gebeuren (de aanroep heeft een .catch),
+    // dus juist hier hoort het vangnet.
+    omschrijving: "admin_notification_type: waarde contact_bericht toevoegen",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TYPE admin_notification_type ADD VALUE IF NOT EXISTS 'contact_bericht'
+      `),
+  },
+  {
     omschrijving: "contact_berichten: index op created_at",
     uitvoeren: () =>
       db.execute(sql`

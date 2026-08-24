@@ -1956,6 +1956,7 @@ export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
   "twv_expiry",          // TWV dreigt te verlopen
   "staffing_request",    // Nieuwe aanvraag van een bedrijf
   "interview_reminder",  // Gesprek vandaag
+  "contact_bericht",     // Bericht via het contactformulier
 ]);
 
 export const adminNotifications = pgTable("admin_notifications", {

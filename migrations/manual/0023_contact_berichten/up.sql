@@ -27,3 +27,8 @@ CREATE TABLE IF NOT EXISTS contact_berichten (
 -- Voor het overzicht in het dashboard: nieuwste eerst, onafgehandelde bovenaan.
 CREATE INDEX IF NOT EXISTS contact_berichten_created_at_idx
   ON contact_berichten (created_at DESC);
+
+-- De dashboardmelding bij een nieuw bericht gebruikt een eigen type. Zonder
+-- deze waarde weigert Postgres de insert, en omdat die aanroep een .catch
+-- heeft zou dat stil gebeuren.
+ALTER TYPE admin_notification_type ADD VALUE IF NOT EXISTS 'contact_bericht';
