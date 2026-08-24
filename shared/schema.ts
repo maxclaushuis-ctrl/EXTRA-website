@@ -1125,6 +1125,26 @@ export const staffingRequests = pgTable("staffing_requests", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+/**
+ * Berichten uit het contactformulier op /contact.
+ *
+ * Bestond niet: dat formulier deed bij verzenden alleen een console.log, terwijl
+ * de bezoeker "Bericht verzonden" te zien kreeg. Elk bericht dat daar ooit is
+ * ingevuld, is verdwenen. Sindsdien landt alles hier én in de mailbox.
+ */
+export const contactBerichten = pgTable("contact_berichten", {
+  id: serial("id").primaryKey(),
+  naam: text("naam").notNull(),
+  email: text("email").notNull(),
+  bericht: text("bericht").notNull(),
+  // Herkomst voor later: van welke pagina kwam het bericht, en welk IP/UA.
+  pagina: text("pagina"),
+  afgehandeld: boolean("afgehandeld").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ContactBerichtRij = typeof contactBerichten.$inferSelect;
+
 export const insertStaffingRequestSchema = createInsertSchema(staffingRequests).omit({
   id: true,
   status: true,

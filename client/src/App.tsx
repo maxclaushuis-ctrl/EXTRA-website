@@ -20,6 +20,7 @@ const EventPersoneelGezocht = lazy(() => import("@/pages/EventPersoneelGezocht")
 const CateringPersoneelGezocht = lazy(() => import("@/pages/CateringPersoneelGezocht"));
 const RestaurantPersoneelGezocht = lazy(() => import("@/pages/RestaurantPersoneelGezocht"));
 const PersoneelsAanvraag = lazy(() => import("@/pages/PersoneelsAanvraag"));
+const AanvraagOntvangen = lazy(() => import("@/pages/AanvraagOntvangen"));
 const Aanmelden = lazy(() => import("@/pages/Aanmelden"));
 const CvUpload = lazy(() => import("@/pages/CvUpload"));
 const HorecaWerk = lazy(() => import("@/pages/HorecaWerk"));
@@ -342,6 +343,7 @@ function Router() {
 
           {/* Overige publieke routes */}
           <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
+          <Route path="/aanvraag-ontvangen" component={AanvraagOntvangen} />
           <Route path="/aanmelden" component={Aanmelden} />
           <Route path="/cv-upload" component={CvUpload} />
           <Route path="/horeca-werk" component={HorecaWerk} />

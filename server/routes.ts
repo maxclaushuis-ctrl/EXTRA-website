@@ -8728,6 +8728,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Contactformulier op /contact.
+   *
+   * Dit endpoint bestond niet. Het formulier deed bij verzenden uitsluitend een
+   * console.log() in de browser en toonde daarna "Bericht verzonden — We nemen
+   * zo snel mogelijk contact met je op". Er werd niets opgeslagen, niets
+   * gemaild en niemand geïnformeerd.
+   *
+   * Volgorde is bewust: eerst opslaan, dan mailen. Valt de mailservice uit,
+   * dan staat het bericht nog steeds in de database en is het niet verloren.
+   */
+  app.post("/api/contact-bericht", async (req: Request, res: Response) => {
+    try {
+      const { valideerContactBericht, contactBerichtInternMail, contactBerichtBevestigingMail, AFZENDER, INTERNE_ONTVANGERS } =
+        await import("@shared/aanvraagMails");
+      const { contactBerichten } = await import("@shared/schema");
+
+      const controle = valideerContactBericht(req.body);
+      if (!controle.ok) {
+        return res.status(400).json({ message: "Controleer de ingevulde gegevens.", fouten: controle.fouten });
+      }
+      const bericht = controle.waarden;
+
+      const [rij] = await db
+        .insert(contactBerichten)
+        .values({
+          naam: bericht.naam,
+          email: bericht.email,
+          bericht: bericht.bericht,
+          pagina: typeof req.body?.pagina === "string" ? req.body.pagina.slice(0, 200) : null,
+        })
+        .returning();
+
+      storage
+        .createAdminNotification({
+          type: "contact_bericht",
+          title: "Nieuw bericht via de website",
+          message: `${bericht.naam} (${bericht.email}) stuurde een bericht via het contactformulier.`,
+          link: "/dashboard",
+        })
+        .catch((e: any) => console.error("[Contact] Notificatie fout:", e));
+
+      // Mailen mag mislukken zonder dat de bezoeker een foutmelding krijgt:
+      // het bericht staat dan al veilig in de database.
+      try {
+        const { sendEmail } = await import("./mail");
+        const intern = contactBerichtInternMail(bericht);
+        await sendEmail({
+          to: INTERNE_ONTVANGERS,
+          from: AFZENDER,
+          replyTo: bericht.email,
+          subject: intern.subject,
+          html: intern.html,
+          text: intern.text,
+        });
+        const bevestiging = contactBerichtBevestigingMail(bericht);
+        await sendEmail({
+          to: bericht.email,
+          from: AFZENDER,
+          replyTo: INTERNE_ONTVANGERS[0],
+          subject: bevestiging.subject,
+          html: bevestiging.html,
+          text: bevestiging.text,
+        });
+        console.log(`[Contact] Bericht #${rij.id} van ${bericht.email} opgeslagen en gemaild`);
+      } catch (mailErr) {
+        console.error(`[Contact] Bericht #${rij.id} opgeslagen, maar mailen mislukte:`, mailErr);
+      }
+
+      return res.status(201).json({ success: true, id: rij.id });
+    } catch (error) {
+      console.error("[Contact] Fout bij verwerken contactbericht:", error);
+      return res.status(500).json({ message: "Er ging iets mis bij het versturen. Bel ons gerust op 085 130 59 15." });
+    }
+  });
+
+  /** Contactberichten voor het dashboard, nieuwste eerst. */
+  app.get("/api/admin/contact-berichten", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const { contactBerichten } = await import("@shared/schema");
+      const { desc } = await import("drizzle-orm");
+      const rijen = await db.select().from(contactBerichten).orderBy(desc(contactBerichten.createdAt));
+      return res.json(rijen);
+    } catch (error) {
+      console.error("[Contact] Fout bij ophalen contactberichten:", error);
+      return res.status(500).json({ message: "Fout bij ophalen contactberichten" });
+    }
+  });
+
   app.post("/api/staffing-request", async (req: Request, res: Response) => {
     try {
       const { staffingRequests } = await import("@shared/schema");
@@ -8902,6 +8991,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[StaffingRequest] E-mail notificatie verzonden voor aanvraag #${result.id} (${data.companyName})`);
       } catch (emailErr) {
         console.error('[StaffingRequest] Fout bij e-mail notificatie:', emailErr);
+      }
+
+      // Bevestigingsmail naar de aanvrager.
+      //
+      // Deze ontbrak: iemand die om 22:00 een aanvraag doet voor de volgende
+      // ochtend had tot het terugbelmoment geen enkel bewijs dat zijn aanvraag
+      // was aangekomen — precies het moment waarop hij ook een concurrent belt.
+      //
+      // Bewust in een eigen try/catch ná de interne mail: als deze mail faalt,
+      // mag dat de aanvraag zelf en de interne notificatie niet raken.
+      try {
+        const { sendEmail } = await import('./mail');
+        const { aanvraagBevestigingMail, AFZENDER, INTERNE_ONTVANGERS } = await import('@shared/aanvraagMails');
+        const mail = aanvraagBevestigingMail({
+          bedrijfsnaam: data.companyName,
+          contactpersoon: data.contactName,
+          telefoon: data.phone,
+          email: data.email,
+          locatienaam: data.locationName,
+          functies: data.functions,
+          opmerkingen: data.notes,
+        });
+        await sendEmail({
+          to: data.email,
+          from: AFZENDER,
+          replyTo: INTERNE_ONTVANGERS[0],
+          subject: mail.subject,
+          html: mail.html,
+          text: mail.text,
+        });
+        console.log(`[StaffingRequest] Bevestiging verzonden naar ${data.email} (aanvraag #${result.id})`);
+      } catch (bevestigingErr) {
+        console.error('[StaffingRequest] Fout bij bevestigingsmail naar aanvrager:', bevestigingErr);
       }
 
       return res.status(201).json({ success: true, id: result.id });
