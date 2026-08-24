@@ -15,6 +15,7 @@ import { registerLlmsTxt } from "./llms";
 import { scheduleSalesflowDailyJob, ensureSalesflowSchema } from "./salesflow";
 import { ensureAuthResetSchema } from "./authReset";
 import { ensureDatabaseSchema, logSchemaDrift } from "./ensureSchema";
+import { maakPromptwatchDoorstuur } from "./promptwatchLogs";
 import path from "path";
 import fs from "fs";
 
@@ -51,6 +52,19 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
+
+// Promptwatch logdoorstuur (Wrkt Digital): stuurt álle requests gebatcht en
+// asynchroon door zodat AI-crawlers (die geen JavaScript uitvoeren) zichtbaar
+// worden. Bewust zo vroeg mogelijk geregistreerd, vóór alle routes, zodat er
+// niets buiten de meting valt. Zonder PROMPTWATCH_LOGS_API_KEY (Replit
+// Secret) is dit een complete no-op. Zie server/promptwatchLogs.ts.
+const promptwatch = maakPromptwatchDoorstuur();
+if (promptwatch) {
+  app.use(promptwatch.middleware);
+  console.log("Promptwatch logdoorstuur actief");
+} else {
+  console.log("Promptwatch logdoorstuur uit (PROMPTWATCH_LOGS_API_KEY niet gezet)");
+}
 
 app.use(compression({ level: 6, threshold: 1024 }));
 // Blok 3: bewaar de exacte raw request body voor SendGrid webhook signature-verificatie.

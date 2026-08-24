@@ -33,6 +33,8 @@
     "indexnow:test": "tsx server/indexnow.test.ts",
     "indexnow": "tsx scripts/indexnow.ts",
     "cache:test": "tsx server/paginaCache.test.ts",
+    "promptwatchlogs:test": "tsx server/promptwatchLogs.test.ts",
+    "promptwatch:test": "tsx scripts/promptwatch-test.ts",
     "links:test": "tsx scripts/linkHerschrijver.test.ts",
     "content:links": "tsx scripts/content-links.ts",
     "content:links:fix": "tsx scripts/content-links.ts --fix",

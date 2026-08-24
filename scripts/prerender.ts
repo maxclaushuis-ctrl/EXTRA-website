@@ -268,7 +268,7 @@ async function main() {
   const browser = await chromium.launch({ executablePath, args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   // Analytics/fonts extern niet nodig tijdens prerender
-  await page.route(/googletagmanager|google-analytics|ahrefs|fonts\.googleapis|fonts\.gstatic/, (r) => r.abort());
+  await page.route(/googletagmanager|google-analytics|ahrefs|promptwatch|fonts\.googleapis|fonts\.gstatic/, (r) => r.abort());
 
   fs.mkdirSync(OUT_COMMITTED, { recursive: true });
   fs.mkdirSync(OUT_DIST, { recursive: true });
