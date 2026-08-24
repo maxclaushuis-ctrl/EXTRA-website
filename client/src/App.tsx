@@ -16,6 +16,7 @@ const BrochureLofi = lazy(() => import("@/pages/BrochureLofi"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const PersoneelGezocht = lazy(() => import("@/pages/PersoneelGezocht"));
 const HotelPersoneelGezocht = lazy(() => import("@/pages/HotelPersoneelGezocht"));
+const LogistiekPersoneelInhuren = lazy(() => import("@/pages/LogistiekPersoneelInhuren"));
 const EventPersoneelGezocht = lazy(() => import("@/pages/EventPersoneelGezocht"));
 const CateringPersoneelGezocht = lazy(() => import("@/pages/CateringPersoneelGezocht"));
 const RestaurantPersoneelGezocht = lazy(() => import("@/pages/RestaurantPersoneelGezocht"));
@@ -150,7 +151,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 
 const PUBLIC_PATHS = [
   '/landing', '/personeel-gezocht', '/horeca-personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
-  '/hotel-personeel-gezocht', '/hotelpersoneel-inhuren', '/event-personeel-gezocht', '/eventpersoneel-inhuren', '/cateringpersoneel-gezocht', '/cateringpersoneel-inhuren', '/horecapersoneel-gezocht', '/horecapersoneel-restaurants', '/restaurant-personeel-gezocht',
+   '/hotel-personeel-gezocht', '/hotelpersoneel-inhuren', '/logistiek-personeel-inhuren', '/event-personeel-gezocht', '/eventpersoneel-inhuren', '/cateringpersoneel-gezocht', '/cateringpersoneel-inhuren', '/horecapersoneel-gezocht', '/horecapersoneel-restaurants', '/restaurant-personeel-gezocht',
   '/brochure', '/brochures', '/events', '/lofi', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
@@ -263,6 +264,7 @@ function Router() {
           <Route path="/dagbetaling">{() => <SeoLandingPagina page="dagbetaling" />}</Route>
           <Route path="/werken-in-de-horeca">{() => <SeoLandingPagina page="werken-in-de-horeca" />}</Route>
           <Route path="/hotelpersoneel-inhuren" component={HotelPersoneelGezocht} />
+          <Route path="/logistiek-personeel-inhuren" component={LogistiekPersoneelInhuren} />
           <Route path="/hotel-personeel-gezocht">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
           <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
           <Route path="/eventpersoneel-inhuren" component={EventPersoneelGezocht} />

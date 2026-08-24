@@ -138,6 +138,16 @@ export const ROUTE_META: RouteMeta[] = [
     changefreq: "weekly",
   },
   {
+    path: "/logistiek-personeel-inhuren",
+    title: "Logistiek personeel inhuren | Gescreend | EXTRA",
+    description:
+      "Logistiek personeel inhuren? EXTRA levert gescreende magazijnmedewerkers, orderpickers en heftruckchauffeurs in loondienst. Vraag direct aan.",
+    noindex: true,
+    follow: true,
+    // Bij livegang prerender op true zetten en daarna een nieuwe prerender-run draaien.
+    prerender: false,
+  },
+  {
     path: "/eventpersoneel-inhuren",
     title: "Eventpersoneel inhuren | Bediening, bar & hosts",
     description:
