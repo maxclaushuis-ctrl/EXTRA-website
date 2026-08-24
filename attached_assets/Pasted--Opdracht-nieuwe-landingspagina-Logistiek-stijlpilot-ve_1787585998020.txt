@@ -1,0 +1,79 @@
+# Opdracht: nieuwe landingspagina "Logistiek" — stijlpilot, verborgen opleveren
+
+## Doel
+Bouw een nieuwe landingspagina voor de sector Logistiek. Deze pagina is de
+pilot voor een nieuwe visuele stijl: de huidige site voelt te "AI-gegenereerd"
+(paars/gradient/glow-esthetiek die overal terugkomt). Als deze pagina staat en
+goed voelt, rollen we de stijl daarna uit over de rest van de site. Dus:
+front-end only, en de stijl blijft strikt binnen deze ene pagina.
+
+## Zichtbaarheid — de pagina moet verborgen zijn
+- Bereikbaar via directe URL, maar nergens vindbaar.
+- `noindex: true` + `follow: true` in shared/routeMeta.ts (zelfde patroon als
+  /BHG-group), waardoor hij ook automatisch buiten de sitemap valt.
+- `prerender: false` zolang de pagina verborgen is — dan hoeft check-seo geen
+  fragment te vinden. Zet in een comment bij de route-entry dat dit bij
+  livegang op `true` moet, met een prerender-run erna.
+- GEEN wijziging aan de navigatie. Het item "Logistiek" komt dus (nog) niet in
+  de dropdown "Ik zoek EXTRA personeel" (foto 1). Laat PublicNav.tsx en
+  PublicFooter.tsx volledig ongemoeid.
+- Route: `/logistiek-personeel-inhuren` (zelfde naamgeving als
+  /hotelpersoneel-inhuren, /cateringpersoneel-inhuren).
+
+## Structuur en inhoud
+- Neem de sectie-indeling van client/src/pages/HotelPersoneelGezocht.tsx
+  1-op-1 over: hero → functies → waarom EXTRA → klantlogo's → klantcase →
+  persoonlijk gescreend → bewezen scores → vaste gezichten → selectieproces →
+  EXTRAATje → FAQ → eind-CTA. Zelfde volgorde, geen secties toevoegen of
+  weglaten.
+- Schrijf de inhoud om naar logistiek (magazijn, orderpicken, heftruck,
+  inpak, expeditie) in dezelfde toon en met dezelfde beloftes als de bestaande
+  sectorpagina's: loondienst, dagbetaling mogelijk, NEN 4400-1, vaste poule.
+- Belangrijk: als je de nieuwe stijl over de pagina doorvoert, verander je
+  alleen de vormgeving — niet wat er staat. Geen herschreven boodschappen,
+  geen andere sectievolgorde.
+
+## De nieuwe stijl (foto 4 = referentie)
+Bouw de hero na zoals in de referentie, en trek die stijl daarna door over
+alle secties van deze pagina.
+
+Kenmerken van de referentie:
+- Egale cyaan/turquoise achtergrond in plaats van donkerpaars. Gesampled uit
+  de screenshot: basis `#61C9E0`, lichtere X-overlays `#8AE0E4` en `#B3E7E7`,
+  violette X-vlakken `#969CE1` en `#7163DD`. Neem deze als vertrekpunt en
+  verfijn waar nodig.
+- Grote X-vormen als achtergrondpatroon, in half-transparante lagen die elkaar
+  overlappen — subtiel, niet als glow of blur. Gebruik hiervoor het
+  meegeleverde patroon (foto 3), geroteerd zoals in de referentie.
+- Foto van de man (foto 2, losse cutout met transparante achtergrond) links,
+  full-bleed en tot de onderrand doorlopend, zonder vignet of spotlight
+  eromheen. Plaats hem als .webp in client/public/images/.
+- Typografie: zware, strak schreefloze headline in wit; ondertitel in een
+  lichtere weight, ruime regelafstand.
+- Twee pill-knoppen naast elkaar: één gevuld wit met gekleurde tekst, één
+  outline wit, beide met pijltje rechts.
+- Rechtsonder de tagline-lockup "EXTRA — Het uitzendbureau dat werkt".
+- Rustiger dan de huidige site: geen ambient glows, geen gradient-vignetten,
+  geen radial spotlights. Vlakke kleurvlakken en duidelijke vormen.
+
+Voor de secties ónder de hero: bepaal zelf een consistente vertaling van deze
+stijl (achtergrondwisseling tussen wit en een lichte cyaan-tint in plaats van
+de huidige crèmetinten, X-vormen als accent, dezelfde knop- en koptypografie)
+en houd die over de hele pagina vol.
+
+## Scope-grenzen
+- Alle stijl blijft binnen deze pagina. Geen wijzigingen in tailwind.config,
+  globale CSS, design-tokens of gedeelde componenten. Heb je een gedeeld
+  component nodig in de nieuwe stijl, maak dan een pagina-lokale variant.
+- Nav en footer blijven zoals ze zijn, ook op deze pagina.
+
+## Oplevering
+- Als patch-bestand, met een stappenplan zoals gebruikelijk (git am → poort →
+  build → branch → PR-link).
+- Poort: `npx tsc --noEmit | grep -c "error TS"` moet 198 blijven,
+  `npm run build` groen (check-seo mag niet klagen over een ontbrekend
+  fragment — vandaar prerender: false).
+- Vermeld in de commit dat npm install in jouw omgeving geblokkeerd is en dat
+  tsc/vite dus in Replit gedraaid moeten worden.
+- Lever er één screenshot-achtige beschrijving of losse HTML-preview bij zodat
+  ik de stijl kan beoordelen vóórdat ik hem merge.

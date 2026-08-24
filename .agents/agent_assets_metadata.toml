@@ -48,3 +48,10 @@ id = "5Hshy195eiwFfkLbNkWZm"
 uri = "file://webhook-verkenning-rapport.md"
 type = "text"
 title = "Verkenningsrapport applicant.ready webhook & intake-formulier"
+
+[[outputs]]
+id = "_-KyVdEUgdNYndXOlFcy7"
+uri = "file://screenshots/logistiek-landing-preview.jpg"
+type = "image"
+title = "Logistiek-stijlpilot — hero preview"
+description = "Desktop-preview van de verborgen logistieke landingspagina met de nieuwe cyaan/X-vormgeving."
