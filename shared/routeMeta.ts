@@ -165,6 +165,21 @@ export const ROUTE_META: RouteMeta[] = [
     changefreq: "monthly",
   },
   {
+    // Bedankpagina na het aanvraagformulier. Bewust noindex: hij heeft alleen
+    // betekenis direct na verzenden. Wel follow, zodat de links naar de
+    // klantcases en de werkwijze gewoon meetellen.
+    //
+    // prerender bewust false: de pagina heeft geen SEO-doel en check-seo eist
+    // een gecommit fragment voor elke route met prerender: true.
+    path: "/aanvraag-ontvangen",
+    title: "Aanvraag ontvangen | EXTRA",
+    description:
+      "Bedankt voor je aanvraag. Je krijgt een bevestiging per mail en wij nemen tijdens kantooruren meestal binnen een uur telefonisch contact op.",
+    noindex: true,
+    follow: true,
+    prerender: false,
+  },
+  {
     path: "/klantcases-horeca",
     title: "Klantcases horeca | Zo werken klanten met EXTRA",
     description:

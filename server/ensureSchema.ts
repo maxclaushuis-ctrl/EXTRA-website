@@ -347,6 +347,50 @@ const AANVULLINGEN: Aanvulling[] = [
           WHERE crm_contact_id IS NOT NULL
       `),
   },
+  {
+    // Migratie 0023 — zie migrations/manual/0023_contact_berichten/
+    //
+    // Het contactformulier op /contact deed bij verzenden alleen een
+    // console.log() in de browser, terwijl de bezoeker "Bericht verzonden" te
+    // zien kreeg. Alles wat daar ooit is ingevuld, is verloren gegaan. Elk
+    // bericht gaat nu naar kantoor én in deze tabel: de mail is de werkstroom,
+    // de tabel het vangnet bij een storing van de mailservice.
+    //
+    // 0022 is bewust overgeslagen: dat nummer hoort bij de Engelse-vacatures-
+    // migratie die nog niet is toegepast.
+    omschrijving: "contact_berichten: berichten uit het contactformulier bewaren",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS contact_berichten (
+          id          serial PRIMARY KEY,
+          naam        text NOT NULL,
+          email       text NOT NULL,
+          bericht     text NOT NULL,
+          pagina      text,
+          afgehandeld boolean NOT NULL DEFAULT false,
+          created_at  timestamp DEFAULT now()
+        )
+      `),
+  },
+  {
+    // Zonder deze stap mislukt het aanmaken van de dashboardmelding bij een
+    // nieuw contactbericht: Postgres kent de enumwaarde dan nog niet en
+    // weigert de insert. Dat zou stil gebeuren (de aanroep heeft een .catch),
+    // dus juist hier hoort het vangnet.
+    omschrijving: "admin_notification_type: waarde contact_bericht toevoegen",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TYPE admin_notification_type ADD VALUE IF NOT EXISTS 'contact_bericht'
+      `),
+  },
+  {
+    omschrijving: "contact_berichten: index op created_at",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE INDEX IF NOT EXISTS contact_berichten_created_at_idx
+          ON contact_berichten (created_at DESC)
+      `),
+  },
 ];
 
 /**

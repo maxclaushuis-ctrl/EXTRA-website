@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowRight, ArrowLeft, Check, Phone, MessageCircle, Shield, Users, Zap } from "lucide-react";
+import { ArrowRight, Check, Phone, MessageCircle, Shield, Users, Zap } from "lucide-react";
 import PublicNav from "@/components/PublicNav";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
@@ -101,7 +102,7 @@ const clients = [
 ];
 
 export default function PersoneelsAanvraag() {
-  const [submitted, setSubmitted] = useState(false);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     document.title = "Personeel Aanvragen bij EXTRA Uitzendbureau";
@@ -165,7 +166,9 @@ export default function PersoneelsAanvraag() {
         }),
       });
     },
-    onSuccess: () => setSubmitted(true),
+    // Navigeren in plaats van de kaart in-place omwisselen: zonder URL-wissel
+    // bestaat er geen bedankpagina en dus geen meetbaar doel in GA4.
+    onSuccess: () => setLocation("/aanvraag-ontvangen"),
   });
 
   const onSubmit = (data: FormValues) => mutation.mutate(data);
@@ -203,23 +206,9 @@ export default function PersoneelsAanvraag() {
 
             {/* FORM CARD */}
             <RevealDiv>
-              {submitted ? (
-                <div className="bg-white rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100 p-10 sm:p-14 text-center">
-                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Check className="w-10 h-10 text-green-600" />
-                  </div>
-                  <h2 className="text-3xl font-black text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    Aanvraag ontvangen!
-                  </h2>
-                  <p className="text-lg text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">
-                    We nemen zo snel mogelijk contact met je op, tijdens kantooruren meestal binnen 1 uur.
-                  </p>
-                  <a href="/horeca-personeel-inhuren" className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold px-8 py-4 rounded-full hover:bg-purple-700 transition-all hover:scale-105">
-                    <ArrowLeft className="w-4 h-4" /> Terug naar overzicht
-                  </a>
-                </div>
-              ) : (
-                <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="bg-white rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100 p-7 sm:p-10">
+              {/* De bevestiging staat sinds deze wijziging op /aanvraag-ontvangen,
+                  zodat er een echte bedankpagina-URL bestaat om op te meten. */}
+              <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="bg-white rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100 p-7 sm:p-10">
                   <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
                     Laat je gegevens achter
                   </h2>
@@ -408,7 +397,6 @@ export default function PersoneelsAanvraag() {
                     </div>
                   </div>
                 </form>
-              )}
             </RevealDiv>
 
             {/* SIDEBAR */}
