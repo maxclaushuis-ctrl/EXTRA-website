@@ -1,3 +1,15 @@
+> **ARCHIEF — niet gebruiken als bron van afspraken.**
+>
+> Dit document beschrijft een momentopname en is sindsdien op meerdere punten
+> achterhaald. De geldende regels staan in `shared/routeMeta.ts`,
+> `scripts/check-seo.ts`, `docs/PAGINA-REGISTER.md` en de skill
+> `extra-website`. Bewaard voor de historie: het legt vast waarom de site is
+> zoals hij is.
+>
+> Concreet achterhaald: de site rendert niet meer volledig client-side, er
+> is nog maar één sitemap, de canonicals zijn niet meer sitewide identiek, de
+> `brochure.doehetextra.nl`-fallback is weg en 404's zijn echte 404's.
+
 # Technische SEO-diagnose — doehetextra.nl
 
 Datum: 15 juli 2026. Uitgevoerd op de gepushte codebase (repo `maxclaushuis-ctrl/EXTRA-website`, branch `main`, commit `f2b73be`). Geen code gewijzigd.

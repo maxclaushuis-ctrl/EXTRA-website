@@ -4,13 +4,18 @@
  * Eén bron van waarheid voor title, meta description en canonical per publieke route.
  * Wordt gebruikt door:
  *  - server/seo.ts        → injecteert deze waarden server-side in de initiële HTML
- *  - scripts/prerender.mjs → bepaalt welke routes een prerendered HTML-fragment krijgen
- *  - scripts/check-seo.mjs → build-check: lengtes, uniciteit, canonicals
+ *  - scripts/prerender.ts  → bepaalt welke routes een prerendered HTML-fragment krijgen
+ *  - scripts/check-seo.ts  → build-check: lengtes, uniciteit, canonicals
+ *  - scripts/register-check.ts → build-check: staat elke indexeerbare route
+ *    in docs/PAGINA-REGISTER.md (wie bezit welk zoekwoordcluster)
  *  - de sitemap-route in server/routes.ts (alleen routes zonder noindex)
  *
  * Regels (afgedwongen door scripts/check-seo.mjs):
- *  - title: max 60 tekens, primaire keyword vooraan, uniek
- *  - description: 120–155 tekens, uniek, met concrete CTA waar passend
+ *  - title: max 60 tekens, primaire keyword vooraan, uniek (P17 verlaagde
+ *    dit van 62 naar 60: daar kapt Google de meeste titles af)
+ *  - description: 110–160 tekens, uniek, met concrete CTA waar passend
+ *    (dit is de grens die scripts/check-seo.ts daadwerkelijk afdwingt;
+ *    hier stond eerder 120–155, wat nergens werd gecontroleerd)
  *  - canonical: self-referencing, behalve bij bewuste duplicaten
  *
  * P14: de vier bekende duplicaten (/nieuws, /beloningssysteem, /hoe-extra-werkt,
