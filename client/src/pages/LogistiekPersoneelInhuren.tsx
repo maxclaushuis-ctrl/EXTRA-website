@@ -29,7 +29,6 @@ import PublicFooter from "@/components/PublicFooter";
 import {
   ArrowRight,
   Phone,
-  Check,
   ShieldCheck,
   Clock,
   Users,
@@ -47,11 +46,18 @@ const HERO_BEELD = "/images/logistiek-hero.webp";
 const HERO_BEELD_MOBIEL = "/images/logistiek-hero-mobiel.webp";
 
 /* ── Kleuren uit de aangeleverde afbeelding ──────────────────────────────── */
-const CYAAN = "#3FC3DA";
+const CYAAN = "#3FC3DA";        // exact de achtergrondkleur uit de hero-afbeelding
 const CYAAN_DIEP = "#2596AC";
 const CYAAN_MIST = "#EAF9FC";
-const VIOLET = "#6B4FD8";
-const INKT = "#101C2B";
+const VIOLET = "#5B3FD0";       // accentkleur: knoppen en iconen. Wit erop = 6,85:1
+/**
+ * Tekst op de cyaan is petrol, geen wit en geen zwart. Wit haalt op deze
+ * achtergrond maar 2,09:1 (norm is 4,5:1) en zwart zet een kleur in het
+ * palet die er niet in hoort. Petrol haalt 6,83:1 en blijft een kleur.
+ */
+const PETROL = "#0A2E3C";       // koppen op cyaan  — 6,83:1
+const PETROL_ZACHT = "#173F4E"; // lopende tekst op cyaan — 5,40:1
+const INKT = "#101C2B";         // koppen op wit
 
 const FUNCTIES = [
   {
@@ -160,86 +166,131 @@ const VRAGEN = [
   },
 ];
 
+/**
+ * Bewijs in de hero. Alleen cijfers die al aantoonbaar op doehetextra.nl
+ * staan — niets verzonnen, en geen klantlogo's zolang er in de logistiek
+ * geen klanten zijn. Deze cijfers gelden EXTRA-breed, niet specifiek voor
+ * logistiek; dat is een bewuste keuze en met Max afgestemd.
+ */
+const BEWIJS = [
+  { cijfer: "4,8/5", label: "uit 234 reviews" },
+  { cijfer: "NEN 4400-1", label: "gecertificeerd" },
+  { cijfer: "800+", label: "medewerkers" },
+];
+
 export default function LogistiekPersoneelInhuren() {
   useEffect(() => {
     document.title = "Logistiek personeel inhuren | EXTRA";
   }, []);
 
+  // Geen paginabrede fontFamily: Inter is de bodyletter van de site en
+  // Poppins staat per element via font-poppins.
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Poppins', system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-white">
       <PublicNav />
 
       {/* ══════════════ HERO ══════════════ */}
+      {/*
+        Typografie volgt de siteconventie: font-poppins voor wat je ziet
+        (bovenregel, kop, knoppen), de standaard font-sans (Inter) voor wat je
+        leest. Eén letter voor alles maakte de header vlak.
+
+        Rangorde in vijf treden: bovenregel → kop met twee gewichten → zin →
+        één massieve knop met het telefoonnummer als ondergeschikte link →
+        bewijsbalk. Twee knoppen van gelijk gewicht lieten het oog niet kiezen.
+      */}
       <section className="relative overflow-hidden" style={{ backgroundColor: CYAAN }}>
-        {/* Desktop: de afbeelding vult de hele hero, de tekst staat in het
-            rechterdeel dat in het beeld bewust leeg is gelaten. */}
-        <img
-          src={HERO_BEELD}
-          alt="Logistiek medewerker met handscanner"
-          className="hidden md:block absolute inset-0 h-full w-full object-cover"
-          style={{ objectPosition: "18% center" }}
-          fetchPriority="high"
-        />
+        {/*
+          <picture> en niet twee <img>: een img die met `hidden` verborgen is
+          wordt door de browser alsnog gedownload, een niet-matchende <source>
+          niet. Mobiel haalt zo 22 kB op in plaats van 86 kB.
+          De sectieachtergrond is exact de kleur van de afbeelding, dus er is
+          geen naad zichtbaar waar het beeld ophoudt.
+        */}
+        {/* fetchpriority via spread: dat is het huispatroon in deze repo,
+            omdat de React-types hier de camelCase-variant niet accepteren. */}
+        <picture className="block">
+          <source media="(min-width: 768px)" srcSet={HERO_BEELD} />
+          <img
+            src={HERO_BEELD_MOBIEL}
+            alt="Logistiek medewerker met handscanner"
+            width={960}
+            height={540}
+            {...({ fetchpriority: "high" } as any)}
+            className="block h-auto w-full md:absolute md:inset-0 md:h-full md:w-full md:object-cover"
+            style={{ objectPosition: "18% center" }}
+          />
+        </picture>
 
-        {/* Mobiel: het beeld staat boven de tekst, zodat de man zichtbaar
-            blijft en de tekst op de egale achtergrond leesbaar is. */}
-        <img
-          src={HERO_BEELD_MOBIEL}
-          alt=""
-          aria-hidden="true"
-          width={960}
-          height={540}
-          className="md:hidden block w-full h-auto"
-        />
-
-        <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-5 pb-14 pt-8 sm:px-6 md:min-h-[86vh] md:grid-cols-2 md:items-center md:pb-24 md:pt-32 lg:px-8">
+        <div className="relative mx-auto grid max-w-7xl grid-cols-1 px-5 pb-16 pt-7 sm:px-6 md:min-h-[44rem] md:grid-cols-[0.94fr_1.06fr] md:items-center md:px-8 md:pb-20 md:pt-32">
+          {/* Linkerkolom blijft leeg: daar staat de man in de afbeelding. */}
           <div className="hidden md:block" aria-hidden="true" />
 
-          <div className="max-w-xl text-white">
-            <h1 className="text-[2rem] font-extrabold leading-[1.05] tracking-tight sm:text-[2.4rem] lg:text-[2.45rem] xl:text-[2.65rem]">
-              Logistiek personeel nodig?
-              <br />
-              <span
-                className="inline-block"
-                style={{
-                  backgroundImage: `linear-gradient(transparent 78%, ${VIOLET} 78%, ${VIOLET} 94%, transparent 94%)`,
-                }}
-              >
-                Wij pakken het op!
-              </span>
-            </h1>
-
-            <p className="mt-6 text-base leading-relaxed text-white/95 sm:text-lg">
-              Van orderpicken tot heftruck, van inpak tot expeditie. EXTRA levert
-              logistiek personeel dat je processen begrijpt. Iedereen persoonlijk
-              gescreend en volledig in loondienst.
+          <div className="w-full md:max-w-[36rem] md:justify-self-end">
+            <p
+              className="inline-flex items-center gap-2.5 font-poppins text-[0.7rem] font-bold uppercase tracking-[0.2em] sm:text-xs"
+              style={{ color: PETROL, opacity: 0.75 }}
+            >
+              <span aria-hidden="true" className="h-0.5 w-6" style={{ backgroundColor: PETROL }} />
+              Logisch werkt!
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
+            {/* Twee gewichten in één kop: de vraag in 400, het antwoord in 800. */}
+            <h1
+              className="mt-4 font-poppins text-[2rem] leading-[1.1] tracking-[-0.035em] sm:text-[2.35rem] lg:text-[2.6rem]"
+              style={{ color: PETROL }}
+            >
+              <span className="block font-normal">Logistiek personeel nodig?</span>
+              <span className="block font-extrabold">Wij pakken het op.</span>
+            </h1>
+
+            <p
+              className="mt-5 max-w-[30rem] text-base leading-relaxed sm:text-[1.0625rem]"
+              style={{ color: PETROL_ZACHT }}
+            >
+              Van orderpicken tot heftruck. Iedereen persoonlijk gescreend,
+              volledig in loondienst en meestal binnen 48 uur inzetbaar.
+            </p>
+
+            <div className="mt-8 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-8">
               <Link
                 href="/personeelsaanvraag"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-4 font-bold shadow-lg transition-transform hover:-translate-y-0.5"
-                style={{ color: CYAAN_DIEP }}
+                className="inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-4 font-poppins font-bold text-white transition-transform hover:-translate-y-0.5"
+                style={{ backgroundColor: VIOLET }}
               >
-                Vraag logistiek personeel aan
+                Vraag personeel aan
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              {/* Bewust geen tweede knop: het nummer is de uitwijkmogelijkheid,
+                  niet de gelijkwaardige keuze. */}
               <a
                 href="tel:0851305915"
-                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/85 px-7 py-4 font-bold text-white transition-colors hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 font-poppins font-bold"
+                style={{ color: PETROL }}
               >
                 <Phone className="h-4 w-4" />
-                085 130 59 15
+                <span className="border-b-2 border-current pb-0.5">085 130 59 15</span>
               </a>
             </div>
 
-            <ul className="mt-8 flex flex-wrap gap-x-7 gap-y-3 text-sm font-medium text-white">
-              {["Iedereen in loondienst", "NEN 4400-1 gecertificeerd", "Geen opzegtermijn"].map((t) => (
-                <li key={t} className="flex items-center gap-2">
-                  <span className="grid h-5 w-5 place-items-center rounded-full border border-white/50 bg-white/25">
-                    <Check className="h-3 w-3" />
-                  </span>
-                  {t}
+            {/* Bewijs boven de vouw, in plaats van onderaan de pagina. */}
+            <ul
+              className="mt-9 grid grid-cols-3 pt-5 text-[13px] leading-snug"
+              style={{ borderTop: "1px solid rgba(10,46,60,.25)", color: PETROL_ZACHT }}
+            >
+              {BEWIJS.map(({ cijfer, label }, i) => (
+                <li
+                  key={cijfer}
+                  className={i === 0 ? "" : "pl-3 sm:pl-4"}
+                  style={i === 0 ? undefined : { borderLeft: "1px solid rgba(10,46,60,.25)" }}
+                >
+                  <b
+                    className="block font-poppins text-[0.95rem] font-extrabold tracking-tight sm:text-base"
+                    style={{ color: PETROL }}
+                  >
+                    {cijfer}
+                  </b>
+                  {label}
                 </li>
               ))}
             </ul>
@@ -399,30 +450,37 @@ export default function LogistiekPersoneelInhuren() {
       </section>
 
       {/* ══════════════ EIND-CTA ══════════════ */}
+      {/* Zelfde behandeling als de hero: petrol op cyaan in plaats van wit
+          (wit haalde hier ook maar 2,09:1), één violette knop en het nummer
+          als ondergeschikte link. */}
       <section className="py-20 sm:py-24" style={{ backgroundColor: CYAAN }}>
         <div className="mx-auto max-w-3xl px-5 text-center sm:px-6">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <h2
+            className="font-poppins text-3xl font-extrabold tracking-tight sm:text-4xl"
+            style={{ color: PETROL }}
+          >
             Vertel ons welke dienst je niet rond krijgt
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-white/95">
+          <p className="mx-auto mt-5 max-w-xl" style={{ color: PETROL_ZACHT }}>
             Laat je nummer achter, dan bellen we je terug met wie we kunnen
             sturen. Ook als het voor morgenochtend is.
           </p>
-          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+          <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-8">
             <Link
               href="/personeelsaanvraag"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 font-bold shadow-lg transition-transform hover:-translate-y-0.5"
-              style={{ color: CYAAN_DIEP }}
+              className="inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-4 font-poppins font-bold text-white transition-transform hover:-translate-y-0.5"
+              style={{ backgroundColor: VIOLET }}
             >
               Vraag logistiek personeel aan
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="tel:0851305915"
-              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/85 px-8 py-4 font-bold text-white transition-colors hover:bg-white/10"
+              className="inline-flex items-center justify-center gap-2 font-poppins font-bold"
+              style={{ color: PETROL }}
             >
               <Phone className="h-4 w-4" />
-              085 130 59 15
+              <span className="border-b-2 border-current pb-0.5">085 130 59 15</span>
             </a>
           </div>
         </div>
