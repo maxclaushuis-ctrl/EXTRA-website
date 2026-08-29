@@ -21,6 +21,8 @@ const CateringPersoneelGezocht = lazy(() => import("@/pages/CateringPersoneelGez
 const RestaurantPersoneelGezocht = lazy(() => import("@/pages/RestaurantPersoneelGezocht"));
 const PersoneelsAanvraag = lazy(() => import("@/pages/PersoneelsAanvraag"));
 const AanvraagOntvangen = lazy(() => import("@/pages/AanvraagOntvangen"));
+// Stijlpilot, noindex — zie shared/routeMeta.ts
+const LogistiekPersoneelInhuren = lazy(() => import("@/pages/LogistiekPersoneelInhuren"));
 const Aanmelden = lazy(() => import("@/pages/Aanmelden"));
 const CvUpload = lazy(() => import("@/pages/CvUpload"));
 const HorecaWerk = lazy(() => import("@/pages/HorecaWerk"));
@@ -159,6 +161,7 @@ const PUBLIC_PATHS = [
   '/bijbaan-amsterdam',
   '/werken-in-de-horeca',
   '/horeca-personeel-inhuren',
+  '/logistiek-personeel-inhuren',
   '/bediening-inhuren',
   '/evenementen-personeel-inhuren',
   '/tijdelijk-horeca-personeel',
@@ -343,6 +346,8 @@ function Router() {
 
           {/* Overige publieke routes */}
           <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
+          {/* Stijlpilot, bewust niet in de navigatie of sitemap opgenomen. */}
+          <Route path="/logistiek-personeel-inhuren" component={LogistiekPersoneelInhuren} />
           <Route path="/aanvraag-ontvangen" component={AanvraagOntvangen} />
           <Route path="/aanmelden" component={Aanmelden} />
           <Route path="/cv-upload" component={CvUpload} />

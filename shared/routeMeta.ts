@@ -170,6 +170,25 @@ export const ROUTE_META: RouteMeta[] = [
     changefreq: "monthly",
   },
   {
+    // STIJLPILOT — mag niet live. Deze pagina bestaat om de cyaan/violette
+    // opmaak te beoordelen naast de bestaande paarse site. Hij staat bewust
+    // niet in de navigatie, niet in de sitemap en niet in de interne
+    // linkstructuur; hij is alleen via de directe URL te bereiken.
+    // noindex zodat hij nooit in de zoekresultaten kan opduiken, follow zodat
+    // de uitgaande links naar bestaande pagina's normaal meetellen, en
+    // prerender: false omdat check-seo anders een gecommit fragment eist voor
+    // een pagina die geen zoekdoel heeft.
+    // Wordt de stijl goedgekeurd, dan gaat noindex eruit, komt er een fragment
+    // bij en hoort de pagina in docs/PAGINA-REGISTER.md.
+    path: "/logistiek-personeel-inhuren",
+    title: "Logistiek personeel inhuren | EXTRA",
+    description:
+      "Logistiek personeel nodig? EXTRA levert orderpickers, heftruckchauffeurs en inpakkers in loondienst, persoonlijk gescreend en snel inzetbaar.",
+    noindex: true,
+    follow: true,
+    prerender: false,
+  },
+  {
     // Bedankpagina na het aanvraagformulier. Bewust noindex: hij heeft alleen
     // betekenis direct na verzenden. Wel follow, zodat de links naar de
     // klantcases en de werkwijze gewoon meetellen.
