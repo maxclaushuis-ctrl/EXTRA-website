@@ -65,7 +65,7 @@ Housekeeping · EXTRA Nieuws · Branche. Gebruik altijd één van deze zes.
 `/housekeeping-vacatures-amsterdam` · `/chef-vacatures-amsterdam` ·
 `/front-office-vacatures-amsterdam` · `/bijbaan-amsterdam` ·
 `/werken-in-de-horeca` · `/dagbetaling` · `/vacatures` · `/aanmelden` ·
-`/extraatje` · `/rewards`
+`/extraatje`
 
 > Regel: een blog **linkt naar** deze pagina's, maar probeert nooit op dezelfde
 > transactionele zoekterm te ranken. "Inhuren" en "vacatures" blijven strikt
@@ -159,10 +159,17 @@ Twee bestanden in `content/blog/`:
   gaan niet naar de database.
 - `<slug>.html` — de body van het artikel.
 
-Het script controleert vóórdat het schrijft: verplichte velden, of de categorie
-bestaat, of de genoemde afbeeldingen echt in `client/public/images/` staan, en
-of er minstens drie interne links in zitten. Ontbreekt er iets, dan schrijft het
-niets weg en zegt het wat er mis is.
+Het script controleert vóórdat het schrijft. Twee soorten meldingen:
+
+- **Blokkerend** (er wordt niets weggeschreven): ontbrekende verplichte velden,
+  een categorie die niet bestaat, of een genoemde afbeelding die niet in
+  `client/public/images/` staat.
+- **Waarschuwing** (het artikel gaat wel door): minder dan drie interne links,
+  een meta-titel boven 60 tekens, een meta-omschrijving boven 160 tekens.
+
+Dat onderscheid is bewust: drie interne links is een richtsnoer, geen wet — en
+een artikel tegenhouden om één link te weinig is strenger dan nuttig. Lees de
+waarschuwingen wel; ze wijzen bijna altijd op iets dat beter kan.
 
 ### Aandachtspunten
 
@@ -174,10 +181,20 @@ niets weg en zegt het wat er mis is.
 - **Interne links:** 3 à 8 per artikel, altijd naar bestaande pagina's uit de
   lijst hierboven. Noteer per artikel ook welke bestaande pagina's ernaartoe
   moeten linken.
-- **Prerender** (`npm run build && npm run prerender`) maakt een statisch
-  fragment voor crawlers zonder JavaScript. Optioneel; Google indexeert de
-  pagina ook zonder. Vereist eenmalig `npx playwright-core install chromium` —
-  let op: `npx playwright install` haalt een verkeerde versie op.
+- **Prerender** maakt een statisch fragment voor crawlers die geen JavaScript
+  uitvoeren. **Niet optioneel.** Google rendert JavaScript wel, maar GPTBot,
+  ClaudeBot en PerplexityBot niet — en dat is precies het verkeer dat we met
+  Promptwatch meten. Zonder fragment bestaat het artikel niet voor die
+  crawlers. `check-seo.ts` faalt bovendien op elke `prerender: true`-route
+  zonder gecommit fragment.
+
+  ```bash
+  npm run build
+  PRERENDER_CHROMIUM=$(which chromium) npm run prerender
+  ```
+
+  Chromium komt uit `replit.nix` (`pkgs.chromium`); de door Playwright
+  gedownloade browser start niet in Replit. Commit de gewijzigde fragmenten mee.
 
 Publiceren via het dashboard (**Blog & SEO → nieuw artikel**) kan ook, mits je
 op de live site bent ingelogd en niet in de testomgeving.

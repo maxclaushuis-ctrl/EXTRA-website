@@ -4,13 +4,18 @@
  * Eén bron van waarheid voor title, meta description en canonical per publieke route.
  * Wordt gebruikt door:
  *  - server/seo.ts        → injecteert deze waarden server-side in de initiële HTML
- *  - scripts/prerender.mjs → bepaalt welke routes een prerendered HTML-fragment krijgen
- *  - scripts/check-seo.mjs → build-check: lengtes, uniciteit, canonicals
+ *  - scripts/prerender.ts  → bepaalt welke routes een prerendered HTML-fragment krijgen
+ *  - scripts/check-seo.ts  → build-check: lengtes, uniciteit, canonicals
+ *  - scripts/register-check.ts → build-check: staat elke indexeerbare route
+ *    in docs/PAGINA-REGISTER.md (wie bezit welk zoekwoordcluster)
  *  - de sitemap-route in server/routes.ts (alleen routes zonder noindex)
  *
  * Regels (afgedwongen door scripts/check-seo.mjs):
- *  - title: max 60 tekens, primaire keyword vooraan, uniek
- *  - description: 120–155 tekens, uniek, met concrete CTA waar passend
+ *  - title: max 60 tekens, primaire keyword vooraan, uniek (P17 verlaagde
+ *    dit van 62 naar 60: daar kapt Google de meeste titles af)
+ *  - description: 110–160 tekens, uniek, met concrete CTA waar passend
+ *    (dit is de grens die scripts/check-seo.ts daadwerkelijk afdwingt;
+ *    hier stond eerder 120–155, wat nergens werd gecontroleerd)
  *  - canonical: self-referencing, behalve bij bewuste duplicaten
  *
  * P14: de vier bekende duplicaten (/nieuws, /beloningssysteem, /hoe-extra-werkt,
@@ -163,6 +168,25 @@ export const ROUTE_META: RouteMeta[] = [
     prerender: true,
     priority: "0.9",
     changefreq: "monthly",
+  },
+  {
+    // STIJLPILOT — mag niet live. Deze pagina bestaat om de cyaan/violette
+    // opmaak te beoordelen naast de bestaande paarse site. Hij staat bewust
+    // niet in de navigatie, niet in de sitemap en niet in de interne
+    // linkstructuur; hij is alleen via de directe URL te bereiken.
+    // noindex zodat hij nooit in de zoekresultaten kan opduiken, follow zodat
+    // de uitgaande links naar bestaande pagina's normaal meetellen, en
+    // prerender: false omdat check-seo anders een gecommit fragment eist voor
+    // een pagina die geen zoekdoel heeft.
+    // Wordt de stijl goedgekeurd, dan gaat noindex eruit, komt er een fragment
+    // bij en hoort de pagina in docs/PAGINA-REGISTER.md.
+    path: "/logistiek-personeel-inhuren",
+    title: "Logistiek personeel inhuren | EXTRA",
+    description:
+      "Logistiek personeel nodig? EXTRA levert orderpickers, heftruckchauffeurs en inpakkers in loondienst, persoonlijk gescreend en snel inzetbaar.",
+    noindex: true,
+    follow: true,
+    prerender: false,
   },
   {
     // Bedankpagina na het aanvraagformulier. Bewust noindex: hij heeft alleen

@@ -1,3 +1,16 @@
+> **ARCHIEF — niet gebruiken als bron van afspraken.**
+>
+> Dit document beschrijft een momentopname en is sindsdien op meerdere punten
+> achterhaald. De geldende regels staan in `shared/routeMeta.ts`,
+> `scripts/check-seo.ts`, `docs/PAGINA-REGISTER.md` en de skill
+> `extra-website`. Bewaard voor de historie: het legt vast waarom de site is
+> zoals hij is.
+>
+> Concreet achterhaald: "62 indexeerbare routes" is nu 57, "54 geprerenderde
+> routes" is nu 60, en de titelgrens is met P17 verlaagd van 62 naar 60
+> tekens. Ook de beschreven `/landing`-canonical is anders uitgevoerd: `/`
+> rendert de landingscontent en `/landing` 301't daarheen.
+
 # SEO-uitvoeringsrapport — P1 t/m P10 (Wrkt Digital-audit, juli 2026)
 
 Uitgevoerd door Claude (Cowork) op de codebase, in drie blokken gepusht naar GitHub (commits `4770f34`, `8adb759`, `d931bfc`). **Nog niet live**: pull + publish in Replit nodig.
