@@ -231,8 +231,8 @@ export const ROUTE_META: RouteMeta[] = [
     // eerstejaars Facilitair Eventmanagement van InHolland. Zelfde patroon
     // als /BHG-group en /xebia hierboven: noindex omdat de pagina geen
     // zoekdoel heeft en niet als orphan in een audit moet terugkomen,
-    // follow zodat de links naar /aanmelden en /hoe-werkt-dagbetaling
-    // gewoon meetellen.
+    // follow zodat de links naar /aanmelden en /dagbetaling gewoon
+    // meetellen.
     //
     // prerender bewust false: zo is de build groen zonder dat er eerst een
     // fragment gegenereerd hoeft te worden. De pagina heeft geen SEO- of
@@ -241,7 +241,7 @@ export const ROUTE_META: RouteMeta[] = [
     path: "/inholland",
     title: "Bijbaan op events voor InHolland-studenten | EXTRA",
     description:
-      "Werk als student bij events in Amsterdam. Kies je eigen diensten om je rooster heen, dagbetaling mogelijk en spaar punten met EXTRAATje.",
+      "Werk als student bij events in Amsterdam. Je kiest zelf je diensten om je rooster heen, vandaag werken kan morgen uitbetaald zijn en je spaart punten.",
     noindex: true,
     follow: true,
     prerender: false,
