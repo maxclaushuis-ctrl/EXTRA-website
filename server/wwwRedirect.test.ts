@@ -94,5 +94,27 @@ console.log("\n— en wat er juist NIET mag gebeuren —");
   eq("apex met https", wwwDoelUrl("doehetextra.nl", "/blog", "https"), "https://www.doehetextra.nl/blog");
 }
 
+{
+  // /api NOOIT omleiden. Een webhook-verzender volgt geen 301.
+  eq("whatsapp-webhook op de apex blijft staan",
+     wwwDoelUrl("doehetextra.nl", "/api/whatsapp/webhook/geheim123"), null);
+  eq("meta-webhook op de apex blijft staan",
+     wwwDoelUrl("doehetextra.nl", "/api/whatsapp/meta-webhook"), null);
+  eq("ook over http niet omleiden",
+     wwwDoelUrl("doehetextra.nl", "/api/whatsapp/webhook/geheim123", "http"), null);
+  eq("elk ander api-pad ook niet",
+     wwwDoelUrl("doehetextra.nl", "/api/webhooks/sendgrid/inbound"), null);
+  eq("/api zonder schuine streep ook niet",
+     wwwDoelUrl("doehetextra.nl", "/api"), null);
+  eq("query-string maakt geen verschil",
+     wwwDoelUrl("doehetextra.nl", "/api/whatsapp/stats?limit=5"), null);
+
+  // Maar een pagina die toevallig met 'api' begint is gewoon een pagina.
+  eq("/apitest is geen api-pad",
+     wwwDoelUrl("doehetextra.nl", "/apitest"), "https://www.doehetextra.nl/apitest");
+  eq("/api-koppeling is geen api-pad",
+     wwwDoelUrl("doehetextra.nl", "/api-koppeling"), "https://www.doehetextra.nl/api-koppeling");
+}
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);

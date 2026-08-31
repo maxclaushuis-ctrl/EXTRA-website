@@ -56,6 +56,15 @@ export function wwwDoelUrl(
 ): string | null {
   if (!host) return null;
 
+  // API-verkeer nooit omleiden. Een 301 is prima voor een pagina en funest
+  // voor een API: een browser volgt hem, een webhook-verzender niet. Die ziet
+  // een 3xx, telt dat als mislukte aflevering en stopt na zijn retry-window.
+  // Precies zo viel de WhatsApp-koppeling stil toen deze redirect live ging:
+  // de webhook stond bij 360dialog op de apex geregistreerd. Voor SEO maakt
+  // het niets uit -- /api staat in geen sitemap en wordt niet geindexeerd.
+  const padVoorApiCheck = url && url.startsWith('/') ? url : `/${url || ''}`;
+  if (padVoorApiCheck === '/api' || padVoorApiCheck.startsWith('/api/')) return null;
+
   // Poort eraf (localhost-achtige situaties en proxies die :443 meesturen).
   const hostnaam = String(host).toLowerCase().split(':')[0];
 

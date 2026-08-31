@@ -40,7 +40,7 @@ berichten. Zonder `WHATSAPP_360_API_KEY` werkt versturen niet.
 De webhook-URL die je bij 360dialog moet zetten is:
 
 ```
-https://doehetextra.nl/api/whatsapp/webhook/<WHATSAPP_WEBHOOK_SECRET>
+https://www.doehetextra.nl/api/whatsapp/webhook/<WHATSAPP_WEBHOOK_SECRET>
 ```
 
 (de hele waarde van het secret achter de schuine streep)
@@ -52,7 +52,7 @@ Twee opties:
 2. **Via 360dialog support** — als optie 1 een 400/permission-error
    teruggeeft, mail support@360dialog.com en vraag:
    > Please set webhook URL for our channel to:
-   > `https://doehetextra.nl/api/whatsapp/webhook/<SECRET>`
+   > `https://www.doehetextra.nl/api/whatsapp/webhook/<SECRET>`
 
 ## Bij rotatie van het secret
 
@@ -90,7 +90,7 @@ gewoon werken tot de cutover; de Meta-webhook kan er parallel naast draaien.
 App → WhatsApp → Configuration → Webhook:
 
 ```
-Callback URL:  https://doehetextra.nl/api/whatsapp/meta-webhook
+Callback URL:  https://www.doehetextra.nl/api/whatsapp/meta-webhook
 Verify token:  <waarde van META_WA_BOT_VERIFY_TOKEN>
 ```
 
