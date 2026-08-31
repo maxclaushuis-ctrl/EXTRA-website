@@ -227,6 +227,26 @@ export const ROUTE_META: RouteMeta[] = [
     follow: true,
   },
   {
+    // Campagnepagina: bestemming van een QR-code tijdens een gastles aan
+    // eerstejaars Facilitair Eventmanagement van InHolland. Zelfde patroon
+    // als /BHG-group en /xebia hierboven: noindex omdat de pagina geen
+    // zoekdoel heeft en niet als orphan in een audit moet terugkomen,
+    // follow zodat de links naar /aanmelden en /hoe-werkt-dagbetaling
+    // gewoon meetellen.
+    //
+    // prerender bewust false: zo is de build groen zonder dat er eerst een
+    // fragment gegenereerd hoeft te worden. De pagina heeft geen SEO- of
+    // AI-zichtbaarheidsdoel, dus dat kost hier niets. Wil je hem later toch
+    // laten prerenderen, zet hem dan op true en draai het prerenderscript.
+    path: "/inholland",
+    title: "Bijbaan op events voor InHolland-studenten | EXTRA",
+    description:
+      "Werk als student bij events in Amsterdam. Kies je eigen diensten om je rooster heen, dagbetaling mogelijk en spaar punten met EXTRAATje.",
+    noindex: true,
+    follow: true,
+    prerender: false,
+  },
+  {
     path: "/xebia",
     title: "Xebia & EXTRA | Hospitality op kantoor",
     description:
