@@ -1191,6 +1191,91 @@ export async function sendTwvExpiryReminderEmail(candidate: {
   return allOk;
 }
 
+/**
+ * Melding dat een tewerkstellingsvergunning AL verlopen is.
+ *
+ * Bewust een aparte mail naast sendTwvExpiryReminderEmail. Die waarschuwt
+ * vooruit ("verloopt over X dagen") en stopt zodra de datum voorbij is — de
+ * filter daar is daysLeft > 0. Precies op het moment dat het probleem echt
+ * ontstaat, kreeg niemand dus nog iets. Deze mail vult dat gat.
+ *
+ * De toon is anders omdat de situatie anders is: bij de eerste kan er nog
+ * verlengd worden, bij deze mag de medewerker niet meer ingezet worden. Rood in
+ * plaats van oranje, en de tekst zegt wat er nú niet meer mag in plaats van wat
+ * er straks moet gebeuren.
+ *
+ * Gaat naar de admins, nooit naar de kandidaat.
+ */
+export async function sendTwvExpiredNotice(candidate: {
+  firstName: string;
+  lastName: string;
+  id: number;
+  twvEndDate: string;
+  dagenVerlopen: number;
+}): Promise<boolean> {
+  const recipients = ['max@doehetextra.nl', 'eveline@doehetextra.nl'];
+  const fullName = `${candidate.firstName} ${candidate.lastName}`;
+  const endDateFormatted = new Date(candidate.twvEndDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const sinds = candidate.dagenVerlopen === 1 ? 'sinds gisteren' : `sinds ${candidate.dagenVerlopen} dagen`;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TWV is verlopen</title>${emailMobileCss()}</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
+        <tr>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="${getEmailBannerSrc()}" width="600" height="200" alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
+          </td>
+        </tr>
+        <tr>
+          <td style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:16px 28px;text-align:center;">
+            <div style="color:#ffffff;font-size:18px;font-weight:700;">TWV is verlopen</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Beste collega,</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">De tewerkstellingsvergunning van <strong>${fullName}</strong> is verlopen op <strong>${endDateFormatted}</strong>, ${sinds}.</p>
+            <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:16px 20px;margin:20px 0;">
+              <p style="margin:0;font-size:14px;color:#991b1b;font-weight:600;">Niet meer inzetbaar</p>
+              <p style="margin:6px 0 0;font-size:14px;color:#7f1d1d;line-height:1.5;">Zonder geldige vergunning mag deze medewerker niet worden ingepland. Haal openstaande diensten weg en neem contact op over een verlenging.</p>
+            </div>
+            <p style="margin:24px 0 0;font-size:15px;color:#374151;line-height:1.6;">De status in het TWV-overzicht staat inmiddels op <strong>TWV Verlopen</strong>.</p>
+            <div style="text-align:center;margin:28px 0;">
+              <a href="${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard" style="display:inline-block;background:#dc2626;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
+            </div>
+            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA – Geautomatiseerde melding</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  let allOk = true;
+  for (const to of recipients) {
+    const ok = await sendEmail({
+      to,
+      from: 'EXTRA Systeem <max@doehetextra.nl>',
+      subject: `TWV van ${fullName} is verlopen — niet meer inzetbaar`,
+      html,
+      text: `De TWV van ${fullName} is verlopen op ${endDateFormatted}, ${sinds}. Deze medewerker mag niet worden ingepland zonder geldige vergunning.`,
+    });
+    if (!ok) allOk = false;
+  }
+  return allOk;
+}
+
 // Helper functie om instellingen op te halen
 async function getSettingValue(key: string, defaultValue: string): Promise<string> {
   try {

@@ -897,6 +897,11 @@ export const candidates = pgTable("candidates", {
   twvStartDate: date("twv_start_date"),
   twvEndDate: date("twv_end_date"),
   twvReminderSentAt: timestamp("twv_reminder_sent_at"),
+  // Apart van twvReminderSentAt, met opzet. Dat veld hoort bij de melding
+  // "verloopt binnenkort"; dit bij de melding "is al verlopen". Op één veld
+  // zouden ze elkaar overschrijven en was achteraf niet meer te bewijzen welke
+  // waarschuwing wanneer is verstuurd.
+  twvExpiredNotifiedAt: timestamp("twv_expired_notified_at"),
   twvNotes: text("twv_notes"),
   
   // Gesprek planning
@@ -1964,6 +1969,7 @@ export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
   "cv_uploaded",         // CV opgestuurd
   "sollicitatie_form",   // Intern sollicitatieformulier ingestuurd
   "twv_expiry",          // TWV dreigt te verlopen
+  "twv_verlopen",        // TWV is verlopen — medewerker niet meer inzetbaar
   "staffing_request",    // Nieuwe aanvraag van een bedrijf
   "interview_reminder",  // Gesprek vandaag
   "contact_bericht",     // Bericht via het contactformulier
