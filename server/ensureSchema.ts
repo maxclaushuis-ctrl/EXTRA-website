@@ -391,6 +391,19 @@ const AANVULLINGEN: Aanvulling[] = [
           ON contact_berichten (created_at DESC)
       `),
   },
+  {
+    // Migratie 0024 — zie migrations/manual/0024_candidates_nationality_iso/
+    // Twee nieuwe kolommen naast het bestaande vrije-tekstveld nationality.
+    // Puur additief: geen bestaande waarde wordt aangeraakt, beide kolommen
+    // beginnen leeg en worden alleen gevuld waar de naam exact matcht.
+    omschrijving: "candidates: nationality_iso en nationality_zone",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE candidates
+          ADD COLUMN IF NOT EXISTS nationality_iso  text,
+          ADD COLUMN IF NOT EXISTS nationality_zone text
+      `),
+  },
 ];
 
 /**
