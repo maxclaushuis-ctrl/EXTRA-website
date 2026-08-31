@@ -12067,7 +12067,7 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
 
   // ─── META CLOUD API WEBHOOK (coexistence — Fase 1 migratie) ───────────────
   // Te registreren in Meta Business Manager (App → WhatsApp → Configuration):
-  //   Callback URL: https://doehetextra.nl/api/whatsapp/meta-webhook
+  //   Callback URL: https://www.doehetextra.nl/api/whatsapp/meta-webhook
   //   Verify token: waarde van META_WA_BOT_VERIFY_TOKEN
   // GET  = verify-handshake; POST = events, geverifieerd via X-Hub-Signature-256
   // (HMAC-SHA256 over de RAW body met META_WA_BOT_APP_SECRET; de raw body wordt
@@ -12110,7 +12110,9 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   app.post('/api/whatsapp/registreer-webhook', adminMiddleware, async (req: Request, res: Response) => {
     if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
     if (!WEBHOOK_SECRET) return res.status(503).json({ error: 'WHATSAPP_WEBHOOK_SECRET niet ingesteld — kan geen veilige URL bouwen' });
-    const baseUrl = req.body?.url || `https://doehetextra.nl/api/whatsapp/webhook/${WEBHOOK_SECRET}`;
+    // www, niet de apex: de apex stuurt sinds 17 augustus met een 301 door
+    // naar www, en een webhook-verzender volgt geen redirect.
+    const baseUrl = req.body?.url || `https://www.doehetextra.nl/api/whatsapp/webhook/${WEBHOOK_SECRET}`;
     const attempts = [
       { method: 'PATCH', body: { url: baseUrl } },
       { method: 'PUT',   body: { url: baseUrl, headers: {} } },

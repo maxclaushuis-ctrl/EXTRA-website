@@ -20,6 +20,22 @@
  * Replit-preview en op interne health checks van de deploy — en die draaien op
  * heel andere hostnamen. Een redirect die de preview onbruikbaar maakt, merk je
  * pas als je hem nodig hebt.
+ *
+ * NOOIT OP /api
+ * -------------
+ * Een 301 is prima voor een pagina en funest voor een API. Een browser volgt
+ * hem; een webhook-verzender niet. Die ziet een 3xx, telt dat als mislukte
+ * aflevering, probeert het nog een paar keer en stopt daarna.
+ *
+ * Precies dat is gebeurd. De WhatsApp-webhook stond bij 360dialog geregistreerd
+ * op de apex (zo staat hij ook in server/whatsapp/README.md en zo zette de knop
+ * "Webhook registreren" hem), en vanaf het moment dat deze redirect live ging,
+ * kreeg elke inkomende POST een 301 in plaats van de handler. Sindsdien kwam er
+ * geen enkel WhatsApp-bericht meer binnen.
+ *
+ * Voor SEO maakt het niets uit: /api staat in geen sitemap en wordt niet
+ * geïndexeerd. Voor elke integratie die ooit op de apex is ingesteld maakt het
+ * het verschil tussen werken en stil uitvallen.
  */
 
 /** De hostnamen die naar www moeten. Poortnummers worden apart afgehandeld. */
@@ -55,6 +71,10 @@ export function wwwDoelUrl(
   protocol?: string | string[] | undefined,
 ): string | null {
   if (!host) return null;
+
+  // API-verkeer nooit omleiden — zie de toelichting bovenaan dit bestand.
+  const pad_ruw = url && url.startsWith('/') ? url : `/${url || ''}`;
+  if (pad_ruw === '/api' || pad_ruw.startsWith('/api/')) return null;
 
   // Poort eraf (localhost-achtige situaties en proxies die :443 meesturen).
   const hostnaam = String(host).toLowerCase().split(':')[0];

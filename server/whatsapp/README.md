@@ -32,6 +32,12 @@ auto-koppeling aan `candidates` / `prospect_contacts`.
 | `WHATSAPP_WEBHOOK_SECRET` | Geheime tokenwaarde in webhook-URL | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `WHATSAPP_PROVIDER` | Verzend-provider: `360dialog` (default) of `meta` | Zet pas op `meta` bij de cutover — zie livegang-checklist |
 
+⚠️ Gebruik altijd de **www**-hostnaam. De apex `doehetextra.nl` stuurt sinds
+17 augustus met een 301 door naar www, en een webhook-verzender volgt geen
+redirect: die ziet een 3xx, telt het als mislukte aflevering en stopt na zijn
+retry-window. `/api` is inmiddels uitgezonderd van die redirect
+(`server/wwwRedirect.ts`), maar registreer hem toch op www.
+
 ⚠️ Zonder `WHATSAPP_WEBHOOK_SECRET` accepteert de webhook **geen** inkomende
 berichten. Zonder `WHATSAPP_360_API_KEY` werkt versturen niet.
 
@@ -40,7 +46,7 @@ berichten. Zonder `WHATSAPP_360_API_KEY` werkt versturen niet.
 De webhook-URL die je bij 360dialog moet zetten is:
 
 ```
-https://doehetextra.nl/api/whatsapp/webhook/<WHATSAPP_WEBHOOK_SECRET>
+https://www.doehetextra.nl/api/whatsapp/webhook/<WHATSAPP_WEBHOOK_SECRET>
 ```
 
 (de hele waarde van het secret achter de schuine streep)
@@ -52,7 +58,7 @@ Twee opties:
 2. **Via 360dialog support** — als optie 1 een 400/permission-error
    teruggeeft, mail support@360dialog.com en vraag:
    > Please set webhook URL for our channel to:
-   > `https://doehetextra.nl/api/whatsapp/webhook/<SECRET>`
+   > `https://www.doehetextra.nl/api/whatsapp/webhook/<SECRET>`
 
 ## Bij rotatie van het secret
 
@@ -90,7 +96,7 @@ gewoon werken tot de cutover; de Meta-webhook kan er parallel naast draaien.
 App → WhatsApp → Configuration → Webhook:
 
 ```
-Callback URL:  https://doehetextra.nl/api/whatsapp/meta-webhook
+Callback URL:  https://www.doehetextra.nl/api/whatsapp/meta-webhook
 Verify token:  <waarde van META_WA_BOT_VERIFY_TOKEN>
 ```
 
