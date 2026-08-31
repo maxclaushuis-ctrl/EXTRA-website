@@ -49,7 +49,8 @@ import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./bi
 import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail, sendAdminWelcomeEmail } from "./mail";
 import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
-import { landvelden } from "@shared/landen";
+import { landvelden, zoekLand } from "@shared/landen";
+import { bepaalVerlopenRijen, bepaalLegeStatusRijen, dagenVerlopen } from "./twvVerlopen";
 import { sendPlanbordWebhook, buildIntakePayloadBlock } from "./integrations/planbord-webhook";
 import { buildPlanbordBackfill } from "./integrations/planbord-backfill";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
@@ -9222,7 +9223,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           c.lastName,
           c.nationality || '',
           c.functionType || '',
-          statusLabels[c.twvStatus] || c.twvStatus || 'Onbekend',
+          // Zelfde noemer als het scherm: een lege status heet overal "Geen status".
+          statusLabels[c.twvStatus] || c.twvStatus || 'Geen status',
           c.twvStartDate || '',
           c.twvEndDate || '',
           c.createdAt ? new Date(c.createdAt).toLocaleDateString('nl-NL') : '',
@@ -9245,6 +9247,220 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ success: true, remindersSent: count });
     } catch (error) {
       console.error("Fout bij TWV reminder check:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // ─── TWV: verlopen vergunningen (onderdeel A) ─────────────────────────────
+  //
+  // Tot nu toe verschoof het TWV-scherm een verstrekte vergunning met een
+  // verstreken einddatum in de BROWSER naar "TWV Verlopen", zonder dat weg te
+  // schrijven. De CSV-export las rechtstreeks uit de database en noemde
+  // diezelfde rij "TWV Verstrekt". Twee documenten, twee getallen.
+  //
+  // Vanaf hier is de database leidend: deze taak zet de status daadwerkelijk om,
+  // het scherm toont voortaan gewoon wat er staat, en er is geen derde plek meer
+  // die zelf iets afleidt.
+  //
+  // PROEFSTAND. Zolang TWV_AUTO_VERLOPEN_ACTIEF op false staat schrijft deze
+  // taak NIETS. Hij logt alleen welke rijen hij zou omzetten. Dat is met opzet:
+  // de eerste echte schrijfactie raakt bestaande productierijen, en die lijst
+  // hoort eerst met eigen ogen bekeken te zijn. Zet hem pas op true nadat de
+  // proefstand-uitvoer is goedgekeurd.
+  const TWV_AUTO_VERLOPEN_ACTIEF = false;
+
+  async function verwerkVerlopenTwv(opties?: { forceerSchrijven?: boolean }): Promise<{
+    droog: boolean;
+    bekeken: number;
+    gevonden: number;
+    gewijzigd: number;
+    rijen: Array<{ id: number; naam: string; einddatum: string | null; dagenVerlopen: number }>;
+  }> {
+    const schrijven = opties?.forceerSchrijven ?? TWV_AUTO_VERLOPEN_ACTIEF;
+    const alleTwv = await storage.getTwvCandidates();
+    const vandaag = new Date();
+    const teVerlopen = bepaalVerlopenRijen(alleTwv as any[], vandaag);
+
+    const rijen = teVerlopen.map((c: any) => ({
+      id: c.id,
+      naam: `${c.firstName} ${c.lastName}`.trim(),
+      einddatum: c.twvEndDate ?? null,
+      dagenVerlopen: dagenVerlopen(c, vandaag),
+    }));
+
+    if (!schrijven) {
+      console.log(`[TWV] PROEFSTAND — ${rijen.length} van ${alleTwv.length} rijen zouden op twv_verlopen gezet worden. Er is niets gewijzigd.`);
+      for (const r of rijen) {
+        console.log(`[TWV]   #${r.id} ${r.naam} — einddatum ${r.einddatum}, ${r.dagenVerlopen} dag(en) verlopen`);
+      }
+      return { droog: true, bekeken: alleTwv.length, gevonden: rijen.length, gewijzigd: 0, rijen };
+    }
+
+    let gewijzigd = 0;
+    for (const c of teVerlopen as any[]) {
+      try {
+        await storage.updateCandidate(c.id, { twvStatus: 'twv_verlopen' } as any);
+        // Auditregel met een eigen actietype, zodat achteraf te zien is dat dit
+        // de taak was en niet een admin die de status beoordeeld heeft.
+        await storage.createCandidateAuditLog({
+          candidateId: c.id,
+          action: 'twv_auto_expired',
+          changedByUserId: null,
+          changeData: {
+            fieldName: 'twvStatus',
+            oldValue: 'twv_verstrekt',
+            newValue: 'twv_verlopen',
+            description: `Automatisch verlopen: einddatum ${c.twvEndDate} ligt in het verleden`,
+          },
+          ipAddress: null,
+        }).catch((e: any) => console.warn('[TWV] auditregel mislukt (niet-kritiek):', e?.message ?? e));
+        gewijzigd++;
+      } catch (err: any) {
+        console.error(`[TWV] omzetten mislukt voor #${c.id}:`, err?.message ?? err);
+      }
+    }
+    console.log(`[TWV] ${gewijzigd} van ${rijen.length} rijen op twv_verlopen gezet.`);
+    return { droog: false, bekeken: alleTwv.length, gevonden: rijen.length, gewijzigd, rijen };
+  }
+
+  // Proefstand bekijken. Schrijft nooit, ongeacht de vlag hierboven.
+  app.get("/api/admin/twv/proefstand-verlopen", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const r = await verwerkVerlopenTwv({ forceerSchrijven: false });
+      return res.json({ ...r, actiefInProductie: TWV_AUTO_VERLOPEN_ACTIEF });
+    } catch (error: any) {
+      console.error("Fout bij proefstand verlopen:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // Handmatig draaien. Volgt de vlag: staat die op false, dan is dit hetzelfde
+  // als de proefstand en verandert er niets.
+  app.post("/api/admin/twv/verwerk-verlopen", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const r = await verwerkVerlopenTwv();
+      return res.json({ ...r, actiefInProductie: TWV_AUTO_VERLOPEN_ACTIEF });
+    } catch (error: any) {
+      console.error("Fout bij verwerken verlopen TWV:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // ─── TWV: lege status opschonen (eenmalig) ────────────────────────────────
+  //
+  // Een rij met needs_twv = true en twv_status IS NULL heet op het scherm
+  // "TWV Nodig" en in de export "Onbekend". Dat is dezelfde dubbele afleiding
+  // als hierboven, alleen voor een andere waarde. Eén keer wegschrijven maakt er
+  // een echte status van.
+
+  app.get("/api/admin/twv/lege-status-telling", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const alleTwv = await storage.getTwvCandidates();
+      const leeg = bepaalLegeStatusRijen(alleTwv as any[]);
+      return res.json({
+        bekeken: alleTwv.length,
+        gevonden: leeg.length,
+        rijen: leeg.map((c: any) => ({
+          id: c.id,
+          naam: `${c.firstName} ${c.lastName}`.trim(),
+          aangemaakt: c.createdAt,
+        })),
+      });
+    } catch (error: any) {
+      console.error("Fout bij tellen lege TWV-status:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  app.post("/api/admin/twv/lege-status-backfill", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      // Bewuste drempel: deze route wijzigt bestaande rijen en moet niet per
+      // ongeluk af te vuren zijn. Zonder { bevestig: true } gebeurt er niets.
+      if (req.body?.bevestig !== true) {
+        return res.status(400).json({
+          message: "Stuur { \"bevestig\": true } mee. Bekijk eerst /api/admin/twv/lege-status-telling.",
+        });
+      }
+      const alleTwv = await storage.getTwvCandidates();
+      const leeg = bepaalLegeStatusRijen(alleTwv as any[]);
+      let gewijzigd = 0;
+      for (const c of leeg as any[]) {
+        try {
+          await storage.updateCandidate(c.id, { twvStatus: 'twv_nodig' } as any);
+          await storage.createCandidateAuditLog({
+            candidateId: c.id,
+            action: 'twv_status_backfill',
+            changedByUserId: req.session?.userId ?? null,
+            changeData: {
+              fieldName: 'twvStatus',
+              oldValue: null,
+              newValue: 'twv_nodig',
+              description: 'Eenmalige opschoning: lege status vastgelegd als twv_nodig',
+            },
+            ipAddress: req.ip ?? null,
+          }).catch((e: any) => console.warn('[TWV] auditregel mislukt (niet-kritiek):', e?.message ?? e));
+          gewijzigd++;
+        } catch (err: any) {
+          console.error(`[TWV] backfill mislukt voor #${c.id}:`, err?.message ?? err);
+        }
+      }
+      console.log(`[TWV] lege-status-backfill: ${gewijzigd} van ${leeg.length} rijen op twv_nodig gezet.`);
+      return res.json({ gevonden: leeg.length, gewijzigd });
+    } catch (error: any) {
+      console.error("Fout bij backfill lege TWV-status:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // ─── TWV: nationaliteitsrapport (onderdeel C, leesbaar vanuit de app) ─────
+  //
+  // Hetzelfde rapport als scripts/twv-nationaliteit-rapport.ts, maar dan vanuit
+  // de draaiende app en dus tegen de database waar de echte rijen staan. Geeft
+  // uitsluitend geaggregeerde tellingen terug: landnaam en aantal, plus id's bij
+  // de niet-matchende waarden zodat een admin ze kan opzoeken. Geen namen, geen
+  // e-mailadressen.
+  app.get("/api/admin/twv/nationaliteit-rapport", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const rijen = await storage.getTwvCandidates();
+      let zonderNationaliteit = 0;
+
+      // Bewust gewone objecten en geen Map: de tsconfig van dit project heeft
+      // geen target/downlevelIteration, en een Map-iterator uitspreiden geeft
+      // dan TS2802.
+      const gematcht: Record<string, { iso: string; zone: string; aantal: number }> = {};
+      const nietGematcht: Record<string, number[]> = {};
+
+      for (const c of rijen as any[]) {
+        const tekst = String(c.nationality ?? "").trim();
+        if (!tekst) { zonderNationaliteit++; continue; }
+        const land = zoekLand(tekst);
+        if (land) {
+          if (!gematcht[tekst]) gematcht[tekst] = { iso: land.iso, zone: land.zone, aantal: 0 };
+          gematcht[tekst].aantal++;
+        } else {
+          if (!nietGematcht[tekst]) nietGematcht[tekst] = [];
+          nietGematcht[tekst].push(c.id);
+        }
+      }
+
+      const wordtGevuld = Object.keys(gematcht)
+        .map(naam => ({ naam, iso: gematcht[naam].iso, zone: gematcht[naam].zone, aantal: gematcht[naam].aantal }))
+        .sort((a, b) => b.aantal - a.aantal || a.naam.localeCompare(b.naam));
+      const blijftLeeg = Object.keys(nietGematcht)
+        .map(naam => ({ naam, aantal: nietGematcht[naam].length, ids: nietGematcht[naam] }))
+        .sort((a, b) => b.aantal - a.aantal || a.naam.localeCompare(b.naam));
+
+      return res.json({
+        totaal: rijen.length,
+        zonderNationaliteit,
+        matcht: wordtGevuld.reduce((t, r) => t + r.aantal, 0),
+        matchtNiet: blijftLeeg.reduce((t, r) => t + r.aantal, 0),
+        alGevuld: (rijen as any[]).filter(c => c.nationalityIso).length,
+        wordtGevuld,
+        blijftLeeg,
+      });
+    } catch (error: any) {
+      console.error("Fout bij nationaliteitsrapport:", error);
       return res.status(500).json({ message: "Er is een fout opgetreden" });
     }
   });
@@ -9320,6 +9536,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const minutesUntil = Math.round(msUntil / 60000);
     console.log(`[TWV] Volgende reminder-check gepland om ${next9am.toLocaleString('nl-NL')} (over ${minutesUntil} minuten)`);
     setTimeout(async () => {
+      // Volgorde is niet vrijblijvend: eerst verlopen vergunningen omzetten,
+      // dan pas herinneren. Andersom zou een vergunning die vandaag verlopen is
+      // nog een "verloopt binnenkort"-mail krijgen.
+      await verwerkVerlopenTwv();
       const sent = await checkTwvReminders();
       console.log(`[TWV] Reminder-check klaar — ${sent} herinneringen verstuurd`);
       scheduleTwvCheck(); // Plan de volgende check
@@ -9327,6 +9547,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   scheduleTwvCheck();
+
+  // Eén keer bij het opstarten, zodat de eerste verwerking niet tot morgenochtend
+  // wacht. In proefstand kost dat alleen een logregel.
+  verwerkVerlopenTwv().catch(e => console.error('[TWV] eerste verwerking mislukt:', e?.message ?? e));
 
   // ─── Calendly-reminder scheduler (dagelijks om 9:00) ─────────────────────
   // Stuurt 1× een WhatsApp-template-bericht naar kandidaten die >= 3 dagen geleden

@@ -392,6 +392,18 @@ const AANVULLINGEN: Aanvulling[] = [
       `),
   },
   {
+    // Migratie 0025 — zie migrations/manual/0025_twv_audit_acties/
+    // Twee waarden erbij in het bestaande enum. ADD VALUE is additief en
+    // herhaalbaar; bestaande auditregels blijven ongemoeid.
+    omschrijving: "candidate_audit_action: waarden twv_auto_expired en twv_status_backfill",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TYPE candidate_audit_action ADD VALUE IF NOT EXISTS 'twv_auto_expired'
+      `).then(() => db.execute(sql`
+        ALTER TYPE candidate_audit_action ADD VALUE IF NOT EXISTS 'twv_status_backfill'
+      `)),
+  },
+  {
     // Migratie 0024 — zie migrations/manual/0024_candidates_nationality_iso/
     // Twee nieuwe kolommen naast het bestaande vrije-tekstveld nationality.
     // Puur additief: geen bestaande waarde wordt aangeraakt, beide kolommen
