@@ -852,7 +852,11 @@ export const whatsappOptInStatusEnum = pgEnum('whatsapp_opt_in_status', ['actief
 export const whatsappContactTypeEnum = pgEnum('whatsapp_contact_type', ['sollicitant', 'kandidaat', 'medewerker']);
 
 // Audit action types
-export const candidateAuditActionEnum = pgEnum('candidate_audit_action', ['created', 'updated', 'status_changed', 'imported', 'anonymized', 'deleted', 'photo_uploaded', 'interview_scheduled']);
+// twv_auto_expired en twv_status_backfill zijn er later bij gekomen, zodat een
+// automatische wijziging achteraf te onderscheiden is van een beoordeling door
+// een admin. Zonder dat verschil is "wie heeft deze vergunning op verlopen
+// gezet?" niet te beantwoorden.
+export const candidateAuditActionEnum = pgEnum('candidate_audit_action', ['created', 'updated', 'status_changed', 'imported', 'anonymized', 'deleted', 'photo_uploaded', 'interview_scheduled', 'twv_auto_expired', 'twv_status_backfill']);
 
 // TWV (Tewerkstellingsvergunning) status enum
 export const twvStatusEnum = pgEnum('twv_status', ['twv_nodig', 'twv_aangevraagd', 'info_nodig', 'twv_verstrekt', 'twv_verlopen']);

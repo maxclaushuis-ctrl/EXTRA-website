@@ -4496,17 +4496,14 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
                 const searchLower = twvSearch.toLowerCase();
 
-                // Auto-move expired to twv_verlopen visually
-                const displayCandidates = twvCandidates.map(c => {
-                  if (c.twvStatus === 'twv_verstrekt' && c.twvEndDate) {
-                    const end = new Date(c.twvEndDate);
-                    end.setHours(0, 0, 0, 0);
-                    if (end < today) return { ...c, twvStatus: 'twv_verlopen' as const };
-                  }
-                  return c;
-                });
-
-                const filtered = displayCandidates.filter(c => {
+                /* Hier stond een omzetting die een verstrekte vergunning met een
+                   verstreken einddatum in de browser als "TWV Verlopen" toonde,
+                   zonder dat weg te schrijven. De CSV-export deed dat niet, en
+                   dus gaven scherm en export verschillende aantallen.
+                   De nachtelijke taak verwerkVerlopenTwv() in server/routes.ts
+                   zet het nu in de database. Het scherm toont voortaan wat er
+                   staat en leidt zelf niets meer af. */
+                const filtered = twvCandidates.filter(c => {
                   if (!searchLower) return true;
                   return (
                     c.firstName.toLowerCase().includes(searchLower) ||
@@ -4525,13 +4522,19 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   { key: 'twv_verlopen',   label: 'TWV Verlopen',     active: 'bg-red-500 text-white',     inactive: 'bg-white border border-red-200 text-red-600' },
                 ];
 
+                /* Een lege twv_status telt niet meer stilzwijgend als "TWV Nodig".
+                   Zo'n rij hoorde op het scherm bij Nodig en in de export bij
+                   "Onbekend" — dezelfde dubbele afleiding, andere waarde. Na de
+                   eenmalige opschoning (POST /api/admin/twv/lege-status-backfill)
+                   hoort dit niet meer voor te komen; komt het tóch voor, dan is
+                   dat zichtbaar in plaats van weggepoetst. */
                 const countFor = (key: string) => key === 'alle'
                   ? filtered.length
-                  : filtered.filter(c => (c.twvStatus ?? 'twv_nodig') === key).length;
+                  : filtered.filter(c => c.twvStatus === key).length;
 
                 const visibleCandidates = twvStatusTab === 'alle'
                   ? filtered
-                  : filtered.filter(c => (c.twvStatus ?? 'twv_nodig') === twvStatusTab);
+                  : filtered.filter(c => c.twvStatus === twvStatusTab);
 
                 const STATUS_LABELS: Record<string, string> = {
                   twv_nodig: 'TWV Nodig',
@@ -4539,16 +4542,18 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   info_nodig: 'Info nodig',
                   twv_verstrekt: 'TWV Verstrekt',
                   twv_verlopen: 'TWV Verlopen',
+                  geen_status: 'Geen status',
                 };
 
                 function statusBadge(c: TwvCandidate) {
-                  const s = c.twvStatus ?? 'twv_nodig';
+                  const s = c.twvStatus ?? 'geen_status';
                   const classes: Record<string, string> = {
                     twv_nodig: 'bg-gray-100 text-gray-700',
                     twv_aangevraagd: 'bg-blue-100 text-blue-700',
                     info_nodig: 'bg-amber-100 text-amber-700',
                     twv_verstrekt: 'bg-green-100 text-green-700',
                     twv_verlopen: 'bg-red-100 text-red-700',
+                    geen_status: 'bg-amber-100 text-amber-700',
                   };
                   return (
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${classes[s] ?? 'bg-gray-100 text-gray-600'}`}>
@@ -4718,9 +4723,14 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                           <div className="flex flex-col gap-1.5">
                             <select
                               className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-pointer"
-                              value={c.twvStatus ?? 'twv_nodig'}
+                              /* Een lege status krijgt een eigen, niet-selecteerbare
+                                 optie in plaats van stilzwijgend "TWV Nodig" te
+                                 tonen. Anders lijkt de status gezet terwijl er in
+                                 de database niets staat. */
+                              value={c.twvStatus ?? ''}
                               onChange={e => updateTwvMutation.mutate({ id: c.id, twvStatus: e.target.value })}
                             >
+                              {!c.twvStatus && <option value="" disabled>Geen status</option>}
                               <option value="twv_nodig">TWV Nodig</option>
                               <option value="twv_aangevraagd">TWV Aangevraagd</option>
                               <option value="info_nodig">Info nodig</option>
