@@ -100,6 +100,8 @@ type TwvCandidate = {
   lastName: string;
   email?: string;
   nationality?: string;
+  nationalityIso?: string | null;
+  nationalityZone?: string | null;
   functionType: string;
   twvStatus?: 'twv_nodig' | 'twv_aangevraagd' | 'info_nodig' | 'twv_verstrekt' | 'twv_verlopen' | null;
   twvStartDate?: string | null;
@@ -4638,10 +4640,24 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                             </div>
                           </div>
 
-                          {/* Nationaliteit */}
+                          {/* Nationaliteit — de vrije tekst blijft altijd zichtbaar.
+                              Staat er een landcode bij, dan is de naam herkend en
+                              is de TWV-zone bekend. Zo niet, dan is dat expliciet
+                              "Onbekend land" in plaats van stilzwijgend niets, want
+                              zonder code valt er niet op te filteren. */}
                           <div className="text-sm text-gray-600">
                             {c.nationality ? (
-                              <span>🌍 {c.nationality}</span>
+                              <span className="inline-flex flex-col">
+                                <span>🌍 {c.nationality}</span>
+                                {c.nationalityIso ? (
+                                  <span className="text-[11px] font-medium text-gray-400">
+                                    {c.nationalityIso}
+                                    {c.nationalityZone ? ` · ${c.nationalityZone === 'NON_EU' ? 'buiten EU' : c.nationalityZone}` : ''}
+                                  </span>
+                                ) : (
+                                  <span className="text-[11px] font-medium text-amber-600">Onbekend land</span>
+                                )}
+                              </span>
                             ) : (
                               <button
                                 className="text-xs text-purple-500 hover:text-purple-700 hover:underline"

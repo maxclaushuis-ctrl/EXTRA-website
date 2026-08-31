@@ -49,6 +49,7 @@ import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./bi
 import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail, sendAdminWelcomeEmail } from "./mail";
 import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
+import { landvelden } from "@shared/landen";
 import { sendPlanbordWebhook, buildIntakePayloadBlock } from "./integrations/planbord-webhook";
 import { buildPlanbordBackfill } from "./integrations/planbord-backfill";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
@@ -4156,7 +4157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: validated.email || null,
         phone: validated.phone || null,
         birthDate: validated.birthDate || null,
-        nationality: validated.nationality || null,
+        ...landvelden(validated.nationality),
         city: validated.city || null,
         language: validated.language || null,
         referralCode: validated.referralCode || null,
@@ -8575,7 +8576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'in_behandeling' as const,
         city: data.city || null,
         birthDate: data.birthDate || null,
-        nationality: data.nationality || null,
+        ...landvelden(data.nationality),
         needsTwv: data.needsWorkPermit === 'ja',
         twvStatus: data.needsWorkPermit === 'ja' ? 'twv_nodig' : null,
         language: (data.languages || []).join(', '),
@@ -9103,7 +9104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (firstName !== undefined) updateData.firstName = String(firstName).trim();
       if (lastName !== undefined) updateData.lastName = String(lastName).trim();
       if (email !== undefined) updateData.email = email ? String(email).trim() : null;
-      if (nationality !== undefined) updateData.nationality = nationality ? String(nationality).trim() : null;
+      if (nationality !== undefined) Object.assign(updateData, landvelden(nationality));
       if (functionType !== undefined) updateData.functionType = functionType;
       const updated = await storage.updateCandidate(id, updateData as any);
       if (!updated) return res.status(404).json({ message: "Kandidaat niet gevonden" });
@@ -9147,7 +9148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: lastName.trim(),
         functionType: functionType as any,
         email: email?.trim() || null,
-        nationality: nationality?.trim() || null,
+        ...landvelden(nationality),
         needsTwv: true,
         twvStatus: twvStatus || 'twv_verstrekt',
         twvStartDate: twvStartDate || null,

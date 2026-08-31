@@ -16,41 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
-type FlowType = "NL" | "EU" | "NON_EU";
+import { ALLE_LANDNAMEN, LANDEN_SCHEIDING, bepaalZone, type LandZone } from "@shared/landen";
+
+/* FlowType was een eigen type; het is nu hetzelfde als LandZone uit shared/landen.ts. */
+type FlowType = LandZone;
 type WizardStep = "basics" | "distance_check" | "skills" | "twv" | "cv_schedule" | "success" | "rejected";
 
 
-const EU_EER_COUNTRIES = [
-  "Oostenrijk", "België", "Bulgarije", "Kroatië", "Cyprus", "Tsjechië",
-  "Denemarken", "Estland", "Finland", "Frankrijk", "Duitsland", "Griekenland",
-  "Hongarije", "Ierland", "Italië", "Letland", "Litouwen", "Luxemburg",
-  "Malta", "Polen", "Portugal", "Roemenië", "Slowakije", "Slovenië",
-  "Spanje", "Zweden", "IJsland", "Liechtenstein", "Noorwegen", "Zwitserland",
-  "Curaçao", "Aruba", "Sint Maarten", "Bonaire", "Sint Eustatius", "Saba"
-];
-
-const ALL_COUNTRIES = [
-  "Nederland", ...EU_EER_COUNTRIES.sort(),
-  "---",
-  "Afghanistan", "Albanië", "Algerije", "Angola", "Argentinië", "Armenië",
-  "Australië", "Azerbeidzjan", "Bangladesh", "Belarus", "Bhutan", "Bolivia",
-  "Bosnië en Herzegovina", "Brazilië", "Cambodja", "Cameroen", "Canada",
-  "Chili", "China", "Colombia", "Congo", "Cuba", "Dominicaanse Republiek",
-  "Ecuador", "Egypte", "El Salvador", "Eritrea", "Ethiopië", "Filipijnen",
-  "Georgië", "Ghana", "Guatemala", "Guinee", "Haïti", "Honduras",
-  "India", "Indonesië", "Irak", "Iran", "Israël", "Ivoorkust",
-  "Jamaica", "Japan", "Jemen", "Jordanië", "Kaapverdië", "Kazachstan",
-  "Kenia", "Kirgizië", "Kosovo", "Koeweit", "Laos", "Libanon",
-  "Libië", "Marokko", "Mexico", "Moldavië", "Mongolië", "Montenegro",
-  "Mozambique", "Myanmar", "Nepal", "Nicaragua", "Nigeria", "Noord-Macedonië",
-  "Oekraïne", "Oezbekistan", "Oman", "Pakistan", "Panama", "Paraguay",
-  "Peru", "Russische Federatie", "Rwanda", "Saudi-Arabië", "Senegal",
-  "Servië", "Sierra Leone", "Singapore", "Somalië", "Sri Lanka",
-  "Sudan", "Suriname", "Syrië", "Tadzjikistan", "Tanzania", "Thailand",
-  "Togo", "Tunesië", "Turkije", "Turkmenistan", "Uganda", "Uruguay",
-  "Venezuela", "Verenigd Koninkrijk", "Verenigde Arabische Emiraten",
-  "Verenigde Staten", "Vietnam", "Zuid-Afrika", "Zuid-Korea", "Zuid-Sudan"
-];
 
 const FUNCTIONS = [
   { value: "horecamedewerker", labelNL: "Horecamedewerker (bediening/bar)", labelEN: "Hospitality staff (service/bar)" },
@@ -83,12 +55,11 @@ const EXPERIENCE_MAP: Record<string, string> = {
   "3plus": "3+ jaar",
 };
 
+/* De landenlijst en de indeling NL/EU/NON_EU staan in shared/landen.ts, zodat
+   de server bij dezelfde bron kan. shared/landen.test.ts vergelijkt de nieuwe
+   uitkomst regel voor regel met de oude, hier verwijderde, versie. */
 function getFlow(nationality: string): FlowType {
-  if (nationality === "Nederland") return "NL";
-  const NL_CARIBBEAN = ["Curaçao", "Aruba", "Sint Maarten", "Bonaire", "Sint Eustatius", "Saba"];
-  if (NL_CARIBBEAN.includes(nationality)) return "NL";
-  if (EU_EER_COUNTRIES.includes(nationality)) return "EU";
-  return "NON_EU";
+  return bepaalZone(nationality);
 }
 
 function calculateAge(birthDate: string): number {
@@ -998,8 +969,8 @@ export default function Aanmelden() {
                       <SelectValue placeholder={lang === "NL" ? "Selecteer land" : "Select country"} />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {ALL_COUNTRIES.map((country) => (
-                        country === "---"
+                      {ALLE_LANDNAMEN.map((country) => (
+                        country === LANDEN_SCHEIDING
                           ? <SelectItem key="sep" value="sep-disabled" disabled className="text-gray-300 cursor-default select-none">──────────────</SelectItem>
                           : <SelectItem key={country} value={country}>{country}</SelectItem>
                       ))}

@@ -872,6 +872,12 @@ export const candidates = pgTable("candidates", {
   phoneOriginal: text("phone_original"), // backup van originele waarde vóór WhatsApp E.164-normalisatie
   birthDate: date("birth_date"),
   nationality: text("nationality"),
+  // Landcode (ISO 3166-1 alpha-2) en TWV-zone bij bovenstaande vrije tekst.
+  // Beide zijn afgeleid via shared/landen.ts en blijven NULL als de vrije tekst
+  // niet exact in die lijst staat — dat is bewust: liever "onbekend" dan een
+  // gok. Het vrije-tekstveld blijft leidend voor wat er ooit is ingevuld.
+  nationalityIso: text("nationality_iso"),
+  nationalityZone: text("nationality_zone"), // "NL" | "EU" | "NON_EU"
   city: text("city"),
   language: text("language"), // Taal die ze spreken
   referralCode: text("referral_code"), // Aanbreng-code uit ?ref op /aanmelden — ondoorzichtige string, alleen opslaan/doorgeven
