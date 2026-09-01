@@ -49,6 +49,7 @@ import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDash
 import SchedulerStatusTab from '@/components/SchedulerStatusTab';
 import MedewerkersTab from '@/components/MedewerkersTab';
 import OnboardingTab from '@/components/OnboardingTab';
+import { parseCsvMetKoppen } from "@shared/csv";
 
 type User = {
   id: number;
@@ -376,7 +377,7 @@ export default function DashboardMockup() {
   const [twvNewFunctionType, setTwvNewFunctionType] = useState('horecamedewerker');
   // CSV import dialog
   const [twvImportOpen, setTwvImportOpen] = useState(false);
-  const [twvImportResult, setTwvImportResult] = useState<{ imported: number; total: number; results: Array<{ email: string; status: string }> } | null>(null);
+  const [twvImportResult, setTwvImportResult] = useState<{ imported: number; total: number; results: Array<{ email: string; status: string; melding?: string }> } | null>(null);
   const [twvImportLoading, setTwvImportLoading] = useState(false);
   // Notities per kaart (expanded set)
   const [twvNotesExpanded, setTwvNotesExpanded] = useState<Set<number>>(new Set());
@@ -4378,7 +4379,7 @@ export default function DashboardMockup() {
                       <p className="font-semibold mb-1">Verwacht CSV-formaat (komma-gescheiden):</p>
                       <code className="font-mono text-xs block bg-white rounded p-2 border border-gray-200 whitespace-pre">email,firstName,lastName,twvStatus,twvStartDate,twvEndDate,twvNotes
 jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
-                      <p className="mt-2 text-gray-500">Vereiste kolommen: <strong>email</strong> of <strong>firstName + lastName</strong>. Status-opties: <code>twv_verstrekt</code>, <code>twv_nodig</code>, <code>twv_aangevraagd</code>, <code>info_nodig</code>.</p>
+                      <p className="mt-2 text-gray-500">Vereiste kolommen: <strong>email</strong> of <strong>firstName + lastName</strong>. Status-opties: <code>twv_verstrekt</code>, <code>twv_nodig</code>, <code>twv_aangevraagd</code>, <code>info_nodig</code>, <code>twv_verlopen</code>. Komma's in een notitie mogen, mits het veld tussen aanhalingstekens staat.</p>
                     </div>
                     <div>
                       <label className="text-xs font-medium text-gray-500 mb-1.5 block">Selecteer CSV-bestand</label>
@@ -4392,15 +4393,12 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                           setTwvImportLoading(true);
                           setTwvImportResult(null);
                           try {
+                            /* Was: line.split(','). Eén komma in een notitieveld
+                               schoof daarmee de hele rij op, zonder foutmelding.
+                               shared/csv.ts volgt RFC 4180 en heeft daar tests op. */
                             const text = await file.text();
-                            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-                            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
-                            const rows = lines.slice(1).map(line => {
-                              const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-                              const obj: Record<string, string> = {};
-                              headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
-                              return obj;
-                            }).filter(r => r.email || (r.firstname && r.lastname));
+                            const rows = parseCsvMetKoppen(text)
+                              .filter(r => r.email || (r.firstname && r.lastname));
                             const normalizedRows = rows.map(r => ({
                               email: r.email || undefined,
                               firstName: r.firstname || r['first_name'] || undefined,
@@ -4430,7 +4428,10 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                         {twvImportResult.results.some(r => r.status !== 'ok') && (
                           <div className="max-h-32 overflow-y-auto text-xs space-y-1">
                             {twvImportResult.results.filter(r => r.status !== 'ok').map((r, i) => (
-                              <div key={i} className="text-red-500">⚠ {r.email} — niet gevonden in systeem</div>
+                              <div key={i} className="text-red-500">
+                                ⚠ {r.email} — {r.melding
+                                  ?? (r.status === 'not_found' ? 'niet gevonden in systeem' : 'kon niet worden bijgewerkt')}
+                              </div>
                             ))}
                           </div>
                         )}

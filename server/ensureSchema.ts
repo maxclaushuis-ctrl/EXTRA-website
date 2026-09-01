@@ -392,6 +392,23 @@ const AANVULLINGEN: Aanvulling[] = [
       `),
   },
   {
+    // Migratie 0026 — zie migrations/manual/0026_twv_verlopen_melding/
+    omschrijving: "candidates: twv_expired_notified_at",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE candidates
+          ADD COLUMN IF NOT EXISTS twv_expired_notified_at timestamp
+      `),
+  },
+  {
+    // Migratie 0026 — zie migrations/manual/0026_twv_verlopen_melding/
+    omschrijving: "admin_notification_type: waarde twv_verlopen toevoegen",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TYPE admin_notification_type ADD VALUE IF NOT EXISTS 'twv_verlopen'
+      `),
+  },
+  {
     // Migratie 0025 — zie migrations/manual/0025_twv_audit_acties/
     // Twee waarden erbij in het bestaande enum. ADD VALUE is additief en
     // herhaalbaar; bestaande auditregels blijven ongemoeid.
