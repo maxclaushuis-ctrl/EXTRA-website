@@ -30,6 +30,7 @@
     "verwant:test": "tsx shared/verwanteLinks.test.ts",
     "taal:test": "tsx shared/taal.test.ts",
     "landen:test": "tsx shared/landen.test.ts",
+    "alias:test": "tsx shared/landenAlias.test.ts",
     "twv:test": "tsx server/twvVerlopen.test.ts",
     "csv:test": "tsx shared/csv.test.ts",
     "twv:nationaliteit-rapport": "tsx scripts/twv-nationaliteit-rapport.ts",

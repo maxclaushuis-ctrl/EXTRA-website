@@ -50,6 +50,7 @@ import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNoti
 import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { landvelden, zoekLand } from "@shared/landen";
+import { zoekLandMetAlias, NIET_KOPPELEN, LAND_ALIASSEN } from "@shared/landenAlias";
 import { bepaalVerlopenRijen, bepaalLegeStatusRijen, bepaalTeMeldenRijen, bepaalTegenstrijdigeRijen, dagenVerlopen } from "./twvVerlopen";
 import { sendPlanbordWebhook, buildIntakePayloadBlock } from "./integrations/planbord-webhook";
 import { buildPlanbordBackfill } from "./integrations/planbord-backfill";
@@ -9667,6 +9668,180 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Fout bij nationaliteitsrapport:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // ─── TWV: landcodes wegschrijven (stap a) ─────────────────────────────────
+  //
+  // Het rapport hierboven laat zien dat 31 van de 72 rijen exact op de
+  // landenlijst matchen en 39 niet. Die 39 zijn geen onzin maar
+  // nationaliteiten ("Bengalese"), Engelse landnamen ("Yemen") en typefouten
+  // ("Agentinian"). Voor 37 daarvan is met de hand een koppeling goedgekeurd;
+  // die staat in shared/landenAlias.ts. De twee overige waarden zijn een
+  // aantekening van een medewerker en blijven bewust leeg.
+  //
+  // Twee endpoints, dezelfde volgorde als bij de lege statussen: eerst tellen,
+  // dan pas schrijven achter een expliciete bevestiging. Beide raken alleen
+  // nationality_iso en nationality_zone aan. De vrije tekst in nationality
+  // blijft staan zoals hij staat, en twv_status wordt niet aangeraakt.
+
+  /**
+   * Deelt alle TWV-rijen in vier hopen: krijgt een code, heeft er al een,
+   * blijft leeg, of heeft helemaal geen nationaliteit. Puur rekenen — deze
+   * functie schrijft niets en wordt door beide endpoints gebruikt, zodat de
+   * telling en de schrijfactie per definitie over dezelfde rijen gaan.
+   */
+  function verdeelLandcodes(rijen: any[]) {
+    const teVullen: Array<{ id: number; tekst: string; iso: string; zone: string; viaAlias: boolean }> = [];
+    const alGevuld: number[] = [];
+    const zonderNationaliteit: number[] = [];
+    const blijftLeeg: Record<string, { ids: number[]; reden: string }> = {};
+    const perWaarde: Record<string, { iso: string; zone: string; viaAlias: boolean; ids: number[] }> = {};
+
+    for (const c of rijen) {
+      const tekst = String(c.nationality ?? "").trim();
+      if (!tekst) { zonderNationaliteit.push(c.id); continue; }
+      if (c.nationalityIso) { alGevuld.push(c.id); continue; }
+
+      const { land, viaAlias } = zoekLandMetAlias(tekst);
+      if (!land) {
+        const reden = NIET_KOPPELEN.indexOf(tekst) >= 0
+          ? "aantekening, geen nationaliteit — bewust niet gekoppeld"
+          : "staat niet in de landenlijst en niet in de aliaslijst";
+        if (!blijftLeeg[tekst]) blijftLeeg[tekst] = { ids: [], reden };
+        blijftLeeg[tekst].ids.push(c.id);
+        continue;
+      }
+
+      teVullen.push({ id: c.id, tekst, iso: land.iso, zone: land.zone, viaAlias });
+      if (!perWaarde[tekst]) perWaarde[tekst] = { iso: land.iso, zone: land.zone, viaAlias, ids: [] };
+      perWaarde[tekst].ids.push(c.id);
+    }
+
+    return { teVullen, alGevuld, zonderNationaliteit, blijftLeeg, perWaarde };
+  }
+
+  /**
+   * Rijen die op de TWV-lijst staan terwijl dat inhoudelijk niet klopt, of
+   * waarvan status en datum elkaar tegenspreken. Deze lijst verandert niets en
+   * hoort met de hand bekeken te worden.
+   *
+   * Twee soorten. Eén: iemand met zone NL of EU heeft geen tewerkstellings-
+   * vergunning nodig, dus hoort niet op deze lijst — hoe die rij daar terecht
+   * is gekomen is een vraag voor een mens, geen ding om automatisch op te
+   * ruimen. Twee: status twv_verlopen met een einddatum die nog niet gepasseerd
+   * is (zie bepaalTegenstrijdigeRijen).
+   */
+  function bepaalNazoekRijen(rijen: any[], vandaag: Date) {
+    const uit: Array<{ id: number; naam: string; nationaliteit: string | null; zone: string | null; twvStatus: string | null; einddatum: string | null; reden: string }> = [];
+    const beschrijf = (c: any, zone: string | null, reden: string) => ({
+      id: c.id,
+      naam: `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim(),
+      nationaliteit: c.nationality ?? null,
+      zone,
+      twvStatus: c.twvStatus ?? null,
+      einddatum: c.twvEndDate ?? null,
+      reden,
+    });
+
+    for (const c of rijen) {
+      const tekst = String(c.nationality ?? "").trim();
+      const zone = tekst ? (zoekLandMetAlias(tekst).land?.zone ?? null) : null;
+      if (zone === "NL" || zone === "EU") {
+        uit.push(beschrijf(c, zone, `nationaliteit valt in zone ${zone} — heeft geen TWV nodig, hoort niet op deze lijst`));
+      }
+    }
+    for (const c of bepaalTegenstrijdigeRijen(rijen, vandaag)) {
+      const tekst = String((c as any).nationality ?? "").trim();
+      const zone = tekst ? (zoekLandMetAlias(tekst).land?.zone ?? null) : null;
+      if (uit.some(r => r.id === (c as any).id)) continue;
+      uit.push(beschrijf(c, zone, "status twv_verlopen terwijl de einddatum nog niet gepasseerd is"));
+    }
+    return uit.sort((a, b) => a.id - b.id);
+  }
+
+  // Telling vooraf. Schrijft nooit.
+  app.get("/api/admin/twv/landcode-telling", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const rijen = await storage.getTwvCandidates() as any[];
+      const v = verdeelLandcodes(rijen);
+
+      const wordtGevuld = Object.keys(v.perWaarde)
+        .map(naam => ({
+          naam,
+          iso: v.perWaarde[naam].iso,
+          zone: v.perWaarde[naam].zone,
+          viaAlias: v.perWaarde[naam].viaAlias,
+          aantal: v.perWaarde[naam].ids.length,
+          ids: v.perWaarde[naam].ids,
+        }))
+        .sort((a, b) => b.aantal - a.aantal || a.naam.localeCompare(b.naam));
+      const blijftLeeg = Object.keys(v.blijftLeeg)
+        .map(naam => ({ naam, aantal: v.blijftLeeg[naam].ids.length, ids: v.blijftLeeg[naam].ids, reden: v.blijftLeeg[naam].reden }))
+        .sort((a, b) => b.aantal - a.aantal || a.naam.localeCompare(b.naam));
+
+      return res.json({
+        totaal: rijen.length,
+        wordtGevuldTotaal: v.teVullen.length,
+        viaAlias: v.teVullen.filter(r => r.viaAlias).length,
+        directeMatch: v.teVullen.filter(r => !r.viaAlias).length,
+        alGevuld: v.alGevuld.length,
+        zonderNationaliteit: v.zonderNationaliteit.length,
+        blijftLeegTotaal: blijftLeeg.reduce((t, r) => t + r.aantal, 0),
+        aliassenInGebruik: LAND_ALIASSEN.length,
+        wordtGevuld,
+        blijftLeeg,
+        handmatigNazoeken: bepaalNazoekRijen(rijen, new Date()),
+      });
+    } catch (error: any) {
+      console.error("Fout bij landcode-telling:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // De schrijfactie. Vult uitsluitend lege nationality_iso / nationality_zone.
+  app.post("/api/admin/twv/landcode-backfill", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      // Dezelfde drempel als bij de lege statussen: zonder { bevestig: true }
+      // gebeurt er niets.
+      if (req.body?.bevestig !== true) {
+        return res.status(400).json({
+          message: "Stuur { \"bevestig\": true } mee. Bekijk eerst /api/admin/twv/landcode-telling.",
+        });
+      }
+      const rijen = await storage.getTwvCandidates() as any[];
+      const { teVullen } = verdeelLandcodes(rijen);
+
+      let gewijzigd = 0;
+      const mislukt: number[] = [];
+      for (const r of teVullen) {
+        try {
+          await storage.updateCandidate(r.id, { nationalityIso: r.iso, nationalityZone: r.zone } as any);
+          await storage.createCandidateAuditLog({
+            candidateId: r.id,
+            action: 'twv_landcode_backfill',
+            changedByUserId: req.session?.userId ?? null,
+            changeData: {
+              fieldName: 'nationalityIso',
+              oldValue: null,
+              newValue: `${r.iso} (${r.zone})`,
+              description: r.viaAlias
+                ? `Eenmalige opschoning: "${r.tekst}" gekoppeld via de goedgekeurde aliaslijst`
+                : `Eenmalige opschoning: "${r.tekst}" matcht direct op de landenlijst`,
+            },
+            ipAddress: req.ip ?? null,
+          }).catch((e: any) => console.warn('[TWV] auditregel mislukt (niet-kritiek):', e?.message ?? e));
+          gewijzigd++;
+        } catch (err: any) {
+          mislukt.push(r.id);
+          console.error(`[TWV] landcode-backfill mislukt voor #${r.id}:`, err?.message ?? err);
+        }
+      }
+      console.log(`[TWV] landcode-backfill: ${gewijzigd} van ${teVullen.length} rijen voorzien van een landcode.`);
+      return res.json({ gevonden: teVullen.length, gewijzigd, mislukt });
+    } catch (error: any) {
+      console.error("Fout bij landcode-backfill:", error);
       return res.status(500).json({ message: "Er is een fout opgetreden" });
     }
   });

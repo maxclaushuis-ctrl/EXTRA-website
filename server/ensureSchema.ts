@@ -409,6 +409,15 @@ const AANVULLINGEN: Aanvulling[] = [
       `),
   },
   {
+    // Migratie 0027 — zie migrations/manual/0027_twv_landcode_backfill/
+    // Eén waarde erbij in hetzelfde enum, voor de eenmalige landcode-backfill.
+    omschrijving: "candidate_audit_action: waarde twv_landcode_backfill",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TYPE candidate_audit_action ADD VALUE IF NOT EXISTS 'twv_landcode_backfill'
+      `),
+  },
+  {
     // Migratie 0025 — zie migrations/manual/0025_twv_audit_acties/
     // Twee waarden erbij in het bestaande enum. ADD VALUE is additief en
     // herhaalbaar; bestaande auditregels blijven ongemoeid.
