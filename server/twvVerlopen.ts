@@ -91,3 +91,45 @@ export function bepaalLegeStatusRijen<T extends { id: number; needsTwv?: boolean
 ): T[] {
   return rijen.filter(r => r.needsTwv === true && (r.twvStatus === null || r.twvStatus === undefined));
 }
+
+/**
+ * WIE KRIJGT EEN "TWV IS VERLOPEN"-MELDING
+ * ---------------------------------------
+ * Alleen op status filteren is niet genoeg. De status twv_verlopen kan met de
+ * hand of via een CSV-import gezet zijn op een rij waarvan de einddatum in de
+ * toekomst ligt. Zo'n rij is niet verlopen, wat de status ook beweert, en een
+ * mail met "verlopen op 9 april 2027" is onzin die de administratie vervuilt.
+ *
+ * De melding gaat er dus alleen uit als de einddatum echt gepasseerd is
+ * (dagenVerlopen > 0 — op de einddatum zelf nog niet, gelijk aan moetVerlopen)
+ * en er nog geen stempel staat. Rijen waarvan status en datum elkaar
+ * tegenspreken blijven onaangeroerd staan en zijn te vinden met
+ * bepaalTegenstrijdigeRijen(); die horen met de hand bekeken te worden.
+ */
+export interface TwvMeldRij extends TwvRij {
+  twvExpiredNotifiedAt?: Date | string | null;
+}
+
+export function moetMeldenVerlopen(rij: TwvMeldRij, vandaag: Date): boolean {
+  if (rij.twvStatus !== 'twv_verlopen') return false;
+  if (rij.twvExpiredNotifiedAt) return false;
+  if (!naarDag(rij.twvEndDate)) return false;
+  return dagenVerlopen(rij, vandaag) > 0;
+}
+
+/** Wie een melding krijgt. Verandert niets aan de invoer. */
+export function bepaalTeMeldenRijen<T extends TwvMeldRij>(rijen: T[], vandaag: Date): T[] {
+  return rijen.filter(r => moetMeldenVerlopen(r, vandaag));
+}
+
+/**
+ * Rijen die op twv_verlopen staan terwijl de einddatum vandaag of later is.
+ * Geen melding, geen wijziging — puur zichtbaar maken dat hier iets niet klopt.
+ */
+export function bepaalTegenstrijdigeRijen<T extends TwvMeldRij>(rijen: T[], vandaag: Date): T[] {
+  return rijen.filter(r =>
+    r.twvStatus === 'twv_verlopen' &&
+    naarDag(r.twvEndDate) !== null &&
+    dagenVerlopen(r, vandaag) <= 0,
+  );
+}

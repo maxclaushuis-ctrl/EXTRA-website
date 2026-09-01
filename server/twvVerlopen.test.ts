@@ -15,6 +15,9 @@ import {
   dagenVerlopen,
   bepaalVerlopenRijen,
   bepaalLegeStatusRijen,
+  moetMeldenVerlopen,
+  bepaalTeMeldenRijen,
+  bepaalTegenstrijdigeRijen,
   naarDag,
 } from "./twvVerlopen";
 
@@ -90,6 +93,50 @@ const leeg = bepaalLegeStatusRijen(metLege);
 ok("twee rijen met een lege status", leeg.length === 2);
 ok("en het zijn 201 en 202", leeg.map(r => r.id).join(",") === "201,202");
 ok("een rij zonder needsTwv telt niet mee", !leeg.some(r => r.id === 204));
+
+// ── De meldingsronde ─────────────────────────────────────────────────────────
+//
+// Dit blok bestaat om één concrete fout: de eerste versie filterde alleen op
+// status en op "er staat een einddatum". In productie stond één rij op
+// twv_verlopen met einddatum 2027-04-09 — met de hand of via een import zo
+// gezet. Die had een mail gekregen met "verlopen op 9 april 2027".
+console.log("\n— Wie een verlopen-melding krijgt —");
+ok("verlopen sinds gisteren, nog niet gemeld → wel",
+  moetMeldenVerlopen({ id: 300, twvStatus: 'twv_verlopen', twvEndDate: "2026-06-14" }, VANDAAG));
+ok("einddatum in de toekomst → niet, wat de status ook zegt",
+  !moetMeldenVerlopen({ id: 301, twvStatus: 'twv_verlopen', twvEndDate: "2027-04-09" }, VANDAAG));
+ok("einddatum is vandaag → niet, vandaag is hij nog geldig",
+  !moetMeldenVerlopen({ id: 302, twvStatus: 'twv_verlopen', twvEndDate: "2026-06-15" }, VANDAAG));
+ok("geen einddatum → niet",
+  !moetMeldenVerlopen({ id: 303, twvStatus: 'twv_verlopen', twvEndDate: null }, VANDAAG));
+ok("al gemeld → niet nog een keer",
+  !moetMeldenVerlopen({ id: 304, twvStatus: 'twv_verlopen', twvEndDate: "2026-06-14", twvExpiredNotifiedAt: new Date("2026-06-15") }, VANDAAG));
+ok("status twv_verstrekt met verstreken datum → niet hier; die gaat eerst door verwerkVerlopenTwv",
+  !moetMeldenVerlopen({ id: 305, twvStatus: 'twv_verstrekt', twvEndDate: "2020-01-01" }, VANDAAG));
+ok("onleesbare datum → niet",
+  !moetMeldenVerlopen({ id: 306, twvStatus: 'twv_verlopen', twvEndDate: "31-12-2020" }, VANDAAG));
+
+const meldLijst = [
+  { id: 401, twvStatus: 'twv_verlopen',  twvEndDate: "2026-06-14", twvExpiredNotifiedAt: null },
+  { id: 402, twvStatus: 'twv_verlopen',  twvEndDate: "2027-04-09", twvExpiredNotifiedAt: null },
+  { id: 403, twvStatus: 'twv_verlopen',  twvEndDate: "2026-06-15", twvExpiredNotifiedAt: null },
+  { id: 404, twvStatus: 'twv_verlopen',  twvEndDate: "2020-01-01", twvExpiredNotifiedAt: new Date("2025-01-01") },
+  { id: 405, twvStatus: 'twv_verstrekt', twvEndDate: "2020-01-01", twvExpiredNotifiedAt: null },
+  { id: 406, twvStatus: 'twv_verlopen',  twvEndDate: null,         twvExpiredNotifiedAt: null },
+];
+const teMelden = bepaalTeMeldenRijen(meldLijst, VANDAAG);
+ok("één van de zes krijgt een melding", teMelden.length === 1);
+ok("en dat is 401", teMelden.map(r => r.id).join(",") === "401");
+ok("de invoerlijst is niet gewijzigd", meldLijst[1].twvExpiredNotifiedAt === null);
+
+console.log("\n— Rijen waarvan status en datum elkaar tegenspreken —");
+const tegenstrijdig = bepaalTegenstrijdigeRijen(meldLijst, VANDAAG);
+ok("twee tegenstrijdige rijen", tegenstrijdig.length === 2);
+ok("en dat zijn 402 en 403", tegenstrijdig.map(r => r.id).join(",") === "402,403");
+ok("een rij zonder einddatum is niet tegenstrijdig, alleen onvolledig",
+  !tegenstrijdig.some(r => r.id === 406));
+ok("een al gemelde rij met verstreken datum is niet tegenstrijdig",
+  !tegenstrijdig.some(r => r.id === 404));
 
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);

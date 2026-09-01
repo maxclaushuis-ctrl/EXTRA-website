@@ -30,6 +30,18 @@
  * De volgorde van ALLE_LANDNAMEN is exact die van de oude ALL_COUNTRIES:
  * Nederland, dan de EU/EER-groep alfabetisch, dan een scheidingsteken, dan de
  * rest. Daar hangt de dropdown aan.
+ *
+ * TOEVOEGINGEN NA DE VERHUIZING
+ * -----------------------------
+ * De lijst begon als een letterlijke kopie van de oude ALL_COUNTRIES. Landen die
+ * daarna zijn toegevoegd staan hieronder bij, en staan óók in
+ * shared/landen.test.ts in BEWUST_TOEGEVOEGD. Die test controleert dat de oude
+ * lijst regel voor regel intact is als je de toevoegingen weglaat: een land dat
+ * per ongeluk verdwijnt of van plek verschuift valt zo alsnog op.
+ *
+ * - Gambia (GM). Ontbrak in de oude lijst, terwijl er wél kandidaten met
+ *   nationaliteit "Gambiaanse" in de TWV-administratie staan. Niet te verwarren
+ *   met Gabon (GA), dat een ander land is en nog steeds niet in de lijst staat.
  */
 
 export type LandZone = "NL" | "EU" | "NON_EU";
@@ -127,6 +139,7 @@ export const LANDEN: Land[] = [
   { naam: "Eritrea",                  iso: "ER", zone: "NON_EU", groep: "overig" },
   { naam: "Ethiopië",                 iso: "ET", zone: "NON_EU", groep: "overig" },
   { naam: "Filipijnen",               iso: "PH", zone: "NON_EU", groep: "overig" },
+  { naam: "Gambia",                   iso: "GM", zone: "NON_EU", groep: "overig" },
   { naam: "Georgië",                  iso: "GE", zone: "NON_EU", groep: "overig" },
   { naam: "Ghana",                    iso: "GH", zone: "NON_EU", groep: "overig" },
   { naam: "Guatemala",                iso: "GT", zone: "NON_EU", groep: "overig" },

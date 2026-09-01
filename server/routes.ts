@@ -50,7 +50,7 @@ import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNoti
 import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { landvelden, zoekLand } from "@shared/landen";
-import { bepaalVerlopenRijen, bepaalLegeStatusRijen, dagenVerlopen } from "./twvVerlopen";
+import { bepaalVerlopenRijen, bepaalLegeStatusRijen, bepaalTeMeldenRijen, bepaalTegenstrijdigeRijen, dagenVerlopen } from "./twvVerlopen";
 import { sendPlanbordWebhook, buildIntakePayloadBlock } from "./integrations/planbord-webhook";
 import { buildPlanbordBackfill } from "./integrations/planbord-backfill";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
@@ -9446,10 +9446,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // het echt misgaat. Onderdeel A maakt dat gat groter: zodra de status op
   // twv_verlopen staat, valt de rij helemaal uit die selectie.
   //
-  // Deze ronde pakt elke rij met status twv_verlopen, een einddatum, en nog geen
-  // twv_expired_notified_at. Eén melding per kandidaat per verlopen-gebeurtenis:
-  // het stempel wordt gewist zodra iemand de status terugzet op twv_verstrekt,
-  // zodat een verlengde en opnieuw verlopen vergunning wél weer meldt.
+  // Deze ronde pakt elke rij met status twv_verlopen, een einddatum die écht in
+  // het verleden ligt, en nog geen twv_expired_notified_at. Één melding per
+  // kandidaat per verlopen-gebeurtenis: het stempel wordt gewist zodra iemand de
+  // status terugzet op twv_verstrekt, zodat een verlengde en opnieuw verlopen
+  // vergunning wél weer meldt.
+  //
+  // De datumcontrole is geen detail. De status twv_verlopen kan met de hand of
+  // via een import gezet zijn op een rij met een einddatum in de toekomst.
+  // Zonder die controle ging er een mail uit met "verlopen op 9 april 2027".
+  // Zulke rijen komen apart terug als `tegenstrijdig` en worden niet gemeld en
+  // niet gewijzigd; die horen met de hand bekeken te worden.
   //
   // Volgt dezelfde vlag als hierboven: in proefstand wordt er niets verstuurd en
   // niets weggeschreven, alleen geteld.
@@ -9458,23 +9465,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     gevonden: number;
     gemeld: number;
     rijen: Array<{ id: number; naam: string; einddatum: string | null; dagenVerlopen: number }>;
+    tegenstrijdig: Array<{ id: number; naam: string; einddatum: string | null; dagenVerlopen: number }>;
   }> {
     const versturen = opties?.forceerVersturen ?? TWV_AUTO_VERLOPEN_ACTIEF;
     const alleTwv = await storage.getTwvCandidates();
     const vandaag = new Date();
-    const teMelden = (alleTwv as any[]).filter(c =>
-      c.twvStatus === 'twv_verlopen' && c.twvEndDate && !c.twvExpiredNotifiedAt);
+    const teMelden = bepaalTeMeldenRijen(alleTwv as any[], vandaag);
 
-    const rijen = teMelden.map(c => ({
+    const beschrijf = (c: any) => ({
       id: c.id,
       naam: `${c.firstName} ${c.lastName}`.trim(),
       einddatum: c.twvEndDate ?? null,
       dagenVerlopen: dagenVerlopen(c, vandaag),
-    }));
+    });
+    const rijen = teMelden.map(beschrijf);
+    const tegenstrijdig = bepaalTegenstrijdigeRijen(alleTwv as any[], vandaag).map(beschrijf);
+    if (tegenstrijdig.length > 0) {
+      console.warn(`[TWV] ${tegenstrijdig.length} rij(en) staan op twv_verlopen terwijl de einddatum nog niet gepasseerd is. Niet gemeld, niet gewijzigd: ${tegenstrijdig.map(r => `#${r.id}`).join(', ')}`);
+    }
 
     if (!versturen) {
       console.log(`[TWV] PROEFSTAND — ${rijen.length} melding(en) "TWV is verlopen" zouden verstuurd worden. Er is niets verstuurd.`);
-      return { droog: true, gevonden: rijen.length, gemeld: 0, rijen };
+      return { droog: true, gevonden: rijen.length, gemeld: 0, rijen, tegenstrijdig };
     }
 
     let gemeld = 0;
@@ -9503,7 +9515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
     console.log(`[TWV] ${gemeld} van ${rijen.length} verlopen-meldingen verstuurd.`);
-    return { droog: false, gevonden: rijen.length, gemeld, rijen };
+    return { droog: false, gevonden: rijen.length, gemeld, rijen, tegenstrijdig };
   }
 
   // Proefstand voor de meldingen: laat zien wie een melding zou krijgen.

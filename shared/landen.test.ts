@@ -60,6 +60,13 @@ const OUD_OVERIG = [
 
 const OUD_ALL_COUNTRIES = ["Nederland", ...[...OUD_EU_EER].sort(), "---", ...OUD_OVERIG];
 
+/**
+ * Landen die na de verhuizing bewust zijn toegevoegd. Ze horen NIET in de
+ * vergelijking met de oude lijst; alles daarbuiten wél. Wie hier iets bijzet,
+ * zegt daarmee: dit is een besluit, geen slip. Zie de kop van shared/landen.ts.
+ */
+const BEWUST_TOEGEVOEGD = ["Gambia"];
+
 function oudeGetFlow(nationality: string): "NL" | "EU" | "NON_EU" {
   if (nationality === "Nederland") return "NL";
   const NL_CARIBBEAN = ["Curaçao", "Aruba", "Sint Maarten", "Bonaire", "Sint Eustatius", "Saba"];
@@ -70,16 +77,25 @@ function oudeGetFlow(nationality: string): "NL" | "EU" | "NON_EU" {
 
 // ── De dropdown moet identiek blijven ────────────────────────────────────────
 console.log("\n— Dropdown-volgorde gelijk aan de oude ALL_COUNTRIES —");
-ok(`even lang (${ALLE_LANDNAMEN.length})`, ALLE_LANDNAMEN.length === OUD_ALL_COUNTRIES.length);
-const eersteAfwijking = ALLE_LANDNAMEN.findIndex((n, i) => n !== OUD_ALL_COUNTRIES[i]);
+const ZONDER_TOEVOEGINGEN = ALLE_LANDNAMEN.filter(n => !BEWUST_TOEGEVOEGD.includes(n));
+ok(
+  `even lang zonder de toevoegingen (${ZONDER_TOEVOEGINGEN.length} + ${BEWUST_TOEGEVOEGD.length} toegevoegd = ${ALLE_LANDNAMEN.length})`,
+  ZONDER_TOEVOEGINGEN.length === OUD_ALL_COUNTRIES.length,
+);
+const eersteAfwijking = ZONDER_TOEVOEGINGEN.findIndex((n, i) => n !== OUD_ALL_COUNTRIES[i]);
 ok(
   eersteAfwijking === -1
     ? "regel voor regel identiek"
-    : `AFWIJKING op positie ${eersteAfwijking}: "${ALLE_LANDNAMEN[eersteAfwijking]}" vs "${OUD_ALL_COUNTRIES[eersteAfwijking]}"`,
+    : `AFWIJKING op positie ${eersteAfwijking}: "${ZONDER_TOEVOEGINGEN[eersteAfwijking]}" vs "${OUD_ALL_COUNTRIES[eersteAfwijking]}"`,
   eersteAfwijking === -1,
 );
+ok("elk toegevoegd land staat ook echt in de lijst", BEWUST_TOEGEVOEGD.every(n => ALLE_LANDNAMEN.includes(n)));
+ok("geen toevoeging stond al in de oude lijst", BEWUST_TOEGEVOEGD.every(n => !OUD_ALL_COUNTRIES.includes(n)));
 ok("Nederland staat vooraan", ALLE_LANDNAMEN[0] === "Nederland");
-ok("scheidingsteken staat op dezelfde plek", ALLE_LANDNAMEN.indexOf("---") === OUD_ALL_COUNTRIES.indexOf("---"));
+ok(
+  "scheidingsteken staat op dezelfde plek",
+  ZONDER_TOEVOEGINGEN.indexOf("---") === OUD_ALL_COUNTRIES.indexOf("---"),
+);
 
 // ── De zone-indeling moet identiek blijven ───────────────────────────────────
 console.log("\n— bepaalZone geeft hetzelfde als de oude getFlow —");
@@ -111,10 +127,14 @@ ok("Nederland → NL", landcode("Nederland") === "NL");
 ok("Bangladesh → BD", landcode("Bangladesh") === "BD");
 ok("Sierra Leone → SL", landcode("Sierra Leone") === "SL");
 ok("Verenigd Koninkrijk → GB", landcode("Verenigd Koninkrijk") === "GB");
+ok("Gambia → GM, niet GA (dat is Gabon)", landcode("Gambia") === "GM");
+ok("Gambia is NON_EU", bepaalZone("Gambia") === "NON_EU");
+ok("Gabon staat er nog steeds niet in", zoekLand("Gabon") === undefined);
 
 console.log("\n— Geen gok bij onbekende namen —");
 ok('"Bangladeshi" geeft null, geen BD', landcode("Bangladeshi") === null);
 ok('"Sierra Leoonse" geeft null', landcode("Sierra Leoonse") === null);
+ok('"Gambiaanse" geeft null — dat is een nationaliteit, geen landnaam', landcode("Gambiaanse") === null);
 ok('"nederland" (kleine letter) geeft null', landcode("nederland") === null);
 ok("lege waarde geeft null", landcode("") === null);
 ok("null geeft null", landcode(null) === null);
@@ -123,7 +143,10 @@ ok("spaties eromheen matchen wel", landcode("  Nederland  ") === "NL");
 console.log("\n— Lijstintegriteit —");
 const namen = LANDEN.map(l => l.naam);
 ok("geen dubbele landnamen", new Set(namen).size === namen.length);
-ok("evenveel landen als in de oude lijsten", LANDEN.length === 1 + OUD_EU_EER.length + OUD_OVERIG.length);
+ok(
+  "evenveel landen als in de oude lijsten plus de bewuste toevoegingen",
+  LANDEN.length === 1 + OUD_EU_EER.length + OUD_OVERIG.length + BEWUST_TOEGEVOEGD.length,
+);
 ok("EU/EER-groep telt 36", EU_EER_LANDNAMEN.length === 36);
 ok("zoekLand geeft het hele object terug", zoekLand("Polen")?.iso === "PL" && zoekLand("Polen")?.zone === "EU");
 
