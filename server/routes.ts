@@ -9380,12 +9380,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // het scherm toont voortaan gewoon wat er staat, en er is geen derde plek meer
   // die zelf iets afleidt.
   //
-  // PROEFSTAND. Zolang TWV_AUTO_VERLOPEN_ACTIEF op false staat schrijft deze
-  // taak NIETS. Hij logt alleen welke rijen hij zou omzetten. Dat is met opzet:
-  // de eerste echte schrijfactie raakt bestaande productierijen, en die lijst
-  // hoort eerst met eigen ogen bekeken te zijn. Zet hem pas op true nadat de
-  // proefstand-uitvoer is goedgekeurd.
-  const TWV_AUTO_VERLOPEN_ACTIEF = false;
+  // TWEE VLAGGEN, BEWUST GESCHEIDEN
+  // ------------------------------
+  // Eerst stond hier één vlag voor allebei. Dat is onhandig gebleken: hem
+  // omzetten schrijft niet alleen de verlopen rijen weg, maar zet in dezelfde
+  // ronde ook meteen de meldingen in gang voor precies die rijen — de
+  // dagelijkse keten is verwerkVerlopenTwv() en dán meldVerlopenTwv(). Bij het
+  // aanzetten waren dat in één klap negen mails: acht rijen die net waren
+  // omgezet, plus één die al op verlopen stond.
+  //
+  // Nu zijn het er twee, en ze horen in deze volgorde aan te gaan:
+  //
+  //   1. TWV_AUTO_VERLOPEN_SCHRIJVEN — zet verstreken vergunningen om naar
+  //      twv_verlopen. Verandert data, verstuurt niets. Daarna is in het scherm
+  //      en in de CSV-export te controleren of de omgezette rijen kloppen.
+  //   2. TWV_AUTO_VERLOPEN_MELDEN — verstuurt pas daarna de meldingen.
+  //
+  // Zolang een vlag op false staat draait die ronde als proefstand: hij telt en
+  // logt, maar schrijft en verstuurt niets. De proefstand-endpoints geven beide
+  // standen terug, zodat te zien is waar het systeem staat.
+  //
+  // Meldingen zonder wegschrijven heeft geen zin: dan is er niets om over te
+  // melden. Andersom wel — dat is precies de tussenstand die hieronder wordt
+  // bedoeld.
+  const TWV_AUTO_VERLOPEN_SCHRIJVEN = true;
+  const TWV_AUTO_VERLOPEN_MELDEN = false;
 
   async function verwerkVerlopenTwv(opties?: { forceerSchrijven?: boolean }): Promise<{
     droog: boolean;
@@ -9394,7 +9413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     gewijzigd: number;
     rijen: Array<{ id: number; naam: string; einddatum: string | null; dagenVerlopen: number }>;
   }> {
-    const schrijven = opties?.forceerSchrijven ?? TWV_AUTO_VERLOPEN_ACTIEF;
+    const schrijven = opties?.forceerSchrijven ?? TWV_AUTO_VERLOPEN_SCHRIJVEN;
     const alleTwv = await storage.getTwvCandidates();
     const vandaag = new Date();
     const teVerlopen = bepaalVerlopenRijen(alleTwv as any[], vandaag);
@@ -9459,8 +9478,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Zulke rijen komen apart terug als `tegenstrijdig` en worden niet gemeld en
   // niet gewijzigd; die horen met de hand bekeken te worden.
   //
-  // Volgt dezelfde vlag als hierboven: in proefstand wordt er niets verstuurd en
-  // niets weggeschreven, alleen geteld.
+  // Volgt TWV_AUTO_VERLOPEN_MELDEN, niet de schrijfvlag. Staat die op false, dan
+  // wordt er alleen geteld en gelogd: niets verstuurd, geen stempel gezet.
   async function meldVerlopenTwv(opties?: { forceerVersturen?: boolean }): Promise<{
     droog: boolean;
     gevonden: number;
@@ -9468,7 +9487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     rijen: Array<{ id: number; naam: string; einddatum: string | null; dagenVerlopen: number }>;
     tegenstrijdig: Array<{ id: number; naam: string; einddatum: string | null; dagenVerlopen: number }>;
   }> {
-    const versturen = opties?.forceerVersturen ?? TWV_AUTO_VERLOPEN_ACTIEF;
+    const versturen = opties?.forceerVersturen ?? TWV_AUTO_VERLOPEN_MELDEN;
     const alleTwv = await storage.getTwvCandidates();
     const vandaag = new Date();
     const teMelden = bepaalTeMeldenRijen(alleTwv as any[], vandaag);
@@ -9523,7 +9542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/twv/proefstand-meldingen", adminMiddleware, async (_req: Request, res: Response) => {
     try {
       const r = await meldVerlopenTwv({ forceerVersturen: false });
-      return res.json({ ...r, actiefInProductie: TWV_AUTO_VERLOPEN_ACTIEF });
+      return res.json({ ...r, schrijvenActief: TWV_AUTO_VERLOPEN_SCHRIJVEN, meldenActief: TWV_AUTO_VERLOPEN_MELDEN });
     } catch (error: any) {
       console.error("Fout bij proefstand meldingen:", error);
       return res.status(500).json({ message: "Er is een fout opgetreden" });
@@ -9534,19 +9553,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/twv/proefstand-verlopen", adminMiddleware, async (_req: Request, res: Response) => {
     try {
       const r = await verwerkVerlopenTwv({ forceerSchrijven: false });
-      return res.json({ ...r, actiefInProductie: TWV_AUTO_VERLOPEN_ACTIEF });
+      return res.json({ ...r, schrijvenActief: TWV_AUTO_VERLOPEN_SCHRIJVEN, meldenActief: TWV_AUTO_VERLOPEN_MELDEN });
     } catch (error: any) {
       console.error("Fout bij proefstand verlopen:", error);
       return res.status(500).json({ message: "Er is een fout opgetreden" });
     }
   });
 
-  // Handmatig draaien. Volgt de vlag: staat die op false, dan is dit hetzelfde
-  // als de proefstand en verandert er niets.
+  // Handmatig draaien. Volgt TWV_AUTO_VERLOPEN_SCHRIJVEN: staat die op false,
+  // dan is dit hetzelfde als de proefstand en verandert er niets.
   app.post("/api/admin/twv/verwerk-verlopen", adminMiddleware, async (_req: Request, res: Response) => {
     try {
       const r = await verwerkVerlopenTwv();
-      return res.json({ ...r, actiefInProductie: TWV_AUTO_VERLOPEN_ACTIEF });
+      return res.json({ ...r, schrijvenActief: TWV_AUTO_VERLOPEN_SCHRIJVEN, meldenActief: TWV_AUTO_VERLOPEN_MELDEN });
     } catch (error: any) {
       console.error("Fout bij verwerken verlopen TWV:", error);
       return res.status(500).json({ message: "Er is een fout opgetreden" });
