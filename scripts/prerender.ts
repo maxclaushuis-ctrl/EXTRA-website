@@ -41,6 +41,7 @@ import path from "path";
 import http from "http";
 import { chromium } from "playwright-core";
 import { ROUTE_META, normalizeMetaPath } from "../shared/routeMeta";
+import { verouderdeFragmenten } from "./prerenderOpruimen";
 
 interface PrerenderRoute {
   path: string;
@@ -286,6 +287,7 @@ async function main() {
   const dynamicRoutes = await fetchDynamicRoutes();
   const routes: PrerenderRoute[] = [...staticRoutes, ...dynamicRoutes];
   let ok = 0, skipped: string[] = [];
+  const geschreven: string[] = [];
 
   for (const route of routes) {
     try {
@@ -317,6 +319,7 @@ async function main() {
       const file = fragmentFileName(route.path);
       fs.writeFileSync(path.join(OUT_COMMITTED, file), fragment);
       fs.writeFileSync(path.join(OUT_DIST, file), fragment);
+      geschreven.push(file);
       ok++;
       console.log(`✓ ${route.path} → prerender/${file} (${Math.round(fragment.length / 1024)}kB, ${h1Count} h1)`);
     } catch (err: any) {
@@ -326,6 +329,32 @@ async function main() {
 
   await browser.close();
   server.close();
+
+  // Fragmenten van artikelen en vacatures die niet meer bestaan, horen weg.
+  // Zonder dit bleven ze staan en linkten /blog en een artikelpagina naar
+  // zeven verdwenen slugs — elf interne links naar een 404, precies bij de
+  // crawlers waarvoor deze fragmenten bedoeld zijn (zie
+  // scripts/prerenderOpruimen.ts).
+  //
+  // De veiligheidsklep: alleen opruimen als er in deze run daadwerkelijk
+  // dynamische routes zijn geprobeerd. Draait dit script zonder
+  // databasetoegang, dan is dynamicRoutes leeg en zou opruimen élk
+  // artikelfragment wissen.
+  if (dynamicRoutes.length > 0) {
+    for (const map of [OUT_COMMITTED, OUT_DIST]) {
+      let aanwezig: string[];
+      try {
+        aanwezig = fs.readdirSync(map);
+      } catch {
+        continue;
+      }
+      for (const naam of verouderdeFragmenten(aanwezig, geschreven)) {
+        fs.unlinkSync(path.join(map, naam));
+        console.log(`- ${naam} verwijderd uit ${path.relative(ROOT, map)} (route bestaat niet meer)`);
+      }
+    }
+  }
+
   console.log(`\nKlaar: ${ok}/${routes.length} routes geprerenderd.`);
   if (dynamicRoutes.length === 0) {
     console.log(
