@@ -43,6 +43,7 @@ import rewardAirtag from "@assets/airtag_1771872665358.webp";
 import rewardMuseumkaart from "@assets/Museumjaarkaart_1771872665358.webp";
 import rewardAirpods from "@assets/Airpods_1771872665358.webp";
 import rewardGig from "@assets/Gig_1771872665358.webp";
+import { REVIEW_SCORE, reviewAantalTekst, reviewScoreTekst } from "@shared/reviews";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -71,21 +72,57 @@ export function RevealSection({ children, className = "", delay = 0 }: { childre
   );
 }
 
+/**
+ * Teller die oploopt zodra het blok in beeld komt.
+ *
+ * De beginwaarde is de eindwaarde, niet 0. Reden: scripts/prerender.ts rendert
+ * de pagina in een browser die niet scrolt. Deze balk kwam daar dus nooit in
+ * beeld, de animatie startte niet, en het fragment werd vastgelegd met "0+".
+ * Dat fragment is precies wat crawlers en AI-modellen lezen — die zagen
+ * "0+ actieve medewerkers" en "0+ tevreden opdrachtgevers" staan.
+ *
+ * Stond het blok bij de eerste meting al in beeld, dan blijft het echte getal
+ * staan en animeert er niets: anders zie je het getal één frame en valt het
+ * daarna terug naar 0. Wie ernaartoe scrolt krijgt de animatie wel, en bij
+ * prefers-reduced-motion animeert er nooit iets.
+ */
 function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suffix?: string; duration?: number }) {
-  const [count, setCount] = useState(0);
-  const { ref, isVisible } = useScrollReveal();
+  const ref = useRef<HTMLSpanElement>(null);
+  const [count, setCount] = useState(target);
   const hasDecimal = target % 1 !== 0;
   useEffect(() => {
-    if (!isVisible) return;
-    let start = 0;
-    const increment = target / (duration / 16);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else { setCount(hasDecimal ? Math.round(start * 10) / 10 : Math.floor(start)); }
-    }, 16);
-    return () => clearInterval(timer);
-  }, [isVisible, target, duration, hasDecimal]);
+    const element = ref.current;
+    if (!element || typeof IntersectionObserver === "undefined") return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let eersteMeting = true;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (eersteMeting) {
+          eersteMeting = false;
+          // Al in beeld bij het laden: het echte getal staat er al, laat staan.
+          if (entry.isIntersecting) observer.disconnect();
+          return;
+        }
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        let start = 0;
+        setCount(0);
+        const increment = target / (duration / 16);
+        timer = setInterval(() => {
+          start += increment;
+          if (start >= target) { setCount(target); if (timer) clearInterval(timer); }
+          else { setCount(hasDecimal ? Math.round(start * 10) / 10 : Math.floor(start)); }
+        }, 16);
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+    );
+
+    observer.observe(element);
+    return () => { observer.disconnect(); if (timer) clearInterval(timer); };
+  }, [target, duration, hasDecimal]);
   return <span ref={ref}>{hasDecimal ? count.toFixed(1).replace('.', ',') : count.toLocaleString("nl-NL")}{suffix}</span>;
 }
 
@@ -880,7 +917,7 @@ export default function LandingPage() {
               { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-600" },
               { value: 90, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
               { value: 500, suffix: "k+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
-              { value: 4.8, suffix: "/5", label: "234 Google reviews", icon: Star, color: "text-amber-400 fill-amber-400" },
+              { value: REVIEW_SCORE, suffix: "/5", label: reviewAantalTekst(), icon: Star, color: "text-amber-400 fill-amber-400" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mx-auto mb-2 sm:mb-3`} />
@@ -1549,9 +1586,9 @@ export default function LandingPage() {
                       <Star key={j} className={`w-4 h-4 sm:w-6 sm:h-6 ${j < 5 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
                     ))}
                   </div>
-                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">4,8</span>
+                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">{reviewScoreTekst("nl")}</span>
                 </div>
-                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">232 Google reviews</span></span>
+                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">{reviewAantalTekst()}</span></span>
               </div>
             </div>
           </RevealSection>

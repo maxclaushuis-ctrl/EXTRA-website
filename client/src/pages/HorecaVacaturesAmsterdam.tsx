@@ -8,6 +8,7 @@ import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
 import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
 import chefImg from "@assets/Chef_1771833440047.webp";
 import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
+import { reviewAantalTekst, reviewScoreTekst } from "@shared/reviews";
 
 const XDivider = () => (
   <div className="relative h-16 overflow-hidden">
@@ -149,9 +150,9 @@ export default function HorecaVacaturesAmsterdam() {
                         <Star key={j} className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400" />
                       ))}
                     </div>
-                    <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">4,8</span>
+                    <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">{reviewScoreTekst("nl")}</span>
                   </div>
-                  <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">232 Google reviews</span></span>
+                  <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">{reviewAantalTekst()}</span></span>
                 </div>
               </div>
             </RevealSection>

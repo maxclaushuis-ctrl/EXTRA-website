@@ -7,6 +7,7 @@ import {
   BookOpen, Zap, Smile, Smartphone, Trophy, MapPin, ChevronDown
 } from "lucide-react";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import { reviewScoreTekst } from "@shared/reviews";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -325,7 +326,7 @@ export default function OnsTeam() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { num: "800+", label: "Actieve medewerkers", color: "from-purple-600 to-violet-600" },
-                  { num: "4,8", label: "Google reviews", color: "from-amber-400 to-orange-500" },
+                  { num: reviewScoreTekst("nl"), label: "Google reviews", color: "from-amber-400 to-orange-500" },
                   { num: "4", label: "Gepassioneerde teamleden", color: "from-fuchsia-500 to-pink-500" },
                   { num: "100%", label: "In loondienst", color: "from-emerald-500 to-teal-500" },
                 ].map(({ num, label, color }) => (

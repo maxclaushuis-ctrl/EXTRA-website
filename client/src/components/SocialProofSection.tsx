@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import TestimonialCard from "@/components/TestimonialCard";
 import { VARIANT_B } from "@/lib/variants";
+import { reviewAantalTekst, reviewScoreUitVijf } from "@shared/reviews";
 
 interface SocialProofSectionProps {
   variant: string;
@@ -78,9 +79,9 @@ export default function SocialProofSection({ variant }: SocialProofSectionProps)
           {/* Altijd de rating tonen, ongeacht de variant */}
           <div className="flex justify-between mt-6 text-center p-4 bg-white rounded-lg shadow-sm">
             <div className="w-1/3">
-              <p className="font-poppins font-bold text-2xl">4.8/5</p>
+              <p className="font-poppins font-bold text-2xl">{reviewScoreUitVijf("nl")}</p>
               <p className="text-xs">★★★★★</p>
-              <p className="text-xs text-gray-600">188 reviews</p>
+              <p className="text-xs text-gray-600">{reviewAantalTekst()}</p>
             </div>
             <div className="w-1/3">
               <p className="font-poppins font-bold text-2xl">1000+</p>

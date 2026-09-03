@@ -40,6 +40,7 @@ import {
   Forklift,
   ChevronDown,
 } from "lucide-react";
+import { REVIEW_AANTAL, reviewScoreUitVijf } from "@shared/reviews";
 
 /* Ligt in client/public/ en wordt dus als kaal pad geserveerd, niet geïmporteerd. */
 const HERO_BEELD = "/images/logistiek-hero.webp";
@@ -173,7 +174,7 @@ const VRAGEN = [
  * logistiek; dat is een bewuste keuze en met Max afgestemd.
  */
 const BEWIJS = [
-  { cijfer: "4,8/5", label: "uit 234 reviews" },
+  { cijfer: reviewScoreUitVijf("nl"), label: `uit ${REVIEW_AANTAL} reviews` },
   { cijfer: "NEN 4400-1", label: "gecertificeerd" },
   { cijfer: "800+", label: "medewerkers" },
 ];

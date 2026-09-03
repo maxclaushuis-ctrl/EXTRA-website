@@ -36,6 +36,7 @@ import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
 import logoWestweelde from "../assets/pitch/logo-westweelde-clean.webp";
+import { reviewAantalTekst, reviewScoreTekst } from "@shared/reviews";
 
 const TOTAL_SLIDES = 11;
 
@@ -710,8 +711,8 @@ export default function BHGGroupPage() {
                       <div className="flex gap-0.5">
                         {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
                       </div>
-                      <span className="text-sm font-bold text-gray-900">4,8</span>
-                      <span className="text-sm text-gray-500">gemiddeld uit 232 Google reviews</span>
+                      <span className="text-sm font-bold text-gray-900">{reviewScoreTekst("nl")}</span>
+                      <span className="text-sm text-gray-500">gemiddeld uit {reviewAantalTekst()}</span>
                     </div>
                   </div>
                 </RevealSection>

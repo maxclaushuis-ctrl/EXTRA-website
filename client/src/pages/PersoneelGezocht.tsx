@@ -37,6 +37,7 @@ import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.webp
 import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";
 import poulesMatches from "@assets/Scherm\u00adafbeelding_2026-03-12_om_10.22.20_1773311761908.png";
 import poulesButton from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.36.42_1773311845901.png";
+import { reviewAantalTekst, reviewScoreTekst } from "@shared/reviews";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -577,9 +578,9 @@ export default function PersoneelGezocht() {
                       <Star key={j} className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">4,8</span>
+                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">{reviewScoreTekst("nl")}</span>
                 </div>
-                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">232 Google reviews</span></span>
+                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">{reviewAantalTekst()}</span></span>
               </div>
             </div>
           </RevealSection>

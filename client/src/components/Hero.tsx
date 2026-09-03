@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useAnalytics } from "@/hooks/use-analytics";
 import heroGraphic from "@/assets/hero_graphic.svg";
+import { reviewAantalTekst, reviewScoreUitVijf } from "@shared/reviews";
 
 export default function Hero() {
   const { trackEvent } = useAnalytics();
@@ -28,8 +29,8 @@ export default function Hero() {
           <div className="flex items-center justify-center mb-3">
             <div className="bg-white text-black rounded-full px-3 py-1 text-sm font-medium flex items-center">
               <span className="text-yellow-400 mr-1">★★★★★</span>
-              <span>4.8/5</span>
-              <span className="text-gray-500 text-xs ml-1">(215 reviews)</span>
+              <span>{reviewScoreUitVijf("nl")}</span>
+              <span className="text-gray-500 text-xs ml-1">({reviewAantalTekst()})</span>
             </div>
           </div>
           
