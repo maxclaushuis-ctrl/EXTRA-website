@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { meldAanmelding } from "@/lib/meting";
+import { herkomstVoorFormulier } from "@/lib/herkomst";
 
 import { ALLE_LANDNAMEN, LANDEN_SCHEIDING, bepaalZone, type LandZone } from "@shared/landen";
 
@@ -650,6 +652,12 @@ export default function Aanmelden() {
         functionType: formData.preferredFunction,
         referralCode: formData.referralCode || null,
         sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
+        // Waar deze bezoeker vandaan kwam. De backend negeert dit veld nog
+        // (zod laat onbekende velden vallen); de kolommen volgen in de
+        // volgende stap. Nu al meesturen betekent dat we in het netwerkpaneel
+        // kunnen controleren of de waarden kloppen voordat er iets in de
+        // database verandert.
+        herkomst: herkomstVoorFormulier(),
         status,
         partial,
         notes: rejReason ? `Afgewezen reden: ${rejReason}` : undefined,
@@ -755,6 +763,7 @@ export default function Aanmelden() {
           referralCode: formData.referralCode || null,
           interviewDate: null, interviewTime: null,
           sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
+          herkomst: herkomstVoorFormulier(),
           notes, partial: true,
           ...horecaTags,
         }),
@@ -787,6 +796,13 @@ export default function Aanmelden() {
 
     // Aanmelding afgerond en in de database opgeslagen: bewaarde referral opruimen.
     clearStoredReferral();
+
+    // Dit is het enige punt waarop een aanmelding echt af is. Niet bij de
+    // eerste POST hierboven — die slaat de kandidaat op met partial: true en
+    // wordt ook geraakt door bezoekers die halverwege stoppen. En niet op de
+    // afwijsroutes: een afgewezen kandidaat is geen aanmelding.
+    meldAanmelding(lang === "NL" ? "nl" : "en");
+
     setStep("cv_schedule");
   }
 

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { herkomstVoorFormulier } from "@/lib/herkomst";
 import { ArrowRight, Check, Phone, MessageCircle, Shield, Users, Zap } from "lucide-react";
 import PublicNav from "@/components/PublicNav";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
@@ -163,6 +164,8 @@ export default function PersoneelsAanvraag() {
         body: JSON.stringify({
           ...data,
           locationType: data.locationName ? "Overig" : "Niet opgegeven",
+          // Zie de toelichting in Aanmelden.tsx: nu meesturen, kolommen volgen.
+          herkomst: herkomstVoorFormulier(),
         }),
       });
     },

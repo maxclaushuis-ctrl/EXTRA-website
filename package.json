@@ -32,6 +32,7 @@
     "landen:test": "tsx shared/landen.test.ts",
     "alias:test": "tsx shared/landenAlias.test.ts",
     "reviews:test": "tsx shared/reviews.test.ts",
+    "herkomst:test": "tsx shared/herkomst.test.ts",
     "prerender:test": "tsx scripts/prerenderOpruimen.test.ts",
     "twv:test": "tsx server/twvVerlopen.test.ts",
     "csv:test": "tsx shared/csv.test.ts",
