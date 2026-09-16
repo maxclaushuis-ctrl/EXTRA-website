@@ -278,7 +278,7 @@ export default function Vacatures() {
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-2">Functie</p>
         <div>
-          {(["Bediening", "Bartender", "Chef", "Banqueting", "Housekeeping", "Front office"] as const).map((f) => (
+          {(["Bediening", "Bartender", "Chef", "Banqueting", "Housekeeping", "Front office", "Afwasser"] as const).map((f) => (
             <FilterCheckbox key={f} type="functions" value={f} />
           ))}
         </div>

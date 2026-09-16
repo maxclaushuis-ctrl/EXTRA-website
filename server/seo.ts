@@ -27,6 +27,7 @@ import {
 import { storage } from "./storage";
 import { blogFragment, vacatureFragment, lijstFragment } from "./contentFragment";
 import { verwanteItems, verwantFragment } from "@shared/verwanteLinks";
+import { leesUurloon } from "@shared/uurloon";
 import { TtlCache, metCache } from "./paginaCache";
 import type { BlogPost, VacancyPost } from "@shared/schema";
 
@@ -228,13 +229,24 @@ function jobPostingJsonLd(vacancy: VacancyPost, canonicalUrl: string): string {
     },
   };
 
-  if (vacancy.salaryMin) {
+  /**
+   * Het loonveld in de wizard is vrije tekst. Stond hier eerder
+   * Number(vacancy.salaryMin): bij de Nederlandse notatie "18,00" levert dat
+   * NaN op, en JSON.stringify maakt daar null van. Google Jobs kreeg dan een
+   * JobPosting met een leeg salaris terwijl de vacaturepagina zelf gewoon
+   * "€18,00" toonde — parseFloat stopt namelijk wél netjes bij de komma.
+   * leesUurloon leest beide notaties en geeft null zodra er geen bruikbaar
+   * bedrag staat; dan laten we baseSalary weg in plaats van een placeholder te
+   * publiceren.
+   */
+  const uurloon = leesUurloon(vacancy.salaryMin);
+  if (uurloon !== null) {
     schema.baseSalary = {
       "@type": "MonetaryAmount",
       currency: "EUR",
       value: {
         "@type": "QuantitativeValue",
-        value: Number(vacancy.salaryMin),
+        value: uurloon,
         unitText: "HOUR",
       },
     };

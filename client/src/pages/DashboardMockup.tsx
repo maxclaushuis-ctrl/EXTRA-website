@@ -6294,7 +6294,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                           <div>
                             <label className="text-xs font-semibold text-gray-700 mb-1 block">Functiecategorie *</label>
                             <select value={vacancyForm.functionType || 'Bediening'} onChange={e => setVacancyForm((f: any) => ({ ...f, functionType: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
-                              {['Bediening','Bartender','Chef','Banqueting','Housekeeping','Front office'].map(v => <option key={v}>{v}</option>)}
+                              {['Bediening','Bartender','Chef','Banqueting','Housekeeping','Front office','Afwasser'].map(v => <option key={v}>{v}</option>)}
                             </select>
                           </div>
                           <div>
