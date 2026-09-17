@@ -2606,7 +2606,28 @@ export default function DashboardMockup() {
                       return String(val);
                     };
 
-                    const EditField = ({ row }: { row: Row }) => {
+                    /**
+                     * LET OP — dit zijn geen componenten, en dat moet zo blijven.
+                     *
+                     * editField, section, ratingSection en arrayCheckRow worden
+                     * hier binnen de render gedefinieerd, omdat ze getFieldValue,
+                     * setFieldValue en isEditingApp uit deze scope nodig hebben.
+                     * Zolang ze als functie worden aangeroepen — {section({ ... })}
+                     * — geeft dat gewoon JSX terug en is er niets aan de hand.
+                     *
+                     * Zodra je er weer JSX-elementen van maakt (<Section ... />)
+                     * breekt het intakescherm. Een component die binnen de render
+                     * wordt gedefinieerd is bij elke render een nieuwe functie, dus
+                     * een nieuw componenttype. React haalt dan de hele boom eronder
+                     * weg en bouwt hem opnieuw op. Gevolg: bij élke toetsaanslag
+                     * verdween het invoerveld waarin je typte, sprong de focus weg
+                     * en schoot het scherm terug naar boven. Je kon geen enkel veld
+                     * in één keer invullen.
+                     *
+                     * Namen daarom bewust met een kleine letter: JSX kan er dan niet
+                     * per ongeluk een component van maken.
+                     */
+                    const editField = ({ row }: { row: Row }) => {
                       const value = getFieldValue(row.key);
                       const onChange = (v: any) => setFieldValue(row.key, v);
                       if (row.type === 'bool') {
@@ -2646,7 +2667,7 @@ export default function DashboardMockup() {
                       return <input type="text" value={value ?? ''} onChange={e => onChange(e.target.value)} className="text-sm border border-gray-200 rounded px-2 py-1 bg-white w-full max-w-[260px]" />;
                     };
 
-                    const Section = ({ title, rows }: { title: string; rows: Row[] }) => (
+                    const section = ({ title, rows }: { title: string; rows: Row[] }) => (
                       <div className="mb-5">
                         <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">{title}</h4>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
@@ -2654,7 +2675,7 @@ export default function DashboardMockup() {
                             <div key={row.key} className="flex justify-between items-center text-sm py-0.5 min-h-[28px]">
                               <span className="text-gray-500 shrink-0 mr-2">{row.label}</span>
                               {isEditingApp
-                                ? <EditField row={row} />
+                                ? editField({ row })
                                 : <span className="font-medium text-right text-gray-800">{renderVal(getFieldValue(row.key), row.type)}</span>}
                             </div>
                           ))}
@@ -2662,7 +2683,7 @@ export default function DashboardMockup() {
                       </div>
                     );
 
-                    const RatingSection = ({ title, rows }: { title: string; rows: { label: string; key: string }[] }) => (
+                    const ratingSection = ({ title, rows }: { title: string; rows: { label: string; key: string }[] }) => (
                       <div className="mb-5">
                         <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">{title}</h4>
                         <div className="space-y-1.5">
@@ -2679,7 +2700,7 @@ export default function DashboardMockup() {
                     );
 
                     // Helper voor checkbox-array veld (bv. chefClothing)
-                    const ArrayCheckRow = ({ label, fieldKey, value: optValue }: { label: string; fieldKey: string; value: string }) => {
+                    const arrayCheckRow = ({ label, fieldKey, value: optValue }: { label: string; fieldKey: string; value: string }) => {
                       const arr: string[] = Array.isArray(getFieldValue(fieldKey)) ? getFieldValue(fieldKey) : [];
                       const checked = arr.includes(optValue);
                       const toggle = () => {
@@ -2857,13 +2878,13 @@ export default function DashboardMockup() {
                         {/* Function-specific sections */}
                         {fn === 'horecamedewerker' && (
                           <>
-                            <Section title="Achtergrond" rows={[
+                            {section({ title: "Achtergrond", rows: [
                               { label: 'Voertaal', key: 'languages', type: 'array' },
                               { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
                               { label: 'Nationaliteit', key: 'nationality' },
                               { label: 'Andere baan', key: 'otherJob' },
-                            ]} />
-                            <Section title="Werkervaring" rows={[
+                            ] })}
+                            {section({ title: "Werkervaring", rows: [
                               { label: 'Ervaring in', key: 'experienceTypes', type: 'array' },
                               { label: 'Horeca-ervaring', key: 'horecaExperience', type: 'years' },
                               { label: 'Zelfstandig werken', key: 'canWorkIndependently', type: 'bool' },
@@ -2873,121 +2894,121 @@ export default function DashboardMockup() {
                               { label: 'Gerechten afwassen', key: 'canWashDishes', type: 'bool' },
                               { label: 'Assistent-kok', key: 'isAssistantChef', type: 'bool' },
                               { label: 'Promowerk', key: 'isPromoWorker', type: 'bool' },
-                            ]} />
-                            <RatingSection title="Vaardigheden (1–5)" rows={[
+                            ] })}
+                            {ratingSection({ title: "Vaardigheden (1–5)", rows: [
                               { label: 'Bediening', key: 'serviceSkills' },
                               { label: 'Bar', key: 'barSkills' },
                               { label: 'Diner', key: 'dinerSkills' },
-                            ]} />
-                            <Section title="Praktisch" rows={[
+                            ] })}
+                            {section({ title: "Praktisch", rows: [
                               { label: 'Rijbewijs', key: 'hasDriversLicense', type: 'bool' },
                               { label: 'OV-kaart', key: 'hasStudentOV', type: 'bool' },
                               { label: 'OV-type', key: 'ovType' },
                               { label: 'Eigen kleding', key: 'workClothing' },
-                            ]} />
-                            <Section title="Beschikbaarheid" rows={[
+                            ] })}
+                            {section({ title: "Beschikbaarheid", rows: [
                               { label: 'Uren per week', key: 'availableHours', type: 'number' },
                               { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
                               { label: 'Voorkeurstijden', key: 'preferredTimes', type: 'array' },
-                            ]} />
-                            <RatingSection title="Beoordeling interviewer" rows={[
+                            ] })}
+                            {ratingSection({ title: "Beoordeling interviewer", rows: [
                               { label: 'Ervaringsniveau', key: 'experienceLevel' },
                               { label: 'Verschijning', key: 'appearance' },
                               { label: 'Attitude', key: 'attitude' },
                               { label: 'Communicatie', key: 'communicationSkills' },
                               { label: 'Algemene indruk', key: 'overallImpression' },
-                            ]} />
+                            ] })}
                           </>
                         )}
 
                         {fn === 'housekeeping' && (
                           <>
-                            <Section title="Achtergrond" rows={[
+                            {section({ title: "Achtergrond", rows: [
                               { label: 'Voertaal', key: 'voertaal' },
                               { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
                               { label: 'Nationaliteit', key: 'nationality' },
-                            ]} />
-                            <Section title="Werkervaring" rows={[
+                            ] })}
+                            {section({ title: "Werkervaring", rows: [
                               { label: 'Taken', key: 'hkTasks', type: 'array' },
                               { label: 'Jaren ervaring', key: 'hkYearsExperience', type: 'years' },
                               { label: 'Locatietypes', key: 'hkLocationTypes', type: 'array' },
                               { label: 'Hotelsterren', key: 'hkHotelStars' },
                               { label: 'Vorige werkgevers', key: 'hkCompanies' },
                               { label: 'Referentie', key: 'hkReference' },
-                            ]} />
-                            <Section title="Beschikbaarheid" rows={[
+                            ] })}
+                            {section({ title: "Beschikbaarheid", rows: [
                               { label: 'Uren per week', key: 'availableHours', type: 'number' },
                               { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
                               { label: 'Voorkeurstijden', key: 'preferredTimes', type: 'array' },
                               { label: 'Eigen auto', key: 'hasCar', type: 'bool' },
-                            ]} />
-                            <RatingSection title="Soft skills (1–5)" rows={[
+                            ] })}
+                            {ratingSection({ title: "Soft skills (1–5)", rows: [
                               { label: 'Betrouwbaarheid', key: 'hkBetrouwbaarheid' },
                               { label: 'Communicatie', key: 'hkCommunicatie' },
                               { label: 'Representativiteit', key: 'hkRepresentativiteit' },
-                            ]} />
+                            ] })}
                           </>
                         )}
 
                         {fn === 'chef' && (
                           <>
-                            <Section title="Achtergrond" rows={[
+                            {section({ title: "Achtergrond", rows: [
                               { label: 'Voertaal', key: 'voertaal' },
                               { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
                               { label: 'Nationaliteit', key: 'nationality' },
-                            ]} />
-                            <Section title="Hard skills" rows={[
+                            ] })}
+                            {section({ title: "Hard skills", rows: [
                               { label: 'Keukentypen', key: 'chefKitchenTypes', type: 'array' },
                               { label: 'Diploma', key: 'chefDiplomas' },
                               { label: 'Jaren als kok', key: 'chefYearsAsKok', type: 'years' },
                               { label: 'Leiderschapservaring', key: 'chefLeadershipExp' },
                               { label: 'Hoofdkeuken', key: 'chefMainKitchen' },
                               { label: 'Vorige werkgevers', key: 'chefCompanies' },
-                            ]} />
-                            <Section title="Beschikbaarheid & Vervoer" rows={[
+                            ] })}
+                            {section({ title: "Beschikbaarheid & Vervoer", rows: [
                               { label: 'Startdatum', key: 'chefStartDate', type: 'date' },
                               { label: 'Uren per week', key: 'availableHours', type: 'number' },
                               { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
                               { label: 'Voorkeurstijden', key: 'preferredTimes', type: 'array' },
                               { label: 'Eigen auto', key: 'hasCar', type: 'bool' },
-                            ]} />
+                            ] })}
                             <div className="mb-5">
                               <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">Kleding</h4>
                               <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                                <ArrayCheckRow label="Koksbuis" fieldKey="chefClothing" value="koksbuis" />
-                                <ArrayCheckRow label="Koksbroek" fieldKey="chefClothing" value="koksbroek" />
-                                <ArrayCheckRow label="Veiligheidsschoenen" fieldKey="chefClothing" value="veiligheidsschoenen" />
-                                <ArrayCheckRow label="Messenset" fieldKey="chefClothing" value="messenset" />
+                                {arrayCheckRow({ label: "Koksbuis", fieldKey: "chefClothing", value: "koksbuis" })}
+                                {arrayCheckRow({ label: "Koksbroek", fieldKey: "chefClothing", value: "koksbroek" })}
+                                {arrayCheckRow({ label: "Veiligheidsschoenen", fieldKey: "chefClothing", value: "veiligheidsschoenen" })}
+                                {arrayCheckRow({ label: "Messenset", fieldKey: "chefClothing", value: "messenset" })}
                               </div>
                             </div>
-                            <RatingSection title="Tags & uitstraling (1–5)" rows={[
+                            {ratingSection({ title: "Tags & uitstraling (1–5)", rows: [
                               { label: 'Professionele uitstraling', key: 'chefProfessioneleUitstraling' },
                               { label: 'Communicatie', key: 'communicationSkills' },
                               { label: 'Algemene indruk', key: 'overallImpression' },
-                            ]} />
-                            <RatingSection title="Beoordeling interviewer" rows={[
+                            ] })}
+                            {ratingSection({ title: "Beoordeling interviewer", rows: [
                               { label: 'Ervaringsniveau', key: 'experienceLevel' },
                               { label: 'Verschijning', key: 'appearance' },
                               { label: 'Attitude', key: 'attitude' },
-                            ]} />
+                            ] })}
                           </>
                         )}
 
                         {fn === 'logistiek' && (
                           <>
-                            <Section title="Achtergrond" rows={[
+                            {section({ title: "Achtergrond", rows: [
                               { label: 'Nationaliteit', key: 'nationality' },
                               { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
                               { label: 'Taal', key: 'languages', type: 'array' },
-                            ]} />
-                            <Section title="Certificaten & Rijbewijzen" rows={[
+                            ] })}
+                            {section({ title: "Certificaten & Rijbewijzen", rows: [
                               { label: 'Rijbewijs B', key: 'logLicenseB', type: 'bool' },
                               { label: 'Rijbewijs C/CE', key: 'logLicenseCCE', type: 'bool' },
                               { label: 'Heftruck certificaat', key: 'logHeftruckCert', type: 'bool' },
                               { label: 'VCA certificaat', key: 'logVCA', type: 'bool' },
                               { label: 'Overige certificaten', key: 'logOtherCertificates' },
-                            ]} />
-                            <Section title="Ervaring & Vaardigheden" rows={[
+                            ] })}
+                            {section({ title: "Ervaring & Vaardigheden", rows: [
                               { label: 'Werkervaring logistiek', key: 'logExperience' },
                               { label: 'Werkomgeving', key: 'logWorkEnvironments', type: 'array' },
                               { label: 'Scanapparatuur / RF', key: 'logScanEquipment', type: 'bool' },
@@ -2997,37 +3018,37 @@ export default function DashboardMockup() {
                               { label: 'Referentie beschikbaar', key: 'logReference', type: 'bool' },
                               { label: 'Naam referentie', key: 'logReferenceContact' },
                               { label: 'Tel. referentie', key: 'logReferencePhone' },
-                            ]} />
-                            <Section title="Praktische zaken" rows={[
+                            ] })}
+                            {section({ title: "Praktische zaken", rows: [
                               { label: 'Eigen vervoer', key: 'logTransport' },
                               { label: 'Max. reistijd', key: 'logMaxTravelTime' },
                               { label: 'Werkkleding aanwezig', key: 'logWorkClothing', type: 'bool' },
-                            ]} />
-                            <Section title="Beschikbaarheid" rows={[
+                            ] })}
+                            {section({ title: "Beschikbaarheid", rows: [
                               { label: 'Uren per week', key: 'logAvailableHours', type: 'number' },
                               { label: 'Beschikbaar vanaf', key: 'logAvailableFrom', type: 'date' },
                               { label: 'Voorkeur diensten', key: 'logShiftPreference', type: 'array' },
                               { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
-                            ]} />
-                            <RatingSection title="Beoordeling interviewer" rows={[
+                            ] })}
+                            {ratingSection({ title: "Beoordeling interviewer", rows: [
                               { label: 'Communicatie', key: 'communicationSkills' },
                               { label: 'Algemene indruk', key: 'overallImpression' },
-                            ]} />
-                            <Section title="Eindoordeel" rows={[
+                            ] })}
+                            {section({ title: "Eindoordeel", rows: [
                               { label: 'Beoordeling', key: 'assessmentRating' },
                               { label: 'Ervaringsniveau', key: 'experienceLevel' },
                               { label: 'Verschijning', key: 'appearance' },
                               { label: 'Attitude', key: 'attitude' },
-                            ]} />
+                            ] })}
                           </>
                         )}
 
                         {(fn === 'frontoffice' || fn === 'front-office') && (
-                          <Section title="Formuliergegevens" rows={
+                          section({ title: "Formuliergegevens", rows:
                             Object.entries(fd)
                               .filter(([k]) => !['functionType','interviewer','firstName','lastName','email','phone','city','salaryScale','assessmentRating','remarks','linkedCandidateId'].includes(k))
                               .map(([k]) => ({ label: k, key: k }))
-                          } />
+                          })
                         )}
                       </>
                     );
