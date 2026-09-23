@@ -830,6 +830,45 @@ export default function HotelPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
+      {/* 9b. WELKE PERSONEELSVORM PAST                      */}
+      {/* ═══════════════════════════════════════════════════ */}
+      {/*
+        Compacte samenvatting, geen kopie: de volledige vergelijking staat op
+        /uitzenden-of-zzp. Die pagina bedient de informatieve zoekvraag
+        ("welke vorm past bij mij"), deze pagina de transactionele. Dit blok is
+        tegelijk de inkomende link die voorkomt dat de nieuwe pagina een
+        orphan wordt.
+      */}
+      <section id="personeelsvorm" className="relative py-20 sm:py-28 bg-white">
+        <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8">
+          <RevealSection>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Uitzenden, payroll of eigen personeel?
+            </h2>
+            <p className="text-gray-600 leading-relaxed mb-8 max-w-2xl">
+              Voor een piek van twee weken kies je iets anders dan voor een functie die je het hele jaar wilt invullen. Het verschil zit niet in het uurtarief, maar in wie werft, wie werkgever is en bij wie het risico ligt.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+              {[
+                { titel: "Uitzenden", tekst: "Wij werven én zijn werkgever. Jij stuurt aan op de vloer en betaalt per gewerkt uur.", eigen: true },
+                { titel: "Payroll", tekst: "Je werft zelf; een payrollorganisatie neemt het werkgeverschap over. EXTRA biedt dit niet aan." },
+                { titel: "Eigen personeel", tekst: "Je werft zelf en bent zelf werkgever. Logisch bij een structurele functie." },
+              ].map((k) => (
+                <div key={k.titel} className={`rounded-2xl border p-5 ${k.eigen ? "border-purple-200 bg-purple-50/60" : "border-gray-200 bg-white"}`}>
+                  <h3 className="font-bold text-gray-900 mb-2">{k.titel}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{k.tekst}</p>
+                </div>
+              ))}
+            </div>
+            <a href="/uitzenden-of-zzp" className="inline-flex items-center gap-2 text-purple-600 font-semibold underline underline-offset-4 hover:text-purple-800">
+              De drie vormen volledig vergeleken
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
       {/* 10. FAQ VOOR HOTELS                                */}
       {/* ═══════════════════════════════════════════════════ */}
       <FAQSection

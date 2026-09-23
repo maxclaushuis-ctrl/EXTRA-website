@@ -168,6 +168,7 @@ const PUBLIC_PATHS = [
   '/bediening-inhuren',
   '/evenementen-personeel-inhuren',
   '/tijdelijk-horeca-personeel',
+  '/uitzenden-of-zzp',
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
   '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
@@ -266,6 +267,7 @@ function Router() {
           <Route path="/bediening-inhuren">{() => <SeoLandingPagina page="bediening-inhuren" />}</Route>
           <Route path="/evenementen-personeel-inhuren">{() => <SeoLandingPagina page="evenementen-personeel-inhuren" />}</Route>
           <Route path="/tijdelijk-horeca-personeel">{() => <SeoLandingPagina page="tijdelijk-horeca-personeel" />}</Route>
+          <Route path="/uitzenden-of-zzp">{() => <SeoLandingPagina page="uitzenden-of-zzp" />}</Route>
           <Route path="/bijbaan-amsterdam">{() => <SeoLandingPagina page="bijbaan-amsterdam" />}</Route>
           <Route path="/dagbetaling">{() => <SeoLandingPagina page="dagbetaling" />}</Route>
           <Route path="/werken-in-de-horeca">{() => <SeoLandingPagina page="werken-in-de-horeca" />}</Route>

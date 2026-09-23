@@ -14,7 +14,15 @@ import PublicFooter from "@/components/PublicFooter";
 import { Check, ArrowRight, ChevronDown } from "lucide-react";
 
 interface Faq { q: string; a: string }
-interface Sectie { titel: string; tekst: string[] }
+/**
+ * Een sectie mag een vergelijkingstabel bevatten. Toegevoegd voor
+ * /uitzenden-of-zzp: een vergelijking van drie contractvormen leest als tabel
+ * beter dan als lopende tekst, en tabellen worden ook beter opgepikt in
+ * AI-antwoorden. De tabel scrolt horizontaal in zijn eigen container, zodat
+ * een smal scherm niet de hele pagina hoeft mee te schuiven.
+ */
+interface SectieTabel { koppen: string[]; rijen: string[][] }
+interface Sectie { titel: string; tekst: string[]; tabel?: SectieTabel }
 interface LandingConfig {
   id: string;
   badge: string;
@@ -126,6 +134,28 @@ function SeoLanding({ cfg }: { cfg: LandingConfig }) {
             <div className="space-y-4">
               {s.tekst.map((p, i) => <p key={i} className="text-gray-700 leading-relaxed">{p}</p>)}
             </div>
+            {s.tabel && (
+              <div className="mt-6 -mx-5 sm:mx-0 overflow-x-auto">
+                <table className="min-w-[34rem] w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-gray-200">
+                      {s.tabel.koppen.map((k) => (
+                        <th key={k} scope="col" className="text-left font-bold text-gray-900 py-2.5 px-3 align-bottom">{k}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {s.tabel.rijen.map((rij, i) => (
+                      <tr key={i} className="border-b border-gray-100 align-top">
+                        {rij.map((cel, j) => (
+                          <td key={j} className={`py-2.5 px-3 ${j === 0 ? "font-semibold text-gray-900" : "text-gray-700"}`}>{cel}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </section>
       ))}
@@ -242,6 +272,117 @@ const CONFIGS: Record<string, LandingConfig> = {
       { label: "Hotelpersoneel inhuren", href: "/hotelpersoneel-inhuren" },
     ],
     serviceSchema: { naam: "Horeca personeel inhuren", beschrijving: "Flexibel horecapersoneel inhuren in Amsterdam via EXTRA: gescreende medewerkers in loondienst, snel geleverd." },
+  },
+
+  /**
+   * UITZENDEN, PAYROLL OF EIGEN PERSONEEL — /uitzenden-of-zzp
+   *
+   * Drie opdrachten wezen naar deze pagina: briefing 06 van Bas, zijn losse
+   * document "Tijdelijk horecapersoneel inlenen" en punt 3 uit het
+   * Wrkt-rapport. Samengevoegd tot één pagina, omdat drie pagina's over
+   * hetzelfde onderwerp elkaar zouden kannibaliseren.
+   *
+   * Intentie is informatief-commercieel: "welke vorm past bij mij". Dat is een
+   * andere vraag dan /horeca-personeel-inhuren (transactioneel, "ik wil nu
+   * personeel") en dan /blog/zzp-inhuren-horeca (nieuws over wat er in 2026
+   * verandert). Deze pagina mag daarom niet op "horeca personeel inhuren"
+   * mikken; dat cluster heeft al een eigenaar.
+   *
+   * Geen tarieven en geen rekenvoorbeeld, op uitdrukkelijk verzoek van Max: het
+   * uurtarief hangt af van de gelijkwaardige beloning bij de inlener en is niet
+   * in één bedrag te vangen. Dat is ook precies het antwoord dat de pagina
+   * geeft. Bas' conceptdocument bevatte wel een bandbreedte met bronnen die
+   * niet te verifiëren waren; die is er bewust uit gebleven.
+   *
+   * Door Max bevestigd op 23-09-2026: EXTRA doet uitsluitend uitzenden, geen
+   * payroll; NEN 4400-1 en de SNA-registratie mogen hard genoemd worden; er is
+   * een standaard inleenovereenkomst; een teamcaptain is ook buiten events
+   * inzetbaar.
+   */
+  "uitzenden-of-zzp": {
+    id: "uitzenden-of-zzp",
+    badge: "Voor hotels, restaurants, cateraars en eventlocaties",
+    h1: "Uitzendkracht, zzp'er of eigen personeel",
+    h1Accent: "wat past bij jou?",
+    subtitel: "De keuze gaat over meer dan het uurtarief: wie werft, wie is werkgever en bij wie ligt het risico als het misgaat. EXTRA levert op één manier — uitzenden, iedereen in loondienst.",
+    intro: [
+      "Een piek van twee weken vraagt iets anders dan een functie die je het hele jaar wilt invullen. Toch vergelijken de meeste inkopers alleen het uurtarief, terwijl het verschil tussen de vormen ergens anders zit: bij wie het werkgeverschap ligt, wie de loonheffingen afdraagt en wie aansprakelijk is als dat misgaat.",
+      "Hieronder zetten we uitzenden, payroll en eigen personeel naast elkaar. Wees gewaarschuwd voor de vorm die er niet tussen staat: een zzp'er die je vaste werktijden geeft en instructies oplegt, is voor de Belastingdienst al snel geen zelfstandige meer. EXTRA biedt payroll niet aan en werkt niet met zzp'ers — die twee staan hier ter vergelijking, niet als aanbod.",
+    ],
+    usps: [
+      { titel: "Alleen uitzenden", tekst: "EXTRA doet één ding. Geen payroll, geen zzp-bemiddeling, geen constructies waar jij achteraf verantwoording over moet afleggen." },
+      { titel: "Iedereen in loondienst", tekst: "Loonheffing, cao-beloning en verzekeringen liggen bij ons. Jij geeft instructies op de vloer zonder het juridische werkgeverschap." },
+      { titel: "NEN 4400-1 en SNA", tekst: "Gecertificeerd en geregistreerd in het Waadi-register van de SNA. Dat beperkt je inlenersaansprakelijkheid." },
+      { titel: "Eén all-in uurtarief", tekst: "Per gewerkt uur, inclusief loon, vakantiegeld, premies en verzekeringen. Eén factuur, geen naheffing achteraf." },
+    ],
+    secties: [
+      {
+        titel: "De drie vormen naast elkaar",
+        tekst: [
+          "Het grootste verschil zit in wie de medewerker zoekt en wie juridisch werkgever wordt. Die twee hoeven niet bij dezelfde partij te liggen — dat is precies waar payroll en uitzenden uit elkaar lopen.",
+        ],
+        tabel: {
+          koppen: ["", "Uitzenden", "Payroll", "Eigen personeel"],
+          rijen: [
+            ["Wie werft en selecteert", "Het uitzendbureau", "Jij zelf", "Jij zelf"],
+            ["Juridisch werkgever", "Het uitzendbureau", "De payrollorganisatie", "Jij"],
+            ["Loonheffingen en premies", "Het uitzendbureau", "De payrollorganisatie", "Jij"],
+            ["Aansturing op de vloer", "Jij", "Jij", "Jij"],
+            ["Op- en afschalen", "Per dienst", "Per contract", "Via je eigen contracten"],
+            ["Biedt EXTRA dit aan", "Ja", "Nee", "Nee"],
+          ],
+        },
+      },
+      {
+        titel: "Wie is werkgever, en wie stuurt aan?",
+        tekst: [
+          "Twee rollen worden vaak door elkaar gehaald. De juridische werkgever heeft het arbeidscontract, draagt loonheffingen en premies af en handelt ziekte en verzuim administratief af. Bij een uitzendkracht van EXTRA zijn wij dat.",
+          "De functionele aansturing ligt bij jou. Jij zegt wat er gebeurt, in welk tempo en volgens welke huisregels, en jij bent verantwoordelijk voor een veilige werkplek en voor de uitleg op locatie. Na de dienst gaat de medewerker terug naar onze planning. Bij grotere opdrachten kun je een teamcaptain vragen: één ervaren aanspreekpunt op de vloer die de briefing bewaakt.",
+          "Dat onderscheid is ook precies waarom een zzp-constructie riskant is. Geef je iemand vaste werktijden, een rooster en instructies, dan ziet de Belastingdienst de kenmerken van een dienstverband — ongeacht wat er in de opdrachtovereenkomst staat. Bij een uitzendkracht mag je die instructies wél geven, want het werkgeverschap ligt al ergens.",
+        ],
+      },
+      {
+        titel: "Waar je als inlener op moet letten",
+        tekst: [
+          "Als inlener kun je aansprakelijk worden gesteld voor loonheffingen die het uitzendbureau niet afdraagt. Dat heet inlenersaansprakelijkheid en de Belastingdienst legt het uit op zijn eigen site. Je beperkt dat risico door te werken met een bureau dat aantoonbaar gecertificeerd is: vraag naar NEN 4400-1 en naar registratie in het Waadi-register van de SNA. EXTRA heeft beide.",
+          "Daarnaast lever jij de gegevens aan die nodig zijn voor de inlenersbeloning. Een uitzendkracht heeft recht op dezelfde arbeidsvoorwaarden als jouw eigen medewerkers in een vergelijkbare functie: hetzelfde loon, dezelfde toeslagen, dezelfde periodieken. Wij kunnen dat alleen goed toepassen als we jouw cao en loongebouw kennen.",
+          "Tot slot: leg de afspraken vast. Er is een standaard inleenovereenkomst waarin staat wat er gebeurt bij annulering, wijziging van aantallen en uitval. Bespreek die bij de eerste opdracht, niet bij het eerste probleem.",
+        ],
+      },
+      {
+        titel: "Wat het kost, en waarom hier geen tarief staat",
+        tekst: [
+          "Je betaalt één all-in uurtarief per gewerkt uur. Daarin zitten het loon, vakantiegeld en reserveringen, de werkgeverslasten, de verzekeringen en onze marge. Er komen geen bureaukosten of wervingskosten achteraf bij, en je betaalt alleen de uren die daadwerkelijk gewerkt zijn.",
+          "Waarom er dan geen bedrag op deze pagina staat: het loon volgt uit de inlenersbeloning, en die verschilt per bedrijf. Twee hotels op vijfhonderd meter van elkaar kunnen een ander loongebouw hebben, en dan is het tarief ook anders. Een gemiddelde noemen zou dus een getal zijn dat voor jou waarschijnlijk niet klopt.",
+          "Voor een concreet voorstel hebben we nodig: welke functies, welke dagen en tijden, hoeveel uur, welke locatie en welk niveau van ervaring. Dag-, avond- en weekenddiensten hebben eigen toeslagen, dus die informatie bepaalt het tarief meer dan het aantal mensen.",
+        ],
+      },
+      {
+        titel: "Drie situaties, drie afwegingen",
+        tekst: [
+          "Incidentele piek of uitval. Een congresweek, een gala, drie ziekmeldingen op een zaterdag. Uitzenden past hier het best: je schakelt per dienst en betaalt alleen de gewerkte uren. Eigen personeel aannemen voor twee weken kan niet, en een zzp'er inschakelen voor werk dat je zelf inroostert is precies de constructie die je wilt vermijden.",
+          "Terugkerende wisselende bezetting. Elk weekend extra bediening, elke zomer meer housekeeping. Ook hier werkt uitzenden, met een verschil: doordat dezelfde mensen terugkomen in je vaste poule, hoef je niet elke keer opnieuw in te werken. Payroll is een alternatief als je zélf wilt werven en alleen het werkgeverschap wilt uitbesteden.",
+          "Structurele functie. Vijf dagen per week, het hele jaar, een vaste plek in je team. Dan is eigen personeel meestal de logische keuze. Wil je iemand eerst een tijd zien werken voordat je dat besluit neemt, dan kan dat via een uitzendperiode — vraag ernaar bij je aanvraag, dan leggen we de afspraken vooraf vast.",
+        ],
+      },
+    ],
+    faqs: [
+      { q: "Wat is het verschil tussen uitzenden en payroll?", a: "Bij uitzenden zoekt het bureau de medewerker en is het bureau ook de werkgever. Bij payroll werf en selecteer je zelf, en neemt de payrollorganisatie alleen het juridische werkgeverschap en de administratie over. Zoek je iemand omdat je zelf geen wervingscapaciteit hebt, dan is uitzenden de vorm die daarbij hoort." },
+      { q: "Biedt EXTRA payroll aan?", a: "Nee. EXTRA doet uitsluitend uitzenden, met iedereen in loondienst bij ons. We leggen payroll hier uit zodat je de vormen kunt vergelijken, maar we bieden het niet aan." },
+      { q: "Loop ik risico op schijnzelfstandigheid als ik via EXTRA inhuur?", a: "De discussie over schijnzelfstandigheid gaat over zzp'ers. Iedereen die via EXTRA bij je werkt heeft een arbeidscontract bij ons, dus die vraag speelt niet. Je mag instructies geven en werktijden bepalen zonder dat de arbeidsrelatie daardoor verandert." },
+      { q: "Wie regelt de ziekmelding als iemand uitvalt?", a: "Dat doen wij. Je meldt de uitval bij ons en wij handelen het formele deel af en kijken wat er aan vervanging mogelijk is. Of er iemand beschikbaar is hangt af van het moment en de functie; dat bespreken we per geval." },
+      { q: "Wat hebben jullie nodig voor een tarief?", a: "Functies en gewenst ervaringsniveau, de dagen en tijden, het aantal uren, de locatie en of het om een eenmalige of terugkerende inzet gaat. Met die gegevens maken we een voorstel met één all-in uurtarief per functie." },
+    ],
+    ctaTitel: "Weten wat bij jouw situatie past?",
+    ctaTekst: "Vertel ons welke functies je zoekt en wanneer. We bellen je terug en bespreken welke inzet past — en wat het bij jouw cao kost.",
+    primaireCta: WERKGEVER_CTA,
+    secundaireCta: { label: "Horeca personeel inhuren", href: "/horeca-personeel-inhuren" },
+    gerelateerd: [
+      { label: "Wat NEN 4400-1 betekent", href: "/nen-4400-1-certificering" },
+      { label: "Hotelpersoneel inhuren", href: "/hotelpersoneel-inhuren" },
+      { label: "Tijdelijk horeca personeel", href: "/tijdelijk-horeca-personeel" },
+      { label: "Zzp'ers inhuren in de horeca", href: "/blog/zzp-inhuren-horeca" },
+    ],
   },
 
   "bediening-inhuren": {

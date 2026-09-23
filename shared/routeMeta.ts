@@ -408,6 +408,21 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.85",
     changefreq: "weekly",
   },
+  /**
+   * Informatieve tegenhanger van de transactionele inhuurpagina's: welke
+   * contractvorm past, en waarom er geen vast tarief bestaat. Mag niet op
+   * "horeca personeel inhuren" mikken — dat cluster is van
+   * /horeca-personeel-inhuren. Zie docs/PAGINA-REGISTER.md.
+   */
+  {
+    path: "/uitzenden-of-zzp",
+    title: "Uitzendkracht of zzp'er inhuren? Zo kies je | EXTRA",
+    description:
+      "Uitzenden, payroll of eigen personeel: wie is werkgever, wie draagt de loonheffingen af en wat kost het? EXTRA doet alleen uitzenden, iedereen in loondienst.",
+    prerender: true,
+    priority: "0.8",
+    changefreq: "monthly",
+  },
   {
     path: "/tijdelijk-horeca-personeel",
     title: "Tijdelijk horeca personeel | Betaal per uur | EXTRA",

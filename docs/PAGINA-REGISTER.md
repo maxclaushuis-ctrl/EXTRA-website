@@ -66,6 +66,7 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/bediening-inhuren` | T | bediening inhuren | WG | Personeel aanvragen | Cluster wordt ook geclaimd door `/horecapersoneel-restaurants` en `/eventpersoneel-inhuren`. |
 | `/evenementen-personeel-inhuren` | T | — (dubbel) | WG | Personeel aanvragen | **Kannibaliseert `/eventpersoneel-inhuren`.** Scaffold van ~180 regels tegenover ~920. Voorstel: 301 naar de sectorpagina. |
 | `/tijdelijk-horeca-personeel` | T | tijdelijk horecapersoneel | WG | Personeel aanvragen | Eigen intentie (tijdelijkheid), verdedigbaar naast de rest. |
+| `/uitzenden-of-zzp` | I/C | uitzendkracht versus zzp'er inhuren + wat kost horecapersoneel inhuren | WG | Personeel aanvragen | Nieuw 23-09-2026. Bedient de twee clusters die hierboven als kans stonden. Informatief, dus **niet** op "horeca personeel inhuren" mikken; dat is van `/horeca-personeel-inhuren`. Naast `/blog/zzp-inhuren-horeca`, dat het nieuws van 2026 behandelt en niet de keuze. Bewust zonder tarief: het uurtarief volgt uit de inlenersbeloning. Meetpunt: positie op "uitzendkracht of zzp" en "wat kost horecapersoneel inhuren", terugkijken na acht weken. |
 
 ## Werkzoekenden
 
@@ -131,8 +132,6 @@ pre-flight-check erbij.
 | housekeeping personeel inhuren | T | Grootste dienst van EXTRA; geen enkele pagina voor werkgevers. Concurrenten hebben die wel. |
 | banqueting personeel inhuren | T | Hoge marge, piekgedreven, nu alleen een bullet binnen de hotelpagina. |
 | front office personeel inhuren | T | Idem — de bestaande front-office-URL is voor werkzoekenden. |
-| wat kost horecapersoneel inhuren | I/C | Hoge koopintentie, volledig onbediend, en concurrenten winnen deze zoekvraag. |
-| uitzendkracht versus zzp'er inhuren | I/C | Sluit aan op het sterkste argument van EXTRA (loondienst, NEN 4400-1). |
 | hotelpersoneel schiphol | T+L | Alleen doen als daar echt geleverd wordt; Radisson Blu Schiphol is al klant. |
 | afwassers en keukenhulp inhuren | T | Longtail, lage marge, instap naar meer. |
 
