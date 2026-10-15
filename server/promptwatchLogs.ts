@@ -39,6 +39,8 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 
+import { clientIp } from "./clientIp";
+
 // ── Types ────────────────────────────────────────────────────────────────
 
 /** Eén event in het formaat dat Promptwatch verwacht. Alle velden moeten
@@ -109,7 +111,11 @@ export function eventVanRequest(
       : Array.isArray(contentType) ? String(contentType[0] ?? "")
       : contentType == null ? ""
       : String(contentType),
-    client_ip: req.ip || "",
+    // req.ip is hier niet bruikbaar: achter de load balancer van Google levert
+    // dat met `trust proxy: 1` het Google-adres op in plaats van dat van de
+    // bezoeker, waardoor Promptwatch geen enkele bot kon verifiëren. Zie de
+    // toelichting in server/clientIp.ts.
+    client_ip: clientIp(req.headers["x-forwarded-for"], req.ip, (req as any).socket?.remoteAddress),
     hostname: req.hostname || eersteHeader(req.headers.host)?.split(":")[0] || "",
     user_agent: eersteHeader(req.headers["user-agent"]) || "",
     referrer: eersteHeader(req.headers.referer) ?? eersteHeader(req.headers.referrer) ?? null,

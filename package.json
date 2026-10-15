@@ -46,6 +46,7 @@
     "cache:test": "tsx server/paginaCache.test.ts",
     "promptwatchlogs:test": "tsx server/promptwatchLogs.test.ts",
     "planbordcv:test": "tsx server/planbordCv.test.ts",
+    "clientip:test": "tsx server/clientIp.test.ts",
     "promptwatch:test": "tsx scripts/promptwatch-test.ts",
     "aanvraagmails:test": "tsx shared/aanvraagMails.test.ts",
     "links:test": "tsx scripts/linkHerschrijver.test.ts",
