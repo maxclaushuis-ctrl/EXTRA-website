@@ -32,8 +32,8 @@ Laatst volledig nagelopen: 25 augustus 2026.
 
 | URL | Intentie | Keywordcluster (eigenaar) | Doel | CTA | Opmerkingen |
 |---|---|---|---|---|---|
-| `/` | T+N | horeca uitzendbureau amsterdam | WG | Personeel aanvragen | **Botst met `/horeca-uitzendbureau-amsterdam`** — beide op sitemapprioriteit 1.0, zelfde kernterm. Uit te zoeken met Search Console. Bedient nu twee doelgroepen even zwaar; de conversieaudit adviseert werkgever primair. |
-| `/horeca-uitzendbureau-amsterdam` | C | horeca uitzendbureau amsterdam (waarom EXTRA) | WG | Personeel aanvragen | Zie hierboven. Als hij blijft, moet hij duidelijk de *vergelijkende* intentie bedienen ("waarom dit bureau") en niet de generieke. |
+| `/` | T+N | horeca uitzendbureau amsterdam | WG | Personeel aanvragen | **Bezit dit cluster.** De botsing met `/horeca-uitzendbureau-amsterdam` is opgelost door die pagina op de vergelijkende intentie te richten; prioriteit daar naar 0.9. Bedient nog wel twee doelgroepen even zwaar; de conversieaudit adviseert werkgever primair. |
+| `/horeca-uitzendbureau-amsterdam` | C | horeca uitzendbureau amsterdam kiezen (vergelijkend) | WG | Personeel aanvragen | Gericht op de vergelijkende zoekvraag: H1 "Zo kies je een horeca uitzendbureau in Amsterdam" plus vijf toetsvragen. Mag niet terug naar de generieke term — dan botst hij weer met `/`. Meetpunt: positie op "beste uitzendbureau (amsterdam)" in Search Console, terugkijken na acht weken. |
 | `/horeca-uitzendbureau-amsterdam-werkwijze` | I | werkwijze uitzendbureau horeca | B | Personeel aanvragen | **Overlapt met `/onze-werkwijze`** — zelfde stappenplan. Eén moet 301'en. |
 | `/onze-werkwijze` | I | hoe werkt het / werkwijze | B | Personeel aanvragen | Zie hierboven. Deze URL is korter en generieker; voorkeur om deze te houden. |
 | `/over-extra` | N | over extra uitzendbureau | B | Contact | Merkpagina. E-E-A-T-drager: hier horen oprichtingsjaar en SNA-nummer te komen. |

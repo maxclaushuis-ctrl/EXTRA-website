@@ -68,13 +68,25 @@ export const ROUTE_META: RouteMeta[] = [
   },
   // /landing bestaat niet meer als eigen pagina: "/" rendert de landings-
   // content nu direct en /landing 301't naar "/" (server/redirects.ts).
+  /**
+   * Deze pagina en "/" stonden allebei op de generieke term "horeca
+   * uitzendbureau amsterdam", allebei op sitemapprioriteit 1.0. Google wisselde
+   * ze af, waardoor het gecombineerde resultaat in Search Console op positie 12
+   * stond terwijl Ahrefs de losse pagina's op 4 en 5 mat. Het register wees dat
+   * al aan als botsing.
+   *
+   * Opgelost door de intenties te scheiden, niet door er een weg te halen: "/"
+   * houdt de generieke term, deze pagina bedient de vergelijkende zoekvraag
+   * ("welk bureau kies ik, en waarop let ik dan"). De prioriteit gaat mee naar
+   * beneden, want de homepage is de belangrijkste van de twee.
+   */
   {
     path: "/horeca-uitzendbureau-amsterdam",
-    title: "Horeca uitzendbureau Amsterdam | Persoonlijk | EXTRA",
+    title: "Beste horeca uitzendbureau Amsterdam kiezen | EXTRA",
     description:
-      "Op zoek naar een horeca uitzendbureau in Amsterdam? EXTRA levert gescreend horecapersoneel, iedereen in loondienst. Ontdek onze aanpak en vraag aan.",
+      "Waar let je op bij het kiezen van een horeca uitzendbureau in Amsterdam? Vijf vragen die het verschil laten zien, met het antwoord van EXTRA erbij.",
     prerender: true,
-    priority: "1.0",
+    priority: "0.9",
     changefreq: "weekly",
   },
   {
