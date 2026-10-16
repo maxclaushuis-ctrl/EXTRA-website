@@ -13,6 +13,7 @@
 
 import { storage } from '../storage';
 import { buildIntakePayloadBlock, type IntakeBlock } from './planbord-webhook';
+import { cvOphaalbaar, isObjectStoragePad } from "../planbordCv";
 
 // Velden waarvan het echte formaat nog onzeker is — we tonen de ontvangende kant
 // welke waarden er feitelijk voorkomen zodat men weet wat verwerkt moet worden.
@@ -32,6 +33,15 @@ export interface BackfillRecord extends IntakeBlock {
 }
 
 export interface BackfillSummary {
+  /**
+   * Hoeveel van de aangenomen sollicitanten een CV hebben dat het Planbord kan
+   * ophalen (afspraak 16-10-2026). Drie getallen:
+   *
+   *  - bruikbaarCv        — Object Storage-pad met een toegestaan type (pdf/doc/docx)
+   *  - oudeSupabaseUrl    — nog een URL van vóór de migratie; bestand niet op te halen
+   *  - geenCv             — geen pad, of een pad met een type dat we niet accepteren
+   */
+  cvTelling: { bruikbaarCv: number; oudeSupabaseUrl: number; geenCv: number };
   ervaringsduurDistribution: Record<string, number>;
   uncertainFieldValues: Record<
     string,
@@ -81,6 +91,19 @@ export async function buildPlanbordBackfill(): Promise<BackfillExport> {
     };
   });
 
+  // CV-telling over dezelfde verzameling aangenomen sollicitaties.
+  const { candidates } = await storage.getCandidates({ limit: 1_000_000 });
+  const cvPadPerKandidaat = new Map<number, string | null>();
+  for (const c of candidates) cvPadPerKandidaat.set(c.id, (c as any).cvFilename ?? null);
+
+  const cvTelling = { bruikbaarCv: 0, oudeSupabaseUrl: 0, geenCv: 0 };
+  for (const app of applications) {
+    const pad = app.candidateId != null ? cvPadPerKandidaat.get(app.candidateId) ?? null : null;
+    if (cvOphaalbaar(pad)) cvTelling.bruikbaarCv++;
+    else if (pad && !isObjectStoragePad(pad)) cvTelling.oudeSupabaseUrl++;
+    else cvTelling.geenCv++;
+  }
+
   // Verdeling van de canonieke ervaringsduur-codes (incl. null en onbekend).
   const ervaringsduurDistribution: Record<string, number> = {};
   for (const r of records) {
@@ -114,6 +137,6 @@ export async function buildPlanbordBackfill(): Promise<BackfillExport> {
   return {
     total: records.length,
     records,
-    summary: { ervaringsduurDistribution, uncertainFieldValues },
+    summary: { cvTelling, ervaringsduurDistribution, uncertainFieldValues },
   };
 }

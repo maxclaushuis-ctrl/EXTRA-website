@@ -70,6 +70,20 @@ export interface IntakeBlock {
 }
 
 export interface PlanbordPayloadData {
+  /**
+   * Metadata over het CV van de sollicitant (afspraak 16-10-2026). Alleen
+   * aanwezig als er echt een ophaalbaar bestand is; het bestand zelf gaat niet
+   * mee. Het Planbord haalt het na contractondertekening op via
+   * GET /api/planbord/applicants/:applicationId/cv.
+   */
+  cv?: {
+    aanwezig: true;
+    bestandsnaam: string;
+    mimeType: string;
+    grootte: number;
+    sha256: string;
+    bijgewerkt: string | null;
+  };
   id: string;
   applicationId?: number;
   candidateId?: number;

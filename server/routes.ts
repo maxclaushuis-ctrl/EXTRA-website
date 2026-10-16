@@ -54,6 +54,7 @@ import { zoekLandMetAlias, NIET_KOPPELEN, LAND_ALIASSEN } from "@shared/landenAl
 import { bepaalVerlopenRijen, bepaalLegeStatusRijen, bepaalTeMeldenRijen, bepaalTegenstrijdigeRijen, dagenVerlopen } from "./twvVerlopen";
 import { sendPlanbordWebhook, buildIntakePayloadBlock } from "./integrations/planbord-webhook";
 import { buildPlanbordBackfill } from "./integrations/planbord-backfill";
+import { bouwCvBlok, cvOphaalbaar, magOphalen, mimeVoorPad, bestandsnaamUitPad, MAX_CV_BYTES, type CvBlok, type CvUitkomst } from "./planbordCv";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
 import { WebSocketServer, WebSocket } from 'ws';
@@ -7834,6 +7835,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return s ? s : undefined;
         };
 
+        /**
+         * Het cv-blok (afspraak met het Planbord, 16-10-2026). Alleen metadata;
+         * het bestand haalt het Planbord later zelf op na contractondertekening.
+         *
+         * Dit kost één extra lees-actie op de bucket, want grootte en sha256
+         * zijn niet uit de database te halen. Die actie staat daarom volledig
+         * in een try/catch: de aannemen-flow mag hier nooit op stuklopen. Lukt
+         * het niet, dan gaat de payload zonder cv-blok de deur uit en staat er
+         * één regel in het log. Zonder CV ontbreekt het blok sowieso — er komt
+         * nooit `aanwezig: false` in te staan.
+         */
+        let cvBlok: CvBlok | null = null;
+        try {
+          const cvKandidaatId = application.candidateId ?? candidate?.id ?? null;
+          const cvKandidaat = cvKandidaatId ? await storage.getCandidate(cvKandidaatId) : null;
+          const cvPad = cvKandidaat?.cvFilename ?? null;
+          if (cvOphaalbaar(cvPad)) {
+            const bestand = await downloadCvFile(cvPad as string);
+            if (bestand) {
+              cvBlok = bouwCvBlok(
+                cvPad,
+                bestand.buffer.length,
+                createHash("sha256").update(bestand.buffer).digest("hex"),
+              );
+            }
+          }
+        } catch (err: any) {
+          console.log(`[planbord-cv] applicationId=${application.id} result=blok_overgeslagen reason=${err?.message ?? "onbekend"}`);
+          cvBlok = null;
+        }
+
         await sendPlanbordWebhook({
           id: String(employee.id),
           applicationId: application.id,
@@ -7872,6 +7904,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           referralCode: application.referralCode ?? candidate?.referralCode ?? null,
           // Contract v2: additief intake-blok (matching, ervaringsduur, beschikbaarheid)
           intake: buildIntakePayloadBlock(fd, application.functionType),
+          // Alleen meesturen als er echt een ophaalbaar CV is.
+          ...(cvBlok ? { cv: cvBlok } : {}),
         });
       } catch (err: any) {
         console.error('[planbord-webhook] sync mislukt:', err?.message ?? err);
@@ -7884,6 +7918,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? "Er bestaat al een medewerker met dit e-mailadres"
         : (error?.message || "Er is iets misgegaan bij het aanmaken van de medewerker");
       return res.status(error?.code === '23505' ? 409 : 500).json({ message: msg });
+    }
+  });
+
+  // ─── CV ophalen door het Planbord (READ-ONLY, server tot server) ────────
+  //
+  // Het Planbord zet het CV na contractondertekening onder Documenten bij de
+  // medewerker. Het bestand gaat niet mee in de applicant-sync-webhook; die
+  // meldt alleen dát er een CV is. Hier wordt het opgehaald.
+  //
+  // Beveiliging: alleen de header x-planbord-key, vergeleken met het secret
+  // PLANBORD_CV_KEY via een timing-safe vergelijking. Bewust NIET WEBHOOK_SECRET:
+  // dat secret hoort bij de andere richting, en één lek mag niet allebei de
+  // kanten openzetten. Geen sessie, geen cookie, geen CORS — dit endpoint
+  // hoeft niet vanuit een browser te werken.
+  //
+  // Alleen aangenomen sollicitaties. De aannemen-flow zet de status op
+  // 'aangenomen' en verstuurt in diezelfde stap de webhook, dus die ene
+  // voorwaarde dekt beide gevallen. Een lopende, beoordeelde of afgewezen
+  // sollicitatie krijgt 'onbekend', ook met een geldige sleutel — het Planbord
+  // mag niet kunnen aftasten wie er wel en niet in het systeem zit.
+  const planbordCvLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'te_veel_verzoeken' },
+  });
+
+  app.get("/api/planbord/applicants/:applicationId/cv", planbordCvLimiter, async (req: Request, res: Response) => {
+    const applicationId = parseInt(req.params.applicationId, 10);
+
+    // Eén regel per verzoek. Bewust alleen deze velden: geen bestandsinhoud,
+    // geen naam, geen e-mailadres, geen telefoonnummer, geen BSN of IBAN.
+    const log = (uitkomst: CvUitkomst, bytes?: number) => {
+      console.log(
+        `[planbord-cv] ${new Date().toISOString()} applicationId=${Number.isFinite(applicationId) ? applicationId : 'ongeldig'} ` +
+        `result=${uitkomst}${bytes != null ? ` bytes=${bytes}` : ''}`,
+      );
+    };
+
+    try {
+      const verwacht = process.env.PLANBORD_CV_KEY || '';
+      const gegeven = String(req.headers['x-planbord-key'] || '');
+      const { safeEqualSecret } = await import('./whatsapp/webhookVerify');
+      if (!verwacht || !safeEqualSecret(gegeven, verwacht)) {
+        log('geweigerd');
+        return res.status(401).json({ error: 'geweigerd' });
+      }
+
+      if (!Number.isFinite(applicationId)) {
+        log('onbekend');
+        return res.status(404).json({ error: 'onbekend' });
+      }
+
+      const application = await storage.getApplicationById(applicationId);
+      if (!application || !magOphalen(application.status)) {
+        log('onbekend');
+        return res.status(404).json({ error: 'onbekend' });
+      }
+
+      const kandidaatId = application.candidateId ?? null;
+      const kandidaat = kandidaatId ? await storage.getCandidate(kandidaatId) : null;
+      const cvPad = kandidaat?.cvFilename ?? null;
+
+      if (!cvOphaalbaar(cvPad)) {
+        log('geen_cv');
+        return res.status(404).json({ error: 'geen_cv' });
+      }
+
+      const mimeType = mimeVoorPad(cvPad as string);
+      if (!mimeType) {
+        // Kan hier niet meer voorkomen (cvOphaalbaar controleert het al), maar
+        // als die twee ooit uiteenlopen is 415 het juiste antwoord.
+        log('geweigerd');
+        return res.status(415).json({ error: 'type_niet_toegestaan' });
+      }
+
+      const bestand = await downloadCvFile(cvPad as string);
+      if (!bestand) {
+        log('geen_cv');
+        return res.status(404).json({ error: 'geen_cv' });
+      }
+
+      // Vangnet voor een bestand dat buiten de upload om in de bucket is
+      // gekomen. De upload begrenst al op 10 MB, maar dit endpoint vertrouwt
+      // daar niet blind op.
+      if (bestand.buffer.length > MAX_CV_BYTES) {
+        log('geweigerd', bestand.buffer.length);
+        return res.status(415).json({ error: 'te_groot' });
+      }
+
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Length', String(bestand.buffer.length));
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(bestandsnaamUitPad(cvPad as string))}"`);
+      res.setHeader('Cache-Control', 'no-store');
+      log('ok', bestand.buffer.length);
+      return res.end(bestand.buffer);
+    } catch (err: any) {
+      console.log(`[planbord-cv] ${new Date().toISOString()} applicationId=${Number.isFinite(applicationId) ? applicationId : 'ongeldig'} result=onbekend`);
+      console.error('[planbord-cv] fout:', err?.message ?? err);
+      return res.status(404).json({ error: 'onbekend' });
     }
   });
 
