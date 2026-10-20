@@ -275,7 +275,7 @@ const CONFIGS: Record<string, LandingConfig> = {
   },
 
   /**
-   * UITZENDEN, PAYROLL OF EIGEN PERSONEEL — /uitzenden-of-zzp
+   * UITZENDEN, PAYROLL OF EIGEN PERSONEEL: /uitzenden-of-zzp
    *
    * Drie opdrachten wezen naar deze pagina: briefing 06 van Bas, zijn losse
    * document "Tijdelijk horecapersoneel inlenen" en punt 3 uit het
@@ -302,12 +302,12 @@ const CONFIGS: Record<string, LandingConfig> = {
   "uitzenden-of-zzp": {
     id: "uitzenden-of-zzp",
     badge: "Voor hotels, restaurants, cateraars en eventlocaties",
-    h1: "Uitzendkracht, zzp'er of eigen personeel",
+    h1: "Uitzendkracht, zzp'er of eigen personeel:",
     h1Accent: "wat past bij jou?",
-    subtitel: "De keuze gaat over meer dan het uurtarief: wie werft, wie is werkgever en bij wie ligt het risico als het misgaat. EXTRA levert op één manier — uitzenden, iedereen in loondienst.",
+    subtitel: "De keuze gaat over meer dan het uurtarief: wie werft, wie is werkgever en bij wie ligt het risico als het misgaat. EXTRA levert op één manier: uitzenden, iedereen in loondienst.",
     intro: [
       "Een piek van twee weken vraagt iets anders dan een functie die je het hele jaar wilt invullen. Toch vergelijken de meeste inkopers alleen het uurtarief, terwijl het verschil tussen de vormen ergens anders zit: bij wie het werkgeverschap ligt, wie de loonheffingen afdraagt en wie aansprakelijk is als dat misgaat.",
-      "Hieronder zetten we uitzenden, payroll en eigen personeel naast elkaar. Wees gewaarschuwd voor de vorm die er niet tussen staat: een zzp'er die je vaste werktijden geeft en instructies oplegt, is voor de Belastingdienst al snel geen zelfstandige meer. EXTRA biedt payroll niet aan en werkt niet met zzp'ers — die twee staan hier ter vergelijking, niet als aanbod.",
+      "Hieronder zetten we uitzenden, payroll en eigen personeel naast elkaar. Wees gewaarschuwd voor de vorm die er niet tussen staat: een zzp'er die je vaste werktijden geeft en instructies oplegt, is voor de Belastingdienst al snel geen zelfstandige meer. EXTRA biedt payroll niet aan en werkt niet met zzp'ers. Die twee staan hier ter vergelijking, niet als aanbod.",
     ],
     usps: [
       { titel: "Alleen uitzenden", tekst: "EXTRA doet één ding. Geen payroll, geen zzp-bemiddeling, geen constructies waar jij achteraf verantwoording over moet afleggen." },
@@ -319,7 +319,7 @@ const CONFIGS: Record<string, LandingConfig> = {
       {
         titel: "De drie vormen naast elkaar",
         tekst: [
-          "Het grootste verschil zit in wie de medewerker zoekt en wie juridisch werkgever wordt. Die twee hoeven niet bij dezelfde partij te liggen — dat is precies waar payroll en uitzenden uit elkaar lopen.",
+          "Het grootste verschil zit in wie de medewerker zoekt en wie juridisch werkgever wordt. Die twee hoeven niet bij dezelfde partij te liggen, en dat is precies waar payroll en uitzenden uit elkaar lopen.",
         ],
         tabel: {
           koppen: ["", "Uitzenden", "Payroll", "Eigen personeel"],
@@ -338,7 +338,7 @@ const CONFIGS: Record<string, LandingConfig> = {
         tekst: [
           "Twee rollen worden vaak door elkaar gehaald. De juridische werkgever heeft het arbeidscontract, draagt loonheffingen en premies af en handelt ziekte en verzuim administratief af. Bij een uitzendkracht van EXTRA zijn wij dat.",
           "De functionele aansturing ligt bij jou. Jij zegt wat er gebeurt, in welk tempo en volgens welke huisregels, en jij bent verantwoordelijk voor een veilige werkplek en voor de uitleg op locatie. Na de dienst gaat de medewerker terug naar onze planning. Bij grotere opdrachten kun je een teamcaptain vragen: één ervaren aanspreekpunt op de vloer die de briefing bewaakt.",
-          "Dat onderscheid is ook precies waarom een zzp-constructie riskant is. Geef je iemand vaste werktijden, een rooster en instructies, dan ziet de Belastingdienst de kenmerken van een dienstverband — ongeacht wat er in de opdrachtovereenkomst staat. Bij een uitzendkracht mag je die instructies wél geven, want het werkgeverschap ligt al ergens.",
+          "Dat onderscheid is ook precies waarom een zzp-constructie riskant is. Geef je iemand vaste werktijden, een rooster en instructies, dan ziet de Belastingdienst de kenmerken van een dienstverband, ongeacht wat er in de opdrachtovereenkomst staat. Bij een uitzendkracht mag je die instructies wél geven, want het werkgeverschap ligt al ergens.",
         ],
       },
       {
@@ -362,7 +362,7 @@ const CONFIGS: Record<string, LandingConfig> = {
         tekst: [
           "Incidentele piek of uitval. Een congresweek, een gala, drie ziekmeldingen op een zaterdag. Uitzenden past hier het best: je schakelt per dienst en betaalt alleen de gewerkte uren. Eigen personeel aannemen voor twee weken kan niet, en een zzp'er inschakelen voor werk dat je zelf inroostert is precies de constructie die je wilt vermijden.",
           "Terugkerende wisselende bezetting. Elk weekend extra bediening, elke zomer meer housekeeping. Ook hier werkt uitzenden, met een verschil: doordat dezelfde mensen terugkomen in je vaste poule, hoef je niet elke keer opnieuw in te werken. Payroll is een alternatief als je zélf wilt werven en alleen het werkgeverschap wilt uitbesteden.",
-          "Structurele functie. Vijf dagen per week, het hele jaar, een vaste plek in je team. Dan is eigen personeel meestal de logische keuze. Wil je iemand eerst een tijd zien werken voordat je dat besluit neemt, dan kan dat via een uitzendperiode — vraag ernaar bij je aanvraag, dan leggen we de afspraken vooraf vast.",
+          "Structurele functie. Vijf dagen per week, het hele jaar, een vaste plek in je team. Dan is eigen personeel meestal de logische keuze. Wil je iemand eerst een tijd zien werken voordat je dat besluit neemt, dan kan dat via een uitzendperiode. Vraag ernaar bij je aanvraag, dan leggen we de afspraken vooraf vast.",
         ],
       },
     ],
@@ -374,7 +374,7 @@ const CONFIGS: Record<string, LandingConfig> = {
       { q: "Wat hebben jullie nodig voor een tarief?", a: "Functies en gewenst ervaringsniveau, de dagen en tijden, het aantal uren, de locatie en of het om een eenmalige of terugkerende inzet gaat. Met die gegevens maken we een voorstel met één all-in uurtarief per functie." },
     ],
     ctaTitel: "Weten wat bij jouw situatie past?",
-    ctaTekst: "Vertel ons welke functies je zoekt en wanneer. We bellen je terug en bespreken welke inzet past — en wat het bij jouw cao kost.",
+    ctaTekst: "Vertel ons welke functies je zoekt en wanneer. We bellen je terug en bespreken welke inzet past, en wat het bij jouw cao kost.",
     primaireCta: WERKGEVER_CTA,
     secundaireCta: { label: "Horeca personeel inhuren", href: "/horeca-personeel-inhuren" },
     gerelateerd: [

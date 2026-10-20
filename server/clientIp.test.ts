@@ -50,7 +50,7 @@ eq("lege header geeft niets", ontleedForwardedFor(""), []);
 console.log("\nHET BEZOEKERSADRES KIEZEN\n");
 
 eq(
-  "de bot, niet de load balancer — dit is de hele bug",
+  "de bot, niet de load balancer: dit is de hele bug",
   clientIp("23.98.142.176, 35.191.0.5", "35.191.0.5", "169.254.1.1"),
   "23.98.142.176",
 );

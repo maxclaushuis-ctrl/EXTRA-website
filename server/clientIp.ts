@@ -9,7 +9,7 @@
  *
  * Promptwatch controleert aan de hand van het IP-adres of een bezoek echt van
  * die partij komt. Kreeg het het verkeerde adres, dan lukt die verificatie
- * nooit — precies het beeld dat Wrkt beschrijft.
+ * nooit, precies het beeld dat Wrkt beschrijft.
  *
  * En dat is wat er gebeurde. De site draait achter de load balancer van Google
  * (Replit-deployments draaien daarop). Die zet in X-Forwarded-For het echte
@@ -29,7 +29,7 @@
  *
  * Let op: het eerste adres in X-Forwarded-For is door een bezoeker te
  * vervalsen. Dat mag hier, want deze waarde wordt uitsluitend doorgestuurd
- * naar Promptwatch, dat er zelf een verificatie op doet — een vervalst adres
+ * naar Promptwatch, dat er zelf een verificatie op doet. Een vervalst adres
  * komt daar simpelweg als niet-geverifieerd binnen. Gebruik deze functie dus
  * niet voor toegang, limieten of iets anders waar een leugen schade doet.
  */
@@ -39,7 +39,7 @@ export type HeaderWaarde = string | string[] | undefined;
 
 /**
  * Oppervlakkige controle: ziet dit eruit als een IP-adres?
- * Geen volledige validatie — we willen alleen voorkomen dat onzin als
+ * Geen volledige validatie: we willen alleen voorkomen dat onzin als
  * "unknown" of een lege string als adres wordt doorgestuurd.
  */
 export function lijktOpIpAdres(waarde: string): boolean {

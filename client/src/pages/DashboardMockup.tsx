@@ -2607,13 +2607,13 @@ export default function DashboardMockup() {
                     };
 
                     /**
-                     * LET OP — dit zijn geen componenten, en dat moet zo blijven.
+                     * LET OP: dit zijn geen componenten, en dat moet zo blijven.
                      *
                      * editField, section, ratingSection en arrayCheckRow worden
                      * hier binnen de render gedefinieerd, omdat ze getFieldValue,
                      * setFieldValue en isEditingApp uit deze scope nodig hebben.
-                     * Zolang ze als functie worden aangeroepen — {section({ ... })}
-                     * — geeft dat gewoon JSX terug en is er niets aan de hand.
+                     * Zolang ze als functie worden aangeroepen, dus {section({ ... })},
+                     * geeft dat gewoon JSX terug en is er niets aan de hand.
                      *
                      * Zodra je er weer JSX-elementen van maakt (<Section ... />)
                      * breekt het intakescherm. Een component die binnen de render

@@ -74,7 +74,7 @@ export default function HorecaUitzendbureau() {
           </div>
         </section>
 
-        {/* Waar let je op — de vergelijkende kern van deze pagina */}
+        {/* Waar let je op: de vergelijkende kern van deze pagina */}
         <section className="py-24 bg-[#0d0415]">
           <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8">
             <RevealSection>

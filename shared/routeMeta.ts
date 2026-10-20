@@ -411,7 +411,7 @@ export const ROUTE_META: RouteMeta[] = [
   /**
    * Informatieve tegenhanger van de transactionele inhuurpagina's: welke
    * contractvorm past, en waarom er geen vast tarief bestaat. Mag niet op
-   * "horeca personeel inhuren" mikken — dat cluster is van
+   * "horeca personeel inhuren" mikken, want dat cluster is van
    * /horeca-personeel-inhuren. Zie docs/PAGINA-REGISTER.md.
    */
   {
