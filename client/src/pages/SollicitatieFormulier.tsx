@@ -186,6 +186,11 @@ export default function SollicitatieFormulier() {
   const [selectedIntakeId, setSelectedIntakeId] = useState<number | null>(null);
   const [intakeCandidateSearch, setIntakeCandidateSearch] = useState('');
   const [intakeNotAuthorized, setIntakeNotAuthorized] = useState(false);
+  // Dit formulier is intern gereedschap: alleen collega's met een
+  // dashboardaccount (rol admin) mogen het zien en versturen. De server dwingt
+  // dat af (adminMiddleware); deze status bepaalt alleen wat we tonen, zodat een
+  // werkzoekende die hier belandt niet eerst een half formulier ziet.
+  const [toegang, setToegang] = useState<'laden' | 'ja' | 'nee'>('laden');
   const [inlineLoginEmail, setInlineLoginEmail] = useState('');
   const [inlineLoginPassword, setInlineLoginPassword] = useState('');
   const [inlineLoginError, setInlineLoginError] = useState('');
@@ -224,14 +229,18 @@ export default function SollicitatieFormulier() {
   });
 
   useEffect(() => {
-    document.title = 'Sollicitatieformulier – EXTRA';
+    document.title = 'Intakeformulier | EXTRA';
     setIsSubmitted(false);
-    // Snelle auth-check zodat we direct kunnen melden als de gebruiker niet ingelogd is
-    // (vooral relevant op iPad/mobiel waar Safari sessies sneller verloopt)
+    // Snelle auth-check: wie niet als collega is ingelogd, ziet de inlog in
+    // plaats van het formulier (vooral relevant op iPad/mobiel waar Safari
+    // sessies sneller verloopt).
     fetch('/api/auth/me', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
-      .then(user => { if (!user) setIntakeNotAuthorized(true); })
-      .catch(() => {});
+      .then(user => {
+        if (!user) setIntakeNotAuthorized(true);
+        setToegang(user?.role === 'admin' ? 'ja' : 'nee');
+      })
+      .catch(() => setToegang('nee'));
   }, []);
 
   // Inline-login op het sollicitatieformulier zelf — handig voor de iPad-snelkoppeling
@@ -256,7 +265,14 @@ export default function SollicitatieFormulier() {
         setInlineLoginError(j.message || 'Inloggen mislukt');
         return;
       }
-      // Sessie nu actief — kandidaten opnieuw ophalen voor de huidige functie
+      // Sessie actief. Alleen een collega-account (rol admin) mag verder; een
+      // account uit de medewerkersapp krijgt een duidelijke melding.
+      const me = await fetch('/api/auth/me', { credentials: 'include' }).then(x => x.ok ? x.json() : null).catch(() => null);
+      if (me?.role !== 'admin') {
+        setInlineLoginError('Dit account heeft geen toegang tot het intakeformulier.');
+        return;
+      }
+      setToegang('ja');
       setIntakeNotAuthorized(false);
       setInlineLoginEmail('');
       setInlineLoginPassword('');
@@ -474,6 +490,12 @@ export default function SollicitatieFormulier() {
         body: JSON.stringify({ ...data, linkedCandidateId: selectedIntakeId }),
       });
 
+      if (response.status === 401 || response.status === 403) {
+        // Sessie verlopen. De antwoorden staan in de concept-opslag en komen
+        // na het inloggen terug (melding "Formulier hersteld").
+        setToegang('nee');
+        throw new Error("Je bent uitgelogd. Log opnieuw in, je antwoorden blijven bewaard.");
+      }
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         throw new Error(err.message || "Fout bij versturen");
@@ -595,6 +617,94 @@ export default function SollicitatieFormulier() {
     </div>
   );
 
+  // Eén inlogformulier, op twee plekken gebruikt: in het toegangsscherm en in
+  // stap 2 als de sessie halverwege verloopt. Bewust een JSX-waarde en geen
+  // component dat hier binnen de render wordt gedefinieerd: dat zou bij elke
+  // toetsaanslag opnieuw gemonteerd worden en de focus kwijtraken.
+  const inlogFormulier = (
+    <form onSubmit={handleInlineLogin} className="p-5 space-y-3" autoComplete="on">
+      <div>
+        <Label className="text-sm font-medium text-gray-700">E-mailadres</Label>
+        <Input
+          type="email"
+          autoComplete="username"
+          inputMode="email"
+          value={inlineLoginEmail}
+          onChange={(e) => setInlineLoginEmail(e.target.value)}
+          placeholder="naam@doehetextra.nl"
+          className="h-12 text-base rounded-xl mt-1"
+          disabled={inlineLoginBusy}
+        />
+      </div>
+      <div>
+        <Label className="text-sm font-medium text-gray-700">Wachtwoord</Label>
+        <Input
+          type="password"
+          autoComplete="current-password"
+          value={inlineLoginPassword}
+          onChange={(e) => setInlineLoginPassword(e.target.value)}
+          placeholder="••••••••"
+          className="h-12 text-base rounded-xl mt-1"
+          disabled={inlineLoginBusy}
+        />
+      </div>
+      {inlineLoginError && (
+        <p className="text-sm text-red-600 font-medium">{inlineLoginError}</p>
+      )}
+      <button
+        type="submit"
+        disabled={inlineLoginBusy}
+        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white text-base font-semibold transition-colors"
+      >
+        {inlineLoginBusy ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            Bezig…
+          </>
+        ) : (
+          <>Inloggen</>
+        )}
+      </button>
+      <p className="text-xs text-gray-400 text-center pt-1">Je blijft 30 dagen ingelogd zolang je de app regelmatig opent.</p>
+    </form>
+  );
+
+  if (toegang !== 'ja') {
+    return (
+      <div className="normal-cursor min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100">
+        <div className="bg-purple-700 text-white shadow-lg">
+          <div className="max-w-5xl mx-auto px-6 py-3 flex items-center gap-4">
+            <img src={extraLogoWit} alt="EXTRA" className="h-8 w-auto" />
+            <div className="w-px h-6 bg-white/30" />
+            <span className="text-base font-semibold tracking-wide">Intakeformulier</span>
+          </div>
+        </div>
+        {toegang === 'laden' ? (
+          <div className="flex justify-center py-24">
+            <div className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="max-w-md mx-auto px-4 py-10">
+            <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+              <div className="px-6 pt-6">
+                <h1 className="text-2xl font-bold text-gray-900">Alleen voor collega's van EXTRA</h1>
+                <p className="text-gray-600 mt-2">Met dit formulier leg je een intakegesprek vast. Log in met je dashboardgegevens.</p>
+              </div>
+              {inlogFormulier}
+            </div>
+            <div className="mt-8 text-center">
+              <p className="text-gray-900 font-semibold">Wil je bij EXTRA werken?</p>
+              <p className="text-gray-500 text-sm mt-1">Meld je aan, dan nemen we contact met je op.</p>
+              <a href="/aanmelden" className="mt-4 inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white border border-purple-200 text-purple-700 font-semibold hover:bg-purple-50 transition-colors">
+                Naar aanmelden
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (isSubmitted) {
     return (
       <div className="normal-cursor min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-8">
@@ -635,7 +745,7 @@ export default function SollicitatieFormulier() {
             {/* Enige <h1> op deze pagina — stond hier eerder als kale <span>,
                 waardoor de pagina (buiten de "Opgeslagen!"-bevestiging) geen
                 H1 had. Zelfde opmaak, nu wel semantisch correct. */}
-            <h1 className="text-base font-semibold tracking-wide">Sollicitatieformulier</h1>
+            <h1 className="text-base font-semibold tracking-wide">Intakeformulier</h1>
           </div>
           <span className="text-purple-200 text-sm font-medium">
             {displayDotIndex + 1} / {totalDisplayDots}
@@ -671,18 +781,6 @@ export default function SollicitatieFormulier() {
               <h2 className="text-xl font-bold">{getSectionTitle(currentSection)}</h2>
             </div>
           </div>
-
-          {/* Alleen op de eerste sectie: link naar de lichtere cv-upload-pagina
-              voor wie geen volledig sollicitatieformulier wil invullen. */}
-          {currentSection === 0 && (
-            <p className="mx-6 mt-6 text-sm text-gray-500">
-              Wil je liever alleen je cv achterlaten?{" "}
-              <a href="/cv-upload" className="text-purple-700 font-semibold underline underline-offset-2 hover:text-purple-800">
-                Ga naar cv-upload
-              </a>
-              .
-            </p>
-          )}
 
           {/* Formulier hersteld banner */}
           {wasRestored && (
@@ -781,51 +879,7 @@ export default function SollicitatieFormulier() {
                       <p className="text-sm font-bold text-purple-900">Log eerst in om kandidaten te zien</p>
                       <p className="text-xs text-purple-700 mt-0.5">Je sessie is verlopen of je bent nog niet ingelogd op dit apparaat. Vul je dashboardgegevens in — daarna zie je de aangemelde kandidaten direct.</p>
                     </div>
-                    <form onSubmit={handleInlineLogin} className="p-5 space-y-3" autoComplete="on">
-                      <div>
-                        <Label className="text-sm font-medium text-gray-700">E-mailadres</Label>
-                        <Input
-                          type="email"
-                          autoComplete="username"
-                          inputMode="email"
-                          value={inlineLoginEmail}
-                          onChange={(e) => setInlineLoginEmail(e.target.value)}
-                          placeholder="naam@doehetextra.nl"
-                          className="h-12 text-base rounded-xl mt-1"
-                          disabled={inlineLoginBusy}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-gray-700">Wachtwoord</Label>
-                        <Input
-                          type="password"
-                          autoComplete="current-password"
-                          value={inlineLoginPassword}
-                          onChange={(e) => setInlineLoginPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="h-12 text-base rounded-xl mt-1"
-                          disabled={inlineLoginBusy}
-                        />
-                      </div>
-                      {inlineLoginError && (
-                        <p className="text-sm text-red-600 font-medium">{inlineLoginError}</p>
-                      )}
-                      <button
-                        type="submit"
-                        disabled={inlineLoginBusy}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white text-base font-semibold transition-colors"
-                      >
-                        {inlineLoginBusy ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                            Bezig…
-                          </>
-                        ) : (
-                          <>Inloggen</>
-                        )}
-                      </button>
-                      <p className="text-xs text-gray-400 text-center pt-1">Je blijft 30 dagen ingelogd zolang je de app regelmatig opent.</p>
-                    </form>
+                    {inlogFormulier}
                   </div>
                 )}
 

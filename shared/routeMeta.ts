@@ -360,8 +360,8 @@ export const ROUTE_META: RouteMeta[] = [
     // WhatsApp-bericht. Zonder token valt er niets te uploaden, dus wie hier via
     // Google binnenkomt, komt per definitie verkeerd uit — Ahrefs zag dan ook
     // een <h1> "Ongeldige of verlopen link" onder een titel die uploaden
-    // belooft. follow: true, want de links naar /aanmelden en het
-    // sollicitatieformulier mogen wél gevolgd worden.
+    // belooft. follow: true, want de link naar /aanmelden mag wél gevolgd
+    // worden.
     noindex: true,
     follow: true,
     prerender: true,
@@ -370,12 +370,17 @@ export const ROUTE_META: RouteMeta[] = [
   },
   {
     path: "/sollicitatieformulier",
-    title: "Sollicitatieformulier | Werken via EXTRA",
+    title: "Intakeformulier | EXTRA",
     description:
-      "Vul het sollicitatieformulier in en ga aan de slag via EXTRA: horeca, housekeeping of logistiek werk in Amsterdam. Binnen enkele minuten geregeld.",
-    prerender: true,
-    priority: "0.6",
-    changefreq: "monthly",
+      "Intern formulier waarmee collega's van EXTRA een intakegesprek vastleggen. Wil je bij EXTRA werken? Meld je aan via doehetextra.nl/aanmelden.",
+    // Intern gereedschap, alleen voor ingelogde collega's (adminMiddleware op
+    // POST /api/sollicitatie en GET /api/intake/candidates). Tot oktober 2026
+    // stond dit formulier open en werd het gelinkt als sollicitatiepagina; een
+    // werkzoekende moest zichzelf dan beoordelen. Werkzoekenden gaan nu naar
+    // /aanmelden. Geen fragment: server/seo.ts serveert elk bestaand fragment,
+    // dus dat is met deze wijziging verwijderd.
+    noindex: true,
+    prerender: false,
   },
   // /hoe-werkt-dagbetaling is per SEO-audit (P10) vervangen door /dagbetaling
   // en 301't daarnaartoe (server/redirects.ts).

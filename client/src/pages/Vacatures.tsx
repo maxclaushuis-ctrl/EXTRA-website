@@ -543,11 +543,7 @@ export default function Vacatures() {
                       <div>
                         <p className="font-black text-gray-900 text-xl leading-snug mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>Niet gevonden wat je zocht?</p>
                         <p className="text-gray-500 text-sm mt-1">
-                          Meld je aan en wij matchen je aan de beste opdrachten, of vul direct het{" "}
-                          <Link href="/sollicitatieformulier" className="text-purple-700 font-semibold underline underline-offset-2 hover:text-purple-800">
-                            sollicitatieformulier
-                          </Link>{" "}
-                          in.
+                          Meld je aan en wij matchen je aan de beste opdrachten.
                         </p>
                       </div>
                       <Link href="/aanmelden" className="flex-shrink-0 group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-full transition-all text-sm hover:scale-105 shadow-xl shadow-purple-600/20">

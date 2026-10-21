@@ -125,7 +125,7 @@ const werkgeverSteps = [
 ];
 
 const medewerkerSteps = [
-  { icon: UserCheck, step: "1", title: "Solliciteer bij EXTRA", desc: "Meld je aan via het sollicitatieformulier.", color: "from-purple-500 to-purple-700" },
+  { icon: UserCheck, step: "1", title: "Solliciteer bij EXTRA", desc: "Meld je aan via de website.", color: "from-purple-500 to-purple-700" },
   { icon: MessageCircle, step: "2", title: "Kennismaking", desc: "We bespreken je ervaring en voorkeuren.", color: "from-violet-500 to-purple-600" },
   { icon: Briefcase, step: "3", title: "Pak diensten op", desc: "Werk bij hotels, evenementen en horeca locaties.", color: "from-indigo-500 to-purple-600" },
   { icon: Gift, step: "4", title: "Verdien EXTRAATjes", desc: "Na iedere dienst word je beoordeeld en kun je punten verdienen.", color: "from-emerald-500 to-teal-600" },

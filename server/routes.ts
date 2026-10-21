@@ -6923,7 +6923,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Intake lookup — returns candidates by functionType for admin intake form
-  app.get("/api/intake/candidates", authMiddleware, async (req: Request, res: Response) => {
+  app.get("/api/intake/candidates", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const { functionType } = req.query;
       // Haal zowel in_behandeling als gepland op — alleen gepland-kandidaten komen in aanmerking voor het sollicitatieformulier
@@ -8699,7 +8699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sollicitatie", async (req: Request, res: Response) => {
+  app.post("/api/sollicitatie", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const data = req.body;
       
