@@ -43,7 +43,7 @@ import rewardAirtag from "@assets/airtag_1771872665358.webp";
 import rewardMuseumkaart from "@assets/Museumjaarkaart_1771872665358.webp";
 import rewardAirpods from "@assets/Airpods_1771872665358.webp";
 import rewardGig from "@assets/Gig_1771872665358.webp";
-import { REVIEW_SCORE, reviewAantalTekst, reviewScoreTekst } from "@shared/reviews";
+import { useLiveReviews } from "@/hooks/useLiveReviews";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -791,11 +791,17 @@ export default function LandingPage() {
 
   const [reviewTab, setReviewTab] = useState<"medewerkers" | "klanten">("klanten");
   const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
-  const medewerkerReviews = [
+  // Score, aantal en medewerkerreviews komen van Google (zie /api/reviews).
+  // Tot die er zijn, of als Google niet reageert, staat hier de vaste stand.
+  const live = useLiveReviews();
+  const vasteMedewerkerReviews = [
     { quote: "Ontzettend leuk uitzendbureau! Open en flexibel team, leuke klussen", name: "Sophie Sybrandy", rating: 5 },
     { quote: "Extra is nice platform for from entry level to become a pro at hospitality industry.", name: "Oliur Rahman", rating: 5 },
     { quote: "Geweldig uitzendbureau met goede en leerzame opdrachten. Werkt met mooie locaties waar altijd een fijne sfeer hangt en goed personeel rondloopt. De communicatie in het bedrijf zelf verloopt goed waardoor je zonder problemen en miscommunicaties aan het werk kan.", name: "Nathalie Siegerma", rating: 5 },
   ];
+  const medewerkerReviews = live.medewerkers.length > 0
+    ? live.medewerkers.slice(0, 3).map((r) => ({ quote: r.tekst, name: r.naam, rating: r.sterren }))
+    : vasteMedewerkerReviews;
   const klantReviews = ["amrath", "westweelde", "hart"].map((id) => {
     const r = CLIENT_REVIEWS.find((x) => x.id === id)!;
     return { quote: r.quote, name: r.author, rating: 5, role: r.role, company: r.company };
@@ -917,7 +923,7 @@ export default function LandingPage() {
               { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-600" },
               { value: 90, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
               { value: 500, suffix: "k+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
-              { value: REVIEW_SCORE, suffix: "/5", label: reviewAantalTekst(), icon: Star, color: "text-amber-400 fill-amber-400" },
+              { value: live.score, suffix: "/5", label: live.aantalTekst, icon: Star, color: "text-amber-400 fill-amber-400" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mx-auto mb-2 sm:mb-3`} />
@@ -1586,9 +1592,9 @@ export default function LandingPage() {
                       <Star key={j} className={`w-4 h-4 sm:w-6 sm:h-6 ${j < 5 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
                     ))}
                   </div>
-                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">{reviewScoreTekst("nl")}</span>
+                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">{live.scoreTekst}</span>
                 </div>
-                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">{reviewAantalTekst()}</span></span>
+                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">{live.aantalTekst}</span></span>
               </div>
             </div>
           </RevealSection>

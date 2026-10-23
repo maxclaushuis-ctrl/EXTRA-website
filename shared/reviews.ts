@@ -18,6 +18,12 @@
  *    crawlers en AI-modellen het oude getal lezen.
  *
  * Stand per 3 september 2026, bevestigd door Max: 237 reviews, gemiddeld 4,8.
+ *
+ * GOOGLE-KOPPELING (sinds oktober 2026)
+ * De server haalt score en aantal elke dag zelf op bij Google Business Profile
+ * (server/googleBusiness.ts). De site toont dan dat getal via /api/reviews.
+ * Deze vaste waarden blijven het vangnet én wat in de geprerenderde pagina's
+ * staat. Wijkt Google af, dan meldt de server dat in de log.
  */
 
 /** Aantal Google-reviews. */

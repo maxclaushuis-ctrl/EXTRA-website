@@ -32,6 +32,7 @@
     "landen:test": "tsx shared/landen.test.ts",
     "alias:test": "tsx shared/landenAlias.test.ts",
     "reviews:test": "tsx shared/reviews.test.ts",
+    "googlereviews:test": "tsx shared/googleReviews.test.ts",
     "herkomst:test": "tsx shared/herkomst.test.ts",
     "uurloon:test": "tsx shared/uurloon.test.ts",
     "prerender:test": "tsx scripts/prerenderOpruimen.test.ts",

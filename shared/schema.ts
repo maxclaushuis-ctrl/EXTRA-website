@@ -1160,6 +1160,48 @@ export const contactBerichten = pgTable("contact_berichten", {
 
 export type ContactBerichtRij = typeof contactBerichten.$inferSelect;
 
+/**
+ * Koppeling met Google Business Profile (één rij, id 1).
+ *
+ * Bevat de refresh token waarmee de server zelf de reviews ophaalt. Die komt
+ * rechtstreeks uit de callback van Google in deze tabel en wordt nooit via een
+ * API teruggegeven. Ontkoppelen = de token leegmaken, niet de rij verwijderen.
+ */
+export const googleKoppeling = pgTable("google_koppeling", {
+  id: integer("id").primaryKey(),
+  refreshToken: text("refresh_token"),
+  account: text("account"),
+  locatie: text("locatie"),
+  locatieNaam: text("locatie_naam"),
+  gemiddelde: real("gemiddelde"),
+  totaal: integer("totaal"),
+  gekoppeldDoor: integer("gekoppeld_door"),
+  gekoppeldOp: timestamp("gekoppeld_op"),
+  laatsteSync: timestamp("laatste_sync"),
+  laatsteFout: text("laatste_fout"),
+});
+
+/**
+ * Reviews van Google, zoals Google ze teruggeeft. De categorie zet Max in het
+ * dashboard: medewerker, klant of verborgen. Een nieuwe review begint als
+ * "onbekend" en komt pas op de site als hij als medewerker is gemarkeerd.
+ */
+export const googleReviews = pgTable("google_reviews", {
+  id: serial("id").primaryKey(),
+  reviewId: text("review_id").notNull().unique(),
+  auteur: text("auteur").notNull(),
+  auteurFoto: text("auteur_foto"),
+  sterren: integer("sterren"),
+  tekst: text("tekst").notNull().default(""),
+  reactie: text("reactie"),
+  categorie: text("categorie").notNull().default("onbekend"),
+  geplaatstOp: timestamp("geplaatst_op"),
+  bijgewerktOp: timestamp("bijgewerkt_op"),
+  opgehaaldOp: timestamp("opgehaald_op").defaultNow(),
+});
+
+export type GoogleReviewDbRij = typeof googleReviews.$inferSelect;
+
 export const insertStaffingRequestSchema = createInsertSchema(staffingRequests).omit({
   id: true,
   status: true,

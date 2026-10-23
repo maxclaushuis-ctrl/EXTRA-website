@@ -34,6 +34,7 @@ import VerjaardagenTab from '@/components/VerjaardagenTab';
 import ProspectCampagnesTab from '@/components/ProspectCampagnesTab';
 import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
+import GoogleReviewsTab from './dashboard/GoogleReviewsTab';
 // Fase 2: nieuwe WhatsApp-inbox (mockup-herbouw). WhatsAppBeheer blijft bestaan tot fase 4.
 import WhatsAppInbox from './dashboard/whatsapp';
 import CommunicatieNav from './dashboard/CommunicatieNav';
@@ -221,6 +222,12 @@ export default function DashboardMockup() {
     };
     window.addEventListener('extra:switch-tab', handler);
     return () => window.removeEventListener('extra:switch-tab', handler);
+  }, []);
+  // Terugkomst van Google na het koppelen (/dashboard?google=...): open meteen de reviews.
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).has('google')) setActiveTab('google-reviews');
+    } catch { /* geen URL beschikbaar */ }
   }, []);
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
   const [bedrijvenExpanded, setBedrijvenExpanded] = useState(true);
@@ -1221,6 +1228,22 @@ export default function DashboardMockup() {
               >
                 <TrendingUp className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>KPI & Rapportage</span>
+              </button>
+              <button
+                onClick={() => { setActiveTab('google-reviews'); setSidebarOpen(false); }}
+                title="Google-reviews"
+                className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'google-reviews' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'google-reviews' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'google-reviews' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
+              >
+                <Star className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
+                <span>Google-reviews</span>
               </button>
             </>
           )}
@@ -6644,6 +6667,10 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
           ) : activeTab === 'stats' ? (
             /* ─── WEBSITE STATISTIEKEN tab ─── */
             <WebsiteStatsTab />
+
+          ) : activeTab === 'google-reviews' ? (
+            /* ─── GOOGLE-REVIEWS tab ─── */
+            <GoogleReviewsTab />
 
           ) : activeTab === 'kpi' ? (
             /* ─── KPI & RAPPORTAGE tab ─── */

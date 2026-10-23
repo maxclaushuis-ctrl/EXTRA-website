@@ -551,6 +551,7 @@ const OPSTART_DB_MAX_MS = 10_000;
     scheduleFlowEngine();
     scheduleSalesflowDailyJob();
     scheduleCrmMailSync();
+    scheduleGoogleReviewsSync();
     // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
     backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
     // WhatsApp Fase 1: 360dialog Cloud API met DB-persistentie. Zie server/whatsapp/README.md.
@@ -802,6 +803,34 @@ function scheduleFlowEngine() {
  * wacht hierop. Daarna één keer per etmaal — vaker heeft geen zin, want de
  * echte bijwerking loopt via de bewerkingen zelf.
  */
+/**
+ * Google-reviews: één keer per etmaal ophalen bij Google Business Profile.
+ *
+ * Doet niets zolang GBP_CLIENT_ID en GBP_CLIENT_SECRET niet in de Secrets
+ * staan of er nog niet is gekoppeld; dan toont de site het vaste getal uit
+ * shared/reviews.ts. Een fout komt als laatste_fout in het dashboard.
+ */
+function scheduleGoogleReviewsSync() {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  async function run() {
+    try {
+      const { gbpGeconfigureerd, koppelingStatus, synchroniseerGoogleReviews } = await import('./googleBusiness');
+      if (!gbpGeconfigureerd()) return;
+      if (!(await koppelingStatus()).gekoppeld) return;
+      const r = await synchroniseerGoogleReviews();
+      log(`Google-reviews: ${r.opgehaald} opgehaald, score ${r.gemiddelde ?? '-'} uit ${r.totaal ?? '-'}`);
+    } catch (err: any) {
+      console.error('[google-reviews] dagelijkse ronde mislukt:', err?.message || err);
+    }
+  }
+
+  setTimeout(() => {
+    run();
+    setInterval(run, MS_PER_DAY);
+  }, 60_000);
+}
+
 function scheduleCrmMailSync() {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

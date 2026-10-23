@@ -442,6 +442,48 @@ const AANVULLINGEN: Aanvulling[] = [
           ADD COLUMN IF NOT EXISTS nationality_zone text
       `),
   },
+  {
+    // Migratie 0028 — zie migrations/manual/0028_google_reviews/
+    // Twee nieuwe tabellen voor de koppeling met Google Business Profile.
+    // Puur additief: er bestond nog niets met deze namen.
+    omschrijving: "google_koppeling: koppeling met Google Business Profile",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS google_koppeling (
+          id             integer PRIMARY KEY,
+          refresh_token  text,
+          account        text,
+          locatie        text,
+          locatie_naam   text,
+          gemiddelde     real,
+          totaal         integer,
+          gekoppeld_door integer,
+          gekoppeld_op   timestamp,
+          laatste_sync   timestamp,
+          laatste_fout   text
+        )
+      `),
+  },
+  {
+    // Migratie 0028 — zie migrations/manual/0028_google_reviews/
+    omschrijving: "google_reviews: reviews van Google Business Profile",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS google_reviews (
+          id            serial PRIMARY KEY,
+          review_id     text NOT NULL UNIQUE,
+          auteur        text NOT NULL,
+          auteur_foto   text,
+          sterren       integer,
+          tekst         text NOT NULL DEFAULT '',
+          reactie       text,
+          categorie     text NOT NULL DEFAULT 'onbekend',
+          geplaatst_op  timestamp,
+          bijgewerkt_op timestamp,
+          opgehaald_op  timestamp DEFAULT now()
+        )
+      `),
+  },
 ];
 
 /**

@@ -8942,6 +8942,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google-reviews: koppeling met Google Business Profile. Zie server/googleReviewsRoutes.ts.
+  {
+    const { registerGoogleReviewRoutes } = await import("./googleReviewsRoutes");
+    registerGoogleReviewRoutes(app, adminMiddleware);
+  }
+
   /** Contactberichten voor het dashboard, nieuwste eerst. */
   app.get("/api/admin/contact-berichten", adminMiddleware, async (_req: Request, res: Response) => {
     try {
