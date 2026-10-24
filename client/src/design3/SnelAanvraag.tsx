@@ -16,8 +16,8 @@ interface Props {
   functies: string[];
   branche: Branche;
   gekozen?: string;
-  /** "rij": de brede balk bovenaan; "kaart": de kaart in het slotblok. */
-  vorm: "rij" | "kaart";
+  /** "rij": de brede balk bovenaan; "kaart": de kaart in het slotblok; "blok": het formulier op de blogpagina's. */
+  vorm: "rij" | "kaart" | "blok";
   kop?: string;
   sub?: string;
 }
@@ -78,6 +78,18 @@ export default function SnelAanvraag({ functies, branche, gekozen, vorm, kop = "
     </select>
   );
 
+  if (vorm === "blok") {
+    return (
+      <form className="bl-form" onSubmit={verstuur} noValidate aria-label="Personeel aanvragen">
+        <label><span>Bedrijfsnaam</span><input name="companyName" type="text" autoComplete="organization" placeholder="Naam van je bedrijf" required /></label>
+        <label><span>Naam</span><input name="contactName" type="text" autoComplete="name" placeholder="Voor en achternaam" required /></label>
+        <label><span>Telefoon</span><input name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="06 12 34 56 78" required /></label>
+        <label><span>Functie</span>{keuze}</label>
+        {fout && <p className="form-fout" role="alert">{fout}</p>}
+        <button className="knop vol" type="submit" disabled={bezig}>{bezig ? "Even geduld" : "Bel mij terug"} <Pijl /></button>
+      </form>
+    );
+  }
   if (vorm === "rij") {
     return (
       <form className="av-form" onSubmit={verstuur} noValidate aria-label="Personeel aanvragen">

@@ -228,7 +228,7 @@ async function main(): Promise<void> {
 
   try {
     const [bestaand] = await db
-      .select({ id: blogPosts.id })
+      .select({ id: blogPosts.id, publishedAt: blogPosts.publishedAt })
       .from(blogPosts)
       .where(eq(blogPosts.slug, slug));
 
@@ -250,7 +250,9 @@ async function main(): Promise<void> {
       readTime: meta.readTime,
       tags: meta.tags ?? [],
       status: alsConcept ? 'draft' : 'published',
-      publishedAt: alsConcept ? null : new Date(),
+      // Een artikel dat al gepubliceerd was, houdt zijn publicatiedatum: een
+      // tekstcorrectie mag de datum (en de volgorde op /blog) niet verschuiven.
+      publishedAt: alsConcept ? null : (bestaand?.publishedAt ?? new Date()),
       updatedAt: new Date(),
     };
 

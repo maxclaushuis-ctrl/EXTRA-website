@@ -90,7 +90,7 @@ export const ROUTE_META: RouteMeta[] = [
     path: "/horeca-personeel-amsterdam",
     title: "Horeca personeel Amsterdam nodig? | EXTRA",
     description:
-      "Horeca personeel in Amsterdam nodig? EXTRA levert bediening, keuken en housekeeping — gescreend en direct inzetbaar. Vraag vandaag nog personeel aan.",
+      "Horeca personeel in Amsterdam nodig? EXTRA levert bediening, keuken en housekeeping: gescreend en direct inzetbaar. Vraag vandaag nog personeel aan.",
     prerender: true,
     priority: "0.95",
     changefreq: "weekly",
@@ -146,7 +146,7 @@ export const ROUTE_META: RouteMeta[] = [
     path: "/eventpersoneel-inhuren",
     title: "Eventpersoneel inhuren | Bediening, bar & hosts",
     description:
-      "Eventpersoneel nodig? EXTRA levert ervaren bediening, bartenders, runners en hosts voor events — representatief en gewend aan tempo. Vraag direct aan.",
+      "Eventpersoneel nodig? EXTRA levert ervaren bediening, bartenders, runners en hosts voor events: representatief en gewend aan tempo. Vraag direct aan.",
     prerender: true,
     priority: "0.9",
     changefreq: "weekly",
@@ -373,7 +373,7 @@ export const ROUTE_META: RouteMeta[] = [
     path: "/horeca-personeel-inhuren",
     title: "Horeca personeel inhuren | Snel geregeld | EXTRA",
     description:
-      "Horeca personeel inhuren in Amsterdam? EXTRA levert gescreende medewerkers in loondienst — vaak binnen 48 uur. Eén tarief, één factuur. Vraag direct aan.",
+      "Horeca personeel inhuren in Amsterdam? EXTRA levert gescreende medewerkers in loondienst, vaak binnen 48 uur. Eén tarief, één factuur. Vraag direct aan.",
     prerender: true,
     priority: "0.95",
     changefreq: "weekly",

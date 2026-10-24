@@ -197,6 +197,37 @@ const EMPLOYMENT_TYPE_BY_SERVICE_TYPE: Record<string, string> = {
  * daarom weggelaten in plaats van verzonnen; Google vereist alleen
  * addressCountry en raadt addressLocality sterk aan.
  */
+/**
+ * BlogPosting voor een gepubliceerd artikel. Stond eerder alleen in de
+ * browser (NieuwsArtikel.tsx), waardoor crawlers zonder JavaScript auteur,
+ * datum en afbeelding misten. Alleen velden die echt in de database staan.
+ */
+export function blogPostingJsonLd(post: {
+  title: string; slug: string; excerpt?: string | null; metaDescription?: string | null; imageUrl?: string | null;
+  author?: string | null; publishedAt?: Date | string | null; updatedAt?: Date | string | null; createdAt?: Date | string | null;
+  focusKeyword?: string | null; category?: string | null;
+}, url: string): string {
+  const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString() : undefined);
+  const beeld = post.imageUrl ? (post.imageUrl.startsWith("http") ? post.imageUrl : `${SITE_ORIGIN}${post.imageUrl}`) : undefined;
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.metaDescription || post.excerpt || undefined,
+    image: beeld,
+    datePublished: iso(post.publishedAt || post.createdAt),
+    dateModified: iso(post.updatedAt || post.publishedAt || post.createdAt),
+    author: { "@type": "Organization", name: post.author || "EXTRA Redactie", url: SITE_ORIGIN },
+    publisher: { "@id": `${SITE_ORIGIN}/#organization` },
+    mainEntityOfPage: url,
+    url,
+    keywords: post.focusKeyword || undefined,
+    articleSection: post.category || undefined,
+    inLanguage: "nl-NL",
+  };
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 function jobPostingJsonLd(vacancy: VacancyPost, canonicalUrl: string): string {
   const posted = new Date(vacancy.publishedAt || vacancy.createdAt || Date.now());
   const description = stripHtml(
@@ -397,15 +428,18 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
             return send(
               200,
               {
-                title: truncate(`${post.title} | EXTRA`, 70),
+                // metaTitle is per artikel bewust geschreven (≤ 60 tekens); alleen
+                // zonder metaTitle valt de titel terug op de artikeltitel.
+                title: truncate((post as any).metaTitle || `${post.title} | EXTRA`, 70),
                 description: truncate(
                   stripHtml((post as any).metaDescription || (post as any).excerpt || (post as any).content || post.title),
                   155
                 ),
                 canonicalUrl: `${SITE_ORIGIN}${dyn.canonicalBase}/${post.slug}`,
-                jsonLd: [breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title)].filter(
-                  (v): v is string => !!v
-                ),
+                jsonLd: [
+                  breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title),
+                  blogPostingJsonLd(post as any, `${SITE_ORIGIN}${dyn.canonicalBase}/${post.slug}`),
+                ].filter((v): v is string => !!v),
               },
               // Fragment op basis van het opgevraagde pad (niet de canonical):
               // /blog/:slug en /nieuws/:slug serveren vandaag dezelfde content
