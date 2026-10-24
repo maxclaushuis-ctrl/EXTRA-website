@@ -8965,11 +8965,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { staffingRequests } = await import("@shared/schema");
       const body = req.body;
+      const { controleerAanvraag } = await import("@shared/aanvraagInvoer");
+      const controle = controleerAanvraag(body);
+      if (!controle.ok) {
+        return res.status(400).json({ message: controle.fout });
+      }
       const data = {
-        companyName: body.companyName,
-        contactName: body.contactName,
-        email: body.email,
-        phone: body.phone,
+        companyName: controle.bedrijf,
+        contactName: controle.naam,
+        // Leeg bij het korte terugbelformulier van design 3.0 (zie shared/aanvraagInvoer.ts).
+        email: controle.email,
+        phone: controle.telefoon,
         locationType: body.locationType,
         locationTypeOther: body.locationTypeOther || null,
         functions: Array.isArray(body.functions) ? body.functions : [],
@@ -8983,9 +8989,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         wantsCallback: !!body.wantsCallback,
         wantsFavoritePool: !!body.wantsFavoritePool,
       };
-      if (!data.companyName || !data.contactName || !data.email || !data.phone) {
-        return res.status(400).json({ message: "Vul alle verplichte velden in." });
-      }
       const [result] = await db.insert(staffingRequests).values(data).returning();
 
       // Admin notificatie: nieuwe aanvraag
@@ -9091,7 +9094,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const rows = [
           ['Bedrijf', data.companyName],
           ['Contactpersoon', data.contactName],
-          ['E-mail', data.email],
+          ['E-mail', data.email || 'niet opgegeven (terugbelverzoek)'],
           ['Telefoon', data.phone],
           ['Type locatie', locationTypeLabel[data.locationType] || data.locationType],
           data.locationTypeOther ? ['Soort locatie (overig)', data.locationTypeOther] : null,
@@ -9145,7 +9148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       //
       // Bewust in een eigen try/catch ná de interne mail: als deze mail faalt,
       // mag dat de aanvraag zelf en de interne notificatie niet raken.
-      try {
+      // Zonder e-mailadres (terugbelformulier) is er niemand om te bevestigen.
+      if (data.email) try {
         const { sendEmail } = await import('./mail');
         const { aanvraagBevestigingMail, AFZENDER, INTERNE_ONTVANGERS } = await import('@shared/aanvraagMails');
         const mail = aanvraagBevestigingMail({

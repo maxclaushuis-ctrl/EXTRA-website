@@ -4,7 +4,7 @@ import { useState, useEffect, lazy, Suspense, Component, ReactNode } from "react
 import { ROUTE_META_BY_PATH, SITE_ORIGIN } from "@shared/routeMeta";
 import { isEngelsPad } from "@shared/taal";
 
-const Home = lazy(() => import("@/pages/Home"));
+const Home = lazy(() => import("@/pages/d3/Home"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
 const DashboardMockup = lazy(() => import("@/pages/DashboardMockup"));
@@ -15,14 +15,14 @@ const BrochureEvents = lazy(() => import("@/pages/BrochureEvents"));
 const BrochureLofi = lazy(() => import("@/pages/BrochureLofi"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const PersoneelGezocht = lazy(() => import("@/pages/PersoneelGezocht"));
-const HotelPersoneelGezocht = lazy(() => import("@/pages/HotelPersoneelGezocht"));
-const EventPersoneelGezocht = lazy(() => import("@/pages/EventPersoneelGezocht"));
+const HotelPersoneelGezocht = lazy(() => import("@/pages/d3/Bedrijven").then((m) => ({ default: m.HotelsBedrijven })));
+const EventPersoneelGezocht = lazy(() => import("@/pages/d3/Bedrijven").then((m) => ({ default: m.EventsBedrijven })));
 const CateringPersoneelGezocht = lazy(() => import("@/pages/CateringPersoneelGezocht"));
 const RestaurantPersoneelGezocht = lazy(() => import("@/pages/RestaurantPersoneelGezocht"));
 const PersoneelsAanvraag = lazy(() => import("@/pages/PersoneelsAanvraag"));
 const AanvraagOntvangen = lazy(() => import("@/pages/AanvraagOntvangen"));
 // Stijlpilot, noindex — zie shared/routeMeta.ts
-const LogistiekPersoneelInhuren = lazy(() => import("@/pages/LogistiekPersoneelInhuren"));
+const LogistiekPersoneelInhuren = lazy(() => import("@/pages/d3/Bedrijven").then((m) => ({ default: m.LogistiekBedrijven })));
 // Campagnepagina voor de gastles bij InHolland, noindex — zie shared/routeMeta.ts
 const InHolland = lazy(() => import("@/pages/InHolland"));
 const Aanmelden = lazy(() => import("@/pages/Aanmelden"));

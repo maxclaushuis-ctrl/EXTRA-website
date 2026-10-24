@@ -52,7 +52,8 @@
     "links:test": "tsx scripts/linkHerschrijver.test.ts",
     "content:links": "tsx scripts/content-links.ts",
     "content:links:fix": "tsx scripts/content-links.ts --fix",
-    "wa:test": "tsx server/whatsapp/__tests__/aiClassifier.test.ts && tsx server/whatsapp/__tests__/phone.test.ts && tsx server/whatsapp/__tests__/metaWebhook.test.ts && tsx server/whatsapp/__tests__/metaClient.test.ts && tsx server/whatsapp/__tests__/taskRules.test.ts && tsx server/whatsapp/__tests__/templates.test.ts && tsx server/whatsapp/__tests__/groupChatLogic.test.ts && tsx server/whatsapp/__tests__/nameLogic.test.ts && tsx server/whatsapp/__tests__/assistentLogic.test.ts"
+    "wa:test": "tsx server/whatsapp/__tests__/aiClassifier.test.ts && tsx server/whatsapp/__tests__/phone.test.ts && tsx server/whatsapp/__tests__/metaWebhook.test.ts && tsx server/whatsapp/__tests__/metaClient.test.ts && tsx server/whatsapp/__tests__/taskRules.test.ts && tsx server/whatsapp/__tests__/templates.test.ts && tsx server/whatsapp/__tests__/groupChatLogic.test.ts && tsx server/whatsapp/__tests__/nameLogic.test.ts && tsx server/whatsapp/__tests__/assistentLogic.test.ts",
+    "aanvraaginvoer:test": "tsx shared/aanvraagInvoer.test.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
