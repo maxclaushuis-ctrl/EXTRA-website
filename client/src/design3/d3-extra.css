@@ -64,3 +64,40 @@
 
 /* Tailwind kent een utility .ring (box-shadow); de ring om de cirkel heet in de mock-up ook zo. */
 .d3 svg.ring{box-shadow:none}
+
+/* ── Aanmelden en personeel aanvragen (levering 3) ── */
+.d3.css-aanvraag .am-stap{display:grid;gap:26px}
+.d3.css-aanvraag .veld select{width:100%;font:inherit;font-size:16px;color:var(--espresso);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2337352C' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center/18px;border:1.5px solid var(--lijn-sterk);border-radius:12px;padding:13px 40px 13px 14px;appearance:none;-webkit-appearance:none;transition:border-color .2s}
+.d3.css-aanvraag .veld select:focus{outline:none;border-color:var(--espresso)}
+.d3.css-aanvraag .veld select:invalid{color:var(--tekst-2)}
+.d3.css-aanvraag .veld.fout select{border-color:#a13d2d;background-color:#fdf4f2}
+.d3.css-aanvraag .am-tel{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px}
+.d3.css-aanvraag .am-land{position:relative;display:flex;align-items:center;gap:6px;border:1.5px solid var(--lijn-sterk);border-radius:12px;background:#fff;padding:0 30px 0 14px;font-size:16px;font-weight:600}
+.d3.css-aanvraag .am-land::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-70%) rotate(45deg)}
+.d3.css-aanvraag .am-land select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;font-size:16px}
+.d3.css-aanvraag .am-land:focus-within{border-color:var(--espresso)}
+.d3.css-aanvraag .veld.fout .am-land{border-color:#a13d2d}
+.d3.css-aanvraag .am-fout{font-size:13px;font-weight:600;color:#a13d2d;margin:10px 0 0}
+.d3.css-aanvraag .am-noot{font-size:14px;line-height:1.5;color:var(--tekst-2);margin:10px 0 0}
+.d3.css-aanvraag .am-noot a{text-decoration:underline;font-weight:600;color:var(--espresso)}
+.d3.css-aanvraag .am-anders{margin-top:-10px}
+.d3.css-aanvraag .am-upload{position:relative}
+.d3.css-aanvraag .am-upload.gekozen{border-style:solid;border-color:var(--espresso);background:#fff}
+.d3.css-aanvraag .am-upload .ic{width:26px;height:26px}
+.d3.css-aanvraag .am-volgende{list-style:none;counter-reset:v;display:grid;gap:12px;margin:0;padding:0}
+.d3.css-aanvraag .am-volgende li{counter-increment:v;display:grid;grid-template-columns:28px 1fr;gap:12px;font-size:15px;line-height:1.5;color:var(--tekst-2)}
+.d3.css-aanvraag .am-volgende li::before{content:counter(v);width:28px;height:28px;border-radius:50%;background:var(--rose);color:var(--espresso);font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+.d3.css-aanvraag .am-melding h2{font-size:clamp(28px,2.6vw,38px);letter-spacing:-.04em}
+.d3.css-aanvraag .am-melding p{font-size:17px;line-height:1.55;color:var(--tekst-2);margin:0}
+.d3.css-aanvraag .am-knoppen{flex-wrap:wrap}
+.d3.css-aanvraag .am-knoppen .knop.lijn{min-height:60px}
+.d3.css-aanvraag .am-klaar .am-check{list-style:none;display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:0 0 26px;padding:0}
+.d3.css-aanvraag .am-check li{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:650;padding:8px 14px;border-radius:99px;background:#fff;color:var(--tekst-2)}
+.d3.css-aanvraag .am-check li.ja{color:var(--espresso);background:var(--rose)}
+.d3.css-aanvraag .am-check .ic{width:16px;height:16px}
+.d3.css-aanvraag .am-klaar .am-volgende{text-align:left;max-width:30em;margin:0 auto 30px}
+.d3.css-aanvraag .am-af h2{margin-top:0}
+@media (max-width:760px){
+  .d3.css-aanvraag .am-stap{gap:22px}
+  .d3.css-aanvraag .am-knoppen .knop.lijn{min-height:52px}
+}

@@ -49,13 +49,13 @@ const BrochureEvents = lazy(() => import("@/pages/BrochureEvents"));
 const BrochureLofi = lazy(() => import("@/pages/BrochureLofi"));
 const HotelPersoneelGezocht = lazy(() => import("@/pages/d3/Bedrijven").then((m) => ({ default: m.HotelsBedrijven })));
 const EventPersoneelGezocht = lazy(() => import("@/pages/d3/Bedrijven").then((m) => ({ default: m.EventsBedrijven })));
-const PersoneelsAanvraag = lazy(() => import("@/pages/PersoneelsAanvraag"));
-const AanvraagOntvangen = lazy(() => import("@/pages/AanvraagOntvangen"));
+const PersoneelsAanvraag = lazy(() => import("@/pages/d3/Aanvraag").then((m) => ({ default: m.PersoneelAanvragen })));
+const AanvraagOntvangen = lazy(() => import("@/pages/d3/Aanvraag").then((m) => ({ default: m.AanvraagOntvangen })));
 // Stijlpilot, noindex — zie shared/routeMeta.ts
 const LogistiekPersoneelInhuren = lazy(() => import("@/pages/d3/Bedrijven").then((m) => ({ default: m.LogistiekBedrijven })));
 // Campagnepagina voor de gastles bij InHolland, noindex — zie shared/routeMeta.ts
 const InHolland = lazy(() => import("@/pages/InHolland"));
-const Aanmelden = lazy(() => import("@/pages/Aanmelden"));
+const Aanmelden = lazy(() => import("@/pages/d3/Aanmelden"));
 const CvUpload = lazy(() => import("@/pages/CvUpload"));
 const NieuwsPage = lazy(() => import("@/pages/d3/Blog").then((m) => ({ default: m.BlogOverzicht })));
 const NieuwsArtikel = lazy(() => import("@/pages/d3/Blog").then((m) => ({ default: m.BlogArtikel })));

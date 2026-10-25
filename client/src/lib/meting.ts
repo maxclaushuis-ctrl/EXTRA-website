@@ -9,7 +9,7 @@
  * zet — dan is TRANSPORT hieronder het enige wat om moet.
  *
  * generate_lead staat NIET in dit bestand: die vuurt al op de bedankpagina
- * (client/src/pages/AanvraagOntvangen.tsx). Hem hier nog eens afvuren zou elke
+ * (client/src/pages/d3/Aanvraag.tsx, AanvraagOntvangen). Hem hier nog eens afvuren zou elke
  * personeelsaanvraag dubbel tellen.
  */
 
