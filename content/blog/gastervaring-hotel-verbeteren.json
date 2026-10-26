@@ -1,0 +1,47 @@
+{
+  "title": "Gastervaring in je hotel verbeteren: vijf dingen die het verschil maken",
+  "slug": "gastervaring-hotel-verbeteren",
+  "excerpt": "De gastervaring wordt niet gemaakt door apps maar door mensen. Vijf dingen die onderzoek en praktijk laten zien: de eerste minuut aan de balie, fouten herstellen, trainen op de vloer, genoeg mensen op piekmomenten en reviews beantwoorden.",
+  "metaTitle": "Gastervaring hotel verbeteren: vijf dingen die werken",
+  "metaDescription": "Zo verbeter je de gastervaring in je hotel: vijf onderbouwde punten, van de eerste minuut aan de balie tot fouten herstellen en reviews beantwoorden.",
+  "focusKeyword": "gastervaring hotel",
+  "category": "Hospitality",
+  "imageUrl": "/images/gastervaring-hotel-verbeteren.webp",
+  "imageAlt": "Lange hotelgang met marmeren vloer, palmen en kroonluchters in warm licht",
+  "author": "EXTRA Redactie",
+  "readTime": "7 min",
+  "tags": [
+    "gastervaring",
+    "hotels",
+    "front office",
+    "reviews"
+  ],
+  "_notities": [
+    "Herschreven uit de oude concepttekst in client/src/pages/NieuwsArtikel.tsx (nooit gepubliceerd). Onderzoek en feitencheck: zie _feitencontrole en _bronnen.",
+    "metaDescription staat ook zichtbaar als intro onder de H1: als leesbare zin geschreven.",
+    "Plaatsen als concept: npm run publish:blog -- gastervaring-hotel-verbeteren --concept"
+  ],
+  "_feitencontrole": [
+    "J.D. Power 2026 NA Hotel Guest Satisfaction Index: +13 punten naar 665 op 1.000; bijna 45.000 gasten; Andrea Stokes: positieve interacties met personeel, courtesy front desk. Gecontroleerd via Hotel Dive en Asian Hospitality (14-7-2026). Officieel persbericht niet geladen.",
+    "J.D. Power 2025: tevredenheid 460 bij een probleem tegen 677 zonder (verschil 217). Uit onderzoeksrapport (canada.jdpower.com, TravelPulse).",
+    "Cornell CHR, Anderson & Martyn (2019): blended training met managers verbeterde alle vijf tevredenheidsmaten, alleen online geen effect; twee hotels. Uit onderzoeksrapport (business.cornell.edu 5-2-2019). Kleine studie, zo benoemd.",
+    "Cornell CHR, Han e.a. (2016): 5.830 TripAdvisor-reviews, negatieve opmerkingen wegen zwaarder. Uit onderzoeksrapport (Hospitality Net).",
+    "Proserpio & Zervas, Marketing Science: +12% reviews, +0,12 ster. Letterlijk gecontroleerd op informs.org.",
+    "Accor juni 2024, 5.000 Europese reizigers: netheid 52% belangrijkste zorg, 71% waardeert reacties. Uit onderzoeksrapport (Hospitality Net).",
+    "Danny Meyer, NPR: citaat uit transcript npr.org/transcripts/6162737 via onderzoeksrapport. Ritz-Carlton Three Steps of Service: eigen site.",
+    "GECORRIGEERD t.o.v. oude conceptversie: het citaat 'Gasten vergeten wat je zei...' stond op naam van Maya Angelou. Volgens Quote Investigator (6-4-2014) is die toeschrijving ongefundeerd; oudste bron Carl W. Buehner (1971). Niet meer als citaat gebruikt, wel in de FAQ rechtgezet.",
+    "Hero: bestaande blogfoto blog-hotel uit client/src/assets/images (al in gebruik op de site)."
+  ],
+  "_bronnen": [
+    "https://www.hoteldive.com/news/hotel-guest-satisfaction-survey-2026-jd-power/825123/",
+    "https://www.asianhospitality.com/study-guest-satisfaction-up-in-north-america/",
+    "https://canada.jdpower.com/node/5316",
+    "https://business.cornell.edu/news/2019/02/05/customer-satisfaction-technology/",
+    "https://hospitalitynet.org/news/4074300.html",
+    "https://www.informs.org/News-Room/INFORMS-Releases/News-Releases/Want-to-improve-your-business-s-online-ratings-Make-sure-to-respond-to-reviews",
+    "https://www.hospitalitynet.org/news/4122451/almost-every-hotel-or-resort-customer-reads-guest-reviews",
+    "https://www.npr.org/transcripts/6162737",
+    "https://ritzcarltonleadershipcenter.com/about-us/about-us-foundations-of-our-brand/",
+    "https://quoteinvestigator.com/2014/04/06/they-feel"
+  ]
+}

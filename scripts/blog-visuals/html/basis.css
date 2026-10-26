@@ -1,0 +1,10 @@
+@font-face{font-family:J;src:url(../../../client/public/d3/plus-jakarta-sans-latin-wght-normal.woff2) format("woff2");font-weight:200 800}
+@font-face{font-family:S;src:url(../../../client/public/d3/serif.woff2) format("woff2");font-weight:100 900}
+:root{--e:#37352C;--o:#F8F7F4;--rose:#EBD0E4;--pis:#CEDBBC;--sky:#C7DFF4}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1200px;overflow:hidden}
+body{font-family:J,sans-serif;color:var(--e);background:var(--o);-webkit-font-smoothing:antialiased}
+.serif{font-family:S,serif;font-weight:400;letter-spacing:-.02em}
+.letters{position:absolute;left:-4%;bottom:-7%;width:108%;aspect-ratio:660/170;background:rgba(55,53,44,.08);-webkit-mask:url(../../../client/public/d3/logo-mask.svg) center/100% 100% no-repeat}
+.bron{position:absolute;left:56px;bottom:34px;font-size:15px;color:#5F5D54}
+.merk{position:absolute;right:56px;bottom:30px;font-weight:800;font-size:22px;letter-spacing:-.06em}

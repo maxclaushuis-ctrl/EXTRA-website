@@ -1,0 +1,48 @@
+{
+  "title": "Personeelstekort in de horeca 2026: wat de cijfers zeggen en wat hotels nu doen",
+  "slug": "personeelstekort-horeca",
+  "excerpt": "Er staan 26.400 horecavacatures open en bijna een derde van de horecabedrijven noemt personeel de grootste rem. De echte cijfers, wat ze betekenen voor hotels in Amsterdam en vijf dingen die je nu doet.",
+  "metaTitle": "Personeelstekort horeca 2026: cijfers en aanpak voor hotels",
+  "metaDescription": "Hoe groot is het personeelstekort in de horeca in 2026? De actuele CBS-cijfers, wat ze betekenen voor hotels in Amsterdam en vijf dingen die je nu kunt doen.",
+  "focusKeyword": "personeelstekort horeca",
+  "category": "Branche",
+  "imageUrl": "/images/personeelstekort-horeca.webp",
+  "imageAlt": "Omslag met het getal 26.400, het aantal openstaande vacatures in de horeca in het tweede kwartaal van 2026",
+  "author": "EXTRA Redactie",
+  "readTime": "7 min",
+  "tags": [
+    "personeelstekort",
+    "horeca",
+    "hotels",
+    "arbeidsmarkt"
+  ],
+  "_feitencontrole": [
+    "GECORRIGEERD: de oude concepttekst zei 'in 2025 stond gemiddeld één op de tien horecafuncties open'. Klopt niet: KHN noemt een vacaturegraad van 50 per 1.000 banen in Q3 2025 (Horecava-persconferentie 12-1-2026). In de tekst rechtgezet.",
+    "Vacatures horeca seizoengecorrigeerd: 26,1 duizend (Q3 2025), 26,4 (Q4 2025), 27,1 (Q1 2026), 26,4 (Q2 2026). Bron: CBS-berichten 30-1-2026, 30-4-2026, 30-7-2026. Q3 2026 verschijnt rond 30-10-2026: vóór publicatie nakijken en zo nodig bijwerken.",
+    "Landelijke vacaturegraad 42 per 1.000 banen en 95 vacatures per 100 werklozen, Q2 2026. Bron: CBS 30-7-2026, letterlijk gecontroleerd.",
+    "Conjunctuurenquête: horeca 30,4% (juli 2026) tegen 40,6% (juli 2025) noemt tekort aan arbeidskrachten als belangrijkste belemmering; 'verreweg het sterkst gedaald'. Bron: CBS longread Conjunctuurenquête Q3 2026, hoofdstuk 6.",
+    "UWV 30-4-2026: bijna 60% van de horecamedewerkers is 15 tot 25 jaar; CBS verwacht 8,3% minder 15- tot 25-jarigen tot 2040; 22.000 studenten horecaopleiding 2025-2026; krapte koks, keukenhulpen, kelners/barpersoneel neemt naar verwachting toe. Letterlijk gecontroleerd. Het '6.000 minder dan tien jaar geleden' komt uit het onderzoeksrapport (agent), niet letterlijk gecontroleerd op de UWV-pagina.",
+    "Citaat Marijke Vuik letterlijk gecontroleerd bij ANP-bericht via Accountancy Vanmorgen, 12-1-2026.",
+    "WML € 14,99 per 1-7-2026 (Taxlive op basis van Staatscourant). Cao horeca +2,5% per 1-1-2026, looptijd t/m 31-12-2026 (KHN, AWVN cao-kijker). Onderhandelingen nieuwe cao gestart (KHN).",
+    "Amsterdam: 22,1 mln hotelovernachtingen 2025 (voorlopig), 22,8 mln verwacht 2026 middenscenario (Bezoekersprognose Amsterdam 2026-2028, O&S, via KHN). Zakelijk aandeel ~32% vóór corona naar ruim 16% in 2025 (KHN 10-6-2026).",
+    "Wtta: in werking 1-1-2027, aanmelden 1-11 t/m 31-12-2026, handhaving inleners vanaf 1-1-2028. Al eerder gecontroleerd voor betrouwbaar-horeca-uitzendbureau-kiezen."
+  ],
+  "_bronnen": [
+    "https://www.cbs.nl/nl-nl/nieuws/2026/31/werkloosheid-gedaald-in-tweede-kwartaal-2026",
+    "https://www.cbs.nl/nl-nl/nieuws/2026/18/minder-vacatures-in-eerste-kwartaal-van-2026",
+    "https://www.cbs.nl/nl-nl/nieuws/2026/05/minder-vacatures-meer-werklozen",
+    "https://www.cbs.nl/nl-nl/longread/rapportages/2026/conjunctuurenquete-nederland-derde-kwartaal-2026/6-belemmeringen",
+    "https://www.uwv.nl/nl/arbeidsmarktinformatie/sector/horeca/afname-jongeren-vergroot-personeelstekort-horeca",
+    "https://static2.khn.nl/public/images/260112_KHN_Horecava_Persconferentie.pdf",
+    "https://www.accountancyvanmorgen.nl/2026/01/12/meer-banen-dan-ooit-in-horeca-toch-zorgen-om-personeelstekort/",
+    "https://khn.nl/nieuws/nieuwe-loontabel-per-1-januari-2026",
+    "https://www.taxlive.nl/nl/documenten/nieuws/minimumloon-per-1-juli-2026/",
+    "https://static2.khn.nl/public/images/media/Afdelingen-en-Regios/Amsterdam/Documenten/Bezoekersprognose-Amsterdam-2026-2028.pdf",
+    "https://khn.nl/nieuws/actuele-cijfers-bezoekerseconomie-amsterdam-2"
+  ],
+  "_notities": [
+    "Herschreven uit de oude concepttekst in client/src/pages/NieuwsArtikel.tsx (nooit gepubliceerd). Onderzoek en feitencheck: zie _feitencontrole en _bronnen.",
+    "metaDescription staat ook zichtbaar als intro onder de H1: als leesbare zin geschreven.",
+    "Plaatsen als concept: npm run publish:blog -- personeelstekort-horeca --concept"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "title": "Housekeeping standaard verhogen: zo houd je elke kamer op niveau",
+  "slug": "housekeeping-standaard-verhogen",
+  "excerpt": "Een checklist zegt wat je moet doen, een standaard laat zien hoe klaar eruitziet. Hoe je een kamerstandaard vastlegt, slim inspecteert, de Arbeidsinspectie voor bent en het niveau vasthoudt met wisselende bezetting.",
+  "metaTitle": "Housekeeping standaard verhogen in je hotel: zo doe je het",
+  "metaDescription": "Zo verhoog je de housekeeping standaard in je hotel: een kamerstandaard per kamertype, slim inspecteren en het niveau vasthouden, ook met flexibel personeel.",
+  "focusKeyword": "housekeeping standaard",
+  "category": "Housekeeping",
+  "imageUrl": "/images/housekeeping-standaard-verhogen.webp",
+  "imageAlt": "Omslag met de woorden schoon, fris en opgeruimd, de drie dingen waaraan gasten netheid afmeten",
+  "author": "EXTRA Redactie",
+  "readTime": "7 min",
+  "tags": [
+    "housekeeping",
+    "hotels",
+    "kwaliteit",
+    "arbo"
+  ],
+  "_feitencontrole": [
+    "Vos e.a. (2019) / proefschrift UT 2022: ervaren netheid = cleaned, fresh, uncluttered; zichtbare schoonmakers, lichte kleur, lichte geur en opgeruimde architectuur helpen. Letterlijk gecontroleerd op utwente.nl. Gaat over serviceomgevingen in het algemeen, zo verwoord.",
+    "Booking.com: netheid is een optionele subscore die niet meetelt in de Guest Review Score (Partner Hub). Overgenomen uit onderzoeksrapport, niet zelf letterlijk nagelezen.",
+    "TrustYou (2017, via Hospitality Net): badkamers het vaakst gekoppeld aan negatieve ervaringen. Uit onderzoeksrapport.",
+    "Hotelstars Union criteria 2025-2030: dagelijkse kamerschoonmaak met opt-out (nr. 40), beddengoed minimaal wekelijks (nr. 42), geen criterium voor interne inspectie. Uit PDF-tekst via onderzoeksrapport; criterium-nummers niet in de tekst gebruikt. Vóór publicatie nog eens nakijken in de PDF.",
+    "Arbeidsinspectie: landelijk inspectieproject hotels vanaf juli 2026, circa 120 hotellocaties, toetspunten fysieke belasting, hulpmiddelen en werkmethoden, voorlichting en instructie, RI&E. Letterlijk gecontroleerd op khn.nl (9-7-2026).",
+    "KHN: housekeeping behoort tot de meest fysiek belastende functies; lijst bewegingen. Uit onderzoeksrapport (khn.nl/kennis/fysieke-belasting-in-de-housekeeping).",
+    "Citaat Arbocatalogus Schoonmaak 2023 p. 7, uit onderzoeksrapport. Duwen, niet trekken: p. 5.",
+    "Arbowet: inlener geldt als werkgever voor arbeidsomstandigheden (art. 1 lid 1 sub a2). Bevestigd via Doorzaam-brochure 'Arbeidsomstandigheden en uitzendkrachten'.",
+    "BEWUST WEGGELATEN: een aantal kamers per dienst of inspectiepercentage. Daar is geen betrouwbare bron voor."
+  ],
+  "_bronnen": [
+    "https://www.utwente.nl/en/bms/events/2022/6/650007/phd-defence-martijn-vos-spotless-perceived-cleanliness-in-service-environments",
+    "https://partner.booking.com/en-us/help/guest-reviews/general/everything-you-need-know-about-guest-review-scores",
+    "https://www.hospitalitynet.org/opinion/4082404.html",
+    "https://khn.nl/nieuws/nieuwe-europese-hotelsterren-classificatieregels-bekend",
+    "https://horesta.dk/media/uk4pgw1n/hsu-classification-criteria-2025-2030_en.pdf",
+    "https://khn.nl/nieuws/arbeidsinspectie-inspecteert-op-fysieke-belasting-in-hotels",
+    "https://khn.nl/kennis/fysieke-belasting-in-de-housekeeping",
+    "https://www.ras.nl/wp-content/uploads/2023/12/Arbocatalogus-2023.pdf",
+    "https://www.doorzaam.nl/fileadmin/media/pdf/Arbeidsomstandigheden-en-uitzendkrachten-2010.pdf"
+  ],
+  "_notities": [
+    "Herschreven uit de oude concepttekst in client/src/pages/NieuwsArtikel.tsx (nooit gepubliceerd). Onderzoek en feitencheck: zie _feitencontrole en _bronnen.",
+    "metaDescription staat ook zichtbaar als intro onder de H1: als leesbare zin geschreven.",
+    "Plaatsen als concept: npm run publish:blog -- housekeeping-standaard-verhogen --concept"
+  ]
+}

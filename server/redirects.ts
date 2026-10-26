@@ -144,6 +144,13 @@ const REDIRECT_MAP: Record<string, string> = {
   "/blog/minimumuurtaief-van-36--voor-zzp-ers":  "/blog/zzp-inhuren-horeca",
   "/blog/minimumuurtarief-van-36-voor-zzp-ers":  "/blog/zzp-inhuren-horeca",
 
+  // Oude conceptartikelen (NieuwsArtikel.tsx, nooit in de database, gaven 404).
+  // Herschreven onder een nieuwe slug; de oude URL's stonden tot P15 in de
+  // interne links en kunnen dus nog in een crawlerindex of bladwijzer zitten.
+  "/blog/personeelstekort-horeca-2026":           "/blog/personeelstekort-horeca",
+  "/blog/housekeeping-standaarden-verhogen":      "/blog/housekeeping-standaard-verhogen",
+  "/blog/vijf-tips-onvergetelijke-gastervaring":  "/blog/gastervaring-hotel-verbeteren",
+
   // ── P14: DUPLICATE CONTENT (identieke pagina, twee URL's) ───
   // Elk paar rendert vandaag dezelfde component (zie client/src/App.tsx) op
   // twee URL's — geen echte inhoudelijke duplicatie in de database, maar wel
