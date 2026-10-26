@@ -19,9 +19,22 @@ const GROUPS: { heading: string; paths: string[] }[] = [
       "/horeca-personeel-gezocht",
       "/hotelpersoneel-inhuren",
       "/eventpersoneel-inhuren",
+      "/logistiek-personeel-inhuren",
       "/cateringpersoneel-inhuren",
       "/horecapersoneel-restaurants",
       "/flexibel-horeca-personeel",
+    ],
+  },
+  {
+    heading: "Functies in hotels (voor werkgevers)",
+    paths: [
+      "/housekeeping-personeel-inhuren",
+      "/front-office-personeel-inhuren",
+      "/fb-personeel-inhuren",
+      "/banqueting-personeel-inhuren",
+      "/keukenpersoneel-inhuren",
+      "/afwassers-inhuren",
+      "/bediening-inhuren",
     ],
   },
   {
@@ -30,6 +43,8 @@ const GROUPS: { heading: string; paths: string[] }[] = [
       "/aanmelden",
       "/horeca-werk",
       "/horeca-vacatures-amsterdam",
+      "/events-werk",
+      "/logistiek-werk",
       "/housekeeping-werk",
       "/chef-vacatures-amsterdam",
       "/front-office-vacatures-amsterdam",
@@ -47,9 +62,9 @@ const GROUPS: { heading: string; paths: string[] }[] = [
   },
 ];
 
-const HEADER = `# EXTRA — Horeca uitzendbureau Amsterdam
+const HEADER = `# EXTRA, uitzendbureau Amsterdam voor hotels, events en logistiek
 
-> EXTRA levert flexibel horecapersoneel voor hotels, restaurants, events en cateraars in Amsterdam. Iedereen werkt in loondienst (geen zzp-constructies) en dagbetaling is mogelijk: salaris staat de ochtend na een shift klaar. Kantoor: Herengracht 372, 1016 CH Amsterdam · +31 85 130 5915 · info@doehetextra.nl
+> EXTRA levert flexibel personeel voor hotels, restaurants, events, cateraars en logistiek in Amsterdam. Iedereen werkt in loondienst (geen zzp-constructies) en dagbetaling is mogelijk: salaris staat de ochtend na een shift klaar. Kantoor: Herengracht 372, 1016 CH Amsterdam · +31 85 130 5915 · info@doehetextra.nl
 `;
 
 function metaFor(p: string) {
