@@ -15,6 +15,8 @@ const pagina: FragmentData = {
   "pagina"
  ],
  "werkzoekende": false,
+ "knop": "/personeelsaanvraag?branche=event",
+ "functies": [],
  "reus": 0.55,
  "faq": [
   [

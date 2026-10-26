@@ -37,7 +37,7 @@ export type Sectie =
 
 export interface ScoreKaart { nr: string; h3: string; sub: string; status: string; p: string | null; score: string; bars: [string, string][]; cijfers: [string, string][]; fav: string[] }
 
-export interface PaginaContent { sector: Sector; secties: Sectie[] }
+export interface PaginaContent { sector: Sector; functies?: string[]; secties: Sectie[] }
 
 interface Ctx { sector: Sector; branche: Branche }
 
@@ -95,7 +95,7 @@ function Hero({ s }: { s: S<"hero"> }) {
           {s.reageer && <p className="reageer">{s.reageer}</p>}
           <div className="knoppen op-foto hhot-knoppen">
             {s.knoppen.map((k, i) => k.tel
-              ? <a key={i} className="knop lijn" href={k.href}><Ic n="tel" />{k.tekst}</a>
+              ? <a key={i} className="hero-tel" href={k.href}><Ic n="tel" />{k.tekst}</a>
               : <a key={i} className={`knop ${k.vol ? "vol" : "lijn"}`} href={k.href}>{k.tekst} <Pijl /></a>)}
           </div>
         </div></div>

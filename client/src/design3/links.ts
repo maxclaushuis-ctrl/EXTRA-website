@@ -11,82 +11,57 @@ export interface MenuLink {
   label: string;
   href: string;
   sub?: string;
+  /** Kleur van de branche (CSS-variabele zonder --), bijv. "rose". */
+  kleur?: string;
 }
 
 export interface MenuGroep {
   label: string;
-  /** Kolommen in het uitklapmenu; elke kolom heeft een kop en links. */
-  kolommen: { kop: string; links: MenuLink[] }[];
+  /** Kop van de lijst; het bolletje ervoor is off-white omdat de lijst algemeen is. */
+  kop: string;
+  /** Kleur van het bolletje voor de kop (standaard off-white). */
+  stip?: string;
+  links: MenuLink[];
+  /** Het blok rechts in het uitklapmenu (niet in het mobiele menu). */
+  cta?: { kop: string; knop: { label: string; href: string }; onder: { label: string; href: string; tel?: boolean } };
 }
 
+/**
+ * Compact menu (voorstel #18): alleen de belangrijkste pagina's. Alle andere
+ * pagina's staan in de footer en zijn via de pagina's zelf bereikbaar.
+ * "Werk bij events" en "Werk in de logistiek" komen erbij zodra die pagina's
+ * als route bestaan.
+ */
 export const MENU: MenuGroep[] = [
   {
     label: "Ik zoek extra personeel",
-    kolommen: [
-      {
-        kop: "Branches",
-        links: [
-          { label: "Hotels", href: "/hotelpersoneel-inhuren", sub: "Housekeeping, front office, F&B en keuken" },
-          { label: "Events", href: "/eventpersoneel-inhuren", sub: "Bediening, bar, hosts en supervisors" },
-          { label: "Logistiek", href: "/logistiek-personeel-inhuren", sub: "Orderpickers, heftruck en magazijn" },
-          { label: "Catering", href: "/cateringpersoneel-inhuren" },
-          { label: "Restaurants", href: "/horecapersoneel-restaurants" },
-        ],
-      },
-      {
-        kop: "Direct regelen",
-        links: [
-          { label: "Personeel aanvragen", href: "/personeelsaanvraag" },
-          { label: "Hoe het werkt", href: "/onze-werkwijze" },
-          { label: "NEN 4400-1", href: "/nen-4400-1-certificering" },
-          { label: "Klantcases", href: "/klantcases-horeca" },
-        ],
-      },
+    kop: "Branches",
+    links: [
+      { label: "Hotels", href: "/hotelpersoneel-inhuren", sub: "Housekeeping, front office, F&B, keuken", kleur: "rose" },
+      { label: "Events", href: "/eventpersoneel-inhuren", sub: "Bediening, bar, hosts, catering", kleur: "sky" },
+      { label: "Logistiek", href: "/logistiek-personeel-inhuren", sub: "Orderpickers, heftruck, inpak", kleur: "pistachio" },
     ],
+    cta: { kop: "Morgen iemand nodig?", knop: { label: "Bel mij terug", href: "/personeelsaanvraag" }, onder: { label: "085 130 59 15", href: "tel:0851305915", tel: true } },
   },
   {
     label: "Ik zoek extra werk",
-    kolommen: [
-      {
-        kop: "Werk",
-        links: [
-          { label: "Werk in hotels", href: "/horeca-vacatures-amsterdam", sub: "Housekeeping, front office, keuken en F&B" },
-          { label: "Alle vacatures", href: "/vacatures" },
-          { label: "Housekeeping werk", href: "/housekeeping-werk" },
-          { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
-          { label: "Front office vacatures", href: "/front-office-vacatures-amsterdam" },
-        ],
-      },
-      {
-        kop: "Werken via EXTRA",
-        links: [
-          { label: "Solliciteer direct", href: "/aanmelden" },
-          { label: "Dagbetaling", href: "/dagbetaling" },
-          { label: "EXTRAATje beloningen", href: "/extraatje" },
-          { label: "Bijbaan Amsterdam", href: "/bijbaan-amsterdam" },
-        ],
-      },
+    kop: "Werk",
+    links: [
+      { label: "Alle vacatures", href: "/vacatures" },
+      { label: "Werk in hotels", href: "/horeca-vacatures-amsterdam", kleur: "rose" },
     ],
+    cta: { kop: "Vandaag nog aan de slag?", knop: { label: "Solliciteer direct", href: "/aanmelden" }, onder: { label: "De volgende dag betaald", href: "/dagbetaling" } },
   },
   {
     label: "Over EXTRA",
-    kolommen: [
-      {
-        kop: "Over ons",
-        links: [
-          { label: "Over EXTRA", href: "/over-extra" },
-          { label: "Ons team", href: "/ons-team" },
-          { label: "Onze werkwijze", href: "/onze-werkwijze" },
-          { label: "Klantcases", href: "/klantcases-horeca" },
-        ],
-      },
-      {
-        kop: "Meer",
-        links: [
-          { label: "Nieuws en blog", href: "/blog" },
-          { label: "Contact", href: "/contact" },
-        ],
-      },
+    kop: "Over ons",
+    stip: "pistachio",
+    links: [
+      { label: "Over EXTRA", href: "/over-extra" },
+      { label: "Hoe het werkt", href: "/onze-werkwijze" },
+      { label: "Klantcases", href: "/klantcases-horeca" },
+      { label: "Blog", href: "/blog" },
+      { label: "Contact", href: "/contact" },
     ],
   },
 ];

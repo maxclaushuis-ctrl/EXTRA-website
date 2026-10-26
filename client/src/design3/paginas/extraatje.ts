@@ -15,6 +15,8 @@ const pagina: FragmentData = {
   "pagina"
  ],
  "werkzoekende": true,
+ "knop": null,
+ "functies": [],
  "reus": 0.55,
  "faq": [
   [

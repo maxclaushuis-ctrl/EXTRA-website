@@ -6,51 +6,14 @@
 /* De oude basisstijl zet Poppins op alle koppen; in design 3.0 erven ze het lettertype. */
 .d3 :where(h1,h2,h3,h4,h5,h6){font-family:inherit}
 
-/* ── Hoofdmenu (desktop) ── */
+/* ── Hoofdmenu ── (de opmaak van het uitklapmenu en het mobiele menu komt uit menu.css in d3.css) */
 .d3 .hdr .nav{display:flex;align-items:center}
 @media (max-width:760px){.d3 .hdr .nav,.d3 .hdr a.taal{display:none}}
-.d3 .hdr .nav-groep{position:relative}
-.d3 .hdr .nav-knop{background:none;border:0;padding:8px 0;color:inherit;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-.d3 .hdr .nav-knop::after{content:"";width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .25s;opacity:.7}
-.d3 .hdr .nav-groep.open .nav-knop::after{transform:translateY(2px) rotate(-135deg)}
-.d3 .hdr .nav-knop[aria-current] span::before{transform:scaleX(1)}
-.d3 .hdr .nav-paneel{position:absolute;top:calc(100% + 18px);left:-28px;display:flex;gap:36px;padding:28px 30px 30px;background:#2c2a23;color:var(--offwhite);border-radius:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);min-width:560px;z-index:30;animation:d3-menu-in .25s cubic-bezier(.2,.8,.2,1)}
-.d3 .hdr .nav-paneel span::before,.d3 .hdr .nav-paneel span::after{content:none}
-.d3 .hdr .nav-paneel span{white-space:normal;cursor:inherit}
-.d3 .hdr .np-kolom{flex:1;min-width:220px}
-.d3 .hdr .np-kolom small{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(248,247,244,.5);margin-bottom:12px}
-.d3 .hdr .np-kolom ul{list-style:none;display:grid;gap:2px}
-.d3 .hdr .np-kolom a{display:block;padding:10px 12px;margin:0 -12px;border-radius:12px;transition:background .2s}
-.d3 .hdr .np-kolom a:hover,.d3 .hdr .np-kolom a:focus-visible{background:rgba(248,247,244,.08);outline:none}
-.d3 .hdr .np-kolom a b{display:block;font-size:16px;font-weight:650;letter-spacing:-.02em}
-.d3 .hdr .np-kolom a span{display:block;font-size:13.5px;color:rgba(248,247,244,.6);margin-top:2px}
-.d3 .hdr .np-kolom a:hover b{color:var(--accent)}
-.d3[data-sector="algemeen"] .hdr .np-kolom a:hover b{color:var(--rose)}
 .d3 .hdr a.taal{opacity:.9}
 .d3 .hdr a.taal:hover{opacity:1;text-decoration:underline;text-underline-offset:4px}
-@keyframes d3-menu-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-
-/* ── Mobiel menu ── */
-.d3 .burger{background:none;color:inherit;cursor:pointer}
-.d3 .mob-menu{position:fixed;inset:0;top:0;z-index:40;background:var(--espresso);color:var(--offwhite);overflow-y:auto;padding:calc(84px + env(safe-area-inset-top,0px)) 20px 40px;animation:d3-menu-in .25s cubic-bezier(.2,.8,.2,1)}
-.d3 .mm-binnen{display:flex;flex-direction:column;gap:6px;max-width:520px;margin:0 auto}
-.d3 .mm-groep{border-bottom:1px solid rgba(248,247,244,.14)}
-.d3 .mm-groep summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:20px 0;font-size:26px;font-weight:750;letter-spacing:-.04em;cursor:pointer}
-.d3 .mm-groep summary::-webkit-details-marker{display:none}
-.d3 .mm-groep summary i{width:12px;height:12px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .25s;margin-right:4px}
-.d3 .mm-groep[open] summary i{transform:rotate(-135deg)}
-.d3 .mm-groep ul{list-style:none;display:grid;gap:2px;padding:0 0 18px}
-.d3 .mm-groep a{display:block;padding:10px 0;font-size:18px;color:rgba(248,247,244,.85)}
-.d3 .mm-acties{display:grid;gap:10px;margin-top:28px}
-.d3 .mm-acties .knop{justify-content:space-between;width:100%}
-.d3 .mm-acties .knop.vol{background:var(--accent);border-color:var(--accent);color:var(--espresso)}
-.d3[data-sector="algemeen"] .mm-acties .knop.vol{background:var(--rose);border-color:var(--rose)}
-.d3 .mm-acties .knop.lijn{border-color:rgba(248,247,244,.4);color:var(--offwhite)}
-.d3 .mm-acties .knop svg{width:18px;height:18px}
-.d3 .mm-tel,.d3 .mm-taal{display:flex;align-items:center;gap:10px;padding:12px 0;font-size:17px;color:rgba(248,247,244,.8)}
-.d3 .hdr .burger{position:relative;z-index:41}
-.d3 .hdr.mm-open{z-index:50}
-@media (min-width:761px){.d3 .mob-menu{display:none}}
+.d3 .nv-mob-taal{display:block;padding:18px 0;font-size:17px;color:rgba(248,247,244,.8)}
+.d3 .nv-mob .mn-kol{margin-bottom:4px}
+@media (min-width:761px){.d3 .nv-mob{display:none}}
 
 /* ── Formulieren ── */
 .d3 .form-fout{grid-column:1/-1;font-size:14px;color:#8a2a1f;background:#fbe9e6;border-radius:12px;padding:10px 14px}

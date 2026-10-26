@@ -3,13 +3,14 @@
  * iconen. Alle styling zit onder de klasse .d3, zodat het dashboard en de
  * medewerkersapp er niets van merken.
  */
-import { useEffect, useRef, useState, type ReactNode, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type MouseEvent } from "react";
 import { useLocation } from "wouter";
 import { HREFLANG_PARTNER, normalizeMetaPath } from "@shared/routeMeta";
 import "./d3.css";
 import "./d3-extra.css";
-import { Iconen, Ic } from "./basis";
+import { Iconen, Ic, Pijl } from "./basis";
 import { MENU, FOOTER, TELEFOON, TELEFOON_HREF, EMAIL, type MenuGroep } from "./links";
+import TerugbelPopup from "./TerugbelPopup";
 
 export type Sector = "horeca" | "events" | "logistiek" | "algemeen";
 
@@ -28,12 +29,15 @@ interface ShellProps {
   bodyKlasse?: string;
   /** Kopregel transparant over de hero (homepage), of vast donker. */
   kopVast?: boolean;
+  /** Functies voor de keuzelijst in de pop-up "Bel mij terug". */
+  functies?: string[];
   children: ReactNode;
 }
 
-export default function Shell({ sector = "algemeen", css = [], werkzoekende = false, knopHref, bodyKlasse, kopVast = true, children }: ShellProps) {
+export default function Shell({ sector = "algemeen", css = [], werkzoekende = false, knopHref, bodyKlasse, kopVast = true, functies = [], children }: ShellProps) {
   const [, navigeer] = useLocation();
   const root = useRef<HTMLDivElement>(null);
+  const [terugbel, setTerugbel] = useState(false);
 
   // Interne links via de router, en altijd bovenaan beginnen op een nieuwe pagina.
   const klik = (e: MouseEvent<HTMLDivElement>) => {
@@ -41,6 +45,15 @@ export default function Shell({ sector = "algemeen", css = [], werkzoekende = fa
     const a = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
     if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
     const href = a.getAttribute("href") || "";
+    // "Bel mij terug" opent de pop-up; op pagina's zonder aanvraagblok doet elke link naar #aanvragen dat.
+    if (href === "#aanvragen" && !a.closest(".hdr")) {
+      const blok = document.getElementById("aanvragen");
+      if (!blok || /^\s*Bel mij terug/.test(a.textContent || "")) {
+        e.preventDefault();
+        setTerugbel(true);
+        return;
+      }
+    }
     if (!href.startsWith("/") || href.startsWith("//")) return;
     if (href.startsWith("/api/")) return;
     e.preventDefault();
@@ -76,6 +89,7 @@ export default function Shell({ sector = "algemeen", css = [], werkzoekende = fa
       <Kop werkzoekende={werkzoekende} knopHref={knopHref} vast={kopVast} />
       <main id="inhoud">{children}</main>
       <Voet />
+      <TerugbelPopup open={terugbel} sluit={() => setTerugbel(false)} functies={functies} sector={sector} />
     </div>
   );
 }
@@ -83,8 +97,12 @@ export default function Shell({ sector = "algemeen", css = [], werkzoekende = fa
 function Kop({ werkzoekende, knopHref, vast }: { werkzoekende: boolean; knopHref?: string; vast: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   const [mobiel, setMobiel] = useState(false);
+  const [links, setLinks] = useState(24);
   const [location] = useLocation();
   const kop = useRef<HTMLElement>(null);
+  const drop = useRef<HTMLDivElement>(null);
+  const knoppen = useRef<(HTMLButtonElement | null)[]>([]);
+  const aanvraagHref = knopHref && knopHref.startsWith("/personeelsaanvraag") ? knopHref : "/personeelsaanvraag";
   // De Engelse tegenhanger van deze pagina, anders de Engelse homepage.
   const engels = HREFLANG_PARTNER[normalizeMetaPath(location)]?.path ?? "/en";
 
@@ -94,53 +112,66 @@ function Kop({ werkzoekende, knopHref, vast }: { werkzoekende: boolean; knopHref
     return () => { document.documentElement.style.overflow = ""; };
   }, [mobiel]);
   useEffect(() => {
-    if (open === null) return;
-    const weg = (e: Event) => { if (kop.current && !kop.current.contains(e.target as Node)) setOpen(null); };
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(null); };
+    if (open === null && !mobiel) return;
+    const weg = (e: Event) => { if (open !== null && kop.current && !kop.current.contains(e.target as Node)) setOpen(null); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(null); setMobiel(false); } };
     document.addEventListener("pointerdown", weg);
     document.addEventListener("keydown", esc);
     return () => { document.removeEventListener("pointerdown", weg); document.removeEventListener("keydown", esc); };
+  }, [open, mobiel]);
+  // Het uitklapmenu onder de knop, maar binnen de breedte van de kopregel (zoals in de mock-up).
+  useLayoutEffect(() => {
+    if (open === null) return;
+    const k = knoppen.current[open], h = kop.current, d = drop.current;
+    if (!k || !h || !d) return;
+    const r = k.getBoundingClientRect(), hr = h.getBoundingClientRect();
+    setLinks(Math.max(24, Math.min(r.left - hr.left - 24, hr.width - d.offsetWidth - 24)));
   }, [open]);
 
-  const actief = (g: MenuGroep) => g.kolommen.some((k) => k.links.some((l) => l.href === location));
+  const actief = (g: MenuGroep) => g.links.some((l) => l.href === location) || g.cta?.knop.href === location;
+  const paneel = (g: MenuGroep, mob = false) => (
+    <>
+      <div className="mn-kol" style={{ ["--k" as any]: `var(--${g.stip ?? "offwhite"})` } as CSSProperties}>
+        <small><i></i>{g.kop}</small>
+        <ul>
+          {g.links.map((l) => (
+            <li key={l.href + l.label}>
+              <a href={l.href} style={l.kleur ? ({ ["--bk" as any]: `var(--${l.kleur})` } as CSSProperties) : undefined}>
+                <b>{l.label}</b>{l.sub && !mob && <span>{l.sub}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {g.cta && !mob && (
+        <div className="mn-cta">
+          <b>{g.cta.kop}</b>
+          <a className="knop vol" href={g.cta.knop.href === "/personeelsaanvraag" ? aanvraagHref : g.cta.knop.href}>{g.cta.knop.label} <Pijl /></a>
+          <a className="mn-tel" href={g.cta.onder.href}>{g.cta.onder.tel && <Ic n="tel" />}{g.cta.onder.label}</a>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <>
-    <header ref={kop} className={`hdr${vast ? " vast" : ""}${open !== null ? " menu-open" : ""}${mobiel ? " mm-open" : ""}`}>
+    <header ref={kop} className={`hdr${vast ? " vast" : ""}${open !== null ? " menu-open" : ""}`}>
       <div className="w">
         <a className="logo" href="/" aria-label="EXTRA, naar de homepage"><img src="/d3/logo-w.svg" alt="EXTRA" /></a>
         <nav className="nav" aria-label="Hoofdmenu">
           {MENU.map((g, i) => (
-            <div className={`nav-groep${open === i ? " open" : ""}`} key={g.label}>
-              <button
-                type="button"
-                className="nav-knop"
-                aria-expanded={open === i}
-                aria-current={actief(g) ? "page" : undefined}
-                onClick={() => setOpen(open === i ? null : i)}
-              >
-                <span>{g.label}</span>
-              </button>
-              {open === i && (
-                <div className="nav-paneel" role="menu">
-                  {g.kolommen.map((k) => (
-                    <div className="np-kolom" key={k.kop}>
-                      <small>{k.kop}</small>
-                      <ul>
-                        {k.links.map((l) => (
-                          <li key={l.href + l.label}>
-                            <a href={l.href} role="menuitem">
-                              <b>{l.label}</b>
-                              {l.sub && <span>{l.sub}</span>}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <button
+              key={g.label}
+              ref={(el) => { knoppen.current[i] = el; }}
+              type="button"
+              className="nv-knop"
+              aria-expanded={open === i}
+              aria-controls="nv-drop"
+              style={actief(g) && open !== i ? { borderColor: "rgba(248,247,244,.5)" } : undefined}
+              onClick={() => setOpen(open === i ? null : i)}
+            >
+              {g.label}
+            </button>
           ))}
         </nav>
         <a className="taal" href={engels} lang="en" aria-label="English version">EN</a>
@@ -149,32 +180,35 @@ function Kop({ werkzoekende, knopHref, vast }: { werkzoekende: boolean; knopHref
         ) : (
           <a className="knop" href={knopHref ?? "/personeelsaanvraag"}><Ic n="tel" /><span>Personeel aanvragen</span></a>
         )}
-        <button type="button" className="burger" aria-label={mobiel ? "Menu sluiten" : "Menu openen"} aria-expanded={mobiel} onClick={() => setMobiel(!mobiel)}>
-          <Ic n={mobiel ? "kruis" : "menu"} />
+        <button type="button" className="burger" aria-label="Menu openen" aria-expanded={mobiel} onClick={() => setMobiel(true)}>
+          <Ic n="menu" />
         </button>
+      </div>
+      <div ref={drop} id="nv-drop" className="nv-drop" hidden={open === null} style={{ left: links }}>
+        {open !== null && <div className="mn-paneel">{paneel(MENU[open])}</div>}
       </div>
     </header>
       {/* Buiten de header: die heeft een animatie met backdrop-filter, waardoor
           een position:fixed-kind anders binnen de kopregel blijft. */}
       {mobiel && (
-        <div className="mob-menu" role="dialog" aria-label="Menu">
-          <div className="mm-binnen">
-            {MENU.map((g) => (
-              <details className="mm-groep" key={g.label}>
+        <div className="nv-mob" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="nv-mob-kop">
+            <img src="/d3/logo-w.svg" alt="EXTRA" />
+            <button type="button" className="nv-mob-x" aria-label="Menu sluiten" onClick={() => setMobiel(false)}>&#x2715;</button>
+          </div>
+          <div className="nv-mob-in">
+            {MENU.map((g, i) => (
+              <details key={g.label} open={i === 0}>
                 <summary>{g.label}<i aria-hidden="true" /></summary>
-                <ul>
-                  {g.kolommen.flatMap((k) => k.links).map((l) => (
-                    <li key={l.href + l.label}><a href={l.href}>{l.label}</a></li>
-                  ))}
-                </ul>
+                <div className="mm-in">{paneel(g, true)}</div>
               </details>
             ))}
-            <div className="mm-acties">
-              <a className="knop vol" href="/personeelsaanvraag">Personeel aanvragen <Ic n="pijl" className="" /></a>
-              <a className="knop lijn" href="/aanmelden">Solliciteer direct <Ic n="pijl" className="" /></a>
-              <a className="mm-tel" href={TELEFOON_HREF}><Ic n="tel" />{TELEFOON}</a>
-              <a className="mm-taal" href={engels} lang="en">English</a>
-            </div>
+            <a className="nv-mob-taal" href={engels} lang="en">English</a>
+          </div>
+          <div className="nv-mob-voet">
+            <a className="knop vol" href={aanvraagHref}>Personeel aanvragen</a>
+            <a className="knop lijn" href="/aanmelden">Solliciteer direct</a>
+            <a className="mn-tel" href={TELEFOON_HREF}>{TELEFOON}</a>
           </div>
         </div>
       )}

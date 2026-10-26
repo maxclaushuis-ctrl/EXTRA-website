@@ -34,6 +34,10 @@ export interface FragmentData {
   faq: [string, string][];
   /** Overige gestructureerde gegevens die van de vorige versie behouden zijn. */
   ld: Record<string, unknown>[];
+  /** Bestemming van de knop rechtsboven als die afwijkt (aanvraagformulier met branche of functie ingevuld). */
+  knop?: string | null;
+  /** Functies voor de pop-up "Bel mij terug". */
+  functies?: string[];
   html: string;
 }
 
@@ -200,7 +204,7 @@ export default function FragmentPagina({ d }: { d: FragmentData }) {
   }, [d]);
 
   return (
-    <Shell sector={d.sector as Sector} css={d.css as CssSet[]} werkzoekende={d.werkzoekende}>
+    <Shell sector={d.sector as Sector} css={d.css as CssSet[]} werkzoekende={d.werkzoekende} knopHref={d.knop ?? undefined} functies={d.functies}>
       <div ref={root} className="d3-inhoud" dangerouslySetInnerHTML={{ __html: d.html }} />
       {ld.map((x, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(x).replace(/</g, "\\u003c") }} />

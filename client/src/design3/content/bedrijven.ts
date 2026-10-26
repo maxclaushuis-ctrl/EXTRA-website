@@ -6,6 +6,14 @@ import type { PaginaContent } from "../secties";
 
 export const hotels: PaginaContent = {
   "sector": "horeca",
+  "functies": [
+    "Housekeeping",
+    "Front office",
+    "F&B",
+    "Banqueting",
+    "Keuken",
+    "Afwas en keukenhulp"
+  ],
   "secties": [
     {
       "type": "hero",
@@ -23,6 +31,12 @@ export const hotels: PaginaContent = {
           "tekst": "Bel mij terug",
           "href": "#aanvragen",
           "vol": true,
+          "tel": false
+        },
+        {
+          "tekst": "Personeel aanvragen",
+          "href": "/personeelsaanvraag?branche=hotel",
+          "vol": false,
           "tel": false
         },
         {
@@ -56,17 +70,6 @@ export const hotels: PaginaContent = {
         ]
       ],
       "vink4": true
-    },
-    {
-      "type": "aanvraag",
-      "functies": [
-        "Housekeeping",
-        "Front office",
-        "F&B",
-        "Banqueting",
-        "Keuken",
-        "Afwas en keukenhulp"
-      ]
     },
     {
       "type": "hierwerk",
@@ -679,6 +682,14 @@ export const hotels: PaginaContent = {
 
 export const events: PaginaContent = {
   "sector": "events",
+  "functies": [
+    "Bediening",
+    "Barpersoneel",
+    "Dinerlopers",
+    "Runners",
+    "Hosts en hostesses",
+    "Event supervisor"
+  ],
   "secties": [
     {
       "type": "hero",
@@ -696,6 +707,12 @@ export const events: PaginaContent = {
           "tekst": "Bel mij terug",
           "href": "#aanvragen",
           "vol": true,
+          "tel": false
+        },
+        {
+          "tekst": "Personeel aanvragen",
+          "href": "/personeelsaanvraag?branche=event",
+          "vol": false,
           "tel": false
         },
         {
@@ -729,17 +746,6 @@ export const events: PaginaContent = {
         ]
       ],
       "vink4": true
-    },
-    {
-      "type": "aanvraag",
-      "functies": [
-        "Bediening",
-        "Barpersoneel",
-        "Dinerlopers",
-        "Runners",
-        "Hosts en hostesses",
-        "Event supervisor"
-      ]
     },
     {
       "type": "hierwerk",
@@ -1315,6 +1321,14 @@ export const events: PaginaContent = {
 
 export const logistiek: PaginaContent = {
   "sector": "logistiek",
+  "functies": [
+    "Orderpicker",
+    "Heftruck of reachtruck",
+    "Inpak en productie",
+    "Expeditie",
+    "Magazijnmedewerker",
+    "Voorraad en kwaliteit"
+  ],
   "secties": [
     {
       "type": "hero",
@@ -1332,6 +1346,12 @@ export const logistiek: PaginaContent = {
           "tekst": "Bel mij terug",
           "href": "#aanvragen",
           "vol": true,
+          "tel": false
+        },
+        {
+          "tekst": "Personeel aanvragen",
+          "href": "/personeelsaanvraag?branche=logistiek",
+          "vol": false,
           "tel": false
         },
         {
@@ -1365,17 +1385,6 @@ export const logistiek: PaginaContent = {
         ]
       ],
       "vink4": true
-    },
-    {
-      "type": "aanvraag",
-      "functies": [
-        "Orderpicker",
-        "Heftruck of reachtruck",
-        "Inpak en productie",
-        "Expeditie",
-        "Magazijnmedewerker",
-        "Voorraad en kwaliteit"
-      ]
     },
     {
       "type": "functies",

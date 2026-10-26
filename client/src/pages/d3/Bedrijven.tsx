@@ -6,9 +6,13 @@ import Shell, { type CssSet } from "@/design3/Shell";
 import { Secties, type PaginaContent } from "@/design3/secties";
 import { events, hotels, logistiek } from "@/design3/content/bedrijven";
 
+const BRANCHE: Record<string, string> = { horeca: "hotel", events: "event", logistiek: "logistiek" };
+
 function Bedrijvenpagina({ content, css }: { content: PaginaContent; css: CssSet[] }) {
+  // De knop rechtsboven gaat naar het aanvraagformulier met de branche al ingevuld.
+  const branche = BRANCHE[content.sector];
   return (
-    <Shell sector={content.sector} css={css} knopHref="#aanvragen">
+    <Shell sector={content.sector} css={css} knopHref={branche ? `/personeelsaanvraag?branche=${branche}` : "/personeelsaanvraag"} functies={content.functies}>
       <Secties content={content} />
     </Shell>
   );
