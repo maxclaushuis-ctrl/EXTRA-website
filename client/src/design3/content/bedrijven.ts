@@ -110,6 +110,37 @@ export const hotels: PaginaContent = {
       ]
     },
     {
+      "type": "hoe",
+      "werk": false,
+      "id": "samenwerken",
+      "eyebrow": "Samenwerken",
+      "h2": "Hoe samenwerken met [[EXTRA werkt]]",
+      "lead": "Van eerste aanvraag tot vaste favorietenpoule. Vier stappen.",
+      "stappen": [
+        {
+          "h3": "Vertel wat je zoekt",
+          "p": "Welke functies, wanneer en hoeveel medewerkers? We denken direct mee over de beste aanpak."
+        },
+        {
+          "h3": "Wij selecteren de juiste mensen",
+          "p": "Op basis van ervaring, skills, beoordelingen en favorietenpoule zetten wij het beste team klaar."
+        },
+        {
+          "h3": "Je team staat klaar",
+          "p": "Een op maat samengesteld team, ingeroosterd en klaar om te starten. Jij hoeft niks te doen."
+        },
+        {
+          "h3": "Evalueren en poule bouwen",
+          "p": "Na elke opdracht feedback. Zo bouwen we samen aan een vaste, betrouwbare favorietenpoule."
+        }
+      ],
+      "knop": {
+        "tekst": "Begin nu met een aanvraag",
+        "href": "/personeelsaanvraag?branche=hotel"
+      },
+      "standaard": null
+    },
+    {
       "type": "functies",
       "eyebrow": "Functies voor hotels",
       "h2": "Voor elke hotelfunctie de [[juiste mensen]]",
