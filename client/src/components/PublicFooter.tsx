@@ -45,7 +45,6 @@ const FOOTER_COPY = {
       { label: "Horeca personeel", href: "/horeca-personeel" },
       { label: "Hotelpersoneel inhuren", href: "/hotelpersoneel-inhuren" },
       { label: "Eventpersoneel inhuren", href: "/eventpersoneel-inhuren" },
-      { label: "Evenementen personeel inhuren", href: "/evenementen-personeel-inhuren" },
       { label: "Cateringpersoneel inhuren", href: "/cateringpersoneel-inhuren" },
       { label: "Restaurantpersoneel", href: "/horecapersoneel-restaurants" },
       { label: "Flexibel horecapersoneel", href: "/flexibel-horeca-personeel" },

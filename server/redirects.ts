@@ -97,6 +97,7 @@ const REDIRECT_MAP: Record<string, string> = {
   "/hotel-personeel-amsterdam":         "/hotelpersoneel-inhuren",
   "/event-personeel-gezocht":           "/eventpersoneel-inhuren",
   "/evenementen-personeel-amsterdam":   "/eventpersoneel-inhuren",
+  "/evenementen-personeel-inhuren":     "/eventpersoneel-inhuren", // design 3.0: samengevoegd, had 0 vertoningen in 12 mnd (GSC okt 2026)
   "/cateringpersoneel-gezocht":         "/cateringpersoneel-inhuren",
   "/catering-personeel-amsterdam":      "/cateringpersoneel-inhuren",
   "/restaurant-personeel-gezocht":      "/horecapersoneel-restaurants",

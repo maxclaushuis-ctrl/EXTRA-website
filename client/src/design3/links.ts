@@ -76,7 +76,6 @@ export const FOOTER: { kop: string; links: MenuLink[] }[] = [
       { label: "Hotelpersoneel inhuren", href: "/hotelpersoneel-inhuren" },
       { label: "Eventpersoneel inhuren", href: "/eventpersoneel-inhuren" },
       { label: "Logistiek personeel inhuren", href: "/logistiek-personeel-inhuren" },
-      { label: "Evenementen personeel inhuren", href: "/evenementen-personeel-inhuren" },
       { label: "Cateringpersoneel inhuren", href: "/cateringpersoneel-inhuren" },
       { label: "Restaurantpersoneel", href: "/horecapersoneel-restaurants" },
       { label: "Flexibel horecapersoneel", href: "/flexibel-horeca-personeel" },

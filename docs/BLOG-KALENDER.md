@@ -53,7 +53,7 @@ Housekeeping · EXTRA Nieuws · Branche. Gebruik altijd één van deze zes.
 ### Landingspagina's — dit zijn de kannibalisatierisico's én de linkdoelen
 
 **Opdrachtgevers:** `/hotelpersoneel-inhuren` · `/cateringpersoneel-inhuren` ·
-`/eventpersoneel-inhuren` · `/evenementen-personeel-inhuren` ·
+`/eventpersoneel-inhuren` ·
 `/bediening-inhuren` · `/horeca-personeel-inhuren` · `/tijdelijk-horeca-personeel` ·
 `/flexibel-horeca-personeel` · `/horeca-uitzendbureau-amsterdam` ·
 `/horeca-uitzendbureau-amsterdam-werkwijze` · `/horecapersoneel-restaurants` ·

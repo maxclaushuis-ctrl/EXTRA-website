@@ -467,15 +467,6 @@ export const ROUTE_META: RouteMeta[] = [
     changefreq: "weekly",
   },
   {
-    path: "/evenementen-personeel-inhuren",
-    title: "Evenementen personeel inhuren | 5 tot 100+ | EXTRA",
-    description:
-      "Evenementen personeel inhuren? EXTRA levert complete eventteams in Amsterdam: bediening, bar, catering en hosts. Schaalbaar en snel. Vraag direct aan.",
-    prerender: true,
-    priority: "0.85",
-    changefreq: "weekly",
-  },
-  {
     path: "/tijdelijk-horeca-personeel",
     title: "Tijdelijk horeca personeel | Betaal per uur | EXTRA",
     description:

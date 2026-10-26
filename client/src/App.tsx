@@ -16,7 +16,6 @@ const D3_flexibel_horeca_personeel = maakFragmentRoute("flexibel-horeca-personee
 const D3_tijdelijk_horeca_personeel = maakFragmentRoute("tijdelijk-horeca-personeel");
 const D3_horeca_personeel_inhuren = maakFragmentRoute("horeca-personeel-inhuren");
 const D3_bediening_inhuren = maakFragmentRoute("bediening-inhuren");
-const D3_evenementen_personeel_inhuren = maakFragmentRoute("evenementen-personeel-inhuren");
 const D3_horeca_uitzendbureau_amsterdam = maakFragmentRoute("horeca-uitzendbureau-amsterdam");
 const D3_horeca_uitzendbureau_amsterdam_werkwijze = maakFragmentRoute("horeca-uitzendbureau-amsterdam-werkwijze");
 const D3_horeca_vacatures_amsterdam = maakFragmentRoute("horeca-vacatures-amsterdam");
@@ -179,7 +178,6 @@ const PUBLIC_PATHS = [
   '/logistiek-personeel-inhuren',
   '/inholland',
   '/bediening-inhuren',
-  '/evenementen-personeel-inhuren',
   '/tijdelijk-horeca-personeel',
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
@@ -278,7 +276,7 @@ function Router() {
           {/* SEO-landingspagina's (P10, juli 2026) */}
           <Route path="/horeca-personeel-inhuren" component={D3_horeca_personeel_inhuren} />
           <Route path="/bediening-inhuren" component={D3_bediening_inhuren} />
-          <Route path="/evenementen-personeel-inhuren" component={D3_evenementen_personeel_inhuren} />
+          <Route path="/evenementen-personeel-inhuren">{() => { window.location.replace('/eventpersoneel-inhuren'); return null; }}</Route>
           <Route path="/tijdelijk-horeca-personeel" component={D3_tijdelijk_horeca_personeel} />
           <Route path="/bijbaan-amsterdam" component={D3_bijbaan_amsterdam} />
           <Route path="/dagbetaling" component={D3_dagbetaling} />

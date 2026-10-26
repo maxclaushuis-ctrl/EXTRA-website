@@ -55,7 +55,7 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/banqueting-personeel-inhuren` | T | banqueting personeel inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). |
 | `/keukenpersoneel-inhuren` | T | keukenpersoneel / chefs inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). Werkzoekendenvariant is `/chef-vacatures-amsterdam`. |
 | `/afwassers-inhuren` | T | afwassers en keukenhulp inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). Longtail. |
-| `/eventpersoneel-inhuren` | T | eventpersoneel inhuren | WG | Personeel aanvragen | **Bezit dit cluster.** Zie `/evenementen-personeel-inhuren`. |
+| `/eventpersoneel-inhuren` | T | eventpersoneel inhuren | WG | Personeel aanvragen | **Bezit dit cluster**, ook "evenementen personeel inhuren". `/evenementen-personeel-inhuren` is in oktober 2026 met een 301 hierin opgegaan (0 vertoningen in 12 maanden volgens Search Console). |
 | `/cateringpersoneel-inhuren` | T | cateringpersoneel inhuren | WG | Personeel aanvragen | |
 | `/horecapersoneel-restaurants` | T | restaurantpersoneel inhuren | WG | Personeel aanvragen | Claimt ook "bediening inhuren" — overlapt met `/bediening-inhuren`. |
 | `/horeca-personeel-gezocht` | T | horeca personeel gezocht | WG | Personeel aanvragen | 1094 regels, echte inhoud. Hreflang-partner van `/en/hospitality-staff-amsterdam`. |
@@ -70,7 +70,6 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/flexibel-horeca-personeel` | T | — (kandidaat voor samenvoeging) | WG | Personeel aanvragen | Idem. |
 | `/horeca-personeel-inhuren` | T | horeca personeel inhuren | WG | Personeel aanvragen | Ligt dicht tegen `/horeca-personeel-amsterdam` aan; scheiding is "inhuren" versus "personeel". Zwak onderscheid, in de gaten houden. |
 | `/bediening-inhuren` | T | bediening inhuren | WG | Personeel aanvragen | Cluster wordt ook geclaimd door `/horecapersoneel-restaurants` en `/eventpersoneel-inhuren`. |
-| `/evenementen-personeel-inhuren` | T | — (dubbel) | WG | Personeel aanvragen | **Kannibaliseert `/eventpersoneel-inhuren`.** Scaffold van ~180 regels tegenover ~920. Voorstel: 301 naar de sectorpagina. |
 | `/tijdelijk-horeca-personeel` | T | tijdelijk horecapersoneel | WG | Personeel aanvragen | Eigen intentie (tijdelijkheid), verdedigbaar naast de rest. |
 
 ## Werkzoekenden
