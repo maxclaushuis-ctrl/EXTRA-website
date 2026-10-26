@@ -179,12 +179,12 @@
 /* Over EXTRA: hero met de echte teamfoto. Lichte gevel, dus extra overloop
    links voor de leesbaarheid; op mobiel staat de foto als blok boven de tekst
    zodat de gezichten niet achter de kop vallen. */
-.d3.css-pagina .ihero.met-foto.ih-team .ih-foto::after{background:linear-gradient(90deg,rgba(31,30,25,.62) 0%,rgba(31,30,25,.3) 45%,rgba(31,30,25,0) 72%),linear-gradient(180deg,rgba(31,30,25,.3) 0%,rgba(31,30,25,.08) 30%,rgba(31,30,25,.9) 100%)}
+.d3.css-pagina .ihero.met-foto.ih-team .ih-foto::after{background:linear-gradient(180deg,rgba(55,53,44,.55) 0%,rgba(55,53,44,0) 22%,rgba(55,53,44,.15) 38%,rgba(55,53,44,.78) 62%,var(--espresso) 100%)}
 @media (max-width:720px){
-  .d3.css-pagina .ihero.met-foto.ih-team{display:block;min-height:0;background:#1f1e19}
+  .d3.css-pagina .ihero.met-foto.ih-team{display:block;min-height:0;background:var(--espresso)}
   .d3.css-pagina .ihero.met-foto.ih-team .ih-foto{position:relative;inset:auto;height:auto;aspect-ratio:1/1}
   .d3.css-pagina .ihero.met-foto.ih-team .ih-foto img{object-position:56% 50%!important}
-  .d3.css-pagina .ihero.met-foto.ih-team .ih-foto::after{background:linear-gradient(180deg,rgba(31,30,25,.45) 0%,rgba(31,30,25,0) 28%,rgba(31,30,25,0) 70%,#1f1e19 100%)}
+  .d3.css-pagina .ihero.met-foto.ih-team .ih-foto::after{background:linear-gradient(180deg,rgba(55,53,44,.55) 0%,rgba(55,53,44,0) 28%,rgba(55,53,44,0) 70%,var(--espresso) 100%)}
   .d3.css-pagina .ihero.met-foto.ih-team .w{padding-top:8px}
 }
 
@@ -279,3 +279,7 @@
   .d3.css-hotels .pt-docs li{grid-template-columns:34px minmax(0,1fr) auto}
 }
 @media (prefers-reduced-motion:reduce){.d3.css-hotels .pt-tab>span>span{transition:none}}
+
+/* Team: vijf kaarten naast elkaar (Max, Eveline, Charlotte, Lea, Tommy) */
+@media (min-width:1101px){.d3.css-pagina .tm-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media (min-width:761px) and (max-width:1100px){.d3.css-pagina .tm-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
