@@ -690,6 +690,37 @@ export const events: PaginaContent = {
       ]
     },
     {
+      "type": "hoe",
+      "werk": false,
+      "id": "samenwerken",
+      "eyebrow": "Samenwerken",
+      "h2": "Snel het juiste personeel [[op de werkvloer]]",
+      "lead": "Van eerste aanvraag tot vaste favorietenpoule. Vier stappen.",
+      "stappen": [
+        {
+          "h3": "Vertel wat je zoekt",
+          "p": "Welke functies, wanneer en hoeveel medewerkers? We denken direct mee over de beste aanpak."
+        },
+        {
+          "h3": "Wij selecteren de juiste mensen",
+          "p": "Op basis van ervaring, skills, beoordelingen en favorietenpoule zetten wij het beste team klaar."
+        },
+        {
+          "h3": "Je team staat klaar",
+          "p": "Een op maat samengesteld team, ingeroosterd en klaar om te starten. Jij hoeft niks te doen."
+        },
+        {
+          "h3": "Evalueren en poule bouwen",
+          "p": "Na elke opdracht feedback. Zo bouwen we samen aan een vaste, betrouwbare favorietenpoule."
+        }
+      ],
+      "knop": {
+        "tekst": "Vraag direct aan",
+        "href": "/personeelsaanvraag?branche=event"
+      },
+      "standaard": null
+    },
+    {
       "type": "functies",
       "eyebrow": "Functies voor events",
       "h2": "Elk soort event. [[Elke rol gevuld.]]",
@@ -794,66 +825,12 @@ export const events: PaginaContent = {
       ]
     },
     {
-      "type": "waarom",
-      "eyebrow": "Bij events telt alles",
-      "h2": "Waarom [[EXTRA]]",
-      "lead": "Elke gast, elke dienst, elk moment. Eventlocaties die structureel goed personeel willen, kiezen voor EXTRA.",
-      "punten": [
-        {
-          "ic": "snel",
-          "h3": "Flexibel opschalen",
-          "p": "Van kleine events tot volle zalen. EXTRA helpt locaties snel opschalen met ervaren personeel dat gewend is aan drukte."
-        },
-        {
-          "ic": "oog",
-          "h3": "Persoonlijk geselecteerd",
-          "p": "Iedere medewerker heeft eerst een persoonlijk gesprek gehad voordat hij of zij via EXTRA werkt."
-        },
-        {
-          "ic": "hand",
-          "h3": "Ervaring met grote events",
-          "p": "Onze medewerkers zijn gewend aan volle zalen, strakke planningen en hoge verwachtingen van gasten."
-        },
-        {
-          "ic": "tel",
-          "h3": "24 uur per dag bereikbaar",
-          "p": "Ook buiten kantooruren staan onze planners klaar wanneer je snel moet schakelen."
-        },
-        {
-          "ic": "ster",
-          "h3": "Continu beoordeeld",
-          "p": "Na iedere dienst verzamelen we feedback van opdrachtgevers. Alleen medewerkers die goed presteren blijven actief."
-        },
-        {
-          "ic": "schild",
-          "h3": "Geen zzp-risico",
-          "p": "Alle medewerkers werken bij ons in loondienst en voldoen aan de NEN 4400-1 norm."
-        }
-      ],
-      "check": "NEN 4400-1 gecertificeerd",
-      "paddingTop": "110px"
-    },
-    {
-      "type": "reviews",
-      "eyebrow": "Referenties",
-      "h2": "Wat eventlocaties over ons [[zeggen]]",
-      "items": [
-        {
-          "quote": "Vanaf het begin hebben wij prettig en direct contact gehad met het team van EXTRA. Wij zijn zeer tevreden over de kwaliteit van de medewerkers die via Extra bij ons werken.",
-          "naam": "D. Sarda",
-          "rol": "Eventmanager, Westweelde · Eventlocatie, Amsterdam"
-        },
-        {
-          "quote": "Bij EXTRA wordt men snel en accuraat geholpen. Als er gebeld wordt voor personeel, maakt niet uit wanneer, er wordt altijd gereageerd en er wordt snel gehandeld.",
-          "naam": "F. de Visser",
-          "rol": "Eventcoordinator, Art Zoo Amsterdam · Evenementenlocatie"
-        },
-        {
-          "quote": "Vanuit het H'ART Museum werken wij met enige regelmaat met personeel van Extra omdat we weten dat we goed gekwalificeerd personeel krijgen dat altijd verzorgd en goed op tijd is.",
-          "naam": "T. Bakkenes",
-          "rol": "Hospitality Manager, H'ART Museum · Museum & culturele locatie"
-        }
-      ]
+      "type": "portaal",
+      "eyebrow": "Klantportaal",
+      "h2": "Je eigen klantportaal, [[waar jij centraal staat]]",
+      "lead": "Diensten uitzetten, je team beoordelen en je administratie rond hebben. Alles op één plek, wanneer het jou uitkomt.",
+      "klant": "Eventlocatie Noord (voorbeeld)",
+      "variant": "events"
     },
     {
       "type": "scores",
@@ -1058,35 +1035,46 @@ export const events: PaginaContent = {
       "los": true
     },
     {
-      "type": "hoe",
-      "werk": false,
-      "id": null,
-      "eyebrow": "Selectieproces",
-      "h2": "Zo selecteren we [[de juiste mensen]]",
-      "lead": "Kwaliteit bij events ontstaat niet vanzelf. We kijken verder dan alleen een cv.",
-      "stappen": [
+      "type": "reviews",
+      "eyebrow": "Referenties",
+      "h2": "Wat eventlocaties over ons [[zeggen]]",
+      "items": [
         {
-          "h3": "Persoonlijke intake",
-          "p": "Iedere medewerker doorloopt een gesprek en beoordeling voordat hij of zij aan de slag kan."
+          "quote": "Vanaf het begin hebben wij prettig en direct contact gehad met het team van EXTRA. Wij zijn zeer tevreden over de kwaliteit van de medewerkers die via Extra bij ons werken.",
+          "naam": "D. Sarda",
+          "rol": "Eventmanager, Westweelde · Eventlocatie, Amsterdam"
         },
         {
-          "h3": "Ervaring en houding",
-          "p": "We kijken verder dan werkervaring. Service, houding en werkmentaliteit zijn net zo belangrijk."
+          "quote": "Bij EXTRA wordt men snel en accuraat geholpen. Als er gebeld wordt voor personeel, maakt niet uit wanneer, er wordt altijd gereageerd en er wordt snel gehandeld.",
+          "naam": "F. de Visser",
+          "rol": "Eventcoordinator, Art Zoo Amsterdam · Evenementenlocatie"
         },
         {
-          "h3": "Representativiteit",
-          "p": "Onze medewerkers zien er verzorgd uit en spreken de taal van hospitality."
-        },
-        {
-          "h3": "Beoordeling na iedere dienst",
-          "p": "Opdrachtgevers geven feedback na elk event. Alleen medewerkers die structureel goed presteren blijven actief."
+          "quote": "Vanuit het H'ART Museum werken wij met enige regelmaat met personeel van Extra omdat we weten dat we goed gekwalificeerd personeel krijgen dat altijd verzorgd en goed op tijd is.",
+          "naam": "T. Bakkenes",
+          "rol": "Hospitality Manager, H'ART Museum · Museum & culturele locatie"
         }
-      ],
-      "knop": {
-        "tekst": "Bel mij terug",
-        "href": "#aanvragen"
-      },
-      "standaard": null
+      ]
+    },
+    {
+      "type": "screening",
+      "id": "selectie",
+      "eyebrow": "Screeningsproces",
+      "h2": "Elke eventmedewerker, [[persoonlijk gescreend]]",
+      "lead": "Voordat een medewerker op jouw event staat, is deze persoonlijk gezien op kantoor en beoordeeld op presentatie, gastvrijheid en eventervaring. Je weet altijd wie er achter je bar of in je bediening staat.",
+      "kaart": {
+        "avatar": "SB",
+        "b": "Voorbeeldprofiel",
+        "span": "Bediening · beoordeeld op kantoor",
+        "tags": [
+          "Topper!",
+          "Eventervaring",
+          "Representatief",
+          "Stressbestendig",
+          "NL",
+          "Bediening"
+        ]
+      }
     },
     {
       "type": "loon",
@@ -1272,6 +1260,37 @@ export const logistiek: PaginaContent = {
       "vink4": true
     },
     {
+      "type": "hoe",
+      "werk": false,
+      "id": "samenwerken",
+      "eyebrow": "Samenwerken",
+      "h2": "Snel het juiste personeel [[op de werkvloer]]",
+      "lead": "Van eerste aanvraag tot vaste favorietenpoule. Vier stappen.",
+      "stappen": [
+        {
+          "h3": "Je aanvraag",
+          "p": "Vertel welke rollen je nodig hebt, wanneer en op welke locatie."
+        },
+        {
+          "h3": "Wij bellen terug",
+          "p": "We bespreken je proces, je tijden en waar het nu misgaat in de bezetting."
+        },
+        {
+          "h3": "Voorstel met namen",
+          "p": "Je hoort wie we sturen en wat die mensen eerder hebben gedaan. Heftruckcertificaten zijn dan al gecontroleerd."
+        },
+        {
+          "h3": "Beoordeling na de dienst",
+          "p": "Jouw beoordeling bepaalt wie er terugkomt. Zo bouwt je vaste poule zichzelf op."
+        }
+      ],
+      "knop": {
+        "tekst": "Vraag direct aan",
+        "href": "/personeelsaanvraag?branche=logistiek"
+      },
+      "standaard": null
+    },
+    {
       "type": "functies",
       "eyebrow": "Functies voor logistiek",
       "h2": "Voor elke logistieke rol de [[juiste mensen]]",
@@ -1371,306 +1390,233 @@ export const logistiek: PaginaContent = {
       ]
     },
     {
-      "type": "waarom",
-      "eyebrow": "Zekerheid over wie er komt",
-      "h2": "Waarom [[EXTRA]]",
-      "lead": "Geen gedoe met inwerken, papieren of uitval. Dit is wat je van ons kunt verwachten.",
-      "punten": [
-        {
-          "ic": "hand",
-          "h3": "Niemand meer inwerken",
-          "p": "Na de eerste keer hoef je niemand meer in te werken. Medewerkers die het bij jou goed doen, zet je in je vaste poule. Bij je volgende aanvraag vragen we hen als eerste."
-        },
-        {
-          "ic": "oog",
-          "h3": "Gemeten, niet gegokt",
-          "p": "Wij weten wie bij jou goed presteert, omdat we het meten. Na elke dienst leggen we vast hoe iemand het deed. Die beoordelingen bepalen wie we de volgende keer sturen."
-        },
-        {
-          "ic": "schild",
-          "h3": "Geen zzp-risico",
-          "p": "Iedereen is in loondienst. Loonheffing, cao-beloning en verzekeringen liggen bij ons, niet bij jou. Geen discussie achteraf over schijnzelfstandigheid."
-        },
-        {
-          "ic": "snel",
-          "h3": "Snel bij piek en uitval",
-          "p": "Ziekmelding om zes uur 's ochtends of een order die er ineens uit moet? Bel ons, dan kijken we meteen wie er beschikbaar is."
-        }
-      ],
-      "check": "NEN 4400-1 gecertificeerd",
-      "paddingTop": "110px"
+      "type": "portaal",
+      "eyebrow": "Klantportaal",
+      "h2": "Je eigen klantportaal, [[waar jij centraal staat]]",
+      "lead": "Diensten uitzetten, je team beoordelen en je administratie rond hebben. Alles op één plek, wanneer het jou uitkomt.",
+      "klant": "Distributiecentrum Oost (voorbeeld)",
+      "variant": "logistiek"
     },
     {
-      "type": "stapel2",
-      "secties": [
+      "type": "scores",
+      "eyebrow": "Onze EXTRA's in cijfers",
+      "h2": "Na elke dienst [[beoordeeld]]",
+      "lead": "Na elke dienst leggen we vast hoe iemand scoort op houding, vaardigheid, kleding en uitstraling. Die beoordelingen bepalen wie we de volgende keer sturen.",
+      "lijst": [],
+      "kaarten": [
         {
-          "type": "poule",
-          "eyebrow": "Vaste poule",
-          "h2": "Dezelfde gezichten, [[elke dienst]]",
-          "lead": "Je bouwt je eigen team op. Wie het goed doet, komt terug. Zo ken je de mensen op je vloer en kennen zij jouw procedures.",
-          "items": [
-            {
-              "h3": "Je beoordeelt na elke dienst",
-              "sub": "Kort en snel, per medewerker",
-              "meta": [
-                "Na de dienst"
-              ],
-              "b": "Jij",
-              "small": "beoordeelt"
-            },
-            {
-              "h3": "Goede medewerkers gaan in je poule",
-              "sub": "Je eigen favorieten voor jouw locatie",
-              "meta": [
-                "Vaste poule"
-              ],
-              "b": "Favoriet",
-              "small": "bij jou"
-            },
-            {
-              "h3": "Bij je volgende aanvraag vragen we hen eerst",
-              "sub": "Dezelfde gezichten, dezelfde procedures",
-              "meta": [
-                "Volgende aanvraag"
-              ],
-              "b": "Eerst",
-              "small": "gevraagd"
-            }
+          "nr": "EXTRA #0518",
+          "h3": "Orderpicker",
+          "sub": "Magazijn · bij EXTRA sinds 2025",
+          "status": "Gold",
+          "p": "96.0",
+          "score": "9,6",
+          "bars": [
+            [
+              "Houding",
+              "100%"
+            ],
+            [
+              "Vaardigheid",
+              "98%"
+            ],
+            [
+              "Kleding",
+              "96%"
+            ],
+            [
+              "Uitstraling",
+              "92%"
+            ]
           ],
-          "knop": null
-        },
-        {
-          "type": "scores",
-          "eyebrow": "Onze EXTRA's in cijfers",
-          "h2": "Na elke dienst [[beoordeeld]]",
-          "lead": "Na elke dienst leggen we vast hoe iemand scoort op houding, vaardigheid, kleding en uitstraling. Die beoordelingen bepalen wie we de volgende keer sturen.",
-          "lijst": [],
-          "kaarten": [
-            {
-              "nr": "EXTRA #0518",
-              "h3": "Orderpicker",
-              "sub": "Magazijn · bij EXTRA sinds 2025",
-              "status": "Gold",
-              "p": "96.0",
-              "score": "9,6",
-              "bars": [
-                [
-                  "Houding",
-                  "100%"
-                ],
-                [
-                  "Vaardigheid",
-                  "98%"
-                ],
-                [
-                  "Kleding",
-                  "96%"
-                ],
-                [
-                  "Uitstraling",
-                  "92%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "148"
-                ],
-                [
-                  "Opkomst",
-                  "99%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,8"
-                ],
-                [
-                  "EXTRA-punten",
-                  "10.240"
-                ]
-              ],
-              "fav": [
-                "Distributiecentrum",
-                "E-commerce magazijn"
-              ]
-            },
-            {
-              "nr": "EXTRA #0721",
-              "h3": "Heftruckchauffeur",
-              "sub": "Magazijn · bij EXTRA sinds 2024",
-              "status": "Diamond",
-              "p": "98.0",
-              "score": "9,8",
-              "bars": [
-                [
-                  "Houding",
-                  "100%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "98%"
-                ],
-                [
-                  "Uitstraling",
-                  "98%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "206"
-                ],
-                [
-                  "Opkomst",
-                  "100%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,9"
-                ],
-                [
-                  "EXTRA-punten",
-                  "16.880"
-                ]
-              ],
-              "fav": [
-                "Distributiecentrum",
-                "Cross-dock"
-              ]
-            },
-            {
-              "nr": "EXTRA #0904",
-              "h3": "Inpakker",
-              "sub": "Productie · bij EXTRA sinds 2025",
-              "status": "Gold",
-              "p": "95.0",
-              "score": "9,5",
-              "bars": [
-                [
-                  "Houding",
-                  "98%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "94%"
-                ],
-                [
-                  "Uitstraling",
-                  "92%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "121"
-                ],
-                [
-                  "Opkomst",
-                  "98%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,6"
-                ],
-                [
-                  "EXTRA-punten",
-                  "8.430"
-                ]
-              ],
-              "fav": [
-                "E-commerce magazijn"
-              ]
-            },
-            {
-              "nr": "EXTRA #1046",
-              "h3": "Expeditiemedewerker",
-              "sub": "Expeditie · bij EXTRA sinds 2025",
-              "status": "Silver",
-              "p": "93.0",
-              "score": "9,3",
-              "bars": [
-                [
-                  "Houding",
-                  "96%"
-                ],
-                [
-                  "Vaardigheid",
-                  "98%"
-                ],
-                [
-                  "Kleding",
-                  "92%"
-                ],
-                [
-                  "Uitstraling",
-                  "90%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "84"
-                ],
-                [
-                  "Opkomst",
-                  "97%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,4"
-                ],
-                [
-                  "EXTRA-punten",
-                  "5.610"
-                ]
-              ],
-              "fav": [
-                "Distributiecentrum"
-              ]
-            }
+          "cijfers": [
+            [
+              "Diensten",
+              "148"
+            ],
+            [
+              "Opkomst",
+              "99%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,8"
+            ],
+            [
+              "EXTRA-punten",
+              "10.240"
+            ]
           ],
-          "noot": "Voorbeeldprofielen. Echte scores, diensten en punten komen rechtstreeks uit het EXTRA-dashboard."
-        }
-      ]
-    },
-    {
-      "type": "hoe",
-      "werk": false,
-      "id": null,
-      "eyebrow": "Zo gaat het",
-      "h2": "Zo werken [[we]]",
-      "lead": "Van je eerste aanvraag tot een vaste poule die zichzelf opbouwt.",
-      "stappen": [
-        {
-          "h3": "Je aanvraag",
-          "p": "Vertel welke rollen je nodig hebt, wanneer en op welke locatie."
+          "fav": [
+            "Distributiecentrum",
+            "E-commerce magazijn"
+          ]
         },
         {
-          "h3": "Wij bellen terug",
-          "p": "We bespreken je proces, je tijden en waar het nu misgaat in de bezetting."
+          "nr": "EXTRA #0721",
+          "h3": "Heftruckchauffeur",
+          "sub": "Magazijn · bij EXTRA sinds 2024",
+          "status": "Diamond",
+          "p": "98.0",
+          "score": "9,8",
+          "bars": [
+            [
+              "Houding",
+              "100%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "98%"
+            ],
+            [
+              "Uitstraling",
+              "98%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "206"
+            ],
+            [
+              "Opkomst",
+              "100%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,9"
+            ],
+            [
+              "EXTRA-punten",
+              "16.880"
+            ]
+          ],
+          "fav": [
+            "Distributiecentrum",
+            "Cross-dock"
+          ]
         },
         {
-          "h3": "Voorstel met namen",
-          "p": "Je hoort wie we sturen en wat die mensen eerder hebben gedaan. Heftruckcertificaten zijn dan al gecontroleerd."
+          "nr": "EXTRA #0904",
+          "h3": "Inpakker",
+          "sub": "Productie · bij EXTRA sinds 2025",
+          "status": "Gold",
+          "p": "95.0",
+          "score": "9,5",
+          "bars": [
+            [
+              "Houding",
+              "98%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "94%"
+            ],
+            [
+              "Uitstraling",
+              "92%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "121"
+            ],
+            [
+              "Opkomst",
+              "98%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,6"
+            ],
+            [
+              "EXTRA-punten",
+              "8.430"
+            ]
+          ],
+          "fav": [
+            "E-commerce magazijn"
+          ]
         },
         {
-          "h3": "Beoordeling na de dienst",
-          "p": "Jouw beoordeling bepaalt wie er terugkomt. Zo bouwt je vaste poule zichzelf op."
+          "nr": "EXTRA #1046",
+          "h3": "Expeditiemedewerker",
+          "sub": "Expeditie · bij EXTRA sinds 2025",
+          "status": "Silver",
+          "p": "93.0",
+          "score": "9,3",
+          "bars": [
+            [
+              "Houding",
+              "96%"
+            ],
+            [
+              "Vaardigheid",
+              "98%"
+            ],
+            [
+              "Kleding",
+              "92%"
+            ],
+            [
+              "Uitstraling",
+              "90%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "84"
+            ],
+            [
+              "Opkomst",
+              "97%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,4"
+            ],
+            [
+              "EXTRA-punten",
+              "5.610"
+            ]
+          ],
+          "fav": [
+            "Distributiecentrum"
+          ]
         }
       ],
-      "knop": {
-        "tekst": "Bel mij terug",
-        "href": "#aanvragen"
-      },
-      "standaard": null
+      "noot": "Voorbeeldprofielen. Echte scores, diensten en punten komen rechtstreeks uit het EXTRA-dashboard.",
+      "los": true
+    },
+    {
+      "type": "screening",
+      "id": "selectie",
+      "eyebrow": "Screeningsproces",
+      "h2": "Elke logistieke medewerker, [[persoonlijk gescreend]]",
+      "lead": "Voordat een medewerker op jouw vloer staat, is deze persoonlijk gezien op kantoor en beoordeeld op ervaring, betrouwbaarheid en de juiste certificaten. Je weet altijd wie er in je magazijn staat.",
+      "kaart": {
+        "avatar": "DM",
+        "b": "Voorbeeldprofiel",
+        "span": "Orderpicken · beoordeeld op kantoor",
+        "tags": [
+          "Topper!",
+          "Veel ervaring",
+          "Heftruckcertificaat",
+          "Altijd op tijd",
+          "NL",
+          "Orderpicken"
+        ]
+      }
     },
     {
       "type": "loon",

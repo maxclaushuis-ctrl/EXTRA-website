@@ -28,7 +28,7 @@ export type Sectie =
   | { type: "scores"; eyebrow: string; h2: string; lead: string; lijst: string[]; kaarten: ScoreKaart[]; noot: string; los?: boolean }
   | { type: "screening"; id?: string; eyebrow: string; h2: string; lead: string; kaart: { avatar: string; b: string; span: string; tags: string[] } }
   | { type: "hoe"; werk: boolean; id: string | null; eyebrow: string; h2: string; lead: string; stappen: { h3: string; p: string }[]; knop: Knop | null; standaard: string | null }
-  | { type: "portaal"; eyebrow: string; h2: string; lead: string; klant: string }
+  | { type: "portaal"; eyebrow: string; h2: string; lead: string; klant: string; variant?: "hotels" | "events" | "logistiek" }
   | { type: "data"; eyebrow: string; h2: string; lead: string; lijst: string[]; schermen: { src: string; alt: string }[] }
   | { type: "loon"; eyebrow: string; h2: string[]; lead: string; voordelen: string[]; knop: Knop | null }
   | { type: "vorm" }
@@ -323,8 +323,25 @@ const PT_TABS: [string, string][] = [
   ["Klaar voor elke inspectie", "Per medewerker de documentatie die je bij een controle moet kunnen laten zien. Alles staat klaar, je hoeft niets bij elkaar te zoeken."],
 ];
 
+type PtRij = readonly [string, string, string, string, boolean];
+const PT_VOORBEELD: Record<"hotels" | "events" | "logistiek", { week: PtRij[]; dienst: string }> = {
+  hotels: {
+    week: [["Ma 26", "Housekeeping", "07:00 tot 15:00", "4 / 4", true], ["Di 27", "Banqueting", "17:00 tot 01:00", "6 / 8", false], ["Wo 28", "Front office", "15:00 tot 23:00", "2 / 2", true], ["Vr 30", "F&B", "06:30 tot 11:00", "3 / 3", true]],
+    dienst: "Housekeeping · ma 26 okt · 07:00 tot 15:00",
+  },
+  events: {
+    week: [["Do 29", "Bediening", "17:00 tot 00:00", "12 / 12", true], ["Vr 30", "Bar", "18:00 tot 01:00", "4 / 6", false], ["Za 31", "Hosts", "16:30 tot 22:00", "3 / 3", true], ["Za 31", "Runners", "17:00 tot 23:00", "6 / 6", true]],
+    dienst: "Bediening · do 29 okt · 17:00 tot 00:00",
+  },
+  logistiek: {
+    week: [["Ma 26", "Orderpicken", "23:00 tot 07:30", "8 / 8", true], ["Di 27", "Inpakken", "07:00 tot 15:30", "5 / 6", false], ["Wo 28", "Heftruck", "15:00 tot 23:30", "2 / 2", true], ["Do 29", "Expeditie", "06:00 tot 14:30", "4 / 4", true]],
+    dienst: "Orderpicken · ma 26 okt · 23:00 tot 07:30",
+  },
+};
+
 function Portaal({ s }: { s: S<"portaal"> }) {
   const [actief, setActief] = useState(0);
+  const vb = PT_VOORBEELD[s.variant ?? "hotels"];
   const id = useId().replace(/:/g, "");
   function toets(e: KeyboardEvent<HTMLButtonElement>, i: number) {
     const n = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
@@ -355,13 +372,13 @@ function Portaal({ s }: { s: S<"portaal"> }) {
             <div className="pt-paneel" id={`pt${id}p0`} role="tabpanel" aria-labelledby={`pt${id}t0`} hidden={actief !== 0}>
               <div className="pt-kop"><b>Planbord</b><span>Week 44 · 26 okt tot 1 nov</span><span className="pt-knop">+ Dienst aanvragen</span></div>
               <ul className="pt-rijen">
-                {([["Ma 26", "Housekeeping", "07:00 tot 15:00", "4 / 4", true], ["Di 27", "Banqueting", "17:00 tot 01:00", "6 / 8", false], ["Wo 28", "Front office", "15:00 tot 23:00", "2 / 2", true], ["Vr 30", "F&B", "06:30 tot 11:00", "3 / 3", true]] as const).map(([d, f, t, b, ok]) => (
-                  <li key={d}><span className="pt-dag">{d}</span><span><b>{f}</b><small>{t}</small></span><span className="pt-bezet">{b}</span>{ok ? st2("goed", "Bevestigd") : st2("letop", "In planning")}</li>
+                {vb.week.map(([d, f, t, b, ok]) => (
+                  <li key={d + f}><span className="pt-dag">{d}</span><span><b>{f}</b><small>{t}</small></span><span className="pt-bezet">{b}</span>{ok ? st2("goed", "Bevestigd") : st2("letop", "In planning")}</li>
                 ))}
               </ul>
             </div>
             <div className="pt-paneel" id={`pt${id}p1`} role="tabpanel" aria-labelledby={`pt${id}t1`} hidden={actief !== 1}>
-              <div className="pt-kop"><b>Afronden</b><span>Housekeeping · ma 26 okt · 07:00 tot 15:00</span><span className="pt-knop">Dienst accorderen</span></div>
+              <div className="pt-kop"><b>Afronden</b><span>{vb.dienst}</span><span className="pt-knop">Dienst accorderen</span></div>
               <div className="pt-score-kop" aria-hidden="true"><span>Medewerker</span><span>Op tijd</span><span>Kleding</span><span>Vaardigheid</span><span>Houding</span><span>Oordeel</span></div>
               <ul className="pt-rijen pt-scores">
                 {([["Sanne de Vries", true, ["hi", "hi", "hi", "hi"], 5], ["Thomas Bakker", false, ["hi", "mid", "hi", "hi"], 4], ["Lotte Visser", true, ["hi", "hi", "hi", "hi"], 5], ["Noor Hendriks", false, ["", "", "", ""], 0]] as const).map(([n, fav, sm, ster]) => (
