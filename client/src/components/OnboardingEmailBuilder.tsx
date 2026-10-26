@@ -182,7 +182,7 @@ export default function OnboardingEmailBuilder({
             >
               {(value.instellingen.lay_out ?? 'extra') === 'extra' && (
                 <img
-                  src="/email-banner-extra.jpg"
+                  src="/email/banner-algemeen.jpg"
                   alt="EXTRA"
                   style={{ display: 'block', width: '100%', height: 'auto' }}
                 />

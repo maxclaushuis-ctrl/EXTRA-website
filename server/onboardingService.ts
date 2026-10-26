@@ -8,13 +8,14 @@ import path from 'path';
 import { storage } from './storage';
 import { sendEmail } from './mail';
 import { generateEmailHTML, generateEmailPlainText, type ContactData } from './emailGenerator';
+import { bruinHartje, brancheVanFunctie } from '@shared/mailOpmaak';
 import type { OnboardingTemplate, OnboardingTemplateMetBijlagen, Employee, OnboardingBijlage } from '@shared/schema';
 
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'max@doehetextra.nl';
 const FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Max van EXTRA';
 const MAX_TOTAAL_BIJLAGEN_BYTES = 25 * 1024 * 1024; // 25 MB SendGrid limit
 
-const FOOTER_TEXT = 'EXTRA B.V. — Amsterdam | doehetextra.nl';
+const FOOTER_TEXT = 'EXTRA B.V. · Amsterdam · doehetextra.nl';
 
 function formatNLDatum(d: Date): string {
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -48,7 +49,9 @@ export function vervangTags(text: string, medewerker: OnboardingMedewerker): str
   for (const [tag, value] of Object.entries(tags)) {
     out = out.replace(new RegExp(escapeRegex(tag), 'gi'), value);
   }
-  return out;
+  // Het paarse hartje hoorde bij de oude huisstijl; opgeslagen templates
+  // krijgen automatisch het bruine (design 3.0).
+  return bruinHartje(out);
 }
 
 function contactDataVoor(medewerker: OnboardingMedewerker): ContactData {
@@ -72,7 +75,7 @@ export async function genereerOnboardingHTML(
   const contact = contactDataVoor(medewerker);
 
   // Geen tracking pixel, geen unsubscribe link (transactioneel)
-  let html = generateEmailHTML(personalisedContent, contact, undefined, undefined, undefined);
+  let html = generateEmailHTML(personalisedContent, contact, undefined, undefined, undefined, brancheVanFunctie(medewerker.functie));
 
   // Vervang eventuele unsubscribe-fragmenten die de generator standaard zou kunnen toevoegen
   html = html.replace(/Uitschrijven|Unsubscribe/gi, '');

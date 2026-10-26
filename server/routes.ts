@@ -4546,6 +4546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sendCvUploadFirstEmail({
         firstName: candidate.firstName,
         email: candidate.email,
+        functionType: (candidate as any).functionType,
         id,
         cvUploadToken: (candidate as any).cvUploadToken,
         baseUrl: process.env.BASE_URL || `${req.protocol}://${req.get('host')}`,
@@ -7072,7 +7073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Stuur alleen mail bij actieve afwijzingsredenen, niet bij stille markeringen (locatie, geen reactie, niet komen opdagen)
       const SILENT_REASONS = new Set(['locatie', 'geen_reactie', 'no_show']);
       if (status === 'afgewezen' && updatedCandidate.email && updatedCandidate.firstName && !SILENT_REASONS.has(String(rejectionReason || ''))) {
-        const candidate = { firstName: updatedCandidate.firstName, email: updatedCandidate.email };
+        const candidate = { firstName: updatedCandidate.firstName, email: updatedCandidate.email, functionType: updatedCandidate.functionType };
         if (rejectionReason === 'cv') {
           sendCandidateRejectionEmailCv(candidate).catch(err =>
             console.error("Fout bij versturen afwijzingsmail (cv):", err)
@@ -7136,7 +7137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       await storage.updateCandidateStatus(id, 'afgewezen', undefined);
       if (candidate.email && candidate.firstName) {
-        sendCandidateRejectionEmailDiensten({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
+        sendCandidateRejectionEmailDiensten({ firstName: candidate.firstName, email: candidate.email, functionType: candidate.functionType }).catch(err =>
           console.error('Fout bij versturen afwijzingsmail:', err)
         );
       }
@@ -7169,7 +7170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         await storage.updateCandidateStatus(id, 'afgewezen', undefined);
         if (candidate.email && candidate.firstName) {
-          sendCandidateRejectionEmailDiensten({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
+          sendCandidateRejectionEmailDiensten({ firstName: candidate.firstName, email: candidate.email, functionType: candidate.functionType }).catch(err =>
             console.error('Fout bij versturen afwijzingsmail:', err)
           );
         }
@@ -9110,23 +9111,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data.notes ? ['Opmerkingen', data.notes] : null,
         ].filter(Boolean) as [string, string][];
 
-        const tableRows = rows.map(([label, value]) =>
-          `<tr><td style="padding:6px 12px;font-weight:600;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;width:180px;white-space:nowrap;">${label}</td><td style="padding:6px 12px;color:#111827;border:1px solid #e5e7eb;">${value}</td></tr>`
-        ).join('');
-
-        const html = `
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-  <div style="background:#7c3aed;padding:20px 24px;border-radius:8px 8px 0 0;">
-    <h2 style="margin:0;color:#fff;font-size:18px;">🏢 Nieuwe personeelsaanvraag</h2>
-    <p style="margin:4px 0 0;color:#ddd6fe;font-size:13px;">Ingediend via doehetextra.nl</p>
-  </div>
-  <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
-    <table style="width:100%;border-collapse:collapse;font-size:14px;">${tableRows}</table>
-    <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;">
-      Bekijk de aanvraag in het dashboard: <a href="https://doehetextra.nl/dashboard" style="color:#7c3aed;">dashboard openen</a>
-    </p>
-  </div>
-</div>`;
+        const { mailOpmaak, gegevens, knop, knoppen, escapeHtml, brancheVanLocatie } = await import('@shared/mailOpmaak');
+        const html = mailOpmaak({
+          branche: brancheVanLocatie(data.locationType),
+          titel: `Nieuwe personeelsaanvraag: ${data.companyName}`,
+          voorkop: 'Ingediend via doehetextra.nl',
+          kop: 'Nieuwe personeelsaanvraag',
+          preheader: `${data.companyName}, ${data.contactName}, ${data.phone}`,
+          voet: 'kort',
+          inhoud: [
+            gegevens(rows.map(([label, value]) => [label, escapeHtml(value).replace(/\r?\n/g, '<br>')] as [string, string])),
+            knoppen(knop('Open het dashboard', 'https://www.doehetextra.nl/dashboard', 'vol')),
+          ].join(''),
+        });
 
         await sendEmail({
           to: ['max@doehetextra.nl', 'eveline@doehetextra.nl'],
@@ -9160,6 +9157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           locatienaam: data.locationName,
           functies: data.functions,
           opmerkingen: data.notes,
+          locatieType: data.locationType,
         });
         await sendEmail({
           to: data.email,
@@ -11958,20 +11956,30 @@ ${vacancies.map(v => `  <url>
         const toEmail = ownerEmails[reminder.owner];
         if (toEmail) {
           const { sendEmail } = await import('./mail');
+          const { mailOpmaak, gegevens, alinea, knop, knoppen, escapeHtml } = await import('@shared/mailOpmaak');
+          const voornaamEigenaar = reminder.owner.charAt(0).toUpperCase() + reminder.owner.slice(1);
           await sendEmail({
             to: toEmail,
+            from: 'EXTRA Systeem <max@doehetextra.nl>',
             subject: `📅 CRM Reminder: ${reminder.title}`,
-            html: `
-              <p>Hallo ${reminder.owner.charAt(0).toUpperCase() + reminder.owner.slice(1)},</p>
-              <p>Er staat een nieuwe reminder voor je klaar in het CRM:</p>
-              <table style="border-collapse:collapse;margin:12px 0">
-                <tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Actie</td><td>${reminder.title}</td></tr>
-                <tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Bedrijf</td><td>${company?.name || ''}</td></tr>
-                <tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Datum</td><td>${reminder.dueDate}</td></tr>
-                ${reminder.note ? `<tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Notitie</td><td>${reminder.note}</td></tr>` : ''}
-              </table>
-              <p>Open het dashboard voor meer informatie.</p>
-            `,
+            html: mailOpmaak({
+              titel: `CRM Reminder: ${reminder.title}`,
+              voorkop: 'CRM reminder',
+              kop: escapeHtml(reminder.title),
+              voet: 'kort',
+              inhoud: [
+                alinea(`Hallo ${escapeHtml(voornaamEigenaar)},`),
+                alinea('Er staat een nieuwe reminder voor je klaar in het CRM:'),
+                gegevens([
+                  ['Actie', escapeHtml(reminder.title)],
+                  ['Bedrijf', escapeHtml(company?.name || '')],
+                  ['Datum', escapeHtml(reminder.dueDate)],
+                  ['Notitie', reminder.note ? escapeHtml(reminder.note) : null],
+                ]),
+                knoppen(knop('Open het dashboard', 'https://www.doehetextra.nl/dashboard', 'vol')),
+              ].join(''),
+            }),
+            text: `Hallo ${voornaamEigenaar},\n\nEr staat een nieuwe reminder voor je klaar in het CRM.\n\nActie: ${reminder.title}\nBedrijf: ${company?.name || ''}\nDatum: ${reminder.dueDate}${reminder.note ? `\nNotitie: ${reminder.note}` : ''}\n\nOpen het dashboard voor meer informatie.`,
           });
         }
       } catch (mailErr) {

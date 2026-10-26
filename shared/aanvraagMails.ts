@@ -27,19 +27,17 @@ export const TELEFOON_LINK = "tel:0851305915";
 export const WHATSAPP_LINK = "https://wa.me/31851305915";
 export const MAILADRES = "info@doehetextra.nl";
 export const ADRES = "Herengracht 372, 1016 CH Amsterdam";
-export const OPENINGSTIJDEN = "ma–vr 9:00–18:00";
+export const OPENINGSTIJDEN = "ma t/m vr 9:00 tot 18:00";
 export const INTERNE_ONTVANGERS = ["max@doehetextra.nl", "eveline@doehetextra.nl"];
 export const AFZENDER = "EXTRA <max@doehetextra.nl>";
 
-/** Minimale HTML-escaping voor waarden die uit een formulier komen. */
-export function escapeHtml(waarde: unknown): string {
-  return String(waarde ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import {
+  escapeHtml, mailOpmaak, brancheVanLocatie,
+  alinea, link, gegevens, donkerBlok, infoBlok, afsluiting,
+} from "./mailOpmaak";
+
+/** Minimale HTML-escaping voor waarden die uit een formulier komen (uit de gedeelde opmaak). */
+export { escapeHtml };
 
 /** Regeleindes naar <br> nadat er geëscaped is (voor vrije tekstvelden). */
 export function tekstNaarHtml(waarde: unknown): string {
@@ -92,50 +90,26 @@ export interface Mail {
   text: string;
 }
 
-const VOET_HTML = `
-  <p style="margin:24px 0 0;font-size:13px;color:#6b7280;line-height:1.7;">
-    EXTRA Uitzendbureau · ${escapeHtml(ADRES)}<br>
-    <a href="${TELEFOON_LINK}" style="color:#7c3aed;">${escapeHtml(TELEFOON)}</a> (${escapeHtml(OPENINGSTIJDEN)}) ·
-    <a href="${WHATSAPP_LINK}" style="color:#7c3aed;">WhatsApp</a> ·
-    <a href="mailto:${MAILADRES}" style="color:#7c3aed;">${escapeHtml(MAILADRES)}</a>
-  </p>`;
-
-function omhulsel(titel: string, ondertitel: string, binnenkant: string): string {
-  return `
-<div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
-  <div style="background:#7c3aed;padding:20px 24px;border-radius:8px 8px 0 0;">
-    <h2 style="margin:0;color:#fff;font-size:18px;">${escapeHtml(titel)}</h2>
-    <p style="margin:4px 0 0;color:#ddd6fe;font-size:13px;">${escapeHtml(ondertitel)}</p>
-  </div>
-  <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;color:#111827;font-size:15px;line-height:1.65;">
-    ${binnenkant}
-  </div>
-</div>`;
-}
-
-function tabel(rijen: [string, string][]): string {
-  const cellen = rijen
-    .map(
-      ([label, waarde]) =>
-        `<tr><td style="padding:6px 12px;font-weight:600;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;width:150px;white-space:nowrap;">${escapeHtml(
-          label,
-        )}</td><td style="padding:6px 12px;color:#111827;border:1px solid #e5e7eb;">${tekstNaarHtml(waarde)}</td></tr>`,
-    )
-    .join("");
-  return `<table style="width:100%;border-collapse:collapse;font-size:14px;">${cellen}</table>`;
-}
+/** Bereikbaarheid onderaan de mails aan bezoekers. */
+const BEREIKBAAR_HTML = alinea(
+  `${link(escapeHtml(TELEFOON), TELEFOON_LINK)} (${escapeHtml(OPENINGSTIJDEN)}) · ${link("WhatsApp", WHATSAPP_LINK)} · ${link(escapeHtml(MAILADRES), `mailto:${MAILADRES}`)}`,
+  { klein: true, marge: "18px 0 0" },
+);
 
 /** Naar kantoor: er is een bericht binnengekomen via /contact. */
 export function contactBerichtInternMail(b: ContactBericht): Mail {
-  const html = omhulsel(
-    "Nieuw bericht via de website",
-    "Verstuurd via het contactformulier op doehetextra.nl",
-    tabel([
-      ["Naam", b.naam],
-      ["E-mail", b.email],
-      ["Bericht", b.bericht],
+  const html = mailOpmaak({
+    titel: "Nieuw bericht via de website",
+    voorkop: "Contactformulier op doehetextra.nl",
+    kop: "Nieuw bericht via de website",
+    preheader: `${b.naam}: ${b.bericht.slice(0, 80)}`,
+    voet: "kort",
+    inhoud: gegevens([
+      ["Naam", escapeHtml(b.naam)],
+      ["E-mail", escapeHtml(b.email)],
+      ["Bericht", tekstNaarHtml(b.bericht)],
     ]),
-  );
+  });
   return {
     subject: `Contactbericht van ${b.naam}`,
     html,
@@ -146,27 +120,24 @@ export function contactBerichtInternMail(b: ContactBericht): Mail {
 /** Naar de afzender: bevestiging dat het bericht is aangekomen. */
 export function contactBerichtBevestigingMail(b: ContactBericht): Mail {
   const voornaam = b.naam.split(/\s+/)[0] || b.naam;
-  const html = omhulsel(
-    "We hebben je bericht ontvangen",
-    "Bedankt voor je bericht aan EXTRA",
-    `
-    <p style="margin:0;">Hoi ${escapeHtml(voornaam)},</p>
-    <p style="margin:14px 0 0;">Je bericht is bij ons binnengekomen. We lezen alles zelf en reageren tijdens kantooruren (${escapeHtml(
-      OPENINGSTIJDEN,
-    )}) meestal dezelfde dag.</p>
-    <p style="margin:14px 0 0;">Heb je haast? Bel gerust <a href="${TELEFOON_LINK}" style="color:#7c3aed;font-weight:600;">${escapeHtml(
-      TELEFOON,
-    )}</a> of stuur een <a href="${WHATSAPP_LINK}" style="color:#7c3aed;font-weight:600;">WhatsApp</a>.</p>
-    <div style="margin:22px 0 0;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;">
-      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Dit stuurde je ons</p>
-      <p style="margin:0;color:#374151;">${tekstNaarHtml(b.bericht)}</p>
-    </div>
-    ${VOET_HTML}`,
-  );
+  const html = mailOpmaak({
+    titel: "We hebben je bericht ontvangen",
+    voorkop: "Bericht ontvangen",
+    kop: "We hebben je bericht ontvangen",
+    preheader: "We reageren tijdens kantooruren meestal dezelfde dag.",
+    inhoud: [
+      alinea(`Hoi ${escapeHtml(voornaam)},`),
+      alinea(`Je bericht is bij ons binnengekomen. We lezen alles zelf en reageren tijdens kantooruren (${escapeHtml(OPENINGSTIJDEN)}) meestal dezelfde dag.`),
+      alinea(`Heb je haast? Bel gerust ${link(escapeHtml(TELEFOON), TELEFOON_LINK)} of stuur een ${link("WhatsApp", WHATSAPP_LINK)}.`),
+      infoBlok("algemeen", `<p style="margin:0;font-size:15px;line-height:1.6;color:#5C594F;">${tekstNaarHtml(b.bericht)}</p>`, { label: "Dit stuurde je ons" }),
+      afsluiting("nl"),
+      BEREIKBAAR_HTML,
+    ].join(""),
+  });
   return {
-    subject: "We hebben je bericht ontvangen — EXTRA",
+    subject: "We hebben je bericht ontvangen",
     html,
-    text: `Hoi ${voornaam},\n\nJe bericht is bij ons binnengekomen. We reageren tijdens kantooruren (${OPENINGSTIJDEN}) meestal dezelfde dag.\n\nHeb je haast? Bel ${TELEFOON} of stuur een WhatsApp.\n\nDit stuurde je ons:\n${b.bericht}\n\nEXTRA Uitzendbureau · ${ADRES}`,
+    text: `Hoi ${voornaam},\n\nJe bericht is bij ons binnengekomen. We reageren tijdens kantooruren (${OPENINGSTIJDEN}) meestal dezelfde dag.\n\nHeb je haast? Bel ${TELEFOON} of stuur een WhatsApp.\n\nDit stuurde je ons:\n${b.bericht}\n\nTot snel! 🤎\nTeam EXTRA\n\nEXTRA Uitzendbureau · ${ADRES}`,
   };
 }
 
@@ -180,6 +151,8 @@ export interface AanvraagSamenvatting {
   locatienaam?: string | null;
   functies?: string[];
   opmerkingen?: string | null;
+  /** Type locatie (hotel, restaurant, eventlocatie, cateraar, logistiek). Bepaalt de kleur van de mail. */
+  locatieType?: string | null;
 }
 
 /**
@@ -201,31 +174,30 @@ export function aanvraagBevestigingMail(a: AanvraagSamenvatting): Mail {
   if (a.functies && a.functies.length > 0) rijen.push(["Functies", a.functies.join(", ")]);
   if (a.opmerkingen) rijen.push(["Toelichting", a.opmerkingen]);
 
-  const html = omhulsel(
-    "Je aanvraag is ontvangen",
-    "Personeelsaanvraag via doehetextra.nl",
-    `
-    <p style="margin:0;">Hoi ${escapeHtml(voornaam)},</p>
-    <p style="margin:14px 0 0;">We hebben je aanvraag binnen. Tijdens kantooruren (${escapeHtml(
-      OPENINGSTIJDEN,
-    )}) bellen we je meestal binnen een uur terug op <strong>${escapeHtml(
-      a.telefoon,
-    )}</strong>. Komt je aanvraag 's avonds of in het weekend binnen, dan bellen we je de eerstvolgende werkdag in de ochtend.</p>
-    <p style="margin:14px 0 0;">Is het urgent — bijvoorbeeld voor morgenochtend? Bel dan gerust zelf: <a href="${TELEFOON_LINK}" style="color:#7c3aed;font-weight:600;">${escapeHtml(
-      TELEFOON,
-    )}</a>. We zijn ook bereikbaar via <a href="${WHATSAPP_LINK}" style="color:#7c3aed;font-weight:600;">WhatsApp</a>.</p>
-    <div style="margin:22px 0 0;">
-      <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Dit hebben we genoteerd</p>
-      ${tabel(rijen)}
-    </div>
-    <p style="margin:20px 0 0;font-size:13px;color:#6b7280;">Klopt er iets niet? Reageer op deze mail, dan passen we het aan.</p>
-    ${VOET_HTML}`,
-  );
+  const branche = brancheVanLocatie(a.locatieType);
+  const html = mailOpmaak({
+    branche,
+    titel: "Je aanvraag is ontvangen",
+    voorkop: "Personeelsaanvraag",
+    kop: "Je aanvraag is ontvangen",
+    preheader: "Tijdens kantooruren bellen we je meestal binnen een uur terug.",
+    inhoud: [
+      alinea(`Hoi ${escapeHtml(voornaam)},`),
+      alinea(`We hebben je aanvraag binnen. Tijdens kantooruren (${escapeHtml(OPENINGSTIJDEN)}) bellen we je meestal binnen een uur terug op <b style="color:#37352C;">${escapeHtml(a.telefoon)}</b>. Komt je aanvraag 's avonds of in het weekend binnen, dan bellen we je de eerstvolgende werkdag in de ochtend.`, { marge: "0 0 22px" }),
+      gegevens(rijen.map(([l, w]) => [l, tekstNaarHtml(w)] as [string, string]), { label: "Dit hebben we genoteerd" }),
+      donkerBlok(branche, "Is het urgent, bijvoorbeeld voor morgenochtend?", "Bel dan gerust zelf. We zijn ook bereikbaar via WhatsApp.", [
+        { tekst: `Bel ${escapeHtml(TELEFOON)}`, href: TELEFOON_LINK },
+        { tekst: "WhatsApp", href: WHATSAPP_LINK },
+      ]),
+      alinea("Klopt er iets niet? Reageer op deze mail, dan passen we het aan.", { klein: true, marge: "0" }),
+      afsluiting("nl"),
+    ].join(""),
+  });
 
   const tekstRegels = rijen.map(([l, v]) => `${l}: ${v}`).join("\n");
   return {
-    subject: `Je aanvraag is ontvangen — EXTRA`,
+    subject: `Je aanvraag bij EXTRA is ontvangen`,
     html,
-    text: `Hoi ${voornaam},\n\nWe hebben je aanvraag binnen. Tijdens kantooruren (${OPENINGSTIJDEN}) bellen we je meestal binnen een uur terug op ${a.telefoon}. Buiten kantooruren bellen we de eerstvolgende werkdag in de ochtend.\n\nIs het urgent? Bel ${TELEFOON} of stuur een WhatsApp.\n\nDit hebben we genoteerd:\n${tekstRegels}\n\nEXTRA Uitzendbureau · ${ADRES}`,
+    text: `Hoi ${voornaam},\n\nWe hebben je aanvraag binnen. Tijdens kantooruren (${OPENINGSTIJDEN}) bellen we je meestal binnen een uur terug op ${a.telefoon}. Buiten kantooruren bellen we de eerstvolgende werkdag in de ochtend.\n\nIs het urgent? Bel ${TELEFOON} of stuur een WhatsApp.\n\nDit hebben we genoteerd:\n${tekstRegels}\n\nTot snel! 🤎\nTeam EXTRA\n\nEXTRA Uitzendbureau · ${ADRES}`,
   };
 }

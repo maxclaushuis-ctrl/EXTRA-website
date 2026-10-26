@@ -75,7 +75,8 @@ console.log("contactBerichtInternMail");
   test("html bevat het bericht", m.html.includes("housekeeping"));
   test("tekstversie is gevuld", m.text.length > 40);
   const kwaad = contactBerichtInternMail({ ...geldig, naam: '<img src=x onerror="alert(1)">' });
-  test("invoer wordt geëscaped in de html", !kwaad.html.includes("<img") && kwaad.html.includes("&lt;img"));
+  // De opmaak bevat zelf <img>-tags (banner, logo); het gaat om de invoer.
+  test("invoer wordt geëscaped in de html", !kwaad.html.includes("<img src=x") && kwaad.html.includes("&lt;img"));
   test("onderwerp bevat geen html-escaping", kwaad.subject.includes("<img"));
 }
 

@@ -4,6 +4,10 @@ import { EmailTemplate, User } from '@shared/schema';
 import fs from 'fs';
 import path from 'path';
 import { downloadCvFile } from './objectStorageFiles';
+import {
+  mailOpmaak, bannerUrl, brancheVanFunctie, escapeHtml,
+  alinea, tussenkop, knop, knoppen, link, infoBlok, stappen, gegevens, melding, afsluiting,
+} from '@shared/mailOpmaak';
 
 // Configuratie voor de mail service
 let mailService: MailService | null = null;
@@ -11,22 +15,15 @@ let useMockService = false;
 let mockMailLog: any[] = [];
 
 /**
- * De banner bovenaan elke mail.
+ * De algemene banner (off-white) uit de gedeelde opmaak in shared/mailOpmaak.ts.
  *
- * Stond tot augustus 2026 als data:-URL in de HTML: het bestand is 27 kB, in
- * base64 zo'n 36 kB, en dat in élke mail. Gmail kapt de weergave af rond 102 kB,
- * dus een derde van dat budget ging op aan de banner voordat er één woord in
- * stond. Sinds de mailbouwer afbeeldingen host in plaats van meebakt (zie
- * server/campagneBeelden.ts) is er geen reden meer om dat hier nog wél te doen.
- *
- * Nadeel van een gehoste afbeelding: wie afbeeldingen blokkeert, ziet hem niet.
- * Dat is precies waarom er een alt-tekst "EXTRA" op staat — en het geldt toch al
- * voor elke andere afbeelding in de mail.
- *
- * Let op de extensie: .jpg is 27 kB, de .png in dezelfde map is 175 kB.
+ * Alle mails in dit bestand gebruiken inmiddels mailOpmaak() en kiezen daar zelf
+ * de banner van hun branche. Deze functie blijft voor code die alleen een
+ * banner nodig heeft. De oude paarse banner (email-banner-extra.jpg) blijft op
+ * de site staan, zodat oude mails in inboxen hun afbeelding houden.
  */
 export function getEmailBannerSrc(): string {
-  return 'https://www.doehetextra.nl/email-banner-extra.jpg';
+  return bannerUrl('algemeen');
 }
 
 // Gedeelde responsive CSS voor alle e-mails
@@ -313,6 +310,25 @@ function replaceTemplatePlaceholders(
   return result;
 }
 
+// ─── Mails aan kandidaten en kantoor ─────────────────────────────────────────
+// Alle mails hieronder gebruiken de gedeelde opmaak uit shared/mailOpmaak.ts.
+// Een mail geeft alleen de branche mee; banner en accentkleur volgen daaruit.
+
+const FUNCTIE_LABELS: Record<string, string> = {
+  housekeeping: 'Housekeeping medewerker',
+  horecamedewerker: 'Horecamedewerker',
+  chef: 'Chef / Kok',
+  frontoffice: 'Front office medewerker',
+};
+
+const functieLabel = (functionType: string) => FUNCTIE_LABELS[functionType] || functionType;
+
+/** Voor interne overzichten: een leeg veld wordt "Niet ingevuld" in plaats van weggelaten. */
+const ofNiet = (waarde: string | null | undefined) =>
+  waarde && String(waarde).trim() ? escapeHtml(waarde) : `<span style="font-weight:400;color:#8A8578;">Niet ingevuld</span>`;
+
+const datumNl = (iso: string | null | undefined) => (iso ? iso.split('-').reverse().join('-') : null);
+
 // Stuur bevestigingsmail aan nieuwe kandidaat na aanmelding
 export async function sendCandidateConfirmationEmail(candidate: {
   firstName: string;
@@ -337,148 +353,48 @@ export async function sendCandidateConfirmationEmail(candidate: {
   const fromName = "EXTRA";
 
   const INSTAGRAM_URL = "https://www.instagram.com/doehetextra/";
+  const branche = brancheVanFunctie(candidate.functionType);
+  const voornaam = escapeHtml(candidate.firstName);
 
-  // ─── NL content ──────────────────────────────────────────────────────────
-  const nlBody = `
-    <tr><td style="padding:32px 32px 0;">
-      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Hi ${candidate.firstName},</p>
-      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Leuk dat je je hebt aangemeld bij EXTRA! 🙌</p>
-      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">We hebben je aanmelding en CV goed ontvangen. Ons team gaat er nu mee aan de slag en kijkt of je profiel aansluit bij de functies en opdrachtgevers waar we mee werken.</p>
-    </td></tr>
+  const inhoud = useEnglish
+    ? [
+        alinea(`Hi ${voornaam},`),
+        alinea(`Great that you signed up with EXTRA! 🙌`),
+        alinea(`We have received your application and CV. Our team will now review your profile to see if it matches the roles and clients we work with.`),
+        tussenkop(`What happens next? 👇`),
+        stappen(branche, [
+          `We review your CV and application`,
+          `Does your profile match EXTRA? Then we will send you an invitation to schedule a meeting 📅`,
+          `In that meeting we get to know you better and look at which roles suit you best 🤝`,
+        ]),
+        alinea(`You will hear from us soon! Thanks for your interest in EXTRA ⚡`),
+        infoBlok(branche, `<p style="margin:0 0 14px;font-size:15px;line-height:1.5;">Curious about the kind of work we do? Check out our Instagram 👀</p>${knop('View our Instagram', INSTAGRAM_URL, 'rand')}`),
+        afsluiting('en'),
+      ].join('')
+    : [
+        alinea(`Hi ${voornaam},`),
+        alinea(`Leuk dat je je hebt aangemeld bij EXTRA! 🙌`),
+        alinea(`We hebben je aanmelding en CV goed ontvangen. Ons team gaat er nu mee aan de slag en kijkt of je profiel aansluit bij de functies en opdrachtgevers waar we mee werken.`),
+        tussenkop(`Wat gebeurt er nu? 👇`),
+        stappen(branche, [
+          `We bekijken je CV en aanmelding`,
+          `Past je profiel bij EXTRA? Dan sturen we je een uitnodiging om een gesprek in te plannen 📅`,
+          `In dat gesprek leren we je beter kennen en kijken we welke opdrachten goed bij je passen 🤝`,
+        ]),
+        alinea(`Je hoort dus snel van ons! Bedankt voor je interesse in EXTRA ⚡`),
+        infoBlok(branche, `<p style="margin:0 0 14px;font-size:15px;line-height:1.5;">Benieuwd wat voor opdrachten we doen? Bekijk alvast onze Instagram 👀</p>${knop('Bekijk onze Instagram', INSTAGRAM_URL, 'rand')}`),
+        afsluiting('nl'),
+      ].join('');
 
-    <tr><td style="padding:20px 32px 0;">
-      <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;">
-        <p style="margin:0 0 16px 0;font-size:15px;font-weight:700;color:#1a1a1a;">Wat gebeurt er nu? 👇</p>
-        <table cellpadding="0" cellspacing="0" width="100%">
-          <tr><td style="padding:6px 0;">
-            <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">1️⃣</td>
-              <td style="font-size:14px;color:#333333;line-height:1.65;">We bekijken je CV en aanmelding</td>
-            </tr></table>
-          </td></tr>
-          <tr><td style="padding:6px 0;">
-            <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">2️⃣</td>
-              <td style="font-size:14px;color:#333333;line-height:1.65;">Past je profiel bij EXTRA? Dan sturen we je een uitnodiging om een gesprek in te plannen 📅</td>
-            </tr></table>
-          </td></tr>
-          <tr><td style="padding:6px 0;">
-            <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">3️⃣</td>
-              <td style="font-size:14px;color:#333333;line-height:1.65;">In dat gesprek leren we je beter kennen en kijken we welke opdrachten goed bij je passen 🤝</td>
-            </tr></table>
-          </td></tr>
-        </table>
-      </div>
-    </td></tr>
-
-    <tr><td style="padding:20px 32px 0;">
-      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Je hoort dus snel van ons!</p>
-      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">Bedankt voor je interesse in EXTRA ⚡</p>
-    </td></tr>
-
-    <tr><td style="padding:20px 32px 32px;">
-      <div style="background:#faf9ff;border:1px solid #ede9fe;border-radius:12px;padding:24px 28px;text-align:center;">
-        <p style="margin:0 0 6px 0;font-size:15px;color:#333333;line-height:1.6;">Benieuwd wat voor opdrachten we doen?</p>
-        <p style="margin:0 0 20px 0;font-size:15px;color:#333333;line-height:1.6;">Bekijk alvast onze Instagram 👀</p>
-        <a href="${INSTAGRAM_URL}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:15px;font-weight:600;font-family:Arial,sans-serif;">Bekijk onze Instagram</a>
-      </div>
-    </td></tr>
-  `;
-
-  // ─── EN content ──────────────────────────────────────────────────────────
-  const enBody = `
-    <!-- 2. INTRO -->
-    <tr><td style="padding:32px 32px 0;">
-      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Hi ${candidate.firstName},</p>
-      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Great that you signed up with EXTRA! 🙌</p>
-      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">We have received your application and CV. Our team will now review your profile to see if it matches the roles and clients we work with.</p>
-    </td></tr>
-
-    <tr><td style="padding:20px 32px 0;">
-      <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;">
-        <p style="margin:0 0 16px 0;font-size:15px;font-weight:700;color:#1a1a1a;">What happens next? 👇</p>
-        <table cellpadding="0" cellspacing="0" width="100%">
-          <tr><td style="padding:6px 0;">
-            <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">1️⃣</td>
-              <td style="font-size:14px;color:#333333;line-height:1.65;">We review your CV and application</td>
-            </tr></table>
-          </td></tr>
-          <tr><td style="padding:6px 0;">
-            <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">2️⃣</td>
-              <td style="font-size:14px;color:#333333;line-height:1.65;">Does your profile match EXTRA? Then we will send you an invitation to schedule a meeting 📅</td>
-            </tr></table>
-          </td></tr>
-          <tr><td style="padding:6px 0;">
-            <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">3️⃣</td>
-              <td style="font-size:14px;color:#333333;line-height:1.65;">In that meeting we get to know you better and look at which roles suit you best 🤝</td>
-            </tr></table>
-          </td></tr>
-        </table>
-      </div>
-    </td></tr>
-
-    <tr><td style="padding:20px 32px 0;">
-      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">You will hear from us soon!</p>
-      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">Thanks for your interest in EXTRA ⚡</p>
-    </td></tr>
-
-    <tr><td style="padding:20px 32px 32px;">
-      <div style="background:#faf9ff;border:1px solid #ede9fe;border-radius:12px;padding:24px 28px;text-align:center;">
-        <p style="margin:0 0 6px 0;font-size:15px;color:#333333;line-height:1.6;">Curious about the kind of work we do?</p>
-        <p style="margin:0 0 20px 0;font-size:15px;color:#333333;line-height:1.6;">Check out our Instagram 👀</p>
-        <a href="${INSTAGRAM_URL}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:15px;font-weight:600;font-family:Arial,sans-serif;">View our Instagram</a>
-      </div>
-    </td></tr>
-  `;
-
-  const html = `<!DOCTYPE html>
-<html lang="${useEnglish ? 'en' : 'nl'}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>${useEnglish ? "Your application is in – EXTRA" : "Je aanmelding is binnen – EXTRA"}</title>
-${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f0eff5;font-family:Arial,Helvetica,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eff5;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-
-        <!-- ① BANNER -->
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;border-radius:12px 12px 0 0;">
-          </td>
-        </tr>
-
-        <!-- ② CONTENT -->
-        <tr>
-          <td style="background:#ffffff;border-radius:0 0 12px 12px;">
-            <table cellpadding="0" cellspacing="0" width="100%">
-              ${useEnglish ? enBody : nlBody}
-
-              <!-- FOOTER -->
-              <tr>
-                <td style="padding:20px 32px 28px;border-top:1px solid #f0edf8;text-align:center;">
-                  <p style="margin:0 0 4px 0;font-size:13px;font-weight:700;color:#7c3aed;letter-spacing:0.5px;">EXTRA</p>
-                  <p style="margin:0;font-size:12px;color:#9ca3af;">Amsterdam</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const html = mailOpmaak({
+    branche,
+    taal: useEnglish ? 'en' : 'nl',
+    titel: useEnglish ? "Your application is in" : "Je aanmelding is binnen",
+    voorkop: useEnglish ? 'Application' : 'Aanmelding',
+    kop: useEnglish ? `Your application is in, ${voornaam}!` : `Je aanmelding is binnen, ${voornaam}!`,
+    preheader: useEnglish ? 'We have received your application and CV.' : 'We hebben je aanmelding en CV goed ontvangen.',
+    inhoud,
+  });
 
   const text = useEnglish
     ? `Hi ${candidate.firstName},
@@ -498,8 +414,8 @@ Thanks for your interest in EXTRA ⚡
 
 Check out our Instagram: ${INSTAGRAM_URL}
 
-EXTRA
-Amsterdam`
+See you soon! 🤎
+Team EXTRA`
     : `Hi ${candidate.firstName},
 
 Leuk dat je je hebt aangemeld bij EXTRA! 🙌
@@ -517,8 +433,8 @@ Bedankt voor je interesse in EXTRA ⚡
 
 Bekijk onze Instagram: ${INSTAGRAM_URL}
 
-EXTRA
-Amsterdam`;
+Tot snel! 🤎
+Team EXTRA`;
 
   return await sendEmail({
     to: candidate.email,
@@ -540,6 +456,32 @@ function getAdminRecipientsForFunction(functionType: string): string[] {
   return ['lea@doehetextra.nl', 'eveline@doehetextra.nl', 'max@doehetextra.nl'];
 }
 
+/** Gegevens van een kandidaat voor de interne meldingen. */
+function kandidaatGegevens(candidate: {
+  firstName: string; lastName: string; functionType: string; city?: string | null; email?: string | null;
+  birthDate?: string | null; phone?: string | null; nationality?: string | null; sourceChannel?: string | null;
+}): string {
+  const rijen: [string, string][] = [
+    ['Naam', escapeHtml(`${candidate.firstName} ${candidate.lastName}`)],
+    ['Functie', escapeHtml(functieLabel(candidate.functionType))],
+    ['Woonplaats', ofNiet(candidate.city)],
+    ['Telefoon', ofNiet(candidate.phone)],
+    ['E-mail', ofNiet(candidate.email)],
+    ['Geboortedatum', ofNiet(datumNl(candidate.birthDate))],
+    ['Nationaliteit', ofNiet(candidate.nationality)],
+  ];
+  if (candidate.sourceChannel) rijen.push(['Binnenkomst via', escapeHtml(candidate.sourceChannel)]);
+  return gegevens(rijen);
+}
+
+const tekstGegevens = (candidate: {
+  firstName: string; lastName: string; functionType: string; city?: string | null; email?: string | null;
+  birthDate?: string | null; phone?: string | null; nationality?: string | null; sourceChannel?: string | null;
+}) => {
+  const n = (w: string | null | undefined) => (w && String(w).trim() ? w : 'niet ingevuld');
+  return `Naam: ${candidate.firstName} ${candidate.lastName}\nFunctie: ${functieLabel(candidate.functionType)}\nWoonplaats: ${n(candidate.city)}\nTelefoon: ${n(candidate.phone)}\nE-mail: ${n(candidate.email)}\nGeboortedatum: ${n(candidate.birthDate)}\nNationaliteit: ${n(candidate.nationality)}\nBinnenkomst via: ${n(candidate.sourceChannel)}`;
+};
+
 // Stuur admin-notificatiemail bij nieuwe voltooide aanmelding
 export async function sendAdminCandidateNotificationEmail(candidate: {
   id: number;
@@ -556,13 +498,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   baseUrl?: string | null;
   sourceChannel?: string | null;
 }): Promise<boolean> {
-  const functionLabels: Record<string, string> = {
-    housekeeping: 'Housekeeping medewerker',
-    horecamedewerker: 'Horecamedewerker',
-    chef: 'Chef / Kok',
-    frontoffice: 'Front office medewerker',
-  };
-  const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
+  const label = functieLabel(candidate.functionType);
 
   const baseUrl = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
   const acceptUrl = candidate.reviewToken
@@ -571,12 +507,6 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   const rejectUrl = candidate.reviewToken
     ? `${baseUrl}/api/candidates/${candidate.id}/reject?token=${candidate.reviewToken}`
     : `${baseUrl}/dashboard`;
-
-  const cell = (label: string, value: string | null | undefined) =>
-    `<td style="padding:10px 14px;vertical-align:top;width:50%;border-bottom:1px solid #f3f4f6;">
-      <div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${label}</div>
-      <div style="color:#111827;font-size:14px;font-weight:600;">${value || '—'}</div>
-    </td>`;
 
   // Laad CV bijlage uit Replit Object Storage (vóór het opbouwen van de HTML,
   // zodat de "CV bijgevoegd"-melding klopt met wat daadwerkelijk is bijgesloten)
@@ -604,74 +534,24 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   }
   const hasAttachableCv = attachments.length > 0;
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 12px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:20px 20px 8px;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-              <tr>
-                ${cell('Voornaam', candidate.firstName)}
-                ${cell('Achternaam', candidate.lastName)}
-              </tr>
-              <tr>
-                ${cell('Functie', functionLabel)}
-                ${cell('Woonplaats', candidate.city)}
-              </tr>
-              <tr>
-                ${cell('Telefoonnummer', candidate.phone)}
-                ${cell('E-mail', candidate.email)}
-              </tr>
-              <tr>
-                ${cell('Geboortedatum', candidate.birthDate ? candidate.birthDate.split('-').reverse().join('-') : null)}
-                ${cell('Nationaliteit', candidate.nationality)}
-              </tr>
-              ${candidate.sourceChannel ? `<tr><td colspan="2" style="padding:10px 14px;vertical-align:top;"><div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Binnenkomst via</div><div style="color:#111827;font-size:14px;font-weight:600;">${candidate.sourceChannel}</div></td></tr>` : ''}
-            </table>
-            ${hasAttachableCv ? `<div style="margin:16px 0 8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">📎 CV bijgevoegd als bijlage bij deze mail</div>` : `<div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">⚠️ Nog geen CV geüpload door kandidaat</div>`}
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:8px;">
-              <tr>
-                <td style="padding:0 0 8px 0;">
-                  <a href="${acceptUrl}" style="display:block;background:#16a34a;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">✅ Accepteren</a>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:0 0 12px 0;">
-                  <a href="${rejectUrl}" style="display:block;background:#dc2626;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">❌ Afwijzen</a>
-                </td>
-              </tr>
-              <tr>
-                <td style="text-align:center;padding-bottom:4px;">
-                  <a href="${baseUrl}/dashboard" style="display:inline-block;color:#7c3aed;text-decoration:underline;font-size:13px;">Bekijk in dashboard</a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const html = mailOpmaak({
+    branche: brancheVanFunctie(candidate.functionType),
+    titel: `Nieuwe aanmelding: ${candidate.firstName} ${candidate.lastName}`,
+    voorkop: 'Nieuwe aanmelding via doehetextra.nl',
+    kop: escapeHtml(`${candidate.firstName} ${candidate.lastName}`),
+    preheader: `${label}${candidate.city ? `, ${candidate.city}` : ''}`,
+    voet: 'kort',
+    inhoud: [
+      kandidaatGegevens(candidate),
+      hasAttachableCv
+        ? melding('goed', 'CV bijgevoegd', 'Je vindt het cv als bijlage bij deze mail.')
+        : melding('let-op', 'Nog geen cv', 'De kandidaat heeft nog geen cv geüpload.'),
+      knoppen(knop('Accepteren', acceptUrl, 'vol'), knop('Afwijzen', rejectUrl, 'rand')),
+      alinea(`Of ${link('bekijk de aanmelding in het dashboard', `${baseUrl}/dashboard`)}.`, { klein: true, marge: '4px 0 0' }),
+    ].join(''),
+  });
 
-  const text = `Nieuwe aanmelding via doehetextra.nl\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}\nBinnenkomst via: ${candidate.sourceChannel || '—'}\n\n✅ Accepteren: ${acceptUrl}\n❌ Afwijzen: ${rejectUrl}`;
+  const text = `Nieuwe aanmelding via doehetextra.nl\n\n${tekstGegevens(candidate)}\n\nAccepteren: ${acceptUrl}\nAfwijzen: ${rejectUrl}`;
 
   const recipients = getAdminRecipientsForFunction(candidate.functionType);
 
@@ -680,7 +560,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
     sendEmail({
       to,
       from: 'EXTRA 🚀 <max@doehetextra.nl>',
-      subject: `Nieuwe aanmelding – ${candidate.firstName} ${candidate.lastName} (${functionLabel})`,
+      subject: `Nieuwe aanmelding: ${candidate.firstName} ${candidate.lastName} (${label})`,
       html,
       text,
       attachments,
@@ -703,87 +583,33 @@ export async function sendAdminCandidateNoCvEmail(candidate: {
   baseUrl?: string | null;
   sourceChannel?: string | null;
 }): Promise<boolean> {
-  const functionLabels: Record<string, string> = {
-    housekeeping: 'Housekeeping medewerker',
-    horecamedewerker: 'Horecamedewerker',
-    chef: 'Chef / Kok',
-    frontoffice: 'Front office medewerker',
-  };
-  const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
+  const label = functieLabel(candidate.functionType);
   const baseUrl = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
   const dashboardUrl = `${baseUrl}/dashboard`;
 
-  const cell = (label: string, value: string | null | undefined) =>
-    `<td style="padding:10px 14px;vertical-align:top;width:50%;border-bottom:1px solid #f3f4f6;">
-      <div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${label}</div>
-      <div style="color:#111827;font-size:14px;font-weight:600;">${value || '—'}</div>
-    </td>`;
+  const html = mailOpmaak({
+    branche: brancheVanFunctie(candidate.functionType),
+    titel: `Nieuwe aanmelding zonder cv: ${candidate.firstName} ${candidate.lastName}`,
+    voorkop: 'Nieuwe aanmelding, nog zonder cv',
+    kop: escapeHtml(`${candidate.firstName} ${candidate.lastName}`),
+    preheader: `${label}. Accepteren of afwijzen kan zodra het cv er is.`,
+    voet: 'kort',
+    inhoud: [
+      alinea(`Er is een nieuwe aanmelding binnen, <b style="color:#37352C;">nog zonder cv</b>. Zodra de kandidaat het cv uploadt, krijg je een nieuwe mail waarin je kunt accepteren of afwijzen.`),
+      kandidaatGegevens(candidate),
+      melding('let-op', 'Wacht op het cv', 'De kandidaat is uitgenodigd om het cv te uploaden. Accepteren of afwijzen kan pas als het cv binnen is.'),
+      knoppen(knop('Bekijk in dashboard', dashboardUrl, 'vol')),
+    ].join(''),
+  });
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 12px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}" width="600" height="200" alt="EXTRA" style="display:block;width:100%;max-width:600px;height:auto;border:0;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:20px 20px 8px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Nieuwe aanmelding ontvangen — <strong>nog geen CV bijgevoegd</strong>. Zodra de kandidaat het CV uploadt, ontvang je een nieuwe e-mail met de mogelijkheid om te accepteren of af te wijzen.</p>
-            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-              <tr>
-                ${cell('Voornaam', candidate.firstName)}
-                ${cell('Achternaam', candidate.lastName)}
-              </tr>
-              <tr>
-                ${cell('Functie', functionLabel)}
-                ${cell('Woonplaats', candidate.city)}
-              </tr>
-              <tr>
-                ${cell('Telefoonnummer', candidate.phone)}
-                ${cell('E-mail', candidate.email)}
-              </tr>
-              <tr>
-                ${cell('Geboortedatum', candidate.birthDate ? candidate.birthDate.split('-').reverse().join('-') : null)}
-                ${cell('Nationaliteit', candidate.nationality)}
-              </tr>
-              ${candidate.sourceChannel ? `<tr><td colspan="2" style="padding:10px 14px;vertical-align:top;"><div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Binnenkomst via</div><div style="color:#111827;font-size:14px;font-weight:600;">${candidate.sourceChannel}</div></td></tr>` : ''}
-            </table>
-            <div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">
-              ⏳ Kandidaat is uitgenodigd om het CV te uploaden. Accepteren of afwijzen is pas mogelijk na ontvangst van het CV.
-            </div>
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:8px;">
-              <tr>
-                <td style="text-align:center;padding-bottom:4px;">
-                  <a href="${dashboardUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;">Bekijk in dashboard</a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-
-  const text = `Nieuwe aanmelding ontvangen (nog geen CV)\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}\nBinnenkomst via: ${candidate.sourceChannel || '—'}\n\nDe kandidaat heeft nog geen CV geüpload. Je ontvangt een tweede e-mail zodra het CV er is.\n\nBekijk in dashboard: ${dashboardUrl}`;
+  const text = `Nieuwe aanmelding ontvangen (nog geen cv)\n\n${tekstGegevens(candidate)}\n\nDe kandidaat heeft nog geen cv geüpload. Je ontvangt een tweede mail zodra het cv er is.\n\nBekijk in dashboard: ${dashboardUrl}`;
 
   const recipients = getAdminRecipientsForFunction(candidate.functionType);
   const results = await Promise.all(recipients.map(to =>
     sendEmail({
       to,
       from: 'EXTRA 🚀 <max@doehetextra.nl>',
-      subject: `Nieuwe aanmelding (geen CV) – ${candidate.firstName} ${candidate.lastName} (${functionLabel})`,
+      subject: `Nieuwe aanmelding zonder cv: ${candidate.firstName} ${candidate.lastName} (${label})`,
       html,
       text,
     })
@@ -795,55 +621,31 @@ export async function sendAdminCandidateNoCvEmail(candidate: {
 export async function sendCalendlyInviteEmail(candidate: {
   firstName: string;
   email: string;
+  functionType?: string | null;
 }): Promise<boolean> {
   if (!candidate.email) return false;
 
   const calendlyUrl = 'https://calendly.com/max-_zs/30min';
+  const voornaam = escapeHtml(candidate.firstName);
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px 28px 24px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Wat leuk dat je je bij ons hebt aangemeld!</p>
-            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Op basis van je aanmelding en CV nodigen we je graag uit voor een kort kennismakingsgesprek. Tijdens dit gesprek vertellen we je meer over EXTRA en kijken we samen welke opdrachten goed bij je passen.</p>
-            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Plan hier eenvoudig een moment dat voor jou uitkomt:</p>
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-              <tr>
-                <td>
-                  <a href="${calendlyUrl}" style="display:block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">📅 Plan een gesprek in</a>
-                </td>
-              </tr>
-            </table>
-            <p style="margin:0 0 4px;font-size:13px;color:#9ca3af;">Of kopieer de link: <a href="${calendlyUrl}" style="color:#7c3aed;word-break:break-all;">${calendlyUrl}</a></p>
-            <p style="margin:20px 0 0;font-size:15px;color:#374151;">We spreken je snel!<br><br>Groet,<br><strong>Team EXTRA</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const html = mailOpmaak({
+    branche: brancheVanFunctie(candidate.functionType),
+    titel: 'Plan je gesprek bij EXTRA',
+    voorkop: 'Kennismaking',
+    kop: 'Plan je gesprek in',
+    preheader: 'We nodigen je graag uit voor een kort kennismakingsgesprek.',
+    inhoud: [
+      alinea(`Hi ${voornaam},`),
+      alinea('Wat leuk dat je je bij ons hebt aangemeld!'),
+      alinea('Op basis van je aanmelding en CV nodigen we je graag uit voor een kort kennismakingsgesprek. Tijdens dit gesprek vertellen we je meer over EXTRA en kijken we samen welke opdrachten goed bij je passen.'),
+      alinea('Plan hier eenvoudig een moment dat voor jou uitkomt:'),
+      knoppen(knop('📅 Plan een gesprek in', calendlyUrl, 'vol')),
+      alinea(`Of kopieer de link: ${link(calendlyUrl, calendlyUrl)}`, { klein: true }),
+      afsluiting('nl', { groet: 'We spreken je snel!' }),
+    ].join(''),
+  });
 
-  const text = `Hi ${candidate.firstName},\n\nWat leuk dat je je bij ons hebt aangemeld!\n\nOp basis van je aanmelding en CV nodigen we je graag uit voor een kort kennismakingsgesprek. Tijdens dit gesprek vertellen we je meer over EXTRA en kijken we samen welke opdrachten goed bij je passen.\n\nPlan hier eenvoudig een moment dat voor jou uitkomt:\n${calendlyUrl}\n\nWe spreken je snel!\n\nGroet,\nTeam EXTRA`;
+  const text = `Hi ${candidate.firstName},\n\nWat leuk dat je je bij ons hebt aangemeld!\n\nOp basis van je aanmelding en CV nodigen we je graag uit voor een kort kennismakingsgesprek. Tijdens dit gesprek vertellen we je meer over EXTRA en kijken we samen welke opdrachten goed bij je passen.\n\nPlan hier eenvoudig een moment dat voor jou uitkomt:\n${calendlyUrl}\n\nWe spreken je snel! 🤎\nTeam EXTRA`;
 
   return await sendEmail({
     to: candidate.email,
@@ -854,50 +656,42 @@ export async function sendCalendlyInviteEmail(candidate: {
   });
 }
 
+/** Gedeelde opbouw voor de drie afwijzingsmails: zelfde toon, andere tekst. */
+function afwijzingsMail(o: { voornaam: string; functionType?: string | null; alineas: string[]; titel: string }): { html: string; text: string } {
+  const html = mailOpmaak({
+    branche: brancheVanFunctie(o.functionType),
+    titel: o.titel,
+    voorkop: 'Je sollicitatie',
+    kop: 'Een update over je sollicitatie',
+    inhoud: [
+      alinea(`Hi ${escapeHtml(o.voornaam)},`),
+      ...o.alineas.map(a => alinea(a)),
+      afsluiting('nl', { groet: 'Groet,', hartje: false }),
+    ].join(''),
+  });
+  const text = `Hi ${o.voornaam},\n\n${o.alineas.join('\n\n')}\n\nGroet,\nTeam EXTRA`;
+  return { html, text };
+}
+
 // Stuur afwijzingsmail naar sollicitant
 export async function sendApplicationRejectionEmail(applicant: {
   firstName: string;
   email: string;
+  functionType?: string | null;
 }): Promise<boolean> {
   if (!applicant.email) return false;
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${applicant.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt dat je laatst bij ons langs bent geweest voor het gesprek. Leuk om kennis te maken en meer over je te horen!</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Op dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat we momenteel beschikbaar hebben in verhouding tot het aantal mensen in onze poule.</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Dat zegt dus niet per se iets over jou, maar meer over de planning en het aantal plekken dat we nu hebben.</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je in ieder geval veel succes met je verdere zoektocht en wie weet kruisen onze paden in de toekomst nog eens.</p>
-            <p style="margin:0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-
-  const text = `Hi ${applicant.firstName},\n\nBedankt dat je laatst bij ons langs bent geweest voor het gesprek. Leuk om kennis te maken en meer over je te horen!\n\nOp dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat we momenteel beschikbaar hebben in verhouding tot het aantal mensen in onze poule.\n\nDat zegt dus niet per se iets over jou, maar meer over de planning en het aantal plekken dat we nu hebben.\n\nWe wensen je in ieder geval veel succes met je verdere zoektocht en wie weet kruisen onze paden in de toekomst nog eens.\n\nGroet,\nTeam EXTRA`;
+  const { html, text } = afwijzingsMail({
+    voornaam: applicant.firstName,
+    functionType: applicant.functionType,
+    titel: 'Update over je sollicitatie bij EXTRA',
+    alineas: [
+      'Bedankt dat je laatst bij ons langs bent geweest voor het gesprek. Leuk om kennis te maken en meer over je te horen!',
+      'Op dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat we momenteel beschikbaar hebben in verhouding tot het aantal mensen in onze poule.',
+      'Dat zegt dus niet per se iets over jou, maar meer over de planning en het aantal plekken dat we nu hebben.',
+      'We wensen je in ieder geval veel succes met je verdere zoektocht en wie weet kruisen onze paden in de toekomst nog eens.',
+    ],
+  });
 
   return await sendEmail({
     to: applicant.email,
@@ -911,46 +705,21 @@ export async function sendApplicationRejectionEmail(applicant: {
 export async function sendCandidateRejectionEmailDiensten(candidate: {
   firstName: string;
   email: string;
+  functionType?: string | null;
 }): Promise<boolean> {
   if (!candidate.email) return false;
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px 28px 24px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je aanmelding bij EXTRA en voor het opsturen van je CV.</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Op basis van de informatie die we nu hebben denken we dat we op dit moment helaas niet voldoende passende opdrachten voor je kunnen bieden.</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Daarom hebben we besloten om je aanmelding op dit moment niet verder in behandeling te nemen.</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je veel succes met je verdere zoektocht naar een leuke baan in de horeca.</p>
-            <p style="margin:0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-
-  const text = `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding bij EXTRA en voor het opsturen van je CV.\n\nOp basis van de informatie die we nu hebben denken we dat we op dit moment helaas niet voldoende passende opdrachten voor je kunnen bieden.\n\nDaarom hebben we besloten om je aanmelding op dit moment niet verder in behandeling te nemen.\n\nWe wensen je veel succes met je verdere zoektocht naar een leuke baan in de horeca.\n\nGroet,\nTeam EXTRA`;
+  const { html, text } = afwijzingsMail({
+    voornaam: candidate.firstName,
+    functionType: candidate.functionType,
+    titel: 'Bedankt voor je aanmelding bij EXTRA',
+    alineas: [
+      'Bedankt voor je aanmelding bij EXTRA en voor het opsturen van je CV.',
+      'Op basis van de informatie die we nu hebben denken we dat we op dit moment helaas niet voldoende passende opdrachten voor je kunnen bieden.',
+      'Daarom hebben we besloten om je aanmelding op dit moment niet verder in behandeling te nemen.',
+      'We wensen je veel succes met je verdere zoektocht naar een leuke baan in de horeca.',
+    ],
+  });
 
   return await sendEmail({
     to: candidate.email,
@@ -964,45 +733,20 @@ export async function sendCandidateRejectionEmailDiensten(candidate: {
 export async function sendCandidateRejectionEmailCv(candidate: {
   firstName: string;
   email: string;
+  functionType?: string | null;
 }): Promise<boolean> {
   if (!candidate.email) return false;
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je interesse in EXTRA en het insturen van je gegevens.</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Na het bekijken van je CV hebben we besloten om op dit moment niet verder te gaan met de sollicitatie. Voor de opdrachten waar we momenteel mensen voor zoeken is meer relevante ervaring nodig.</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je veel succes met je verdere stappen en bedanken je voor je interesse in EXTRA.</p>
-            <p style="margin:0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-
-  const text = `Hi ${candidate.firstName},\n\nBedankt voor je interesse in EXTRA en het insturen van je gegevens.\n\nNa het bekijken van je CV hebben we besloten om op dit moment niet verder te gaan met de sollicitatie. Voor de opdrachten waar we momenteel mensen voor zoeken is meer relevante ervaring nodig.\n\nWe wensen je veel succes met je verdere stappen en bedanken je voor je interesse in EXTRA.\n\nGroet,\nTeam EXTRA`;
+  const { html, text } = afwijzingsMail({
+    voornaam: candidate.firstName,
+    functionType: candidate.functionType,
+    titel: 'Update over je sollicitatie bij EXTRA',
+    alineas: [
+      'Bedankt voor je interesse in EXTRA en het insturen van je gegevens.',
+      'Na het bekijken van je CV hebben we besloten om op dit moment niet verder te gaan met de sollicitatie. Voor de opdrachten waar we momenteel mensen voor zoeken is meer relevante ervaring nodig.',
+      'We wensen je veel succes met je verdere stappen en bedanken je voor je interesse in EXTRA.',
+    ],
+  });
 
   return await sendEmail({
     to: candidate.email,
@@ -1013,110 +757,69 @@ export async function sendCandidateRejectionEmailCv(candidate: {
   });
 }
 
-export async function sendCvUploadFirstEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null; baseUrl?: string }): Promise<boolean> {
+type CvUploadKandidaat = { firstName: string; email: string; id: number; cvUploadToken?: string | null; baseUrl?: string; functionType?: string | null };
+
+function cvUploadUrl(candidate: CvUploadKandidaat): string {
   const base = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
-  const uploadUrl = candidate.cvUploadToken
+  return candidate.cvUploadToken
     ? `${base}/cv-upload?token=${candidate.cvUploadToken}`
     : `${base}/aanmelden`;
+}
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Upload je cv bij EXTRA</title>${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px 28px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hi ${candidate.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je aanmelding bij EXTRA! We hebben je gegevens goed ontvangen.</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Om een gesprek in te plannen hebben we nog je cv nodig. Zo kunnen we kijken of er een goede match is met onze opdrachten.</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">Het hele proces duurt nog maar een paar minuten.</p>
-            <div style="text-align:center;margin:28px 0;">
-              <a href="${uploadUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Upload je cv &rarr;</a>
-            </div>
-            <p style="margin:24px 0 0;font-size:14px;color:#9ca3af;line-height:1.6;">Zonder cv kunnen we helaas geen gesprek inplannen. Heb je vragen? App ons gerust.</p>
-            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+export async function sendCvUploadFirstEmail(candidate: CvUploadKandidaat): Promise<boolean> {
+  const uploadUrl = cvUploadUrl(candidate);
+
+  const html = mailOpmaak({
+    branche: brancheVanFunctie(candidate.functionType),
+    titel: 'Upload je cv bij EXTRA',
+    voorkop: 'Je aanmelding',
+    kop: 'Nog één stap: je cv',
+    preheader: 'Om een gesprek in te plannen hebben we nog je cv nodig.',
+    inhoud: [
+      alinea(`Hi ${escapeHtml(candidate.firstName)},`),
+      alinea('Bedankt voor je aanmelding bij EXTRA! We hebben je gegevens goed ontvangen.'),
+      alinea('Om een gesprek in te plannen hebben we nog je cv nodig. Zo kunnen we kijken of er een goede match is met onze opdrachten.'),
+      alinea('Het hele proces duurt nog maar een paar minuten.'),
+      knoppen(knop('Upload je cv', uploadUrl, 'vol')),
+      alinea('Zonder cv kunnen we helaas geen gesprek inplannen. Heb je vragen? App ons gerust.', { klein: true }),
+      afsluiting('nl'),
+    ].join(''),
+  });
 
   return await sendEmail({
     to: candidate.email,
     from: 'EXTRA <max@doehetextra.nl>',
     subject: 'Upload je cv om een gesprek in te plannen',
     html,
-    text: `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding bij EXTRA!\n\nOm een gesprek in te plannen hebben we nog je cv nodig. Ga naar ${uploadUrl} om je cv te uploaden.\n\nGroet,\nTeam EXTRA`,
+    text: `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding bij EXTRA!\n\nOm een gesprek in te plannen hebben we nog je cv nodig. Ga naar ${uploadUrl} om je cv te uploaden.\n\nTot snel! 🤎\nTeam EXTRA`,
   });
 }
 
-export async function sendCvReminderEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null; baseUrl?: string }): Promise<boolean> {
-  const base = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
-  const uploadUrl = candidate.cvUploadToken
-    ? `${base}/cv-upload?token=${candidate.cvUploadToken}`
-    : `${base}/aanmelden`;
+export async function sendCvReminderEmail(candidate: CvUploadKandidaat): Promise<boolean> {
+  const uploadUrl = cvUploadUrl(candidate);
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Reminder: upload je cv bij EXTRA</title>${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px 28px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hi ${candidate.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">We hebben je aanmelding bij EXTRA nog staan, maar je cv ontbreekt nog. Zonder cv kunnen we helaas geen gesprek inplannen.</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">Het uploaden duurt maar een minuutje — dan kunnen we snel kijken of er een goede match is!</p>
-            <div style="text-align:center;margin:28px 0;">
-              <a href="${uploadUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Upload je cv nu &rarr;</a>
-            </div>
-            <p style="margin:24px 0 0;font-size:14px;color:#9ca3af;line-height:1.6;">Heb je vragen of wil je je aanmelding intrekken? Stuur ons dan even een berichtje.</p>
-            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const html = mailOpmaak({
+    branche: brancheVanFunctie(candidate.functionType),
+    titel: 'Herinnering: upload je cv bij EXTRA',
+    voorkop: 'Herinnering',
+    kop: 'Je cv ontbreekt nog',
+    preheader: 'Zonder cv kunnen we geen gesprek inplannen.',
+    inhoud: [
+      alinea(`Hi ${escapeHtml(candidate.firstName)},`),
+      alinea('We hebben je aanmelding bij EXTRA nog staan, maar je cv ontbreekt nog. Zonder cv kunnen we helaas geen gesprek inplannen.'),
+      alinea('Het uploaden duurt maar een minuutje. Dan kunnen we snel kijken of er een goede match is!'),
+      knoppen(knop('Upload je cv nu', uploadUrl, 'vol')),
+      alinea('Heb je vragen of wil je je aanmelding intrekken? Stuur ons dan even een berichtje.', { klein: true }),
+      afsluiting('nl'),
+    ].join(''),
+  });
 
   return await sendEmail({
     to: candidate.email,
     from: 'EXTRA <max@doehetextra.nl>',
-    subject: 'Reminder: upload je cv om een gesprek in te plannen',
+    subject: 'Herinnering: upload je cv om een gesprek in te plannen',
     html,
-    text: `Hi ${candidate.firstName},\n\nJe cv ontbreekt nog bij je aanmelding bij EXTRA. Zonder cv kunnen we geen gesprek inplannen.\n\nGa naar ${uploadUrl} om je cv te uploaden.\n\nGroet,\nTeam EXTRA`,
+    text: `Hi ${candidate.firstName},\n\nJe cv ontbreekt nog bij je aanmelding bij EXTRA. Zonder cv kunnen we geen gesprek inplannen.\n\nGa naar ${uploadUrl} om je cv te uploaden.\n\nTot snel! 🤎\nTeam EXTRA`,
   });
 }
 
@@ -1130,52 +833,23 @@ export async function sendTwvExpiryReminderEmail(candidate: {
   const recipients = ['max@doehetextra.nl', 'eveline@doehetextra.nl'];
   const fullName = `${candidate.firstName} ${candidate.lastName}`;
   const endDateFormatted = new Date(candidate.twvEndDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dashboardUrl = `${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard`;
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TWV verloopt binnenkort</title>${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="background:linear-gradient(135deg,#d97706,#b45309);padding:16px 28px;text-align:center;">
-            <div style="color:#ffffff;font-size:18px;font-weight:700;">⚠️ TWV verloopt binnenkort</div>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px 28px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Beste collega,</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">De tewerkstellingsvergunning (TWV) van <strong>${fullName}</strong> verloopt over <strong>${candidate.daysLeft} dagen</strong> op <strong>${endDateFormatted}</strong>.</p>
-            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin:20px 0;">
-              <p style="margin:0;font-size:14px;color:#92400e;font-weight:600;">Actie vereist</p>
-              <p style="margin:6px 0 0;font-size:14px;color:#78350f;line-height:1.5;">Vergeet niet op tijd een verlengingsaanvraag in te dienen bij het UWV om te voorkomen dat de medewerker zonder geldige vergunning werkt.</p>
-            </div>
-            <p style="margin:24px 0 0;font-size:15px;color:#374151;line-height:1.6;">Bekijk het TWV-overzicht in het dashboard voor meer details.</p>
-            <div style="text-align:center;margin:28px 0;">
-              <a href="${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard" style="display:inline-block;background:#d97706;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
-            </div>
-            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA – Geautomatiseerde melding</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const html = mailOpmaak({
+    titel: 'TWV verloopt binnenkort',
+    voorkop: 'Automatische melding',
+    kop: 'TWV verloopt binnenkort',
+    preheader: `De TWV van ${fullName} verloopt over ${candidate.daysLeft} dagen.`,
+    voet: 'kort',
+    inhoud: [
+      alinea('Beste collega,'),
+      alinea(`De tewerkstellingsvergunning (TWV) van <b style="color:#37352C;">${escapeHtml(fullName)}</b> verloopt over <b style="color:#37352C;">${candidate.daysLeft} dagen</b> op <b style="color:#37352C;">${endDateFormatted}</b>.`),
+      melding('let-op', 'Actie vereist', 'Vergeet niet op tijd een verlengingsaanvraag in te dienen bij het UWV, zodat de medewerker niet zonder geldige vergunning werkt.'),
+      alinea('Bekijk het TWV-overzicht in het dashboard voor meer details.'),
+      knoppen(knop('Open TWV-dashboard', dashboardUrl, 'vol')),
+      afsluiting('nl', { groet: 'Groet,', afzender: 'Team EXTRA, automatische melding', hartje: false }),
+    ].join(''),
+  });
 
   let allOk = true;
   for (const to of recipients) {
@@ -1195,14 +869,14 @@ export async function sendTwvExpiryReminderEmail(candidate: {
  * Melding dat een tewerkstellingsvergunning AL verlopen is.
  *
  * Bewust een aparte mail naast sendTwvExpiryReminderEmail. Die waarschuwt
- * vooruit ("verloopt over X dagen") en stopt zodra de datum voorbij is — de
- * filter daar is daysLeft > 0. Precies op het moment dat het probleem echt
+ * vooruit ("verloopt over X dagen") en stopt zodra de datum voorbij is (de
+ * filter daar is daysLeft > 0). Precies op het moment dat het probleem echt
  * ontstaat, kreeg niemand dus nog iets. Deze mail vult dat gat.
  *
  * De toon is anders omdat de situatie anders is: bij de eerste kan er nog
- * verlengd worden, bij deze mag de medewerker niet meer ingezet worden. Rood in
- * plaats van oranje, en de tekst zegt wat er nú niet meer mag in plaats van wat
- * er straks moet gebeuren.
+ * verlengd worden, bij deze mag de medewerker niet meer ingezet worden. Een
+ * rode melding in plaats van een gele, en de tekst zegt wat er nú niet meer mag
+ * in plaats van wat er straks moet gebeuren.
  *
  * Gaat naar de admins, nooit naar de kandidaat.
  */
@@ -1217,57 +891,30 @@ export async function sendTwvExpiredNotice(candidate: {
   const fullName = `${candidate.firstName} ${candidate.lastName}`;
   const endDateFormatted = new Date(candidate.twvEndDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
   const sinds = candidate.dagenVerlopen === 1 ? 'sinds gisteren' : `sinds ${candidate.dagenVerlopen} dagen`;
+  const dashboardUrl = `${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard`;
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TWV is verlopen</title>${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}" width="600" height="200" alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:16px 28px;text-align:center;">
-            <div style="color:#ffffff;font-size:18px;font-weight:700;">TWV is verlopen</div>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px 28px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Beste collega,</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">De tewerkstellingsvergunning van <strong>${fullName}</strong> is verlopen op <strong>${endDateFormatted}</strong>, ${sinds}.</p>
-            <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:16px 20px;margin:20px 0;">
-              <p style="margin:0;font-size:14px;color:#991b1b;font-weight:600;">Niet meer inzetbaar</p>
-              <p style="margin:6px 0 0;font-size:14px;color:#7f1d1d;line-height:1.5;">Zonder geldige vergunning mag deze medewerker niet worden ingepland. Haal openstaande diensten weg en neem contact op over een verlenging.</p>
-            </div>
-            <p style="margin:24px 0 0;font-size:15px;color:#374151;line-height:1.6;">De status in het TWV-overzicht staat inmiddels op <strong>TWV Verlopen</strong>.</p>
-            <div style="text-align:center;margin:28px 0;">
-              <a href="${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard" style="display:inline-block;background:#dc2626;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
-            </div>
-            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA – Geautomatiseerde melding</strong></p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const html = mailOpmaak({
+    titel: 'TWV is verlopen',
+    voorkop: 'Automatische melding',
+    kop: 'TWV is verlopen',
+    preheader: `${fullName} is niet meer inzetbaar.`,
+    voet: 'kort',
+    inhoud: [
+      alinea('Beste collega,'),
+      alinea(`De tewerkstellingsvergunning van <b style="color:#37352C;">${escapeHtml(fullName)}</b> is verlopen op <b style="color:#37352C;">${endDateFormatted}</b>, ${sinds}.`),
+      melding('stop', 'Niet meer inzetbaar', 'Zonder geldige vergunning mag deze medewerker niet worden ingepland. Haal openstaande diensten weg en neem contact op over een verlenging.'),
+      alinea('De status in het TWV-overzicht staat inmiddels op <b style="color:#37352C;">TWV Verlopen</b>.'),
+      knoppen(knop('Open TWV-dashboard', dashboardUrl, 'vol')),
+      afsluiting('nl', { groet: 'Groet,', afzender: 'Team EXTRA, automatische melding', hartje: false }),
+    ].join(''),
+  });
 
   let allOk = true;
   for (const to of recipients) {
     const ok = await sendEmail({
       to,
       from: 'EXTRA Systeem <max@doehetextra.nl>',
-      subject: `TWV van ${fullName} is verlopen — niet meer inzetbaar`,
+      subject: `TWV van ${fullName} is verlopen, niet meer inzetbaar`,
       html,
       text: `De TWV van ${fullName} is verlopen op ${endDateFormatted}, ${sinds}. Deze medewerker mag niet worden ingepland zonder geldige vergunning.`,
     });
@@ -1299,70 +946,23 @@ export async function sendAdminWelcomeEmail(params: {
   password: string;
   loginUrl: string;
 }): Promise<boolean> {
-  const { to, firstName, lastName, email, password, loginUrl } = params;
+  const { to, firstName, email, password, loginUrl } = params;
 
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 12px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px 28px 8px;">
-            <h2 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#111827;">Welkom bij het EXTRA admin-portaal, ${firstName}!</h2>
-            <p style="margin:0 0 20px;font-size:14px;color:#6b7280;line-height:1.6;">
-              Je account is aangemaakt. Hieronder vind je jouw inloggegevens voor het admin-portaal van EXTRA. Bewaar deze goed en deel ze niet met anderen.
-            </p>
-
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:20px;">
-              <tr>
-                <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-                  <div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">E-mailadres</div>
-                  <div style="color:#111827;font-size:15px;font-weight:600;">${email}</div>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:16px 20px;">
-                  <div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Wachtwoord</div>
-                  <div style="color:#111827;font-size:15px;font-weight:600;font-family:monospace;letter-spacing:1px;">${password}</div>
-                </td>
-              </tr>
-            </table>
-
-            <p style="margin:0 0 16px;font-size:13px;color:#6b7280;line-height:1.5;">
-              Wijzig je wachtwoord direct na de eerste aanmelding via je profielinstellingen.
-            </p>
-
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-              <tr>
-                <td>
-                  <a href="${loginUrl}" style="display:block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">
-                    Inloggen in het admin-portaal →
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
-            EXTRA · Herengracht 372 · Amsterdam
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const html = mailOpmaak({
+    titel: 'Welkom bij het EXTRA admin-portaal',
+    voorkop: 'Welkom',
+    kop: `Welkom bij het admin-portaal, ${escapeHtml(firstName)}!`,
+    inhoud: [
+      alinea('Je account is aangemaakt. Hieronder vind je jouw inloggegevens voor het admin-portaal van EXTRA. Bewaar ze goed en deel ze niet met anderen.'),
+      infoBlok('algemeen',
+        `<p style="margin:0 0 8px;font-size:15px;line-height:1.5;"><b>E-mailadres:</b> ${escapeHtml(email)}</p>` +
+        `<p style="margin:0;font-size:15px;line-height:1.5;"><b>Wachtwoord:</b> <span style="display:inline-block;background:#FFFFFF;border-radius:8px;padding:4px 10px;font-family:'SFMono-Regular',Menlo,Consolas,monospace;font-size:15px;letter-spacing:.04em;">${escapeHtml(password)}</span></p>`,
+        { label: 'Jouw inloggegevens' }),
+      alinea('Wijzig je wachtwoord direct na de eerste aanmelding via je profielinstellingen.', { klein: true }),
+      knoppen(knop('Inloggen in het admin-portaal', loginUrl, 'vol')),
+      afsluiting('nl'),
+    ].join(''),
+  });
 
   const text = `Welkom bij het EXTRA admin-portaal, ${firstName}!\n\nJe inloggegevens:\nE-mailadres: ${email}\nWachtwoord: ${password}\n\nInloggen: ${loginUrl}\n\nWijzig je wachtwoord direct na de eerste aanmelding.`;
 

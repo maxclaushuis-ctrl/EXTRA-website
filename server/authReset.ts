@@ -16,7 +16,8 @@ import bcrypt from "bcryptjs";
 import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { log } from "./vite";
-import { sendEmail, getEmailBannerSrc, emailMobileCss } from "./mail";
+import { sendEmail } from "./mail";
+import { mailOpmaak, escapeHtml, alinea, knop, knoppen, afsluiting } from "@shared/mailOpmaak";
 
 const rows = (r: any): any[] => r.rows ?? r ?? [];
 const one = (r: any): any | undefined => rows(r)[0];
@@ -63,61 +64,22 @@ export async function verstuurWachtwoordInstelLink(email: string): Promise<void>
     VALUES (${user.id}, ${hashToken(token)}, now() + interval '24 hours')`);
   const baseUrl = (process.env.BASE_URL || "https://www.doehetextra.nl").replace(/\/$/, "");
   const link = `${baseUrl}/wachtwoord-instellen?token=${token}`;
-  // Zelfde tabel-gebaseerde opbouw (banner · witte content-kaart · voettekst)
-  // als de rest van de transactionele mails in mail.ts — deze mail gebruikte
-  // eerder losse <p>-tags zonder die wrapper, waardoor hij er compleet anders
-  // uitzag dan al het andere dat vanuit EXTRA verstuurd wordt.
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Stel je wachtwoord in voor het EXTRA dashboard</title>
-${emailMobileCss()}</head>
-<body style="margin:0;padding:0;background:#f0eff5;font-family:Arial,Helvetica,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eff5;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" class="ew" style="max-width:600px;width:100%;">
-
-        <!-- ① BANNER -->
-        <tr>
-          <td style="padding:0;line-height:0;font-size:0;">
-            <img src="${getEmailBannerSrc()}"
-                 width="600" height="200"
-                 alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;border-radius:12px 12px 0 0;">
-          </td>
-        </tr>
-
-        <!-- ② CONTENT -->
-        <tr>
-          <td style="background:#ffffff;border-radius:0 0 12px 12px;">
-            <table cellpadding="0" cellspacing="0" width="100%">
-              <tr><td class="ep" style="padding:32px 32px 8px;">
-                <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Hoi ${user.firstName ?? ""},</p>
-                <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Via onderstaande link stel je een (nieuw) wachtwoord in voor je admin-account op het EXTRA dashboard.</p>
-                <p style="margin:0 0 24px 0;text-align:center;">
-                  <a href="${link}" class="eb" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:15px;font-weight:600;font-family:Arial,sans-serif;">Wachtwoord instellen</a>
-                </p>
-                <p style="margin:0 0 16px 0;font-size:13px;color:#666666;line-height:1.6;">De link is 24 uur geldig en kan één keer gebruikt worden. Niet zelf aangevraagd? Dan kun je deze mail negeren — er is niets gewijzigd.</p>
-              </td></tr>
-
-              <!-- FOOTER -->
-              <tr>
-                <td style="padding:20px 32px 28px;border-top:1px solid #f0edf8;text-align:center;">
-                  <p style="margin:0 0 4px 0;font-size:13px;font-weight:700;color:#7c3aed;letter-spacing:0.5px;">EXTRA</p>
-                  <p style="margin:0;font-size:12px;color:#9ca3af;">Amsterdam</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  // Gedeelde opmaak (shared/mailOpmaak.ts). Een wachtwoordmail hoort bij geen
+  // branche, dus de algemene off-white variant.
+  const html = mailOpmaak({
+    titel: "Stel je wachtwoord in voor het EXTRA dashboard",
+    voorkop: "Je account",
+    kop: "Stel je wachtwoord in",
+    preheader: "Via de link in deze mail stel je een nieuw wachtwoord in.",
+    voet: "kort",
+    inhoud: [
+      alinea(`Hoi ${escapeHtml(user.firstName ?? "")},`),
+      alinea("Via onderstaande link stel je een (nieuw) wachtwoord in voor je admin-account op het EXTRA dashboard."),
+      knoppen(knop("Wachtwoord instellen", link, "vol")),
+      alinea("De link is 24 uur geldig en kan één keer gebruikt worden. Niet zelf aangevraagd? Dan kun je deze mail negeren, er is niets gewijzigd.", { klein: true }),
+      afsluiting("nl"),
+    ].join(""),
+  });
   const ok = await sendEmail({
     to: user.email,
     from: "EXTRA <max@doehetextra.nl>",
@@ -142,5 +104,5 @@ export async function stelWachtwoordIn(token: string, password: string): Promise
   await db.execute(sql`UPDATE users SET password = ${hash} WHERE id = ${rij.userId}`);
   await db.execute(sql`UPDATE password_reset_tokens SET used_at = now() WHERE id = ${rij.id}`);
   log(`[auth] wachtwoord ingesteld voor user ${rij.userId}`);
-  return { ok: true, message: "Wachtwoord ingesteld — je kunt nu inloggen" };
+  return { ok: true, message: "Wachtwoord ingesteld, je kunt nu inloggen" };
 }

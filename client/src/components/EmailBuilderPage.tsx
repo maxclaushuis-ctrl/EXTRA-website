@@ -39,7 +39,7 @@ export function renderInlineLinksHtml(text: string): string {
   return escaped.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label: string, url: string) => {
     const trimmed = url.trim();
     const safe = /^(https?:|mailto:|tel:)/i.test(trimmed) ? trimmed : `https://${trimmed.replace(/^\/+/, '')}`;
-    return `<a href="${safe}" style="color:#7c3aed;text-decoration:underline" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    return `<a href="${safe}" style="color:#37352C;font-weight:700;text-decoration:underline" target="_blank" rel="noopener noreferrer">${label}</a>`;
   });
 }
 
@@ -120,7 +120,7 @@ const DEFAULT_SETTINGS: BuilderSettings = {
   tekstkleur: '#111827',
   unsubscribe_tekst: 'Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.',
   lay_out: 'extra',
-  header_kleur: '#5b2eb5',
+  header_kleur: '#37352C',
   header_tekst: 'EXTRA',
   footer_tekst: 'EXTRA · Herengracht 372 · Amsterdam',
 };
@@ -146,7 +146,7 @@ export function makeBlock(type: BuilderBlock['type']): BuilderBlock {
   switch (type) {
     case 'koptekst': return { id, type, tekst: 'Kopregel', niveau: 'h2', uitlijning: 'left', kleur: '#111827' };
     case 'paragraaf': return { id, type, tekst: 'Schrijf hier je tekst. Gebruik {{voornaam}} en {{bedrijf}} voor personalisatie.', uitlijning: 'left', kleur: '#374151' };
-    case 'knop': return { id, type, tekst: 'Plan een kennismaking', url: 'https://doehetextra.nl/contact', achtergrond: '#7c3aed', tekstkleur: '#ffffff', uitlijning: 'left' };
+    case 'knop': return { id, type, tekst: 'Plan een kennismaking', url: 'https://doehetextra.nl/contact', achtergrond: '#37352C', tekstkleur: '#F8F7F4', uitlijning: 'left' };
     case 'lijn': return { id, type, kleur: '#e5e7eb', dikte: 1 };
     case 'ruimte': return { id, type, hoogte: 24 };
     case 'afbeelding': return { id, type, url: '', alt: '', uitlijning: 'center', link: '' };
@@ -173,7 +173,7 @@ export function parseContent(raw: string | null | undefined): BuilderContent {
         const id = genId();
         if (b.type === 'heading') return { id, type: 'koptekst', tekst: b.text || '', niveau: 'h2', uitlijning: b.align || 'left', kleur: '#111827' };
         if (b.type === 'text') return { id, type: 'paragraaf', tekst: b.text || '', uitlijning: 'left', kleur: '#374151' };
-        if (b.type === 'button') return { id, type: 'knop', tekst: b.label || '', url: b.url || '', achtergrond: b.color || '#7c3aed', tekstkleur: '#ffffff', uitlijning: 'center' };
+        if (b.type === 'button') return { id, type: 'knop', tekst: b.label || '', url: b.url || '', achtergrond: b.color || '#37352C', tekstkleur: '#F8F7F4', uitlijning: 'center' };
         if (b.type === 'divider') return { id, type: 'lijn', kleur: '#e5e7eb', dikte: 1 };
         if (b.type === 'spacer') return { id, type: 'ruimte', hoogte: b.height || 24 };
         if (b.type === 'image') return { id, type: 'afbeelding', url: b.url || '', alt: b.alt || '', uitlijning: 'center', link: '' };

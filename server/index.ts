@@ -696,7 +696,7 @@ function scheduleDailyCvReminders() {
             cvUploadToken = randomUUID();
             await storage.updateCandidate(candidate.id, { cvUploadToken } as any);
           }
-          await sendCvReminderEmail({ firstName: candidate.firstName, email: candidate.email, id: candidate.id, cvUploadToken, baseUrl: process.env.BASE_URL || 'https://www.doehetextra.nl' });
+          await sendCvReminderEmail({ firstName: candidate.firstName, email: candidate.email, functionType: candidate.functionType, id: candidate.id, cvUploadToken, baseUrl: process.env.BASE_URL || 'https://www.doehetextra.nl' });
           await storage.updateCandidate(candidate.id, {
             cvReminderSentAt: now,
             cvReminderCount: reminderCount + 1,
