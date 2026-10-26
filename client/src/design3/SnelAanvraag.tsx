@@ -7,7 +7,7 @@
 import { useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { herkomstVoorFormulier } from "@/lib/herkomst";
-import { Ic, Pijl } from "./basis";
+import { Ic, Pijl, onthoudVoornaam } from "./basis";
 import { TELEFOON, TELEFOON_HREF, WHATSAPP_HREF } from "./links";
 
 export type Branche = "hotel" | "event" | "logistiek" | "anders";
@@ -63,7 +63,8 @@ export default function SnelAanvraag({ functies, branche, gekozen, vorm, kop = "
         const j = await res.json().catch(() => null);
         throw new Error(j?.message || "Versturen lukte niet.");
       }
-      naar(`/aanvraag-ontvangen?naam=${encodeURIComponent(naam.split(" ")[0])}`);
+      onthoudVoornaam(naam);
+      naar("/aanvraag-ontvangen");
       window.scrollTo(0, 0);
     } catch (err: any) {
       setFout(`${err?.message || "Versturen lukte niet."} Bel ons gerust op ${TELEFOON}.`);

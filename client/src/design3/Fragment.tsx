@@ -23,6 +23,7 @@ import { useLiveReviews } from "@/hooks/useLiveReviews";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { herkomstVoorFormulier } from "@/lib/herkomst";
 import { TELEFOON } from "./links";
+import { onthoudVoornaam } from "./basis";
 
 export interface FragmentData {
   sector: Sector | string;
@@ -180,7 +181,8 @@ export default function FragmentPagina({ d }: { d: FragmentData }) {
           const j = await res.json().catch(() => null);
           throw new Error(j?.message || "");
         }
-        naar(`/aanvraag-ontvangen?naam=${encodeURIComponent(w("contactName").split(" ")[0])}`);
+        onthoudVoornaam(w("contactName"));
+        naar("/aanvraag-ontvangen");
         window.scrollTo(0, 0);
       } catch (err: any) {
         bezig(f, false);

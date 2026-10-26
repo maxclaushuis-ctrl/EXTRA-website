@@ -16,7 +16,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import Shell from "@/design3/Shell";
-import { Ic, Pijl } from "@/design3/basis";
+import { Ic, Pijl, haalVoornaam, onthoudVoornaam } from "@/design3/basis";
 import { TELEFOON, TELEFOON_HREF, WHATSAPP_HREF } from "@/design3/links";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
 import { herkomstVoorFormulier } from "@/lib/herkomst";
@@ -152,7 +152,8 @@ export function PersoneelAanvragen() {
         const j = await res.json().catch(() => null);
         throw new Error(j?.message || "");
       }
-      naar(`/aanvraag-ontvangen?naam=${encodeURIComponent(waarden.contactName.trim().split(" ")[0])}`);
+      onthoudVoornaam(waarden.contactName);
+      naar("/aanvraag-ontvangen");
       window.scrollTo(0, 0);
     } catch (err: any) {
       setBezig(false);
@@ -259,13 +260,8 @@ export function PersoneelAanvragen() {
 }
 
 export function AanvraagOntvangen() {
-  const naam = useMemo(() => {
-    try {
-      return (new URLSearchParams(window.location.search).get("naam") || "").slice(0, 30);
-    } catch {
-      return "";
-    }
-  }, []);
+  // Voornaam uit sessionStorage (gezet door het formulier), niet uit de URL.
+  const naam = useMemo(() => haalVoornaam(), []);
 
   useEffect(() => {
     // Conversiedoel in GA4 (gtag staat in client/index.html). Alleen hier, niet

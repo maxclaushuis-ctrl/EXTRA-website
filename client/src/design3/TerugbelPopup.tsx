@@ -10,7 +10,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useLocation } from "wouter";
 import { herkomstVoorFormulier } from "@/lib/herkomst";
-import { Pijl } from "./basis";
+import { Pijl, onthoudVoornaam } from "./basis";
 import { TELEFOON, TELEFOON_HREF } from "./links";
 
 /** Type locatie zoals het dashboard het kent; per pagina waar dat preciezer kan. */
@@ -110,7 +110,8 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
         throw new Error(j?.message || "Versturen lukte niet.");
       }
       sluit();
-      naar(`/aanvraag-ontvangen?naam=${encodeURIComponent(waarden.contactName.trim().split(" ")[0])}`);
+      onthoudVoornaam(waarden.contactName);
+      naar("/aanvraag-ontvangen");
       window.scrollTo(0, 0);
     } catch (err: any) {
       setMelding(`${err?.message || "Versturen lukte niet."} Bel ons gerust op ${TELEFOON}.`);

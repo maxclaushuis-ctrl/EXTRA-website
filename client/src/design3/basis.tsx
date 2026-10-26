@@ -91,3 +91,19 @@ export function initialen(naam: string): string {
   if (w.length > 1) return w[0][0] + w[w.length - 1][0];
   return naam.slice(0, 2).toUpperCase();
 }
+
+/**
+ * Voornaam voor de bedankpagina. Gaat via sessionStorage en niet via de URL,
+ * zodat er geen persoonsgegevens in adresbalk, analytics of logs komen.
+ */
+const VOORNAAM_SLEUTEL = "extra-aanvraag-voornaam";
+export function onthoudVoornaam(volledigeNaam: string): void {
+  try { sessionStorage.setItem(VOORNAAM_SLEUTEL, volledigeNaam.trim().split(/\s+/)[0].slice(0, 30)); } catch { /* privémodus */ }
+}
+export function haalVoornaam(): string {
+  try {
+    const v = sessionStorage.getItem(VOORNAAM_SLEUTEL) || "";
+    sessionStorage.removeItem(VOORNAAM_SLEUTEL);
+    return v;
+  } catch { return ""; }
+}
