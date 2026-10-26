@@ -197,7 +197,8 @@
 .d3 #samenwerken .knop.vol{background:var(--accent);border-color:var(--accent);color:var(--espresso)}
 
 /* Scorekaarten los onder de functies (zonder de favorietenpoule eronder): geen schuifkaart-rand */
-.d3.css-hotels .scores.los{border-radius:0;box-shadow:none;padding-top:40px}
+.d3.css-hotels .scores.los{border-radius:0;box-shadow:none}
+.d3.css-hotels .functies2 + .scores.los{padding-top:40px}
 
 /* Telefoonnummer in de hero: op desktop gewone tekst, alleen op mobiel klikbaar om direct te bellen */
 @media (min-width:761px){.d3.css-hotels .hhot-knoppen .hero-tel{text-decoration:none;pointer-events:none;cursor:text}}

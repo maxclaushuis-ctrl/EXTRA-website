@@ -940,255 +940,206 @@ export const events: PaginaContent = {
       ]
     },
     {
-      "type": "stapel2",
-      "secties": [
+      "type": "scores",
+      "eyebrow": "Continue kwaliteitsmeting",
+      "h2": "Elk event beter dan [[het vorige]]",
+      "lead": "Na elk event meten we hoe het personeel gepresteerd heeft. Zo leren we wie het beste past bij jouw type event en wie we de volgende keer prioriteit geven. Geen giswerk. Data.",
+      "lijst": [],
+      "kaarten": [
         {
-          "type": "poule",
-          "eyebrow": "Favorietenpoules",
-          "h2": "Vaste teams die [[jouw event kennen]]",
-          "lead": "Voor terugkerende events of vaste locaties bouwt EXTRA een favorietenpoule op. Dezelfde medewerkers die jouw locatie, setup en verwachtingen kennen.",
-          "items": [
-            {
-              "h3": "Vaste gala-ploeg",
-              "sub": "Dezelfde bediening bij elk gala-diner op jouw locatie",
-              "meta": [
-                "Gala en diner"
-              ],
-              "b": "Vast",
-              "small": "team"
-            },
-            {
-              "h3": "Vaste bartenders",
-              "sub": "Kennen jouw bar, drankenkaart en tempo",
-              "meta": [
-                "Bar"
-              ],
-              "b": "Vast",
-              "small": "team"
-            },
-            {
-              "h3": "Vaste runners",
-              "sub": "Kennen de indeling en logistiek van jouw locatie",
-              "meta": [
-                "Runners"
-              ],
-              "b": "Vast",
-              "small": "team"
-            },
-            {
-              "h3": "Vaste host-ploeg",
-              "sub": "Vertegenwoordigen jouw entree zoals jij dat wilt",
-              "meta": [
-                "Ontvangst"
-              ],
-              "b": "Vast",
-              "small": "team"
-            }
+          "nr": "EXTRA #0377",
+          "h3": "Bartender",
+          "sub": "Bar · bij EXTRA sinds 2024",
+          "status": "Diamond",
+          "p": "98.0",
+          "score": "9,8",
+          "bars": [
+            [
+              "Houding",
+              "100%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "98%"
+            ],
+            [
+              "Uitstraling",
+              "96%"
+            ]
           ],
-          "knop": null
+          "cijfers": [
+            [
+              "Diensten",
+              "198"
+            ],
+            [
+              "Opkomst",
+              "99%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,9"
+            ],
+            [
+              "EXTRA-punten",
+              "17.240"
+            ]
+          ],
+          "fav": [
+            "Westweelde",
+            "Art Zoo Amsterdam"
+          ]
         },
         {
-          "type": "scores",
-          "eyebrow": "Continue kwaliteitsmeting",
-          "h2": "Elk event beter dan [[het vorige]]",
-          "lead": "Na elk event meten we hoe het personeel gepresteerd heeft. Zo leren we wie het beste past bij jouw type event en wie we de volgende keer prioriteit geven. Geen giswerk. Data.",
-          "lijst": [],
-          "kaarten": [
-            {
-              "nr": "EXTRA #0377",
-              "h3": "Bartender",
-              "sub": "Bar · bij EXTRA sinds 2024",
-              "status": "Diamond",
-              "p": "98.0",
-              "score": "9,8",
-              "bars": [
-                [
-                  "Houding",
-                  "100%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "98%"
-                ],
-                [
-                  "Uitstraling",
-                  "96%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "198"
-                ],
-                [
-                  "Opkomst",
-                  "99%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,9"
-                ],
-                [
-                  "EXTRA-punten",
-                  "17.240"
-                ]
-              ],
-              "fav": [
-                "Westweelde",
-                "Art Zoo Amsterdam"
-              ]
-            },
-            {
-              "nr": "EXTRA #0612",
-              "h3": "Host",
-              "sub": "Ontvangst · bij EXTRA sinds 2025",
-              "status": "Gold",
-              "p": "96.0",
-              "score": "9,6",
-              "bars": [
-                [
-                  "Houding",
-                  "100%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "96%"
-                ],
-                [
-                  "Uitstraling",
-                  "90%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "126"
-                ],
-                [
-                  "Opkomst",
-                  "98%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,7"
-                ],
-                [
-                  "EXTRA-punten",
-                  "9.360"
-                ]
-              ],
-              "fav": [
-                "H'ART Museum",
-                "Westweelde"
-              ]
-            },
-            {
-              "nr": "EXTRA #0833",
-              "h3": "Bediening",
-              "sub": "Banqueting · bij EXTRA sinds 2024",
-              "status": "Gold",
-              "p": "97.0",
-              "score": "9,7",
-              "bars": [
-                [
-                  "Houding",
-                  "98%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "96%"
-                ],
-                [
-                  "Uitstraling",
-                  "96%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "164"
-                ],
-                [
-                  "Opkomst",
-                  "100%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "10,0"
-                ],
-                [
-                  "EXTRA-punten",
-                  "13.120"
-                ]
-              ],
-              "fav": [
-                "Westweelde",
-                "FC Utrecht"
-              ]
-            },
-            {
-              "nr": "EXTRA #1102",
-              "h3": "Event supervisor",
-              "sub": "Teamleiding · bij EXTRA sinds 2025",
-              "status": "Silver",
-              "p": "94.0",
-              "score": "9,4",
-              "bars": [
-                [
-                  "Houding",
-                  "96%"
-                ],
-                [
-                  "Vaardigheid",
-                  "98%"
-                ],
-                [
-                  "Kleding",
-                  "94%"
-                ],
-                [
-                  "Uitstraling",
-                  "92%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "72"
-                ],
-                [
-                  "Opkomst",
-                  "97%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,5"
-                ],
-                [
-                  "EXTRA-punten",
-                  "5.480"
-                ]
-              ],
-              "fav": [
-                "Art Zoo Amsterdam"
-              ]
-            }
+          "nr": "EXTRA #0612",
+          "h3": "Host",
+          "sub": "Ontvangst · bij EXTRA sinds 2025",
+          "status": "Gold",
+          "p": "96.0",
+          "score": "9,6",
+          "bars": [
+            [
+              "Houding",
+              "100%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "96%"
+            ],
+            [
+              "Uitstraling",
+              "90%"
+            ]
           ],
-          "noot": "Voorbeeldprofielen. Echte scores, diensten en punten komen rechtstreeks uit het EXTRA-dashboard."
+          "cijfers": [
+            [
+              "Diensten",
+              "126"
+            ],
+            [
+              "Opkomst",
+              "98%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,7"
+            ],
+            [
+              "EXTRA-punten",
+              "9.360"
+            ]
+          ],
+          "fav": [
+            "H'ART Museum",
+            "Westweelde"
+          ]
+        },
+        {
+          "nr": "EXTRA #0833",
+          "h3": "Bediening",
+          "sub": "Banqueting · bij EXTRA sinds 2024",
+          "status": "Gold",
+          "p": "97.0",
+          "score": "9,7",
+          "bars": [
+            [
+              "Houding",
+              "98%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "96%"
+            ],
+            [
+              "Uitstraling",
+              "96%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "164"
+            ],
+            [
+              "Opkomst",
+              "100%"
+            ],
+            [
+              "Betrouwbaar",
+              "10,0"
+            ],
+            [
+              "EXTRA-punten",
+              "13.120"
+            ]
+          ],
+          "fav": [
+            "Westweelde",
+            "FC Utrecht"
+          ]
+        },
+        {
+          "nr": "EXTRA #1102",
+          "h3": "Event supervisor",
+          "sub": "Teamleiding · bij EXTRA sinds 2025",
+          "status": "Silver",
+          "p": "94.0",
+          "score": "9,4",
+          "bars": [
+            [
+              "Houding",
+              "96%"
+            ],
+            [
+              "Vaardigheid",
+              "98%"
+            ],
+            [
+              "Kleding",
+              "94%"
+            ],
+            [
+              "Uitstraling",
+              "92%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "72"
+            ],
+            [
+              "Opkomst",
+              "97%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,5"
+            ],
+            [
+              "EXTRA-punten",
+              "5.480"
+            ]
+          ],
+          "fav": [
+            "Art Zoo Amsterdam"
+          ]
         }
-      ]
+      ],
+      "noot": "Voorbeeldprofielen. Echte scores, diensten en punten komen rechtstreeks uit het EXTRA-dashboard.",
+      "los": true
     },
     {
       "type": "hoe",
