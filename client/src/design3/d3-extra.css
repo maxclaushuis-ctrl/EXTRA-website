@@ -175,3 +175,15 @@
 }
 .sf.sf h1,.sf.sf h2,.sf.sf h3{font-family:inherit}
 .sf.sf .sf-inhoud input.pl-11{padding-left:44px}
+
+/* Over EXTRA: hero met de echte teamfoto. Lichte gevel, dus extra overloop
+   links voor de leesbaarheid; op mobiel staat de foto als blok boven de tekst
+   zodat de gezichten niet achter de kop vallen. */
+.d3.css-pagina .ihero.met-foto.ih-team .ih-foto::after{background:linear-gradient(90deg,rgba(31,30,25,.62) 0%,rgba(31,30,25,.3) 45%,rgba(31,30,25,0) 72%),linear-gradient(180deg,rgba(31,30,25,.3) 0%,rgba(31,30,25,.08) 30%,rgba(31,30,25,.9) 100%)}
+@media (max-width:720px){
+  .d3.css-pagina .ihero.met-foto.ih-team{display:block;min-height:0;background:#1f1e19}
+  .d3.css-pagina .ihero.met-foto.ih-team .ih-foto{position:relative;inset:auto;height:auto;aspect-ratio:1/1}
+  .d3.css-pagina .ihero.met-foto.ih-team .ih-foto img{object-position:56% 50%!important}
+  .d3.css-pagina .ihero.met-foto.ih-team .ih-foto::after{background:linear-gradient(180deg,rgba(31,30,25,.45) 0%,rgba(31,30,25,0) 28%,rgba(31,30,25,0) 70%,#1f1e19 100%)}
+  .d3.css-pagina .ihero.met-foto.ih-team .w{padding-top:8px}
+}
