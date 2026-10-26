@@ -1289,6 +1289,42 @@ export const events: PaginaContent = {
         [
           "Hoe snel kunnen jullie eventpersoneel leveren?",
           "Bij EXTRA kunnen we in veel gevallen binnen 48 uur geschikt eventpersoneel leveren. Dankzij onze grote pool van ervaren medewerkers kunnen we snel schakelen, ook bij last-minute aanvragen."
+        ],
+        [
+          "Hoeveel bediening heb ik nodig per gast?",
+          "Vuistregel: bij een uitgeserveerd diner ongeveer één bediening per 10 tot 12 gasten, bij een borrel of buffet één per 25 tot 30. We adviseren graag op basis van jouw draaiboek."
+        ],
+        [
+          "Is er één aanspreekpunt tijdens het event?",
+          "Bij grotere producties zetten we een teamcaptain in die de briefing kent, het team aanstuurt en schakelt met jouw eventmanager."
+        ],
+        [
+          "Leveren jullie ook buiten Amsterdam?",
+          "Ja. Het overgrote deel van onze poule zit in de regio Amsterdam, maar we zijn daar niet toe beperkt. Bespreek de locatie bij je aanvraag, dan kijken we wat mogelijk is."
+        ],
+        [
+          "Wat moet ik aanleveren bij mijn aanvraag?",
+          "Het liefst je draaiboek: aantal gasten, type service (walking dinner, buffet of uitgeserveerd), tijden en locatie. Dan adviseren we over de juiste bezetting per onderdeel, van bediening tot bar."
+        ],
+        [
+          "Kan ik ook personeel inhuren voor één avond?",
+          "Ja, één shift is genoeg. Veel opdrachtgevers starten met een los event en schalen daarna op naar een vaste samenwerking."
+        ],
+        [
+          "Wat kost eventpersoneel inhuren?",
+          "Je betaalt een all-in uurtarief dat afhangt van functie en ervaring. Daarin zitten loon, premies en verzekeringen, zonder verborgen kosten. Je betaalt alleen gewerkte uren. Vraag een voorstel aan op basis van je draaiboek."
+        ],
+        [
+          "Wat als iemand zich vlak voor het event ziek meldt?",
+          "Dan regelen wij vervanging, vaak nog dezelfde dag. We zijn 24 uur per dag bereikbaar en het verzuimrisico ligt bij EXTRA, niet bij jou."
+        ],
+        [
+          "Wat als een medewerker niet bevalt?",
+          "Dat lossen we direct op: we plannen een vervanger en verwerken je feedback in de volgende matches. Je zit nergens aan vast."
+        ],
+        [
+          "Stuur ik het eventpersoneel zelf aan?",
+          "Ja. Bij inlening werken de medewerkers onder jouw leiding, of onder die van onze teamcaptain bij grotere producties. Jij bepaalt de briefing en de taakverdeling op de vloer."
         ]
       ]
     },
