@@ -192,3 +192,6 @@
    kaart op dezelfde hoogte staat, ook als de tekst of de tags langer zijn. */
 .d3.css-hotels .fslide .fonder{flex:1 1 auto;grid-template-rows:1fr auto;align-items:start}
 .d3.css-hotels .fslide .frechts{align-self:end}
+
+/* Samenwerken op de branchepagina: knop in de kleur van de branche (hotels roze) */
+.d3 #samenwerken .knop.vol{background:var(--accent);border-color:var(--accent);color:var(--espresso)}

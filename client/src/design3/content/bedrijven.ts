@@ -114,7 +114,7 @@ export const hotels: PaginaContent = {
       "werk": false,
       "id": "samenwerken",
       "eyebrow": "Samenwerken",
-      "h2": "Hoe samenwerken met [[EXTRA werkt]]",
+      "h2": "Snel het juiste personeel [[op de werkvloer]]",
       "lead": "Van eerste aanvraag tot vaste favorietenpoule. Vier stappen.",
       "stappen": [
         {
@@ -135,7 +135,7 @@ export const hotels: PaginaContent = {
         }
       ],
       "knop": {
-        "tekst": "Begin nu met een aanvraag",
+        "tekst": "Vraag direct aan",
         "href": "/personeelsaanvraag?branche=hotel"
       },
       "standaard": null
