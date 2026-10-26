@@ -20,6 +20,7 @@
     "publish:blog": "tsx scripts/publish-blog.ts",
     "publish:blog:dev": "tsx scripts/publish-blog.ts --dev",
     "blog:opruimen": "tsx scripts/blog-opruimen.ts",
+    "blog:archiveer": "tsx scripts/blog-archiveer.ts",
     "wa:classificatie-live": "tsx scripts/wa-classificatie-live.ts",
     "sales:test": "tsx server/salesflowLogic.test.ts",
     "crmmail:test": "tsx server/crmNaarMail.test.ts",
