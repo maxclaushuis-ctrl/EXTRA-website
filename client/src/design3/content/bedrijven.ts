@@ -247,6 +247,13 @@ export const hotels: PaginaContent = {
       ]
     },
     {
+      "type": "portaal",
+      "eyebrow": "Klantportaal",
+      "h2": "Je eigen klantportaal, [[waar jij centraal staat]]",
+      "lead": "Diensten uitzetten, je team beoordelen en je administratie rond hebben. Alles op één plek, wanneer het jou uitkomt.",
+      "klant": "Hotel Keizersgracht (voorbeeld)"
+    },
+    {
       "type": "scores",
       "eyebrow": "Onze EXTRA's in cijfers",
       "h2": "Na elke dienst [[beoordeeld]]",
@@ -450,46 +457,6 @@ export const hotels: PaginaContent = {
       "los": true
     },
     {
-      "type": "waarom",
-      "eyebrow": "Waarom EXTRA",
-      "h2": "Waarom hotels voor [[EXTRA kiezen]]",
-      "lead": "Hotelpersoneel vraagt om meer dan alleen ervaring. Gastvrijheid, representativiteit en consistentie zijn essentieel. EXTRA begrijpt dat.",
-      "punten": [
-        {
-          "ic": "hand",
-          "h3": "Vertrouwd met hotelstandaarden",
-          "p": "Onze medewerkers kennen het verschil tussen drie en vijf sterren service. Ze werken volgens hotelstandaarden, dresscodes en guestrelations protocollen."
-        },
-        {
-          "ic": "ster",
-          "h3": "Vaste gezichten per hotel",
-          "p": "Via favorietenpoules bouwen we per hotel een vaste poule op. Medewerkers die jouw procedures kennen en direct inzetbaar zijn."
-        },
-        {
-          "ic": "oog",
-          "h3": "Geselecteerd op gastvrijheid",
-          "p": "Representativiteit en gastvrijheid zijn doorslaggevend in onze selectie. Iedereen heeft eerst een persoonlijk gesprek gehad."
-        },
-        {
-          "ic": "snel",
-          "h3": "Snel schakelen bij uitval",
-          "p": "Ziekte of last minute aanvragen? EXTRA is 24 uur per dag bereikbaar en kan snel schakelen."
-        },
-        {
-          "ic": "tel",
-          "h3": "Data per medewerker per hotel",
-          "p": "Na iedere dienst meten we prestaties. Zo weten we precies wie op jouw locatie het beste presteert."
-        },
-        {
-          "ic": "schild",
-          "h3": "Volledig in loondienst",
-          "p": "NEN 4400-1 gecertificeerd en conform arbeidswetgeving. Geen zzp-risico's voor hotels."
-        }
-      ],
-      "check": "NEN 4400-1 gecertificeerd",
-      "paddingTop": "110px"
-    },
-    {
       "type": "reviews",
       "eyebrow": "Referenties",
       "h2": "Wat hotels over ons [[zeggen]]",
@@ -530,27 +497,6 @@ export const hotels: PaginaContent = {
         ]
       },
       "id": "selectie"
-    },
-    {
-      "type": "data",
-      "eyebrow": "Data en inzicht",
-      "h2": "Geselecteerd op bewezen [[servicescores]]",
-      "lead": "Wij registreren elke plaatsing. Per medewerker zie je scores op houding, vaardigheid, kleding en uitstraling per hotelfunctie. Zo plaatsen wij altijd de persoon die bij jouw hotelstandaard en afdeling past, zonder gokken.",
-      "lijst": [
-        "Elk medewerkersprofiel met functie- en dienstscores",
-        "Direct inzicht in wie past bij jouw hotel en afdeling",
-        "Objectieve matching op basis van bewezen hotelervaring"
-      ],
-      "schermen": [
-        {
-          "src": "/d3/ev-overzicht.webp",
-          "alt": "Dashboard met medewerkersoverzicht en scores"
-        },
-        {
-          "src": "/d3/ev-profiel.webp",
-          "alt": "Individueel medewerkersprofiel met beoordelingen"
-        }
-      ]
     },
     {
       "type": "loon",

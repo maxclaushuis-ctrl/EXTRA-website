@@ -202,3 +202,80 @@
 
 /* Telefoonnummer in de hero: op desktop gewone tekst, alleen op mobiel klikbaar om direct te bellen */
 @media (min-width:761px){.d3.css-hotels .hhot-knoppen .hero-tel{text-decoration:none;pointer-events:none;cursor:text}}
+
+/* Klantportaal: tabbladen links, voorbeeldscherm rechts */
+.d3.css-hotels .portaal{background:var(--offwhite);padding-top:40px}
+.d3.css-hotels .pt-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:start;margin-top:64px}
+.d3.css-hotels .pt-lijst{display:grid;border-top:1px solid var(--lijn-sterk)}
+.d3.css-hotels .pt-tab{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:22px 4px 22px 0;border-bottom:1px solid var(--lijn-sterk);color:var(--tekst-2);transition:color .2s}
+.d3.css-hotels .pt-tab b{display:block;font-size:clamp(20px,1.8vw,26px);font-weight:800;letter-spacing:-.035em;color:var(--espresso);opacity:.55;transition:opacity .2s}
+.d3.css-hotels .pt-tab>span>span{display:block;margin-top:6px;font-size:15px;line-height:1.5;max-height:0;overflow:hidden;opacity:0;transition:max-height .35s,opacity .3s}
+.d3.css-hotels .pt-nr{font-size:13px;font-weight:700;padding-top:7px;color:var(--tekst-2)}
+.d3.css-hotels .pt-tab[aria-selected="true"] b{opacity:1}
+.d3.css-hotels .pt-tab[aria-selected="true"]>span>span{max-height:120px;opacity:1}
+.d3.css-hotels .pt-tab[aria-selected="true"] .pt-nr{color:var(--espresso)}
+.d3.css-hotels .pt-tab[aria-selected="true"] .pt-nr::after{content:"";display:block;width:22px;height:3px;border-radius:3px;background:var(--accent);margin-top:8px;box-shadow:inset 0 0 0 1px rgba(55,53,44,.15)}
+.d3.css-hotels .pt-tab:hover b{opacity:1}
+.d3.css-hotels .pt-tab:focus-visible{outline:2px solid var(--espresso);outline-offset:4px;border-radius:6px}
+.d3.css-hotels .pt-scherm{background:var(--accent);border-radius:var(--rr);padding:clamp(16px,2.4vw,32px);position:sticky;top:110px}
+.d3.css-hotels .pt-balk{display:flex;align-items:center;gap:6px;padding:0 4px 12px;font-size:12.5px;font-weight:600;color:var(--espresso)}
+.d3.css-hotels .pt-balk i{width:9px;height:9px;border-radius:50%;background:rgba(55,53,44,.25)}
+.d3.css-hotels .pt-balk span{margin-left:8px;opacity:.75}
+.d3.css-hotels .pt-in{background:#fff;border-radius:18px;padding:20px;box-shadow:0 30px 60px -30px rgba(55,53,44,.45);min-height:380px;display:flex;flex-direction:column}
+.d3.css-hotels .pt-paneel{flex:1}
+.d3.css-hotels .pt-kop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--lijn)}
+.d3.css-hotels .pt-kop b{font-size:18px;font-weight:800;letter-spacing:-.03em}
+.d3.css-hotels .pt-kop>span:nth-child(2){font-size:13px;color:var(--tekst-2)}
+.d3.css-hotels .pt-knop,.d3.css-hotels .pt-som{margin-left:auto}
+.d3.css-hotels .pt-knop{background:var(--espresso);color:var(--offwhite);font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:10px}
+.d3.css-hotels .pt-som{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.d3.css-hotels .pt-kop .pt-st{margin-left:auto}
+.d3.css-hotels .pt-rijen{list-style:none;margin:0;padding:0}
+.d3.css-hotels .pt-rijen li{display:grid;grid-template-columns:54px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--lijn);font-size:14px}
+.d3.css-hotels .pt-rijen li:last-child{border-bottom:0}
+.d3.css-hotels .pt-rijen b{display:block;font-weight:700}
+.d3.css-hotels .pt-rijen small{display:block;font-size:12px;color:var(--tekst-2)}
+.d3.css-hotels .pt-dag{font-weight:700;font-size:13px;color:var(--tekst-2)}
+.d3.css-hotels .pt-bezet{font-weight:700;font-variant-numeric:tabular-nums}
+.d3.css-hotels .pt-st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 9px;border-radius:7px;white-space:nowrap}
+.d3.css-hotels .pt-st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.d3.css-hotels .pt-st.goed{background:#EEF3E7;color:#456B2E}
+.d3.css-hotels .pt-st.letop{background:#FBF1DC;color:#8A6414}
+.d3.css-hotels .pt-score-kop,.d3.css-hotels .pt-scores li{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(4,minmax(0,.7fr)) minmax(0,1.1fr);gap:8px;align-items:center}
+.d3.css-hotels .pt-score-kop{padding:12px 0 6px;font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--tekst-2)}
+.d3.css-hotels .pt-scores small.fav{color:var(--espresso);font-weight:700}
+.d3.css-hotels .pt-sm{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--lijn-sterk);position:relative}
+.d3.css-hotels .pt-sm.hi{background:var(--accent);border-color:var(--espresso)}
+.d3.css-hotels .pt-sm.mid{background:var(--offwhite);border-color:var(--espresso)}
+.d3.css-hotels .pt-sm.hi::after,.d3.css-hotels .pt-sm.mid::after{content:"";position:absolute;left:6px;right:6px;bottom:6px;height:4px;border-bottom:1.5px solid var(--espresso);border-radius:0 0 8px 8px}
+.d3.css-hotels .pt-sm.mid::after{height:0;bottom:8px;border-radius:0}
+.d3.css-hotels .pt-ster{letter-spacing:1px;color:var(--espresso);font-size:14px;white-space:nowrap}
+.d3.css-hotels .pt-ster i{font-style:normal;opacity:.2}
+.d3.css-hotels .pt-ster.leeg{opacity:.2}
+.d3.css-hotels .pt-fact li{grid-template-columns:minmax(0,1fr) auto auto auto}
+.d3.css-hotels .pt-bedrag{font-weight:700;font-variant-numeric:tabular-nums}
+.d3.css-hotels .pt-acties{display:flex;gap:6px}
+.d3.css-hotels .pt-mini{font-size:12px;font-weight:700;padding:6px 10px;border-radius:9px;border:1px solid var(--lijn-sterk);white-space:nowrap}
+.d3.css-hotels .pt-mini.vol{background:var(--espresso);border-color:var(--espresso);color:var(--offwhite)}
+.d3.css-hotels .pt-docs li{grid-template-columns:34px minmax(0,1fr) auto}
+.d3.css-hotels .pt-doc{width:30px;height:36px;border-radius:5px;background:var(--offwhite);border:1.5px solid var(--espresso);position:relative}
+.d3.css-hotels .pt-doc::before,.d3.css-hotels .pt-doc::after{content:"";position:absolute;left:6px;right:6px;height:1.5px;background:var(--espresso);top:13px}
+.d3.css-hotels .pt-doc::after{top:20px;right:10px}
+.d3.css-hotels .pt-noot{margin-top:12px;font-size:11.5px;color:var(--tekst-2);text-align:right}
+.d3.css-hotels .pt-extra{list-style:none;display:flex;flex-wrap:wrap;gap:10px 28px;margin:40px 0 0;padding:0;font-weight:650}
+.d3.css-hotels .pt-extra li{display:flex;align-items:center;gap:8px}
+.d3.css-hotels .pt-extra .ic{width:18px;height:18px;padding:3px;border-radius:50%;background:var(--accent)}
+@media (max-width:900px){
+  .d3.css-hotels .pt-grid{grid-template-columns:minmax(0,1fr);gap:28px;margin-top:40px}
+  .d3.css-hotels .pt-scherm{position:static;padding:12px;border-radius:22px}
+  .d3.css-hotels .pt-in{padding:14px;min-height:0}
+  .d3.css-hotels .pt-score-kop{display:none}
+  .d3.css-hotels .pt-scores li{grid-template-columns:minmax(0,1fr) repeat(4,24px);row-gap:6px}
+  .d3.css-hotels .pt-scores .pt-ster{grid-column:1/-1}
+  .d3.css-hotels .pt-rijen li{grid-template-columns:44px minmax(0,1fr) auto}
+  .d3.css-hotels .pt-rijen li .pt-st{grid-column:2/-1;justify-self:start}
+  .d3.css-hotels .pt-fact li{grid-template-columns:minmax(0,1fr) auto}
+  .d3.css-hotels .pt-fact .pt-acties{grid-column:1/-1}
+  .d3.css-hotels .pt-docs li{grid-template-columns:34px minmax(0,1fr) auto}
+}
+@media (prefers-reduced-motion:reduce){.d3.css-hotels .pt-tab>span>span{transition:none}}

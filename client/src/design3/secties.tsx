@@ -5,7 +5,7 @@
  * De markup is gelijk aan die van de mock-up, zodat de gedeelde CSS (d3.css)
  * en het gedrag (gedrag.ts) overal hetzelfde werken.
  */
-import { Fragment, useId, useRef, type CSSProperties } from "react";
+import { Fragment, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Ic, Pijl, T, Woorden, initialen, type IcoonNaam } from "./basis";
 import { useCarrousel, useReus, useSpoor, useStapelTop } from "./gedrag";
 import SnelAanvraag, { type Branche } from "./SnelAanvraag";
@@ -28,6 +28,7 @@ export type Sectie =
   | { type: "scores"; eyebrow: string; h2: string; lead: string; lijst: string[]; kaarten: ScoreKaart[]; noot: string; los?: boolean }
   | { type: "screening"; id?: string; eyebrow: string; h2: string; lead: string; kaart: { avatar: string; b: string; span: string; tags: string[] } }
   | { type: "hoe"; werk: boolean; id: string | null; eyebrow: string; h2: string; lead: string; stappen: { h3: string; p: string }[]; knop: Knop | null; standaard: string | null }
+  | { type: "portaal"; eyebrow: string; h2: string; lead: string; klant: string }
   | { type: "data"; eyebrow: string; h2: string; lead: string; lijst: string[]; schermen: { src: string; alt: string }[] }
   | { type: "loon"; eyebrow: string; h2: string[]; lead: string; voordelen: string[]; knop: Knop | null }
   | { type: "vorm" }
@@ -63,6 +64,7 @@ function SectieView({ s, ctx }: { s: Sectie; ctx: Ctx }) {
     case "screening": return <Screening s={s} />;
     case "hoe": return <Hoe s={s} />;
     case "data": return <Data s={s} />;
+    case "portaal": return <Portaal s={s} />;
     case "loon": return <Loon s={s} />;
     case "vorm": return <Vorm />;
     case "faq": return <Faq s={s} />;
@@ -308,6 +310,86 @@ function Hoe({ s }: { s: S<"hoe"> }) {
         ))}
       </div>
       {s.standaard && <p className="standaard"><T t={s.standaard} /></p>}
+    </div></section>
+  );
+}
+
+// Klantportaal: tabbladen links, voorbeeldscherm rechts. De schermen zijn een
+// nagebouwd voorbeeld met fictieve gegevens (geen echte klanten of medewerkers).
+const PT_TABS: [string, string][] = [
+  ["Diensten uitzetten", "Kies functie, dag, tijden en aantal mensen. Op het planbord zie je per dag wie er komt en wat nog open staat."],
+  ["Beoordelen na elke dienst", "Geef een score op tijd, kleding, vaardigheid en houding. Wie goed bevalt, markeer je als favoriet voor je vaste poule."],
+  ["Urenbriefjes en facturen", "Per week je urenbriefjes en facturen. Klopt een uur niet, dan vraag je direct een correctie aan. Downloaden of online betalen."],
+  ["Klaar voor elke inspectie", "Per medewerker de documentatie die je bij een controle moet kunnen laten zien. Alles staat klaar, je hoeft niets bij elkaar te zoeken."],
+];
+
+function Portaal({ s }: { s: S<"portaal"> }) {
+  const [actief, setActief] = useState(0);
+  const id = useId().replace(/:/g, "");
+  function toets(e: KeyboardEvent<HTMLButtonElement>, i: number) {
+    const n = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
+    if (!n) return;
+    e.preventDefault();
+    const d = (i + n + PT_TABS.length) % PT_TABS.length;
+    setActief(d);
+    (document.getElementById(`pt${id}t${d}`) as HTMLButtonElement | null)?.focus();
+  }
+  const st2 = (k: "goed" | "letop", t: string) => <span className={`pt-st ${k}`}>{t}</span>;
+  return (
+    <section className="portaal" id="klantportaal"><div className="w">
+      <div className="dkop"><div><span className="eyebrow">{s.eyebrow}</span>
+        <h2 className="groot" style={{ marginTop: "22px", fontSize: "clamp(46px,5.6vw,92px)" }}><T t={s.h2} /></h2></div>
+        <div><p className="lead zacht"><T t={s.lead} /></p></div>
+      </div>
+      <div className="pt-grid">
+        <div className="pt-lijst" role="tablist" aria-label="Wat je in het klantportaal doet">
+          {PT_TABS.map(([b, p], i) => (
+            <button key={b} className="pt-tab" role="tab" type="button" id={`pt${id}t${i}`} aria-selected={actief === i} aria-controls={`pt${id}p${i}`} tabIndex={actief === i ? 0 : -1} onClick={() => setActief(i)} onKeyDown={(e) => toets(e, i)}>
+              <span className="pt-nr">{String(i + 1).padStart(2, "0")}</span><span><b>{b}</b><span>{p}</span></span>
+            </button>
+          ))}
+        </div>
+        <div className="pt-scherm" aria-label="Voorbeeld van het klantportaal">
+          <div className="pt-balk" aria-hidden="true"><i /><i /><i /><span>Klantportaal · {s.klant}</span></div>
+          <div className="pt-in">
+            <div className="pt-paneel" id={`pt${id}p0`} role="tabpanel" aria-labelledby={`pt${id}t0`} hidden={actief !== 0}>
+              <div className="pt-kop"><b>Planbord</b><span>Week 44 · 26 okt tot 1 nov</span><span className="pt-knop">+ Dienst aanvragen</span></div>
+              <ul className="pt-rijen">
+                {([["Ma 26", "Housekeeping", "07:00 tot 15:00", "4 / 4", true], ["Di 27", "Banqueting", "17:00 tot 01:00", "6 / 8", false], ["Wo 28", "Front office", "15:00 tot 23:00", "2 / 2", true], ["Vr 30", "F&B", "06:30 tot 11:00", "3 / 3", true]] as const).map(([d, f, t, b, ok]) => (
+                  <li key={d}><span className="pt-dag">{d}</span><span><b>{f}</b><small>{t}</small></span><span className="pt-bezet">{b}</span>{ok ? st2("goed", "Bevestigd") : st2("letop", "In planning")}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="pt-paneel" id={`pt${id}p1`} role="tabpanel" aria-labelledby={`pt${id}t1`} hidden={actief !== 1}>
+              <div className="pt-kop"><b>Afronden</b><span>Housekeeping · ma 26 okt · 07:00 tot 15:00</span><span className="pt-knop">Dienst accorderen</span></div>
+              <div className="pt-score-kop" aria-hidden="true"><span>Medewerker</span><span>Op tijd</span><span>Kleding</span><span>Vaardigheid</span><span>Houding</span><span>Oordeel</span></div>
+              <ul className="pt-rijen pt-scores">
+                {([["Sanne de Vries", true, ["hi", "hi", "hi", "hi"], 5], ["Thomas Bakker", false, ["hi", "mid", "hi", "hi"], 4], ["Lotte Visser", true, ["hi", "hi", "hi", "hi"], 5], ["Noor Hendriks", false, ["", "", "", ""], 0]] as const).map(([n, fav, sm, ster]) => (
+                  <li key={n}><span><b>{n}</b>{fav ? <small className="fav">♥ Favoriet</small> : <small>8 uur</small>}</span>{sm.map((k, i) => <span key={i} className={`pt-sm ${k}`} />)}<span className={`pt-ster${ster ? "" : " leeg"}`} aria-label={ster ? `${ster} van 5 sterren` : "Nog niet beoordeeld"}>{"★".repeat(ster || 5)}{ster && ster < 5 ? <i>{"★".repeat(5 - ster)}</i> : null}</span></li>
+                ))}
+              </ul>
+            </div>
+            <div className="pt-paneel" id={`pt${id}p2`} role="tabpanel" aria-labelledby={`pt${id}t2`} hidden={actief !== 2}>
+              <div className="pt-kop"><b>Facturen</b><span>2 openstaand</span><span className="pt-som">€ 8.240,50</span></div>
+              <ul className="pt-rijen pt-fact">
+                {([["Week 43", "2026-0431", "€ 4.180,25", false], ["Week 42", "2026-0422", "€ 4.060,25", false], ["Week 41", "2026-0413", "€ 3.912,00", true], ["Week 40", "2026-0404", "€ 4.275,75", true]] as const).map(([w, nr, bedrag, betaald]) => (
+                  <li key={w}><span><b>{w}</b><small>Factuur {nr}</small></span><span className="pt-bedrag">{bedrag}</span>{betaald ? st2("goed", "Betaald") : st2("letop", "Openstaand")}<span className="pt-acties"><span className="pt-mini">Download</span>{!betaald && <span className="pt-mini vol">Betalen</span>}</span></li>
+                ))}
+              </ul>
+            </div>
+            <div className="pt-paneel" id={`pt${id}p3`} role="tabpanel" aria-labelledby={`pt${id}t3`} hidden={actief !== 3}>
+              <div className="pt-kop"><b>Documenten</b><span>Documentatie per medewerker</span>{st2("goed", "Compleet")}</div>
+              <ul className="pt-rijen pt-docs">
+                {([["Identiteitsbewijs per medewerker", "Gecontroleerd door EXTRA", "Bekijk"], ["Werkvergunning waar nodig", "Met geldigheidsdatum", "Bekijk"], ["Gewerkte uren per medewerker", "Per dienst geregistreerd en geaccordeerd", "Download"], ["NEN 4400-1 certificaat", "Geldig en actueel", "Download"]] as const).map(([b, sub, k]) => (
+                  <li key={b}><span className="pt-doc" aria-hidden="true" /><span><b>{b}</b><small>{sub}</small></span><span className="pt-mini">{k}</span></li>
+                ))}
+              </ul>
+            </div>
+            <p className="pt-noot">Voorbeeld met fictieve gegevens</p>
+          </div>
+        </div>
+      </div>
+      <ul className="pt-extra">{["Vaste poules per afdeling", "Meldingen bij nieuwe diensten", "In het Nederlands, Engels en Spaans"].map((t) => <li key={t}><Ic n="vink" />{t}</li>)}</ul>
     </div></section>
   );
 }
