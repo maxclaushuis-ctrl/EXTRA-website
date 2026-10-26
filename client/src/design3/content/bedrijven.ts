@@ -528,38 +528,8 @@ export const hotels: PaginaContent = {
           "NL",
           "Housekeeping"
         ]
-      }
-    },
-    {
-      "type": "hoe",
-      "werk": false,
-      "id": "selectie",
-      "eyebrow": "Ons selectieproces",
-      "h2": "Hoe wij hotelpersoneel [[selecteren]]",
-      "lead": "Hotelpersoneel vraagt om meer dan vakkennis. Presentatie, houding en gastvrijheid bepalen de gastbeleving. Daarom selecteren wij op alle drie.",
-      "stappen": [
-        {
-          "h3": "Persoonlijk gesprek op kantoor",
-          "p": "Iedere kandidaat komt langs. We beoordelen presentatie, communicatie en hospitality mindset."
-        },
-        {
-          "h3": "Selectie op soft en hard skills",
-          "p": "Vakkennis is belangrijk, maar gastvrijheid, representativiteit en nauwkeurigheid zijn doorslaggevend bij hotelplaatsingen."
-        },
-        {
-          "h3": "Hospitality ervaring verifiëren",
-          "p": "We controleren eerdere hotelervaring en referenties voordat iemand bij een hotel wordt geplaatst."
-        },
-        {
-          "h3": "Beoordeling na elke hotelplaatsing",
-          "p": "Na iedere dienst meten we prestaties en bouwen we per hotel een poule van bewezen medewerkers."
-        }
-      ],
-      "knop": {
-        "tekst": "Bel mij terug",
-        "href": "#aanvragen"
       },
-      "standaard": "Niemand die via EXTRA bij een hotel werkt heeft géén persoonlijk gesprek gehad. [[Dat is onze standaard, geen uitzondering.]]"
+      "id": "selectie"
     },
     {
       "type": "data",

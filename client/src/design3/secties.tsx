@@ -26,7 +26,7 @@ export type Sectie =
   | { type: "reviews"; eyebrow: string; h2: string; items: { quote: string; naam: string; rol: string }[] }
   | { type: "poule"; eyebrow: string; h2: string; lead: string; items: { h3: string; sub: string; meta: string[]; b: string; small: string }[]; knop: Knop | null }
   | { type: "scores"; eyebrow: string; h2: string; lead: string; lijst: string[]; kaarten: ScoreKaart[]; noot: string; los?: boolean }
-  | { type: "screening"; eyebrow: string; h2: string; lead: string; kaart: { avatar: string; b: string; span: string; tags: string[] } }
+  | { type: "screening"; id?: string; eyebrow: string; h2: string; lead: string; kaart: { avatar: string; b: string; span: string; tags: string[] } }
   | { type: "hoe"; werk: boolean; id: string | null; eyebrow: string; h2: string; lead: string; stappen: { h3: string; p: string }[]; knop: Knop | null; standaard: string | null }
   | { type: "data"; eyebrow: string; h2: string; lead: string; lijst: string[]; schermen: { src: string; alt: string }[] }
   | { type: "loon"; eyebrow: string; h2: string[]; lead: string; voordelen: string[]; knop: Knop | null }
@@ -281,7 +281,7 @@ function Scores({ s }: { s: S<"scores"> }) {
 
 function Screening({ s }: { s: S<"screening"> }) {
   return (
-    <section className="screening"><div className="w">
+    <section className="screening" id={s.id ?? undefined}><div className="w">
       <div className="scr-tekst">
         <span className="eyebrow">{s.eyebrow}</span>
         <h2 className="groot" style={{ marginTop: "22px", fontSize: "clamp(44px,5vw,84px)" }}><T t={s.h2} /></h2>
