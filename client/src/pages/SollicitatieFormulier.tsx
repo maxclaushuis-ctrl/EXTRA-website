@@ -14,6 +14,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useFormPersistence } from "@/hooks/use-form-persistence";
+import "@/design3/d3.css";
+import "@/design3/d3-extra.css";
+import { Iconen, Ic, Pijl } from "@/design3/basis";
+
+/*
+ * Design 3.0 (mock-up sollicitatieformulier.html). Alleen de opmaak is
+ * veranderd; velden, stappen, validatie, opslag (/api/sollicitatie), de
+ * intake-koppeling en het bewaren van een concept werken zoals voorheen.
+ * Dit is een intern formulier voor het intakegesprek: de route staat op
+ * noindex (shared/routeMeta.ts). De accentkleur volgt de gekozen functie:
+ * logistiek groen, de horecafuncties roze, nog niets gekozen off-white.
+ */
 
 const DRAFT_KEY = "sollicitatie_form_draft";
 
@@ -224,7 +236,7 @@ export default function SollicitatieFormulier() {
   });
 
   useEffect(() => {
-    document.title = 'Sollicitatieformulier – EXTRA';
+    document.title = 'Sollicitatieformulier | EXTRA';
     setIsSubmitted(false);
     // Snelle auth-check zodat we direct kunnen melden als de gebruiker niet ingelogd is
     // (vooral relevant op iPad/mobiel waar Safari sessies sneller verloopt)
@@ -269,7 +281,7 @@ export default function SollicitatieFormulier() {
       }
       toast({ title: 'Ingelogd', description: 'Kandidaten worden opgehaald.' });
     } catch {
-      setInlineLoginError('Verbindingsfout — probeer opnieuw');
+      setInlineLoginError('Verbindingsfout, probeer opnieuw');
     } finally {
       setInlineLoginBusy(false);
     }
@@ -518,19 +530,18 @@ export default function SollicitatieFormulier() {
     onChange: (val: number) => void;
     hasError?: boolean;
   }) => (
-    <div className={`flex gap-3 justify-center py-3 px-4 rounded-2xl ${hasError ? "bg-red-50 border-2 border-red-300" : "bg-gray-50 border-2 border-gray-100"}`}>
+    <div className={`sf-sterren${hasError ? " fout" : ""}`} role="radiogroup" data-naam={name}>
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
           type="button"
+          role="radio"
+          aria-checked={value === star}
+          aria-label={`${star} van 5`}
           onClick={() => onChange(star)}
-          className={`text-5xl leading-none transition-all active:scale-90 select-none touch-manipulation w-16 h-16 flex items-center justify-center rounded-xl ${
-            value && star <= value
-              ? "text-yellow-400 bg-yellow-50"
-              : "text-gray-300 hover:text-yellow-300"
-          }`}
+          className={`sf-ster${value && star <= value ? " aan" : ""}`}
         >
-          ★
+          <Ic n="ster" className="" />
         </button>
       ))}
     </div>
@@ -549,21 +560,16 @@ export default function SollicitatieFormulier() {
     children: React.ReactNode;
     id: string;
   }) => (
-    <div
+    <button
+      type="button"
+      id={id}
+      role="radio"
+      aria-checked={currentValue === value}
       onClick={() => onSelect(value)}
-      className={`flex items-center gap-4 px-5 py-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation min-h-[56px] ${
-        currentValue === value
-          ? "border-purple-500 bg-purple-50"
-          : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/30"
-      }`}
+      className={`sf-chip${currentValue === value ? " aan" : ""}`}
     >
-      <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
-        currentValue === value ? "border-purple-600" : "border-gray-300"
-      }`}>
-        {currentValue === value && <div className="w-2.5 h-2.5 rounded-full bg-purple-600" />}
-      </div>
-      <Label htmlFor={id} className="cursor-pointer text-base leading-snug flex-1">{children}</Label>
-    </div>
+      {children}
+    </button>
   );
 
   const CheckCard = ({
@@ -577,119 +583,96 @@ export default function SollicitatieFormulier() {
     children: React.ReactNode;
     id: string;
   }) => (
-    <div
+    <button
+      type="button"
+      id={id}
+      role="checkbox"
+      aria-checked={checked}
       onClick={onToggle}
-      className={`flex items-center gap-4 px-5 py-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation min-h-[56px] ${
-        checked
-          ? "border-purple-500 bg-purple-50"
-          : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/30"
-      }`}
+      className={`sf-chip vink${checked ? " aan" : ""}`}
     >
-      <Checkbox
-        id={id}
-        checked={checked}
-        onCheckedChange={onToggle}
-        className="w-5 h-5 flex-shrink-0"
-      />
-      <Label htmlFor={id} className="cursor-pointer text-base leading-snug flex-1">{children}</Label>
-    </div>
+      {children}
+    </button>
   );
+
+  /** Accentkleur: logistiek groen, horecafuncties roze, nog niets gekozen off-white. */
+  const sector = watchedFunctionType === "logistiek" ? "logistiek" : watchedFunctionType ? "hotels" : "algemeen";
 
   if (isSubmitted) {
     return (
-      <div className="normal-cursor min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-8">
-        <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
-          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-12 h-12 text-green-600" />
+      <div className="sf normal-cursor" data-sector={sector}>
+        <Iconen />
+        <header className="sf-balk"><div className="w"><div className="sf-rij"><img src={extraLogoWit} alt="EXTRA" /><i /><span className="sf-titel">Sollicitatieformulier</span></div></div></header>
+        <main className="sf-main">
+          <div className="sf-kaart sf-klaar" role="status">
+            <span className="sf-vink"><Ic n="vink" /></span>
+            <h1>Opgeslagen</h1>
+            <p>De sollicitatie staat in het dashboard.</p>
+            <button
+              type="button"
+              className="knop vol"
+              onClick={() => {
+                clearDraft();
+                setIsSubmitted(false);
+                setCurrentSection(0);
+                setIntakeCandidates([]);
+                setSelectedIntakeId(null);
+                setIntakeCandidateSearch('');
+                setScoreErrors([]);
+                form.reset();
+              }}
+            >
+              Nieuwe sollicitatie <Pijl />
+            </button>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Opgeslagen!</h1>
-          <p className="text-gray-600 mb-8 text-lg">De sollicitatie is succesvol toegevoegd aan het systeem.</p>
-          <Button
-            onClick={() => {
-              clearDraft();
-              setIsSubmitted(false);
-              setCurrentSection(0);
-              setIntakeCandidates([]);
-              setSelectedIntakeId(null);
-              setIntakeCandidateSearch('');
-              setScoreErrors([]);
-              form.reset();
-            }}
-            className="w-full bg-purple-600 hover:bg-purple-700 h-14 text-lg rounded-xl"
-          >
-            Nieuwe Sollicitatie
-          </Button>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="normal-cursor min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100">
-      {/* Header */}
-      <div className="bg-purple-700 text-white shadow-lg sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src={extraLogoWit} alt="EXTRA" className="h-8 w-auto" />
-            <div className="w-px h-6 bg-white/30" />
-            {/* Enige <h1> op deze pagina — stond hier eerder als kale <span>,
-                waardoor de pagina (buiten de "Opgeslagen!"-bevestiging) geen
-                H1 had. Zelfde opmaak, nu wel semantisch correct. */}
-            <h1 className="text-base font-semibold tracking-wide">Sollicitatieformulier</h1>
+    <div className="sf normal-cursor" data-sector={sector}>
+      <Iconen />
+      <header className="sf-balk">
+        <div className="w">
+          <div className="sf-rij">
+            <img src={extraLogoWit} alt="EXTRA" />
+            <i />
+            {/* Enige <h1> op deze pagina. */}
+            <h1>Sollicitatieformulier</h1>
+            <span className="sf-teller">Stap <b>{displayDotIndex + 1}</b> van {totalDisplayDots}</span>
           </div>
-          <span className="text-purple-200 text-sm font-medium">
-            {displayDotIndex + 1} / {totalDisplayDots}
-          </span>
+          <div className="sf-voortgang" aria-hidden="true">
+            {Array.from({ length: totalDisplayDots }).map((_, i) => (
+              <b key={i} className={i < displayDotIndex ? "klaar" : i === displayDotIndex ? "nu" : undefined} />
+            ))}
+          </div>
         </div>
+      </header>
 
-        {/* Step dots */}
-        <div className="max-w-5xl mx-auto px-6 pb-3 flex items-center gap-2">
-          {Array.from({ length: totalDisplayDots }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2 flex-1">
-              <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                i < displayDotIndex ? "bg-green-400" :
-                i === displayDotIndex ? "bg-white" :
-                "bg-white/20"
-              }`} />
-            </div>
-          ))}
-        </div>
-      </div>
+      <form onSubmit={(e) => e.preventDefault()} className="sf-main">
 
-      <form onSubmit={(e) => e.preventDefault()} className="max-w-5xl mx-auto px-4 py-6">
+        <div className="sf-kaart">
 
-        {/* Section card */}
-        <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-
-          {/* Section title bar */}
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-8 py-5">
-            <div className="flex items-center gap-3">
-              {(() => {
-                const Icon = sections[currentSection].icon;
-                return <Icon className="w-6 h-6 opacity-80" />;
-              })()}
-              <h2 className="text-xl font-bold">{getSectionTitle(currentSection)}</h2>
-            </div>
+          <div className="sf-kop">
+            <span className="eyebrow">Stap {displayDotIndex + 1} van {totalDisplayDots}</span>
+            <h2>{getSectionTitle(currentSection)}</h2>
           </div>
 
-          {/* Alleen op de eerste sectie: link naar de lichtere cv-upload-pagina
-              voor wie geen volledig sollicitatieformulier wil invullen. */}
+          {/* Alleen op de eerste sectie: de lichtere cv-upload-route. */}
           {currentSection === 0 && (
-            <p className="mx-6 mt-6 text-sm text-gray-500">
-              Wil je liever alleen je cv achterlaten?{" "}
-              <a href="/cv-upload" className="text-purple-700 font-semibold underline underline-offset-2 hover:text-purple-800">
-                Ga naar cv-upload
-              </a>
-              .
+            <p className="sf-tip">
+              Wil de kandidaat alleen een cv achterlaten? Stuur dan de link naar{" "}
+              <a href="/cv-upload">cv-upload</a>.
             </p>
           )}
 
           {/* Formulier hersteld banner */}
           {wasRestored && (
-            <div className="mx-6 mt-6 flex items-center justify-between gap-3 bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+            <div className="sf-melding sf-info">
               <div className="flex items-center gap-3">
-                <RotateCcw className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <p className="text-sm font-semibold text-blue-700">Formulier hersteld — je gegevens zijn bewaard na de herlaadbeurt.</p>
+                <RotateCcw className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm font-semibold">Formulier hersteld: je gegevens zijn bewaard na de herlaadbeurt.</p>
               </div>
               <button
                 type="button"
@@ -699,7 +682,7 @@ export default function SollicitatieFormulier() {
                   setScoreErrors([]);
                   form.reset();
                 }}
-                className="text-xs text-blue-500 hover:text-blue-700 underline whitespace-nowrap flex-shrink-0"
+                className="sf-link text-xs whitespace-nowrap flex-shrink-0"
               >
                 Opnieuw beginnen
               </button>
@@ -708,20 +691,20 @@ export default function SollicitatieFormulier() {
 
           {/* Score errors banner */}
           {scoreErrors.length > 0 && (
-            <div className="mx-6 mt-6 flex items-start gap-3 bg-red-50 border-2 border-red-200 rounded-2xl p-4">
+            <div className="sf-melding sf-fout">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-red-700 text-sm">Vul alle verplichte scorevelden in:</p>
+                <p className="font-semibold text-sm">Vul alle verplichte scorevelden in:</p>
                 <ul className="mt-1 space-y-0.5">
                   {scoreErrors.map(e => (
-                    <li key={e} className="text-sm text-red-600">• {e}</li>
+                    <li key={e} className="text-sm">{e}</li>
                   ))}
                 </ul>
               </div>
             </div>
           )}
 
-          <div className="p-8 space-y-8">
+          <div className="sf-inhoud">
 
             {/* ═══ SECTIE 0: START ═══ */}
             {currentSection === 0 && (
@@ -776,10 +759,10 @@ export default function SollicitatieFormulier() {
             {currentSection === 1 && (
               <>
                 {intakeNotAuthorized && (
-                  <div className="rounded-2xl border-2 border-purple-200 bg-white shadow-sm overflow-hidden">
-                    <div className="px-5 pt-5 pb-3 bg-purple-50 border-b border-purple-100">
-                      <p className="text-sm font-bold text-purple-900">Log eerst in om kandidaten te zien</p>
-                      <p className="text-xs text-purple-700 mt-0.5">Je sessie is verlopen of je bent nog niet ingelogd op dit apparaat. Vul je dashboardgegevens in — daarna zie je de aangemelde kandidaten direct.</p>
+                  <div className="rounded-2xl border-2 border-[#E4E0D8] bg-white shadow-sm overflow-hidden">
+                    <div className="px-5 pt-5 pb-3 bg-[#F8F7F4] border-b border-[#E4E0D8]">
+                      <p className="text-sm font-bold text-[#37352C]">Log eerst in om kandidaten te zien</p>
+                      <p className="text-xs text-[#5F5D54] mt-0.5">Je sessie is verlopen of je bent nog niet ingelogd op dit apparaat. Vul je dashboardgegevens in, daarna zie je de aangemelde kandidaten direct.</p>
                     </div>
                     <form onSubmit={handleInlineLogin} className="p-5 space-y-3" autoComplete="on">
                       <div>
@@ -813,7 +796,7 @@ export default function SollicitatieFormulier() {
                       <button
                         type="submit"
                         disabled={inlineLoginBusy}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white text-base font-semibold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#37352C] hover:bg-[#45433A] disabled:bg-[#37352C]/40 text-white text-base font-semibold transition-colors"
                       >
                         {inlineLoginBusy ? (
                           <>
@@ -830,15 +813,15 @@ export default function SollicitatieFormulier() {
                 )}
 
                 {intakeCandidatesLoading && (
-                  <div className="flex items-center gap-3 text-sm text-purple-600 bg-purple-50 border border-purple-100 rounded-2xl px-5 py-4">
-                    <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  <div className="flex items-center gap-3 text-sm text-[#5F5D54] bg-[#F8F7F4] border border-[#E4E0D8] rounded-2xl px-5 py-4">
+                    <div className="w-5 h-5 border-2 border-[#37352C] border-t-transparent rounded-full animate-spin" />
                     Kandidaten ophalen…
                   </div>
                 )}
 
                 {!intakeCandidatesLoading && intakeCandidates.length > 0 && (
-                  <div className="rounded-2xl border-2 border-purple-100 bg-white overflow-hidden shadow-sm">
-                    <div className="px-5 pt-5 pb-4 border-b border-gray-100 bg-purple-50/50">
+                  <div className="rounded-2xl border-2 border-[#E4E0D8] bg-white overflow-hidden shadow-sm">
+                    <div className="px-5 pt-5 pb-4 border-b border-gray-100 bg-[#F8F7F4]">
                       <p className="text-sm font-bold text-gray-800 mb-3">Welke kandidaat zit nu bij je aan tafel?</p>
                       <div className="relative">
                         <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
@@ -846,7 +829,7 @@ export default function SollicitatieFormulier() {
                           value={intakeCandidateSearch}
                           onChange={e => setIntakeCandidateSearch(e.target.value)}
                           placeholder="Zoek op naam…"
-                          className="w-full pl-11 pr-4 py-3 text-base rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                          className="w-full pl-11 pr-4 py-3 text-base rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#37352C]/20 focus:border-[#37352C] transition-all"
                         />
                       </div>
                     </div>
@@ -867,29 +850,29 @@ export default function SollicitatieFormulier() {
                               key={c.id}
                               type="button"
                               onClick={() => applyIntakeCandidate(c)}
-                              className={`w-full text-left px-5 py-4 flex items-center gap-4 transition-colors ${isSelected ? 'bg-purple-50' : 'hover:bg-gray-50'}`}
+                              className={`w-full text-left px-5 py-4 flex items-center gap-4 transition-colors ${isSelected ? 'bg-[#F8F7F4]' : 'hover:bg-gray-50'}`}
                             >
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white' : isGepland ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${isSelected ? 'bg-[#37352C] text-white' : isGepland ? 'bg-[#F8F7F4] text-[#37352C]' : 'bg-gray-100 text-gray-600'}`}>
                                 {initials}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className={`text-base font-semibold truncate ${isSelected ? 'text-purple-900' : 'text-gray-800'}`}>
+                                <p className={`text-base font-semibold truncate ${isSelected ? 'text-[#37352C]' : 'text-gray-800'}`}>
                                   {c.firstName} {c.lastName}
-                                  {isGepland && <span className="ml-2 text-xs font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">Gesprek gepland</span>}
+                                  {isGepland && <span className="ml-2 text-xs font-medium bg-[#F8F7F4] text-[#37352C] px-1.5 py-0.5 rounded-full">Gesprek gepland</span>}
                                 </p>
-                                <p className="text-sm text-gray-400 truncate">{c.city || '—'} · {c.email}</p>
+                                <p className="text-sm text-gray-400 truncate">{c.city ? `${c.city} · ` : ''}{c.email}</p>
                               </div>
                               {isSelected && (
-                                <Check className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                                <Check className="w-5 h-5 text-[#5F5D54] flex-shrink-0" />
                               )}
                             </button>
                           );
                         })}
                     </div>
                     {selectedIntakeId && (
-                      <div className="px-5 py-3 border-t border-gray-100 bg-green-50">
-                        <p className="text-sm text-green-700 font-semibold">✓ Gegevens vooraf ingevuld — je kunt ze nog aanpassen</p>
-                        <p className="text-xs text-green-600 mt-0.5">Na het versturen wordt deze kandidaat automatisch als sollicitant geregistreerd.</p>
+                      <div className="px-5 py-3 border-t border-gray-100 bg-[#EEF3E7]">
+                        <p className="text-sm text-[#37352C] font-semibold">Gegevens vooraf ingevuld, je kunt ze nog aanpassen</p>
+                        <p className="text-xs text-[#5F5D54] mt-0.5">Na het versturen wordt deze kandidaat automatisch als sollicitant geregistreerd.</p>
                       </div>
                     )}
                   </div>
@@ -897,7 +880,7 @@ export default function SollicitatieFormulier() {
 
                 {!intakeCandidatesLoading && !intakeNotAuthorized && intakeCandidates.length === 0 && watchedFunctionType && (
                   <div className="rounded-xl border border-gray-200 px-5 py-4 text-sm text-gray-500 bg-gray-50">
-                    Geen aangemelde kandidaten voor deze functie — vul de gegevens hieronder handmatig in.
+                    Geen aangemelde kandidaten voor deze functie. Vul de gegevens hieronder zelf in.
                   </div>
                 )}
 
@@ -1171,7 +1154,7 @@ export default function SollicitatieFormulier() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-base font-semibold">Beschikbaarheid per week (in uren)</Label>
-                    <Input {...register("logAvailableHours")} placeholder="bijv. 24–40 uur" className="h-14 text-base rounded-xl" />
+                    <Input {...register("logAvailableHours")} placeholder="bijv. 24 tot 40 uur" className="h-14 text-base rounded-xl" />
                   </div>
 
                   <div className="space-y-2">
@@ -1596,7 +1579,7 @@ export default function SollicitatieFormulier() {
             {/* ═══ SECTIE 6: BESCHIKBAARHEID (Housekeeping: Tags) ═══ */}
             {currentSection === 6 && watchedFunctionType === "housekeeping" && (
               <>
-                <p className="text-sm text-gray-500 bg-purple-50 border border-purple-100 rounded-xl px-5 py-3">
+                <p className="text-sm text-gray-500 bg-[#F8F7F4] border border-[#E4E0D8] rounded-xl px-5 py-3">
                   Selecteer per categorie welke score van toepassing is op basis van het gesprek.
                 </p>
 
@@ -1640,7 +1623,7 @@ export default function SollicitatieFormulier() {
                         hasError={scoreErrors.includes(scoreFieldLabels[field])}
                       />
                       {watch(field) && (
-                        <p className="text-center text-sm font-bold text-purple-700">{watch(field)} / 5</p>
+                        <p className="text-center text-sm font-bold text-[#5F5D54]">{watch(field)} / 5</p>
                       )}
                     </div>
                   ))}
@@ -1706,25 +1689,25 @@ export default function SollicitatieFormulier() {
                     <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
                       <p className="font-semibold text-gray-900">Professionele uitstraling *</p>
                       <div className="flex justify-between text-xs text-gray-400 px-1">
-                        <span>❌ Onverzorgd</span>
-                        <span>⭐ Zeer representatief</span>
+                        <span>Onverzorgd</span>
+                        <span>Zeer representatief</span>
                       </div>
                       <StarRating name="chefProfessioneleUitstraling" value={watch("chefProfessioneleUitstraling")} onChange={(val) => setValue("chefProfessioneleUitstraling", val)} hasError={scoreErrors.includes("Professionele uitstraling (chef)")} />
-                      {watch("chefProfessioneleUitstraling") && <p className="text-center text-sm font-bold text-purple-700">{watch("chefProfessioneleUitstraling")} / 5</p>}
+                      {watch("chefProfessioneleUitstraling") && <p className="text-center text-sm font-bold text-[#5F5D54]">{watch("chefProfessioneleUitstraling")} / 5</p>}
                     </div>
                     <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
                       <p className="font-semibold text-gray-900">Communicatieve vaardigheden *</p>
                       <div className="flex justify-between text-xs text-gray-400 px-1">
-                        <span>❌ Gesloten</span>
-                        <span>⭐ Super vlot</span>
+                        <span>Gesloten</span>
+                        <span>Super vlot</span>
                       </div>
                       <StarRating name="communicationSkills" value={watch("communicationSkills")} onChange={(val) => setValue("communicationSkills", val)} hasError={scoreErrors.includes("Communicatieve vaardigheden")} />
-                      {watch("communicationSkills") && <p className="text-center text-sm font-bold text-purple-700">{watch("communicationSkills")} / 5</p>}
+                      {watch("communicationSkills") && <p className="text-center text-sm font-bold text-[#5F5D54]">{watch("communicationSkills")} / 5</p>}
                     </div>
                     <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
                       <p className="font-semibold text-gray-900">Algehele indruk *</p>
                       <StarRating name="overallImpression" value={watch("overallImpression")} onChange={(val) => setValue("overallImpression", val)} hasError={scoreErrors.includes("Algehele indruk")} />
-                      {watch("overallImpression") && <p className="text-center text-sm font-bold text-purple-700">{watch("overallImpression")} / 5</p>}
+                      {watch("overallImpression") && <p className="text-center text-sm font-bold text-[#5F5D54]">{watch("overallImpression")} / 5</p>}
                     </div>
                   </div>
                 )}
@@ -1799,21 +1782,21 @@ export default function SollicitatieFormulier() {
                     <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
                       <p className="font-semibold text-gray-900">Communicatieve vaardigheden *</p>
                       <div className="flex justify-between text-xs text-gray-400 px-1">
-                        <span>❌ Gesloten</span>
-                        <span>⭐ Super vlot</span>
+                        <span>Gesloten</span>
+                        <span>Super vlot</span>
                       </div>
                       <StarRating name="communicationSkills" value={watch("communicationSkills")} onChange={(val) => setValue("communicationSkills", val)} hasError={scoreErrors.includes("Communicatieve vaardigheden")} />
-                      {watch("communicationSkills") && <p className="text-center text-sm font-bold text-purple-700">{watch("communicationSkills")} / 5</p>}
+                      {watch("communicationSkills") && <p className="text-center text-sm font-bold text-[#5F5D54]">{watch("communicationSkills")} / 5</p>}
                     </div>
 
                     <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
                       <p className="font-semibold text-gray-900">Algehele indruk *</p>
                       <div className="flex justify-between text-xs text-gray-400 px-1">
-                        <span>❌ Onverzorgd en ongeïnteresseerd</span>
-                        <span>⭐ Super enthousiast en representatief</span>
+                        <span>Onverzorgd en ongeïnteresseerd</span>
+                        <span>Super enthousiast en representatief</span>
                       </div>
                       <StarRating name="overallImpression" value={watch("overallImpression")} onChange={(val) => setValue("overallImpression", val)} hasError={scoreErrors.includes("Algehele indruk")} />
-                      {watch("overallImpression") && <p className="text-center text-sm font-bold text-purple-700">{watch("overallImpression")} / 5</p>}
+                      {watch("overallImpression") && <p className="text-center text-sm font-bold text-[#5F5D54]">{watch("overallImpression")} / 5</p>}
                     </div>
                   </div>
                 )}
@@ -1902,8 +1885,8 @@ export default function SollicitatieFormulier() {
                     />
                   </div>
 
-                  <div className="p-5 bg-purple-50 rounded-2xl border border-purple-200">
-                    <p className="text-sm text-purple-700 leading-relaxed">
+                  <div className="p-5 bg-[#F8F7F4] rounded-2xl border border-[#E4E0D8]">
+                    <p className="text-sm text-[#5F5D54] leading-relaxed">
                       <strong>Let op:</strong> Na het versturen worden de gegevens direct gekoppeld aan het sollicitanten overzicht in het dashboard.
                     </p>
                   </div>
@@ -1913,70 +1896,30 @@ export default function SollicitatieFormulier() {
 
           </div>
 
-          {/* Navigation */}
-          <div className="px-8 py-5 bg-gray-50 border-t-2 border-gray-100 flex items-center justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrev}
-              disabled={currentSection === 0}
-              className="flex items-center gap-2 h-14 px-8 text-base rounded-xl border-2"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              Vorige
-            </Button>
-
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalDisplayDots }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`rounded-full transition-all duration-200 ${
-                    i === displayDotIndex
-                      ? "w-6 h-3 bg-purple-600"
-                      : i < displayDotIndex
-                      ? "w-3 h-3 bg-green-400"
-                      : "w-3 h-3 bg-gray-300"
-                  }`}
-                />
-              ))}
-            </div>
+          {/* Navigatie */}
+          <div className="sf-nav">
+            <button type="button" className="knop lijn" onClick={handlePrev} disabled={currentSection === 0}>
+              <Ic n="terug" className="" /> Vorige
+            </button>
 
             {currentSection === sections.length - 1 ? (
-              <div className="flex flex-col items-end gap-2">
+              <div className="sf-opslaan">
                 {scoreErrors.length > 0 && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm font-semibold bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>Vul ontbrekende velden in: {scoreErrors.join(", ")}</span>
-                  </div>
+                  <p className="sf-melding sf-fout" role="alert">Vul ontbrekende velden in: {scoreErrors.join(", ")}</p>
                 )}
-                <Button
+                <button
                   type="button"
+                  className="knop vol"
                   onClick={async () => { await onSubmit(watch() as FormData); }}
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 h-14 px-8 text-base rounded-xl bg-green-600 hover:bg-green-700"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Opslaan…
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Versturen
-                    </>
-                  )}
-                </Button>
+                  {isSubmitting ? "Opslaan" : <>Opslaan <Ic n="vink" className="" /></>}
+                </button>
               </div>
             ) : (
-              <Button
-                type="button"
-                onClick={handleNext}
-                className="flex items-center gap-2 h-14 px-8 text-base rounded-xl bg-purple-600 hover:bg-purple-700"
-              >
-                Volgende
-                <ChevronRight className="w-5 h-5" />
-              </Button>
+              <button type="button" className="knop vol" onClick={handleNext}>
+                Volgende <Pijl />
+              </button>
             )}
           </div>
         </div>

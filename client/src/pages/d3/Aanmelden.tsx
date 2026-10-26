@@ -691,8 +691,8 @@ export default function Aanmelden() {
                 {knop(t.verder, naStap1)}
                 <p className="am-noot am-anders">
                   {paginaTaal === "EN"
-                    ? <>Just want to drop off your CV? <a href="/cv-upload">Go to CV upload</a>. Or fill in the full <a href="/sollicitatieformulier">application form</a>.</>
-                    : <>Alleen je cv achterlaten? <a href="/cv-upload">Ga naar cv-upload</a>. Of vul het uitgebreide <a href="/sollicitatieformulier">sollicitatieformulier</a> in.</>}
+                    ? <>Just want to drop off your CV? <a href="/cv-upload">Go to CV upload</a>.</>
+                    : <>Alleen je cv achterlaten? <a href="/cv-upload">Ga naar cv-upload</a>.</>}
                 </p>
               </div>
             )}

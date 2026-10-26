@@ -3,7 +3,7 @@
  */
 import { Fragment, type CSSProperties, type ReactNode } from "react";
 
-export type IcoonNaam = "pijl" | "vink" | "ster" | "schild" | "oog" | "snel" | "hand" | "tel" | "koffer" | "menu" | "kruis";
+export type IcoonNaam = "pijl" | "vink" | "ster" | "schild" | "oog" | "snel" | "hand" | "tel" | "koffer" | "menu" | "kruis" | "doc" | "zoek" | "terug";
 
 /** De iconen staan één keer per pagina als sprite (zie <Iconen/>). */
 export function Ic({ n, className = "ic", style }: { n: IcoonNaam; className?: string; style?: CSSProperties }) {
@@ -37,6 +37,9 @@ export function Iconen() {
       <symbol id="koffer" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18" /></symbol>
       <symbol id="menu" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16" /></symbol>
       <symbol id="kruis" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></symbol>
+      <symbol id="doc" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 12h5M10 16h5" /></symbol>
+      <symbol id="zoek" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></symbol>
+      <symbol id="terug" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></symbol>
     </svg>
   );
 }

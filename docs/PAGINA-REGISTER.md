@@ -80,7 +80,6 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/front-office-vacatures-amsterdam` | T | front office vacatures | WZ | Aanmelden | |
 | `/vacatures` | T | horeca vacatures (overzicht) | WZ | Solliciteren | Overzicht plus `/vacatures/:slug`. Detailpagina's krijgen 4 ringlinks. |
 | `/aanmelden` | T | aanmelden uitzendbureau (conversie) | WZ | Aanmelden | Conversiepagina, geen SEO-doel. Engelse ingang via `?lang=en`. |
-| `/sollicitatieformulier` | T | sollicitatieformulier (conversie) | WZ | Versturen | Conversiepagina. |
 | `/bijbaan-amsterdam` | T+L | bijbaan amsterdam | WZ | Aanmelden | |
 | `/dagbetaling` | I | dagbetaling horeca | WZ | Aanmelden | Sterk onderscheidend onderwerp; ook bruikbaar als blogcluster-pillar. |
 | `/werken-in-de-horeca` | I | werken in de horeca | WZ | Aanmelden | Brede informatieve instap. |
@@ -139,5 +138,6 @@ pre-flight-check erbij.
 ## Bewust niet in het register
 
 `/BHG-group`, `/xebia` (klantpagina's, `noindex, follow`), `/cv-upload`,
+`/sollicitatieformulier` (intern intakeformulier, sinds oktober 2026 `noindex, follow`),
 `/aanvraag-ontvangen`, de brochures en alle dashboard- en app-routes. Die
 hebben geen zoekdoel en dus geen cluster.

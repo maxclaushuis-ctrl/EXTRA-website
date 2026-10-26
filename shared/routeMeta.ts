@@ -361,6 +361,11 @@ export const ROUTE_META: RouteMeta[] = [
     title: "Sollicitatieformulier | Werken via EXTRA",
     description:
       "Vul het sollicitatieformulier in en ga aan de slag via EXTRA: horeca, housekeeping of logistiek werk in Amsterdam. Binnen enkele minuten geregeld.",
+    // Noindex (oktober 2026): dit is het interne formulier dat het team tijdens
+    // het intakegesprek invult, geen pagina voor werkzoekenden. Werkzoekenden
+    // horen op /aanmelden. follow: true, zodat de link naar /cv-upload gevolgd mag worden.
+    noindex: true,
+    follow: true,
     prerender: true,
     priority: "0.6",
     changefreq: "monthly",
