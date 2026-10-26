@@ -187,3 +187,8 @@
   .d3.css-pagina .ihero.met-foto.ih-team .ih-foto::after{background:linear-gradient(180deg,rgba(31,30,25,.45) 0%,rgba(31,30,25,0) 28%,rgba(31,30,25,0) 70%,#1f1e19 100%)}
   .d3.css-pagina .ihero.met-foto.ih-team .w{padding-top:8px}
 }
+
+/* Functiekaarten in de carrousel: knop altijd onderaan, zodat hij op elke
+   kaart op dezelfde hoogte staat, ook als de tekst of de tags langer zijn. */
+.d3.css-hotels .fslide .fonder{flex:1 1 auto;grid-template-rows:1fr auto;align-items:start}
+.d3.css-hotels .fslide .frechts{align-self:end}
