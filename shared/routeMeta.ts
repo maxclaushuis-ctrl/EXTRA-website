@@ -142,6 +142,61 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.95",
     changefreq: "weekly",
   },
+  // ── Functiepagina's hotels (design 3.0, oktober 2026) ──────────────
+  {
+    path: "/housekeeping-personeel-inhuren",
+    title: "Housekeeping personeel inhuren in Amsterdam | EXTRA",
+    description:
+      "Housekeeping personeel inhuren voor je hotel? Ervaren room attendants in loondienst, persoonlijk geselecteerd en NEN 4400-1 gecertificeerd. Vraag direct aan.",
+    prerender: true,
+    priority: "0.9",
+    changefreq: "monthly",
+  },
+  {
+    path: "/front-office-personeel-inhuren",
+    title: "Front office personeel inhuren voor hotels | EXTRA",
+    description:
+      "Front office personeel inhuren voor receptie, check-in en guest relations. Representatief, gewend aan hotelprocessen en in loondienst bij EXTRA. Vraag aan.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "monthly",
+  },
+  {
+    path: "/fb-personeel-inhuren",
+    title: "F&B personeel inhuren voor hotels | EXTRA",
+    description:
+      "F&B personeel inhuren voor je hotelrestaurant, ontbijt en roomservice. Gastvrije medewerkers, persoonlijk geselecteerd en in loondienst bij EXTRA. Vraag aan.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "monthly",
+  },
+  {
+    path: "/banqueting-personeel-inhuren",
+    title: "Banqueting personeel inhuren voor hotels | EXTRA",
+    description:
+      "Banqueting personeel inhuren voor conferenties, gala-diners en events in je hotel. Ervaren met grote groepen en in loondienst bij EXTRA. Vraag direct aan.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "monthly",
+  },
+  {
+    path: "/keukenpersoneel-inhuren",
+    title: "Chefs en keukenpersoneel inhuren | EXTRA",
+    description:
+      "Chefs en keukenpersoneel inhuren voor je hotelkeuken: van commis tot zelfstandig werkend kok, gematcht op jouw niveau en in loondienst bij EXTRA. Vraag aan.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "monthly",
+  },
+  {
+    path: "/afwassers-inhuren",
+    title: "Afwassers en keukenhulp inhuren | EXTRA",
+    description:
+      "Afwassers en keukenhulp inhuren voor drukke hotelkeukens, banqueting en piekdrukte. Betrouwbaar, persoonlijk geselecteerd en in loondienst bij EXTRA.",
+    prerender: true,
+    priority: "0.8",
+    changefreq: "monthly",
+  },
   {
     path: "/eventpersoneel-inhuren",
     title: "Eventpersoneel inhuren | Bediening, bar & hosts",
@@ -301,6 +356,25 @@ export const ROUTE_META: RouteMeta[] = [
       "Housekeeping werk in Amsterdam: aan de slag als room attendant of hotelschoonmaker in tophotels. Flexibele diensten, snelle uitbetaling. Meld je aan.",
     prerender: true,
     priority: "0.95",
+    changefreq: "weekly",
+  },
+  // ── Werkpagina's events en logistiek (design 3.0, oktober 2026) ─────
+  {
+    path: "/events-werk",
+    title: "Werk bij events in Amsterdam | EXTRA",
+    description:
+      "Werk bij events in Amsterdam: bediening, bar, hosting of runner bij eventlocaties. Werk wanneer het jou uitkomt, de volgende dag betaald. Schrijf je in.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "weekly",
+  },
+  {
+    path: "/logistiek-werk",
+    title: "Werk in de logistiek | Magazijn en orderpicken | EXTRA",
+    description:
+      "Werk in de logistiek via EXTRA: orderpicken, inpakken, heftruck of expeditie in magazijnen en distributiecentra. Met of zonder ervaring. Schrijf je in.",
+    prerender: true,
+    priority: "0.85",
     changefreq: "weekly",
   },
   {

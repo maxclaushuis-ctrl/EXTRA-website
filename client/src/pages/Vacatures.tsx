@@ -87,7 +87,7 @@ const VARIANTEN: Record<Variant, VariantInfo> = {
     sector: "events",
     h1: ["Vacatures bij ", "events"],
     lead: () => "Bediening, bar, hosts en runners bij events in Amsterdam. Met dagbetaling en EXTRAATJE-punten.",
-    midden: null,
+    midden: ["Werk bij events", "/events-werk"],
     binnenkort: [
       ["Bediening", "Diners, borrels en recepties"],
       ["Barpersoneel", "Cocktails, wine service, hoog tempo"],
@@ -106,7 +106,7 @@ const VARIANTEN: Record<Variant, VariantInfo> = {
     sector: "logistiek",
     h1: ["Vacatures in de ", "logistiek"],
     lead: () => "Orderpicken, heftruck, inpakken en expeditie in magazijnen en distributiecentra. Met dagbetaling en EXTRAATJE-punten.",
-    midden: null,
+    midden: ["Werk in de logistiek", "/logistiek-werk"],
     binnenkort: [
       ["Orderpicker", "Voice picking, scannen, batchpicken"],
       ["Heftruckchauffeur", "Heftruck, reachtruck, EPT"],

@@ -119,7 +119,7 @@ export const hotels: PaginaContent = {
         {
           "img": "/d3/f-housekeeping.webp",
           "h3": "Housekeeping",
-          "href": "/hotelpersoneel-inhuren",
+          "href": "/housekeeping-personeel-inhuren",
           "p": "Ervaren kamermeisjes en room attendants die werken volgens jouw kwaliteitsstandaarden.",
           "tags": [
             "AD",
@@ -130,13 +130,13 @@ export const hotels: PaginaContent = {
           ],
           "knop": {
             "tekst": "Bekijk housekeeping personeel",
-            "href": "/hotelpersoneel-inhuren"
+            "href": "/housekeeping-personeel-inhuren"
           }
         },
         {
           "img": "/d3/f-frontoffice.webp",
           "h3": "Front Office",
-          "href": "/hotelpersoneel-inhuren",
+          "href": "/front-office-personeel-inhuren",
           "p": "Representatieve medewerkers voor receptie, check in, check out en guestrelations. Professioneel, gastvrij en gewend aan hotelprocessen.",
           "tags": [
             "Receptie",
@@ -146,13 +146,13 @@ export const hotels: PaginaContent = {
           ],
           "knop": {
             "tekst": "Bekijk front office personeel",
-            "href": "/hotelpersoneel-inhuren"
+            "href": "/front-office-personeel-inhuren"
           }
         },
         {
           "img": "/d3/f-fb.webp",
           "h3": "F&B Medewerkers",
-          "href": "/hotelpersoneel-inhuren",
+          "href": "/fb-personeel-inhuren",
           "p": "Gastvrije F&B medewerkers voor hotelrestaurants, ontbijtservice, roomservice en banqueting.",
           "tags": [
             "Restaurantmedewerker",
@@ -163,13 +163,13 @@ export const hotels: PaginaContent = {
           ],
           "knop": {
             "tekst": "Bekijk F&B personeel",
-            "href": "/hotelpersoneel-inhuren"
+            "href": "/fb-personeel-inhuren"
           }
         },
         {
           "img": "/d3/f-banqueting.webp",
           "h3": "Banqueting",
-          "href": "/hotelpersoneel-inhuren",
+          "href": "/banqueting-personeel-inhuren",
           "p": "Professionele service voor conferenties, gala diners, meetings en events. Ervaring met grotere groepen en hotelservice.",
           "tags": [
             "Conferenties",
@@ -179,13 +179,13 @@ export const hotels: PaginaContent = {
           ],
           "knop": {
             "tekst": "Bekijk banqueting personeel",
-            "href": "/hotelpersoneel-inhuren"
+            "href": "/banqueting-personeel-inhuren"
           }
         },
         {
           "img": "/d3/f-keuken.webp",
           "h3": "Chefs en Keukenpersoneel",
-          "href": "/hotelpersoneel-inhuren",
+          "href": "/keukenpersoneel-inhuren",
           "p": "Ervaren chefs, sous chefs en koks voor à la carte service, banqueting en ontbijtservice in hotels.",
           "tags": [
             "Chef de partie",
@@ -195,13 +195,13 @@ export const hotels: PaginaContent = {
           ],
           "knop": {
             "tekst": "Bekijk keukenpersoneel",
-            "href": "/hotelpersoneel-inhuren"
+            "href": "/keukenpersoneel-inhuren"
           }
         },
         {
           "img": "/d3/f-afwas.webp",
           "h3": "Afwassers en Keukenondersteuning",
-          "href": "/hotelpersoneel-inhuren",
+          "href": "/afwassers-inhuren",
           "p": "Betrouwbare ondersteuning voor drukke hotelkeukens. Afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.",
           "tags": [
             "Afwasser",
@@ -210,7 +210,7 @@ export const hotels: PaginaContent = {
           ],
           "knop": {
             "tekst": "Bekijk afwassers en keukenhulp",
-            "href": "/hotelpersoneel-inhuren"
+            "href": "/afwassers-inhuren"
           }
         }
       ]

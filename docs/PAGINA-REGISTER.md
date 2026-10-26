@@ -49,6 +49,12 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | URL | Intentie | Keywordcluster (eigenaar) | Doel | CTA | Opmerkingen |
 |---|---|---|---|---|---|
 | `/hotelpersoneel-inhuren` | T | hotelpersoneel inhuren | WG | Personeel aanvragen | Sterkste sectorpagina. Zwaartepunt housekeeping en front office. |
+| `/housekeeping-personeel-inhuren` | T | housekeeping personeel inhuren | WG | Personeel aanvragen | Functiepagina onder `/hotelpersoneel-inhuren` (okt 2026). Naast de blog `/blog/housekeeping-personeel-inhuren`, die vergelijkt (informatief) en hierheen hoort te linken. |
+| `/front-office-personeel-inhuren` | T | front office personeel inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). Werkzoekendenvariant is `/front-office-vacatures-amsterdam`. |
+| `/fb-personeel-inhuren` | T | f&b personeel inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). Raakt aan `bediening inhuren`; deze pagina is hotel-F&B (restaurant, ontbijt, roomservice), `/bediening-inhuren` blijft de eigenaar van "bediening". |
+| `/banqueting-personeel-inhuren` | T | banqueting personeel inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). |
+| `/keukenpersoneel-inhuren` | T | keukenpersoneel / chefs inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). Werkzoekendenvariant is `/chef-vacatures-amsterdam`. |
+| `/afwassers-inhuren` | T | afwassers en keukenhulp inhuren | WG | Personeel aanvragen | Functiepagina (okt 2026). Longtail. |
 | `/eventpersoneel-inhuren` | T | eventpersoneel inhuren | WG | Personeel aanvragen | **Bezit dit cluster.** Zie `/evenementen-personeel-inhuren`. |
 | `/cateringpersoneel-inhuren` | T | cateringpersoneel inhuren | WG | Personeel aanvragen | |
 | `/horecapersoneel-restaurants` | T | restaurantpersoneel inhuren | WG | Personeel aanvragen | Claimt ook "bediening inhuren" — overlapt met `/bediening-inhuren`. |
@@ -78,6 +84,8 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/housekeeping-werk` | T | housekeeping werk | WZ | Aanmelden | Naast de vacaturevariant; scheiding "vacatures" versus "werk" is dun maar bestaat sitebreed. |
 | `/chef-vacatures-amsterdam` | T | chef vacatures amsterdam | WZ | Aanmelden | |
 | `/front-office-vacatures-amsterdam` | T | front office vacatures | WZ | Aanmelden | |
+| `/events-werk` | T | werk bij events / evenementen werk | WZ | Aanmelden | Werkpagina events (okt 2026). Vacatures via `/vacatures?branche=events`. |
+| `/logistiek-werk` | T | logistiek werk / magazijnwerk | WZ | Aanmelden | Werkpagina logistiek (okt 2026). Vacatures via `/vacatures?branche=logistiek`. |
 | `/vacatures` | T | horeca vacatures (overzicht) | WZ | Solliciteren | Overzicht plus `/vacatures/:slug`. Detailpagina's krijgen 4 ringlinks. |
 | `/aanmelden` | T | aanmelden uitzendbureau (conversie) | WZ | Aanmelden | Conversiepagina, geen SEO-doel. Engelse ingang via `?lang=en`. |
 | `/bijbaan-amsterdam` | T+L | bijbaan amsterdam | WZ | Aanmelden | |
@@ -127,13 +135,9 @@ pre-flight-check erbij.
 
 | Cluster | Intentie | Waarom relevant |
 |---|---|---|
-| housekeeping personeel inhuren | T | Grootste dienst van EXTRA; geen enkele pagina voor werkgevers. Concurrenten hebben die wel. |
-| banqueting personeel inhuren | T | Hoge marge, piekgedreven, nu alleen een bullet binnen de hotelpagina. |
-| front office personeel inhuren | T | Idem — de bestaande front-office-URL is voor werkzoekenden. |
 | wat kost horecapersoneel inhuren | I/C | Hoge koopintentie, volledig onbediend, en concurrenten winnen deze zoekvraag. |
 | uitzendkracht versus zzp'er inhuren | I/C | Sluit aan op het sterkste argument van EXTRA (loondienst, NEN 4400-1). |
 | hotelpersoneel schiphol | T+L | Alleen doen als daar echt geleverd wordt; Radisson Blu Schiphol is al klant. |
-| afwassers en keukenhulp inhuren | T | Longtail, lage marge, instap naar meer. |
 
 ## Bewust niet in het register
 

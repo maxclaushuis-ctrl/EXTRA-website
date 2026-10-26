@@ -38,6 +38,14 @@ const D3_nen_4400_1_certificering = maakFragmentRoute("nen-4400-1-certificering"
 const D3_contact = maakFragmentRoute("contact");
 const D3_privacybeleid = maakFragmentRoute("privacybeleid");
 const D3_voorwaarden = maakFragmentRoute("voorwaarden");
+const D3_housekeeping_personeel_inhuren = maakFragmentRoute("housekeeping-personeel-inhuren");
+const D3_front_office_personeel_inhuren = maakFragmentRoute("front-office-personeel-inhuren");
+const D3_fb_personeel_inhuren = maakFragmentRoute("fb-personeel-inhuren");
+const D3_banqueting_personeel_inhuren = maakFragmentRoute("banqueting-personeel-inhuren");
+const D3_keukenpersoneel_inhuren = maakFragmentRoute("keukenpersoneel-inhuren");
+const D3_afwassers_inhuren = maakFragmentRoute("afwassers-inhuren");
+const D3_events_werk = maakFragmentRoute("events-werk");
+const D3_logistiek_werk = maakFragmentRoute("logistiek-werk");
 const D3_cookiebeleid = maakFragmentRoute("cookiebeleid");
 const NotFound = maakFragmentRoute("niet-gevonden");
 const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
@@ -178,6 +186,7 @@ const PUBLIC_PATHS = [
   '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
   '/ik-zoek-extra-werk/horeca', '/ik-zoek-extra-werk/chef', '/ik-zoek-extra-werk/front-office',
   '/horeca-werk', '/housekeeping-werk',
+  '/housekeeping-personeel-inhuren', '/front-office-personeel-inhuren', '/fb-personeel-inhuren', '/banqueting-personeel-inhuren', '/keukenpersoneel-inhuren', '/afwassers-inhuren', '/events-werk', '/logistiek-werk',
   '/horeca-uitzendbureau-amsterdam', '/horeca-uitzendbureau-amsterdam-werkwijze',
   '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
@@ -363,6 +372,14 @@ function Router() {
           <Route path="/cv-upload" component={CvUpload} />
           <Route path="/horeca-werk" component={D3_horeca_werk} />
           <Route path="/housekeeping-werk" component={D3_housekeeping_werk} />
+          <Route path="/housekeeping-personeel-inhuren" component={D3_housekeeping_personeel_inhuren} />
+          <Route path="/front-office-personeel-inhuren" component={D3_front_office_personeel_inhuren} />
+          <Route path="/fb-personeel-inhuren" component={D3_fb_personeel_inhuren} />
+          <Route path="/banqueting-personeel-inhuren" component={D3_banqueting_personeel_inhuren} />
+          <Route path="/keukenpersoneel-inhuren" component={D3_keukenpersoneel_inhuren} />
+          <Route path="/afwassers-inhuren" component={D3_afwassers_inhuren} />
+          <Route path="/events-werk" component={D3_events_werk} />
+          <Route path="/logistiek-werk" component={D3_logistiek_werk} />
           <Route path="/extraatje" component={D3_extraatje} />
           {/* P14: /beloningssysteem en /hoe-extra-werkt waren tweede URL's voor
               dezelfde Extraatje- resp. HoeExtraWerkt-component als /extraatje

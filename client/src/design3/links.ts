@@ -1,10 +1,7 @@
 /**
  * Navigatie en footer van design 3.0.
  *
- * Alle links wijzen naar bestaande routes uit shared/routeMeta.ts. Pagina's die
- * in design 3.0 nieuw zijn (functiepagina's, branchepagina's) komen hier pas bij
- * als hun route bestaat; tot die tijd linkt het menu naar de dichtstbijzijnde
- * bestaande pagina.
+ * Alle links wijzen naar bestaande routes uit shared/routeMeta.ts.
  */
 
 export interface MenuLink {
@@ -29,8 +26,6 @@ export interface MenuGroep {
 /**
  * Compact menu (voorstel #18): alleen de belangrijkste pagina's. Alle andere
  * pagina's staan in de footer en zijn via de pagina's zelf bereikbaar.
- * "Werk bij events" en "Werk in de logistiek" komen erbij zodra die pagina's
- * als route bestaan.
  */
 export const MENU: MenuGroep[] = [
   {
@@ -49,6 +44,8 @@ export const MENU: MenuGroep[] = [
     links: [
       { label: "Alle vacatures", href: "/vacatures" },
       { label: "Werk in hotels", href: "/horeca-vacatures-amsterdam", kleur: "rose" },
+      { label: "Werk bij events", href: "/events-werk", kleur: "sky" },
+      { label: "Werk in de logistiek", href: "/logistiek-werk", kleur: "pistachio" },
     ],
     cta: { kop: "Vandaag nog aan de slag?", knop: { label: "Solliciteer direct", href: "/aanmelden" }, onder: { label: "De volgende dag betaald", href: "/dagbetaling" } },
   },
@@ -86,6 +83,17 @@ export const FOOTER: { kop: string; links: MenuLink[] }[] = [
       { label: "Tijdelijk horecapersoneel", href: "/tijdelijk-horeca-personeel" },
       { label: "Horeca personeel inhuren", href: "/horeca-personeel-inhuren" },
       { label: "Horeca personeel gezocht", href: "/horeca-personeel-gezocht" },
+    ],
+  },
+  {
+    kop: "Functies",
+    links: [
+      { label: "Housekeeping personeel", href: "/housekeeping-personeel-inhuren" },
+      { label: "Front office personeel", href: "/front-office-personeel-inhuren" },
+      { label: "F&B personeel", href: "/fb-personeel-inhuren" },
+      { label: "Banqueting personeel", href: "/banqueting-personeel-inhuren" },
+      { label: "Chefs en keukenpersoneel", href: "/keukenpersoneel-inhuren" },
+      { label: "Afwassers en keukenhulp", href: "/afwassers-inhuren" },
       { label: "Bediening inhuren", href: "/bediening-inhuren" },
     ],
   },
@@ -101,6 +109,8 @@ export const FOOTER: { kop: string; links: MenuLink[] }[] = [
       { label: "Housekeeping werk", href: "/housekeeping-werk" },
       { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
       { label: "Front office vacatures", href: "/front-office-vacatures-amsterdam" },
+      { label: "Werk bij events", href: "/events-werk" },
+      { label: "Werk in de logistiek", href: "/logistiek-werk" },
       { label: "Bijbaan Amsterdam", href: "/bijbaan-amsterdam" },
       { label: "Werken in de horeca", href: "/werken-in-de-horeca" },
       { label: "Hoe werkt dagbetaling", href: "/dagbetaling" },
