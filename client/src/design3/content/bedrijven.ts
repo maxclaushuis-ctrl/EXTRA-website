@@ -596,8 +596,8 @@ export const events: PaginaContent = {
       "pos": "53% 20%",
       "chip": "{reviews} · NEN-4400-1 gecertificeerd",
       "h1": [
-        "Eventpersoneel nodig?",
-        "Wij [[shaken]] het voor elkaar."
+        "Event[[(ueel)]] personeel nodig?",
+        "Zeker met EXTRA!"
       ],
       "reageer": "Reageer direct",
       "knoppen": [
