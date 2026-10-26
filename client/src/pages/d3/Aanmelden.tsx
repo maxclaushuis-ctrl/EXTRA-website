@@ -613,7 +613,7 @@ export default function Aanmelden() {
       bewijs: ["Employed", "everyone, no freelancers"], dag: ["Next day", "paid"], direct: "Question?", uit: "from",
     }
     : {
-      eyebrow: "Aanmelden", h1: <>Aanmelden als horeca&shy;medewerker <span className="serif">bij EXTRA</span></>,
+      eyebrow: "Aanmelden", h1: <>Aanmelden als horecamedewerker <span className="serif">bij EXTRA</span></>,
       lead: "In drie stappen aangemeld. Daarna plannen we een kennismaking op ons kantoor.",
       stappen: [["Persoonlijk", "Eerst wat basics: je gegevens en voorkeursfunctie."], ["Skills", "Taal en ervaring, zodat we de juiste match maken."], ["CV en gesprek", "Upload je cv en we nodigen je uit voor een gesprek."]],
       bewijs: ["Loondienst", "iedereen, geen zzp"], dag: ["Volgende dag", "betaald"], direct: "Vraag?", uit: "uit",

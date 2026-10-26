@@ -573,7 +573,7 @@ export const hotels: PaginaContent = {
       ],
       "gekozen": null,
       "laag": false,
-      "id": null
+      "id": "aanvragen"
     }
   ]
 };
@@ -1187,7 +1187,7 @@ export const events: PaginaContent = {
       ],
       "gekozen": null,
       "laag": true,
-      "id": null
+      "id": "aanvragen"
     }
   ]
 };
@@ -1689,7 +1689,7 @@ export const logistiek: PaginaContent = {
       ],
       "gekozen": null,
       "laag": false,
-      "id": null
+      "id": "aanvragen"
     }
   ]
 };

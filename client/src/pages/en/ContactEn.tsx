@@ -70,7 +70,7 @@ export default function ContactEn() {
                   <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
                     <Phone className="w-8 h-8 text-blue-500 mb-4" />
                     <h3 className="text-lg font-bold mb-2">Call us</h3>
-                    <a href="tel:0201234567" className="text-purple-200/60 hover:text-white transition-colors">020-123 45 67</a>
+                    <a href="tel:0851305915" className="text-purple-200/60 hover:text-white transition-colors">085 130 59 15</a>
                   </div>
                   <div className="p-6 rounded-2xl bg-white/5 border border-white/10 sm:col-span-2">
                     <MapPin className="w-8 h-8 text-green-500 mb-4" />
