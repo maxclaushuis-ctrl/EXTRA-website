@@ -52,10 +52,11 @@ export const MENU: MenuGroep[] = [
   {
     label: "Over EXTRA",
     kop: "Over ons",
-    stip: "pistachio",
     links: [
       { label: "Over EXTRA", href: "/over-extra" },
       { label: "Hoe het werkt", href: "/onze-werkwijze" },
+      { label: "Dagbetaling", href: "/dagbetaling" },
+      { label: "EXTRAATje", href: "/extraatje" },
       { label: "Klantcases", href: "/klantcases-horeca" },
       { label: "Blog", href: "/blog" },
       { label: "Contact", href: "/contact" },
