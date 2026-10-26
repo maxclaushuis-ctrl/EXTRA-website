@@ -195,3 +195,6 @@
 
 /* Samenwerken op de branchepagina: knop in de kleur van de branche (hotels roze) */
 .d3 #samenwerken .knop.vol{background:var(--accent);border-color:var(--accent);color:var(--espresso)}
+
+/* Scorekaarten los onder de functies (zonder de favorietenpoule eronder): geen schuifkaart-rand */
+.d3.css-hotels .scores.los{border-radius:0;box-shadow:none;padding-top:40px}

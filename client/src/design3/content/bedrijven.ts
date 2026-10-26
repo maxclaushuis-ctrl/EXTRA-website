@@ -247,6 +247,209 @@ export const hotels: PaginaContent = {
       ]
     },
     {
+      "type": "scores",
+      "eyebrow": "Onze EXTRA's in cijfers",
+      "h2": "Na elke dienst [[beoordeeld]]",
+      "lead": "Hotels beoordelen onze medewerkers na iedere dienst op houding, vaardigheid, kleding en uitstraling. Zo zie je precies wie je binnenhaalt.",
+      "lijst": [],
+      "kaarten": [
+        {
+          "nr": "EXTRA #0412",
+          "h3": "Room attendant",
+          "sub": "Housekeeping · bij EXTRA sinds 2024",
+          "status": "Diamond",
+          "p": "98.0",
+          "score": "9,8",
+          "bars": [
+            [
+              "Houding",
+              "100%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "98%"
+            ],
+            [
+              "Uitstraling",
+              "96%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "214"
+            ],
+            [
+              "Opkomst",
+              "99%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,9"
+            ],
+            [
+              "EXTRA-punten",
+              "18.450"
+            ]
+          ],
+          "fav": [
+            "Grand Hotel Amrâth Amsterdam",
+            "Amrâth Kurhaus",
+            "Pulitzer Amsterdam"
+          ]
+        },
+        {
+          "nr": "EXTRA #0938",
+          "h3": "Receptionist",
+          "sub": "Front Office · bij EXTRA sinds 2025",
+          "status": "Gold",
+          "p": "96.0",
+          "score": "9,6",
+          "bars": [
+            [
+              "Houding",
+              "100%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "96%"
+            ],
+            [
+              "Uitstraling",
+              "90%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "132"
+            ],
+            [
+              "Opkomst",
+              "98%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,7"
+            ],
+            [
+              "EXTRA-punten",
+              "9.820"
+            ]
+          ],
+          "fav": [
+            "Hilton Amsterdam",
+            "Radisson Blu Amsterdam Airport"
+          ]
+        },
+        {
+          "nr": "EXTRA #0655",
+          "h3": "Chef de partie",
+          "sub": "Keuken · bij EXTRA sinds 2024",
+          "status": "Gold",
+          "p": "97.0",
+          "score": "9,7",
+          "bars": [
+            [
+              "Houding",
+              "98%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "96%"
+            ],
+            [
+              "Uitstraling",
+              "98%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "176"
+            ],
+            [
+              "Opkomst",
+              "100%"
+            ],
+            [
+              "Betrouwbaar",
+              "10,0"
+            ],
+            [
+              "EXTRA-punten",
+              "14.300"
+            ]
+          ],
+          "fav": [
+            "Marriott Amsterdam",
+            "Pulitzer Amsterdam"
+          ]
+        },
+        {
+          "nr": "EXTRA #1127",
+          "h3": "Banqueting medewerker",
+          "sub": "F&B · bij EXTRA sinds 2025",
+          "status": "Silver",
+          "p": "94.0",
+          "score": "9,4",
+          "bars": [
+            [
+              "Houding",
+              "96%"
+            ],
+            [
+              "Vaardigheid",
+              "100%"
+            ],
+            [
+              "Kleding",
+              "94%"
+            ],
+            [
+              "Uitstraling",
+              "90%"
+            ]
+          ],
+          "cijfers": [
+            [
+              "Diensten",
+              "88"
+            ],
+            [
+              "Opkomst",
+              "97%"
+            ],
+            [
+              "Betrouwbaar",
+              "9,5"
+            ],
+            [
+              "EXTRA-punten",
+              "6.150"
+            ]
+          ],
+          "fav": [
+            "Mercure Amsterdam"
+          ]
+        }
+      ],
+      "noot": "Voorbeeldprofielen. Echte scores, diensten en punten komen rechtstreeks uit het EXTRA-dashboard.",
+      "los": true
+    },
+    {
       "type": "waarom",
       "eyebrow": "Waarom EXTRA",
       "h2": "Waarom hotels voor [[EXTRA kiezen]]",
@@ -305,258 +508,6 @@ export const hotels: PaginaContent = {
           "quote": "Het proces rondom het uitzetten van diensten verloopt soepel en de kwaliteit van de medewerkers die jullie sturen is goed. Negen van de tien kandidaten die jullie hebben gestuurd, hebben uitstekend gewerkt.",
           "naam": "A. Schoenmaker",
           "rol": "Hotelmanager, Radisson Blu Hotel Amsterdam Airport"
-        }
-      ]
-    },
-    {
-      "type": "stapel2",
-      "secties": [
-        {
-          "type": "poule",
-          "eyebrow": "Favorietenpoule",
-          "h2": "Vaste gezichten per hotel, [[minder uitleg]]",
-          "lead": "Na elke geslaagde plaatsing voegen wij jouw favorieten toe aan je hotelpoule per afdeling.",
-          "items": [
-            {
-              "h3": "Opgebouwd per afdeling",
-              "sub": "Housekeeping, F&B, banqueting en front office",
-              "meta": [
-                "Per afdeling"
-              ],
-              "b": "Jouw",
-              "small": "poule"
-            },
-            {
-              "h3": "Direct inzetbaar bij je volgende aanvraag",
-              "sub": "Geen inwerkkosten, geen verrassingen bij de deur",
-              "meta": [
-                "Volgende aanvraag"
-              ],
-              "b": "Direct",
-              "small": "inzetbaar"
-            },
-            {
-              "h3": "Zelf uitnodigen via je dashboard",
-              "sub": "Met de knop Poules uitnodigen",
-              "meta": [
-                "Dashboard"
-              ],
-              "b": "Zelf",
-              "small": "uitnodigen"
-            },
-            {
-              "h3": "Automatisch bijgewerkt na elke dienst",
-              "sub": "Op basis van jouw beoordelingen",
-              "meta": [
-                "Na elke dienst"
-              ],
-              "b": "Altijd",
-              "small": "actueel"
-            }
-          ],
-          "knop": null
-        },
-        {
-          "type": "scores",
-          "eyebrow": "Onze EXTRA's in cijfers",
-          "h2": "Na elke dienst [[beoordeeld]]",
-          "lead": "Hotels beoordelen onze medewerkers na iedere dienst op houding, vaardigheid, kleding en uitstraling. Zo zie je precies wie je binnenhaalt.",
-          "lijst": [],
-          "kaarten": [
-            {
-              "nr": "EXTRA #0412",
-              "h3": "Room attendant",
-              "sub": "Housekeeping · bij EXTRA sinds 2024",
-              "status": "Diamond",
-              "p": "98.0",
-              "score": "9,8",
-              "bars": [
-                [
-                  "Houding",
-                  "100%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "98%"
-                ],
-                [
-                  "Uitstraling",
-                  "96%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "214"
-                ],
-                [
-                  "Opkomst",
-                  "99%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,9"
-                ],
-                [
-                  "EXTRA-punten",
-                  "18.450"
-                ]
-              ],
-              "fav": [
-                "Grand Hotel Amrâth Amsterdam",
-                "Amrâth Kurhaus",
-                "Pulitzer Amsterdam"
-              ]
-            },
-            {
-              "nr": "EXTRA #0938",
-              "h3": "Receptionist",
-              "sub": "Front Office · bij EXTRA sinds 2025",
-              "status": "Gold",
-              "p": "96.0",
-              "score": "9,6",
-              "bars": [
-                [
-                  "Houding",
-                  "100%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "96%"
-                ],
-                [
-                  "Uitstraling",
-                  "90%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "132"
-                ],
-                [
-                  "Opkomst",
-                  "98%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,7"
-                ],
-                [
-                  "EXTRA-punten",
-                  "9.820"
-                ]
-              ],
-              "fav": [
-                "Hilton Amsterdam",
-                "Radisson Blu Amsterdam Airport"
-              ]
-            },
-            {
-              "nr": "EXTRA #0655",
-              "h3": "Chef de partie",
-              "sub": "Keuken · bij EXTRA sinds 2024",
-              "status": "Gold",
-              "p": "97.0",
-              "score": "9,7",
-              "bars": [
-                [
-                  "Houding",
-                  "98%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "96%"
-                ],
-                [
-                  "Uitstraling",
-                  "98%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "176"
-                ],
-                [
-                  "Opkomst",
-                  "100%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "10,0"
-                ],
-                [
-                  "EXTRA-punten",
-                  "14.300"
-                ]
-              ],
-              "fav": [
-                "Marriott Amsterdam",
-                "Pulitzer Amsterdam"
-              ]
-            },
-            {
-              "nr": "EXTRA #1127",
-              "h3": "Banqueting medewerker",
-              "sub": "F&B · bij EXTRA sinds 2025",
-              "status": "Silver",
-              "p": "94.0",
-              "score": "9,4",
-              "bars": [
-                [
-                  "Houding",
-                  "96%"
-                ],
-                [
-                  "Vaardigheid",
-                  "100%"
-                ],
-                [
-                  "Kleding",
-                  "94%"
-                ],
-                [
-                  "Uitstraling",
-                  "90%"
-                ]
-              ],
-              "cijfers": [
-                [
-                  "Diensten",
-                  "88"
-                ],
-                [
-                  "Opkomst",
-                  "97%"
-                ],
-                [
-                  "Betrouwbaar",
-                  "9,5"
-                ],
-                [
-                  "EXTRA-punten",
-                  "6.150"
-                ]
-              ],
-              "fav": [
-                "Mercure Amsterdam"
-              ]
-            }
-          ],
-          "noot": "Voorbeeldprofielen. Echte scores, diensten en punten komen rechtstreeks uit het EXTRA-dashboard."
         }
       ]
     },

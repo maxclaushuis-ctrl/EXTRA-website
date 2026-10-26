@@ -25,7 +25,7 @@ export type Sectie =
   | { type: "waarom"; eyebrow: string; h2: string; lead: string; punten: { ic: string; h3: string; p: string }[]; check: string | null; paddingTop: string | null }
   | { type: "reviews"; eyebrow: string; h2: string; items: { quote: string; naam: string; rol: string }[] }
   | { type: "poule"; eyebrow: string; h2: string; lead: string; items: { h3: string; sub: string; meta: string[]; b: string; small: string }[]; knop: Knop | null }
-  | { type: "scores"; eyebrow: string; h2: string; lead: string; lijst: string[]; kaarten: ScoreKaart[]; noot: string }
+  | { type: "scores"; eyebrow: string; h2: string; lead: string; lijst: string[]; kaarten: ScoreKaart[]; noot: string; los?: boolean }
   | { type: "screening"; eyebrow: string; h2: string; lead: string; kaart: { avatar: string; b: string; span: string; tags: string[] } }
   | { type: "hoe"; werk: boolean; id: string | null; eyebrow: string; h2: string; lead: string; stappen: { h3: string; p: string }[]; knop: Knop | null; standaard: string | null }
   | { type: "data"; eyebrow: string; h2: string; lead: string; lijst: string[]; schermen: { src: string; alt: string }[] }
@@ -254,7 +254,7 @@ function Scores({ s }: { s: S<"scores"> }) {
   useSpoor(ref, ".scspoor", ".scbedien");
   const id = useId().replace(/:/g, "");
   return (
-    <section className="scores" aria-labelledby={`sc${id}`} ref={ref}><div className="w">
+    <section className={`scores${s.los ? " los" : ""}`} aria-labelledby={`sc${id}`} ref={ref}><div className="w">
       <div className="dkop"><div><span className="eyebrow">{s.eyebrow}</span>
         <h2 className="groot" id={`sc${id}`} style={{ marginTop: "22px", fontSize: "clamp(46px,5.6vw,92px)" }}><T t={s.h2} /></h2></div>
         <div><p className="lead zacht"><T t={s.lead} /></p>
