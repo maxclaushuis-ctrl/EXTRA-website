@@ -33,8 +33,8 @@ export const MENU: MenuGroep[] = [
     kop: "Branches",
     links: [
       { label: "Hotels", href: "/hotelpersoneel-inhuren", sub: "Housekeeping, front office, F&B, keuken", kleur: "rose" },
-      { label: "Events", href: "/eventpersoneel-inhuren", sub: "Bediening, bar, hosts, catering", kleur: "sky" },
       { label: "Logistiek", href: "/logistiek-personeel-inhuren", sub: "Orderpickers, heftruck, inpak", kleur: "pistachio" },
+      { label: "Events", href: "/eventpersoneel-inhuren", sub: "Bediening, bar, hosts, catering", kleur: "sky" },
     ],
     cta: { kop: "Morgen iemand nodig?", knop: { label: "Bel mij terug", href: "/personeelsaanvraag" }, onder: { label: "085 130 59 15", href: "tel:0851305915", tel: true } },
   },
@@ -44,8 +44,8 @@ export const MENU: MenuGroep[] = [
     links: [
       { label: "Alle vacatures", href: "/vacatures" },
       { label: "Werk in hotels", href: "/horeca-vacatures-amsterdam", kleur: "rose" },
-      { label: "Werk bij events", href: "/events-werk", kleur: "sky" },
       { label: "Werk in de logistiek", href: "/logistiek-werk", kleur: "pistachio" },
+      { label: "Werk bij events", href: "/events-werk", kleur: "sky" },
     ],
     cta: { kop: "Vandaag nog aan de slag?", knop: { label: "Solliciteer direct", href: "/aanmelden" }, onder: { label: "De volgende dag betaald", href: "/dagbetaling" } },
   },
