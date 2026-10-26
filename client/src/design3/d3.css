@@ -1441,8 +1441,6 @@
 @keyframes hw-loop{to{transform:translateX(-100%)}}
 .d3.css-werk .hw-rij li{flex:none;width:var(--cel);height:180px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--lijn-sterk);transition:background .35s}
 .d3.css-werk .hw-rij img{width:auto;max-width:72%;object-fit:contain;filter:brightness(0);opacity:.82;transition:opacity .35s,transform .5s cubic-bezier(.2,.8,.2,1)}
-.d3.css-werk .hw-rij li:hover{background:var(--accent)}
-.d3.css-werk .hw-rij li:hover img{opacity:1;transform:scale(1.06)}
 @media (prefers-reduced-motion: reduce){.d3.css-werk .hw-rij{animation:none}}
 @media (max-width:760px){.d3.css-werk .hierwerk{padding:72px 0}
 .d3.css-werk .hw-kop{grid-template-columns:minmax(0,1fr);gap:16px;padding-bottom:36px}
@@ -1515,7 +1513,6 @@
 .d3.css-werk .deal-logo{display:block;width:auto;max-width:60%;object-fit:contain}
 .d3.css-werk .deal header{min-height:74px}
 .d3.css-werk .hw-woord{font-size:clamp(20px,1.9vw,30px);font-weight:800;letter-spacing:-.045em;color:var(--espresso);text-align:center;padding:0 16px;line-height:1.05;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
-.d3.css-werk .hw-rij li:hover .hw-woord{transform:scale(1.06)}
 @media (max-width:760px){.d3.css-werk .hw-woord{font-size:20px}}
 .d3.css-werk .hw-rij li.hw-vol img{filter:grayscale(1) contrast(1.05);opacity:.9}
 @media (min-width:761px){.d3.css-werk .slot-werk.slot-laag .reus{margin-top:480px}}
