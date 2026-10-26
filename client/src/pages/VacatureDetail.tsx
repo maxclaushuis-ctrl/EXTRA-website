@@ -1,30 +1,48 @@
-import { useEffect, useMemo, type ReactNode } from "react";
-import { Link, useRoute, useLocation } from "wouter";
+/**
+ * Vacature (/vacatures/:slug) in design 3.0. Bron: mock-ups vacature-*.html.
+ *
+ * Alle inhoud komt uit het CMS (/api/vacatures/:slug), ongewijzigd:
+ *  - "Over deze functie": introductie, over de rol en werkomgeving
+ *  - "Wat ga je doen?": verantwoordelijkheden
+ *  - "Wat wij zoeken": eisen
+ *  - "Wat wij bieden": aanbod (vet deel en toelichting, gesplitst op het streepje)
+ *  - veelgestelde vragen, als die in het CMS staan
+ *
+ * Wat bewust hetzelfde blijft als de vorige versie:
+ *  - JobPosting en BreadcrumbList komen server-side (server/seo.ts); hier niet
+ *    nog een keer, anders staan ze dubbel. FAQPage wel hier (via <Faq/>).
+ *  - Title, description, canonical en Open Graph uit het CMS.
+ *  - "Andere vacatures" is dezelfde ring als de server toont voor crawlers
+ *    zonder JavaScript (shared/verwanteLinks.ts, 4 links).
+ *  - Bestaat de vacature niet (meer), dan door naar /vacatures.
+ */
+import { useEffect, useMemo } from "react";
+import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import PublicNav from "@/components/PublicNav";
-// Dezelfde selectie als de server gebruikt voor de no-JavaScript-versie.
+import Shell from "@/design3/Shell";
+import { Ic, Pijl } from "@/design3/basis";
+import { Faq } from "@/design3/secties";
+import { TELEFOON, TELEFOON_HREF } from "@/design3/links";
+import KandidaatSlot from "@/design3/KandidaatSlot";
 import { verwanteItems } from "@shared/verwanteLinks";
-import PublicFooter from "@/components/PublicFooter";
-import { RevealSection, XPatternBg } from "@/pages/LandingPage";
-import {
-  ChevronRight,
-  MapPin,
-  Building2,
-  Clock,
-  Briefcase,
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Euro,
-  Calendar,
-  HelpCircle,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { alineas, splitsAanbod } from "@shared/vacatureWeergave";
+import { naarRij, VacRegel } from "./Vacatures";
 
-type FaqItem = { q: string; a: string };
+const WHATSAPP = "https://wa.me/31851305915";
 
-/** Zet meta-/link-tags dynamisch; maakt de tag aan als hij nog niet bestaat. */
+/** Beeld per afdeling (zelfde foto's als de functiekaarten op de site). */
+const BEELD: Record<string, string> = {
+  Housekeeping: "/d3/f-housekeeping.webp",
+  Keuken: "/d3/f-keuken.webp",
+  "F&B": "/d3/f-fb.webp",
+  Banqueting: "/d3/f-banqueting.webp",
+  "Front office": "/d3/f-frontoffice.webp",
+  Afwas: "/d3/f-afwas.webp",
+};
+
+/** Functie in het inschrijfformulier die bij de afdeling hoort. */
+const FORMULIER_FUNCTIE: Record<string, string> = { Afwas: "Afwas en keukenhulp" };
+
 function setMeta(attr: "name" | "property", key: string, content: string) {
   if (!content) return;
   let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
@@ -46,399 +64,159 @@ function setCanonical(url: string) {
   el.setAttribute("href", url);
 }
 
+const datumNl = (d: string | null | undefined) => {
+  if (!d) return null;
+  const t = new Date(d);
+  return isNaN(t.getTime()) ? null : t.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+};
+
 export default function VacatureDetail() {
   const [match, params] = useRoute("/vacatures/:slug");
-  const [, setLocation] = useLocation();
+  const [, naar] = useLocation();
   const slug = params?.slug ?? "";
 
-  const { data: dbVacancy, isLoading } = useQuery<any>({
+  const { data: post, isLoading } = useQuery<any>({
     queryKey: [`/api/vacatures/${slug}`],
     enabled: !!slug,
     staleTime: 60_000,
     retry: false,
   });
+  const { data: alleData } = useQuery<any>({ queryKey: ["/api/vacatures"], enabled: !!slug, staleTime: 60_000, retry: false });
 
-  // Andere vacatures, voor het blok onderaan.
-  //
-  // Dezelfde selectie als de server onder de pagina zet voor crawlers zonder
-  // JavaScript (shared/verwanteLinks.ts). Die twee moeten hetzelfde tonen:
-  // een bezoeker hoort niet minder te zien dan een zoekmachine.
-  const { data: alleVacatures } = useQuery<any>({
-    queryKey: ['/api/vacatures'],
-    enabled: !!slug,
-    staleTime: 60_000,
-    retry: false,
-  });
-
+  const alle = useMemo(() => (Array.isArray(alleData?.posts) ? alleData.posts : []), [alleData]);
   const verwant = useMemo(() => {
-    const lijst = Array.isArray(alleVacatures?.posts) ? alleVacatures.posts : [];
-    return verwanteItems(
-      lijst.map((v: any) => ({ slug: v.slug, title: v.title, groep: v.location ?? null })),
-      slug,
-    );
-  }, [alleVacatures, slug]);
+    const ring = verwanteItems(alle.map((v: any) => ({ slug: v.slug, title: v.title, groep: v.location ?? null })), slug);
+    return ring.map((r) => alle.find((v: any) => v.slug === r.slug)).filter(Boolean).map(naarRij);
+  }, [alle, slug]);
 
-  // FAQ uit het CMS: JSON-string [{"q":"...","a":"..."}]
-  let faqs: FaqItem[] = [];
-  if (dbVacancy?.faqItems) {
+  const faqs: [string, string][] = useMemo(() => {
+    if (!post?.faqItems) return [];
     try {
-      const parsed = JSON.parse(dbVacancy.faqItems);
-      if (Array.isArray(parsed)) faqs = parsed.filter((f: any) => f?.q && f?.a);
-    } catch { /* ongeldig JSON → geen FAQ */ }
-  }
+      const p = JSON.parse(post.faqItems);
+      return Array.isArray(p) ? p.filter((f: any) => f?.q && f?.a).map((f: any) => [String(f.q), String(f.a)] as [string, string]) : [];
+    } catch { return []; }
+  }, [post]);
 
-  const vacature = dbVacancy
-    ? {
-        title: dbVacancy.title,
-        slug: dbVacancy.slug,
-        location: dbVacancy.location,
-        region: dbVacancy.region,
-        serviceType: dbVacancy.serviceType,
-        workplace: dbVacancy.workplace,
-        functionType: dbVacancy.functionType,
-        client: dbVacancy.client || "EXTRA",
-        salaryMin: dbVacancy.salaryMin ? parseFloat(dbVacancy.salaryMin) : null,
-        introductionText: dbVacancy.introductionText || "",
-        aboutRole: dbVacancy.aboutRole || "",
-        workEnvironment: dbVacancy.workEnvironment || "",
-        fullDescription: [dbVacancy.introductionText, dbVacancy.aboutRole, dbVacancy.workEnvironment].filter(Boolean).join("\n\n"),
-        responsibilities: dbVacancy.responsibilities || [],
-        requirements: dbVacancy.requirements || [],
-        offer: dbVacancy.offer || [],
-        datePosted: dbVacancy.publishedAt || dbVacancy.createdAt,
-        metaTitle: dbVacancy.metaTitle || "",
-        metaDescription: dbVacancy.metaDescription || dbVacancy.shortDescription || "",
-        canonicalUrl: dbVacancy.canonicalUrl || "",
-        ogTitle: dbVacancy.ogTitle || "",
-        ogDescription: dbVacancy.ogDescription || "",
-        ctaText: dbVacancy.ctaText || "",
-      }
-    : null;
+  useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [slug]);
+    if (!isLoading && !post && match) naar("/vacatures");
+  }, [post, match, naar, isLoading]);
 
+  // Title, description, canonical en Open Graph uit het CMS (zoals voorheen).
   useEffect(() => {
-    if (!isLoading && !vacature && match) {
-      setLocation("/vacatures");
-    }
-  }, [vacature, match, setLocation, isLoading]);
-
-  // SEO: title, description, canonical, Open Graph
-  useEffect(() => {
-    if (!vacature) return;
-    const pageTitle = vacature.metaTitle || `${vacature.title} | Horeca vacature ${vacature.location} | EXTRA`;
-    const pageUrl = vacature.canonicalUrl || `https://www.doehetextra.nl/vacatures/${vacature.slug}`;
-    document.title = pageTitle;
-    setMeta("name", "description", vacature.metaDescription);
-    setCanonical(pageUrl);
-    setMeta("property", "og:title", vacature.ogTitle || pageTitle);
-    setMeta("property", "og:description", vacature.ogDescription || vacature.metaDescription);
+    if (!post) return;
+    const titel = post.metaTitle || `${post.title} | Horeca vacature ${post.location} | EXTRA`;
+    const url = post.canonicalUrl || `https://www.doehetextra.nl/vacatures/${post.slug}`;
+    const omschrijving = post.metaDescription || post.shortDescription || "";
+    document.title = titel;
+    setMeta("name", "description", omschrijving);
+    setCanonical(url);
+    setMeta("property", "og:title", post.ogTitle || titel);
+    setMeta("property", "og:description", post.ogDescription || omschrijving);
     setMeta("property", "og:type", "article");
-    setMeta("property", "og:url", pageUrl);
-  }, [vacature]);
+    setMeta("property", "og:url", url);
+  }, [post]);
 
-  if (isLoading) return null;
-  if (!vacature) return null;
+  if (isLoading || !post) return null;
 
-  // JobPosting- en BreadcrumbList-schema staan sinds P12 server-side in
-  // server/seo.ts (jobPostingJsonLd/breadcrumbJsonLd) — die zitten al in de
-  // initiële server-response, vóór hydratie. Hier nogmaals genereren zou
-  // dezelfde twee JSON-LD-blokken dubbel op de pagina zetten na hydratie.
-  // FAQPage staat (nog) niet server-side en blijft daarom hier client-side.
-  const faqSchema = faqs.length > 0 ? {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqs.map((f) => ({
-      "@type": "Question",
-      "name": f.q,
-      "acceptedAnswer": { "@type": "Answer", "text": f.a },
-    })),
-  } : null;
-
-  const salarisLabel = vacature.salaryMin
-    ? `€${vacature.salaryMin.toFixed(2).replace(".", ",")} all-in per uur`
-    : "In overleg";
-
-  const SectionHeading = ({ children }: { children: ReactNode }) => (
-    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <span className="w-8 h-1 bg-purple-600 rounded-full inline-block" />
-      {children}
-    </h2>
-  );
+  const v = naarRij(post);
+  const sector = v.branche === "events" ? "events" : v.branche === "logistiek" ? "logistiek" : "horeca";
+  const over = alineas(post.introductionText, post.aboutRole, post.workEnvironment);
+  const doen: string[] = post.responsibilities || [];
+  const zoek: string[] = post.requirements || [];
+  const bied: string[] = post.offer || [];
+  const gepubliceerd = datumNl(post.publishedAt || post.createdAt);
+  const tag = v.branche === "events" ? "/d3/logo-tag-b.svg" : v.branche === "logistiek" ? "/d3/logo-tag-g.svg" : "/d3/logo-tag-r.svg";
+  const slotFoto = v.branche === "events" ? "/d3/e-slot.webp" : v.branche === "logistiek" ? "/d3/l-slot.webp" : "/d3/w-slot.webp";
+  const functies = ["Housekeeping", "Front office", "F&B", "Banqueting", "Keuken", "Afwas en keukenhulp"];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-purple-200">
-      {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
-      <PublicNav forceDark={false} />
-
-      <main>
-        {/* Hero — paars, zoals de rest van de site; content daaronder wit */}
-        <section className="relative pt-32 pb-14 lg:pt-44 lg:pb-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-[#2a0d5e] to-purple-800" />
-          <XPatternBg count={3} opacity={0.08} color="rgba(216,180,254,0.6)" />
-
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-            <RevealSection>
-              <nav className="flex mb-8 text-sm text-purple-200/70" aria-label="Breadcrumb">
-                <ol className="flex items-center space-x-2">
-                  <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
-                  <li><ChevronRight className="w-4 h-4" /></li>
-                  <li><Link href="/vacatures" className="hover:text-white transition-colors">Vacatures</Link></li>
-                  <li><ChevronRight className="w-4 h-4" /></li>
-                  <li className="text-white font-medium truncate max-w-[200px] sm:max-w-none" aria-current="page">{vacature.title}</li>
-                </ol>
-              </nav>
-
-              <div className="max-w-3xl">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  {vacature.title}
-                </h1>
-
-                <div className="flex flex-wrap gap-3 mb-6">
-                  <Badge variant="secondary" className="bg-white/10 text-purple-100 border-white/15 px-3 py-1 text-sm font-semibold">
-                    <MapPin className="w-3.5 h-3.5 mr-1.5" /> {vacature.location}
-                  </Badge>
-                  <Badge variant="secondary" className="bg-white/10 text-purple-100 border-white/15 px-3 py-1 text-sm font-semibold">
-                    <Building2 className="w-3.5 h-3.5 mr-1.5" /> {vacature.client}
-                  </Badge>
-                  <Badge variant="secondary" className="bg-white/10 text-purple-100 border-white/15 px-3 py-1 text-sm font-semibold">
-                    <Clock className="w-3.5 h-3.5 mr-1.5" /> {vacature.serviceType}
-                  </Badge>
-                  <Badge variant="secondary" className="bg-white/10 text-purple-100 border-white/15 px-3 py-1 text-sm font-semibold">
-                    <Briefcase className="w-3.5 h-3.5 mr-1.5" /> {vacature.workplace}
-                  </Badge>
-                </div>
-
-                {/* All-in uurloon prominent in de hero */}
-                <div className="inline-flex items-center gap-2 bg-white text-purple-800 font-bold px-5 py-2.5 rounded-full mb-8 shadow-lg">
-                  <Euro className="w-4 h-4" />
-                  {salarisLabel}
-                </div>
-
-                <div className="flex flex-wrap gap-4">
-                  <Link href="/aanmelden">
-                    <Button size="lg" className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-8 py-6 rounded-full text-lg shadow-xl shadow-purple-900/40">
-                      Solliciteer direct
-                    </Button>
-                  </Link>
-                  <Link href="/vacatures">
-                    <Button variant="outline" size="lg" className="bg-white/5 hover:bg-white/15 text-white border-white/25 font-bold px-8 py-6 rounded-full text-lg">
-                      Alle vacatures
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </RevealSection>
-          </div>
-        </section>
-
-        {/* Content — wit */}
-        <section className="py-16 lg:py-24 bg-white">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-
-              {/* Hoofdcontent */}
-              <article className="lg:col-span-2 space-y-14">
-                <RevealSection>
-                  <SectionHeading>Over deze functie</SectionHeading>
-                  <div className="text-gray-600 text-lg leading-relaxed space-y-4">
-                    {vacature.fullDescription.split("\n\n").map((par, i) => (
-                      <p key={i}>{par}</p>
-                    ))}
-                  </div>
-                </RevealSection>
-
-                {vacature.responsibilities.length > 0 && (
-                  <RevealSection>
-                    <SectionHeading>Wat ga je doen?</SectionHeading>
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 list-none p-0">
-                      {vacature.responsibilities.map((item: string, index: number) => (
-                        <li key={index} className="flex items-start gap-3 bg-purple-50/60 border border-purple-100 rounded-xl p-4 text-gray-700">
-                          <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </RevealSection>
-                )}
-
-                {vacature.requirements.length > 0 && (
-                  <RevealSection>
-                    <SectionHeading>Wat wij zoeken</SectionHeading>
-                    <ul className="space-y-4 list-none p-0">
-                      {vacature.requirements.map((item: string, index: number) => (
-                        <li key={index} className="flex items-start gap-4 text-gray-700">
-                          <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
-                            <span className="text-purple-700 font-bold text-sm">{index + 1}</span>
-                          </div>
-                          <span className="text-lg">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </RevealSection>
-                )}
-
-                {vacature.offer.length > 0 && (
-                  <RevealSection>
-                    <SectionHeading>Wat wij bieden</SectionHeading>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      {vacature.offer.map((item: string, index: number) => (
-                        <div key={index} className="flex items-center gap-4 bg-purple-50/60 border-l-4 border-purple-600 p-5 rounded-r-xl">
-                          <span className="text-lg font-semibold text-gray-900">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </RevealSection>
-                )}
-
-                {faqs.length > 0 && (
-                  <RevealSection>
-                    <SectionHeading>Veelgestelde vragen</SectionHeading>
-                    <div className="space-y-3">
-                      {faqs.map((f, i) => (
-                        <details key={i} className="group bg-white border border-purple-100 rounded-xl overflow-hidden">
-                          <summary className="flex items-center justify-between gap-3 cursor-pointer list-none px-5 py-4 font-semibold text-gray-900 hover:bg-purple-50/50 transition-colors">
-                            <span className="flex items-center gap-3">
-                              <HelpCircle className="w-5 h-5 text-purple-600 shrink-0" />
-                              {f.q}
-                            </span>
-                            <ChevronRight className="w-4 h-4 text-purple-400 transition-transform group-open:rotate-90 shrink-0" />
-                          </summary>
-                          <div className="px-5 pb-5 pt-1 text-gray-600 leading-relaxed">{f.a}</div>
-                        </details>
-                      ))}
-                    </div>
-                  </RevealSection>
-                )}
-              </article>
-
-              {/* Sidebar */}
-              <aside className="lg:col-span-1">
-                <RevealSection delay={200}>
-                  <div className="sticky top-32 space-y-6">
-                    <div className="bg-white p-8 rounded-3xl border border-purple-100 shadow-xl shadow-purple-100/60">
-                      <h3 className="text-xl font-bold mb-6 border-b border-gray-100 pb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                        Vacaturedetails
-                      </h3>
-
-                      <div className="space-y-6">
-                        {[
-                          { icon: Building2, label: "Opdrachtgever", value: vacature.client },
-                          { icon: MapPin, label: "Locatie", value: vacature.location },
-                          { icon: Euro, label: "All-in uurloon", value: salarisLabel },
-                          { icon: Clock, label: "Dienstverband", value: vacature.serviceType },
-                          { icon: Calendar, label: "Gepubliceerd op", value: new Date(vacature.datePosted).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" }) },
-                        ].map(({ icon: Icon, label, value }) => (
-                          <div key={label} className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
-                              <Icon className="w-5 h-5 text-purple-600" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
-                              <p className="font-bold text-gray-800">{value}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-10 space-y-4">
-                        <Link href="/aanmelden">
-                          <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-7 rounded-2xl text-lg group shadow-lg shadow-purple-600/25">
-                            Solliciteer direct
-                            <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
-                          </Button>
-                        </Link>
-                        <Link href="/vacatures">
-                          <Button variant="ghost" className="w-full text-purple-600 font-bold hover:bg-purple-50 flex items-center justify-center gap-2">
-                            <ArrowLeft className="w-4 h-4" />
-                            Alle vacatures
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-
-                    {/* Support-kaart */}
-                    <div className="bg-purple-50 border border-purple-100 p-8 rounded-3xl">
-                      <h4 className="font-bold text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>Vragen over deze vacature?</h4>
-                      <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                        Onze recruiters staan voor je klaar om je alles te vertellen over werken via EXTRA.
-                      </p>
-                      <Link href="/contact" className="text-purple-600 font-bold text-sm hover:text-purple-700 flex items-center gap-2 transition-colors">
-                        Neem contact op <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </RevealSection>
-              </aside>
+    <Shell sector={sector} css={["events", "hotels", "werk", "vacature"]} werkzoekende>
+      <section className="vhero"><div className="w">
+        <nav className="kruimel" aria-label="Kruimelpad">
+          <a href="/">Home</a><span>/</span><a href="/vacatures">Vacatures</a><span>/</span><span aria-current="page">{v.kort}</span>
+        </nav>
+        <div className="vh-grid">
+          <div className="vh-tekst">
+            <span className="chip"><i></i>Vacature · {v.afdeling}</span>
+            <h1 className="vh-h1">{v.kort}{v.client && <> <span className="serif">bij {v.client}</span></>}</h1>
+            <ul className="vh-meta">
+              {v.location && <li>{v.location}</li>}
+              {post.serviceType && <li>{post.serviceType}</li>}
+              {post.workplace && <li>{post.workplace}</li>}
+            </ul>
+            <p className="vh-loon">{v.loon ? <><b>{v.loon}</b><span>all-in per uur</span></> : <><b>In overleg</b><span>uurloon</span></>}</p>
+            <div className="knoppen op-foto">
+              <a className="knop vol" href="#inschrijven">Solliciteer direct <Pijl /></a>
+              <a className="knop lijn" href={v.branche === "hotels" ? "/vacatures" : `/vacatures?branche=${v.branche}`}>Alle vacatures <Pijl /></a>
             </div>
           </div>
-        </section>
+          <div className="vh-beeld"><div className="fbeeld"><img src={BEELD[v.afdeling] ?? "/d3/f-fb.webp"} alt="" fetchPriority="high" /><span className="fletters" aria-hidden="true"></span></div></div>
+        </div>
+      </div></section>
 
-        {/* Andere vacatures.
-            Lost de Ahrefs-melding "only one dofollow incoming internal link"
-            op, maar staat er vooral omdat iemand die deze vacature net niet
-            past anders doodloopt op deze pagina. */}
-        {verwant.length > 0 && (
-          <section className="py-14 bg-white border-t border-gray-100">
-            <div className="max-w-4xl mx-auto px-5">
-              <h2 className="text-2xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Andere vacatures
-              </h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {verwant.map(v => (
-                  <li key={v.slug}>
-                    <Link
-                      href={`/vacatures/${v.slug}`}
-                      className="block rounded-xl border border-gray-200 px-4 py-3 transition-colors hover:border-purple-300 hover:bg-purple-50/50"
-                      data-testid={`link-verwant-${v.slug}`}
-                    >
-                      <span className="block font-semibold text-gray-900 text-sm">{v.title}</span>
-                      {v.groep && <span className="block text-xs text-gray-500 mt-0.5">{v.groep}</span>}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )}
-
-        {/* Onderste CTA */}
-        <section className="relative py-20 bg-gradient-to-r from-purple-600 to-violet-700 overflow-hidden">
-          <XPatternBg count={2} opacity={0.08} color="rgba(255,255,255,1)" />
-          <div className="max-w-4xl mx-auto px-5 text-center relative z-10">
-            <RevealSection>
-              <h2 className="text-3xl sm:text-5xl font-black text-white mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                {vacature.ctaText || "Klaar om iets extra's te laten zien?"}
-              </h2>
-              <p className="text-xl text-purple-100 mb-10">
-                Meld je vandaag aan — binnen een paar dagen sta jij op de mooiste locaties van {vacature.location}.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Link href="/aanmelden">
-                  <Button size="lg" className="bg-white text-purple-700 hover:bg-purple-50 font-bold px-8 py-4 rounded-full shadow-2xl">
-                    Solliciteer direct
-                  </Button>
-                </Link>
-                <Link href="/vacatures">
-                  <Button size="lg" variant="outline" className="bg-transparent text-white border-white/30 hover:bg-white/10 font-bold px-8 py-4 rounded-full">
-                    Alle vacatures bekijken
-                  </Button>
-                </Link>
-              </div>
-              <p className="text-purple-100/80 text-sm mt-6">
-                Liever eerst rustig alles invullen?{" "}
-                <Link href="/sollicitatieformulier" className="text-white font-semibold underline underline-offset-2 hover:text-purple-50">
-                  Naar het sollicitatieformulier
-                </Link>
-              </p>
-            </RevealSection>
+      <section className="vbody"><div className="w vb-grid">
+        <article className="vb-tekst">
+          {over.length > 0 && <>
+            <h2 className="vb-h2">Over deze <span className="serif">functie</span></h2>
+            <div className="vb-over">{over.map((p, i) => <p key={i}>{p}</p>)}</div>
+          </>}
+          {doen.length > 0 && <>
+            <h2 className="vb-h2">Wat ga je <span className="serif">doen?</span></h2>
+            <ul className="vb-doen">{doen.map((d, i) => <li key={i}><Ic n="vink" /><span>{d}</span></li>)}</ul>
+          </>}
+          {zoek.length > 0 && <>
+            <h2 className="vb-h2">Wat wij <span className="serif">zoeken</span></h2>
+            <ol className="vb-zoek">{zoek.map((z, i) => <li key={i}><span className="vz-nr">{String(i + 1).padStart(2, "0")}</span><span>{z}</span></li>)}</ol>
+          </>}
+          {bied.length > 0 && <>
+            <h2 className="vb-h2">Wat wij <span className="serif">bieden</span></h2>
+            <ul className="vb-bied">{bied.map((b, i) => { const [vet, rest] = splitsAanbod(b); return <li key={i}><b>{vet}</b>{rest && <span>{rest}</span>}</li>; })}</ul>
+          </>}
+        </article>
+        <aside className="vb-kaart"><div className="vk-in">
+          <h3>Vacaturedetails</h3>
+          <dl>
+            {v.client && <div><dt>Opdrachtgever</dt><dd>{v.client}</dd></div>}
+            {v.location && <div><dt>Locatie</dt><dd>{v.location}</dd></div>}
+            <div><dt>All-in uurloon</dt><dd>{v.loon ? `${v.loon} per uur` : "In overleg"}</dd></div>
+            {post.serviceType && <div><dt>Dienstverband</dt><dd>{post.serviceType}</dd></div>}
+            {gepubliceerd && <div><dt>Gepubliceerd op</dt><dd>{gepubliceerd}</dd></div>}
+          </dl>
+          <a className="knop vol" href="#inschrijven">Solliciteer direct <Pijl /></a>
+          <div className="vk-vraag">
+            <b>Vragen over deze vacature?</b><span>Onze recruiters vertellen je alles over werken via EXTRA.</span>
+            <p><a href={TELEFOON_HREF}><Ic n="tel" />{TELEFOON}</a><a className="if-wa" href={WHATSAPP}>WhatsApp ons <Ic n="pijl" /></a></p>
           </div>
-        </section>
-      </main>
+        </div></aside>
+      </div></section>
 
-      <PublicFooter />
-    </div>
+      {faqs.length > 0 && <Faq s={{ type: "faq", eyebrow: "Veelgestelde vragen", h2: "Vragen over deze [[vacature]]", items: faqs }} />}
+
+      {verwant.length > 0 && (
+        <section className="donker vacs vandere"><div className="w">
+          <div className="dkop"><div><span className="eyebrow">Meer vacatures</span>
+            <h2 className="groot" style={{ marginTop: "22px", fontSize: "clamp(46px,5.6vw,92px)" }}>Andere <span className="serif">vacatures</span></h2></div>
+            <p className="lead">Dagbetaling, EXTRAATJE-punten en vaste opdrachtgevers.</p></div>
+          <div className="vac-lijst">{verwant.map((r, i) => <VacRegel key={r.slug} v={r} nr={i + 1} />)}</div>
+          <div className="vac-voet"><a className="knop vol" href="/vacatures">Bekijk alle vacatures <Pijl /></a><span>{alle.length} openstaande {alle.length === 1 ? "vacature" : "vacatures"}</span></div>
+        </div></section>
+      )}
+
+      <KandidaatSlot
+        foto={slotFoto}
+        tag={tag}
+        regels={["Solliciteer", "direct op deze", "vacature"]}
+        kop={`Solliciteer als ${v.kort.toLowerCase()}`}
+        sub="Daarna nemen we contact met je op voor een kennismaking."
+        functies={functies}
+        gekozen={FORMULIER_FUNCTIE[v.afdeling] ?? v.afdeling}
+        beschikbaarheid={["Doordeweeks", "Weekend", "Avond"]}
+        knop="Solliciteer direct"
+      />
+
+      <a className="v-sticky" href="#inschrijven"><span>{v.loon ? <><b>{v.loon}</b>all-in per uur</> : <b>Solliciteer</b>}</span><span className="knop vol">Solliciteer direct <Pijl /></span></a>
+    </Shell>
   );
 }

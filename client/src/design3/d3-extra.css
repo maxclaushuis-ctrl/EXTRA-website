@@ -43,7 +43,6 @@
 .d3.css-aanvraag .am-fout{font-size:13px;font-weight:600;color:#a13d2d;margin:10px 0 0}
 .d3.css-aanvraag .am-noot{font-size:14px;line-height:1.5;color:var(--tekst-2);margin:10px 0 0}
 .d3.css-aanvraag .am-noot a{text-decoration:underline;font-weight:600;color:var(--espresso)}
-.d3.css-aanvraag .am-anders{margin-top:-10px}
 .d3.css-aanvraag .am-upload{position:relative}
 .d3.css-aanvraag .am-upload.gekozen{border-style:solid;border-color:var(--espresso);background:#fff}
 .d3.css-aanvraag .am-upload .ic{width:26px;height:26px}

@@ -50,6 +50,7 @@
     "promptwatch:test": "tsx scripts/promptwatch-test.ts",
     "aanvraagmails:test": "tsx shared/aanvraagMails.test.ts",
     "mailopmaak:test": "tsx shared/mailOpmaak.test.ts",
+    "vacatureweergave:test": "tsx shared/vacatureWeergave.test.ts",
     "links:test": "tsx scripts/linkHerschrijver.test.ts",
     "content:links": "tsx scripts/content-links.ts",
     "content:links:fix": "tsx scripts/content-links.ts --fix",

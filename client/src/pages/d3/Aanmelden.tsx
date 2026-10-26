@@ -689,11 +689,6 @@ export default function Aanmelden() {
                   {begin.kanaalVast && <p className="am-noot">{t.kanaalVast}</p>}
                 </details>
                 {knop(t.verder, naStap1)}
-                <p className="am-noot am-anders">
-                  {paginaTaal === "EN"
-                    ? <>Just want to drop off your CV? <a href="/cv-upload">Go to CV upload</a>.</>
-                    : <>Alleen je cv achterlaten? <a href="/cv-upload">Ga naar cv-upload</a>.</>}
-                </p>
               </div>
             )}
 
