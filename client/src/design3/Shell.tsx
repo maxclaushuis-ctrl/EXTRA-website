@@ -40,6 +40,19 @@ export default function Shell({ sector = "algemeen", css = [], werkzoekende = fa
   const [, navigeer] = useLocation();
   const root = useRef<HTMLDivElement>(null);
   const [terugbel, setTerugbel] = useState(false);
+  // De achtergrond achter de pagina in espresso: die kleurt in Safari op iPhone de
+  // balk boven de pagina en is zichtbaar bij doorscrollen voorbij de rand. Zonder
+  // dit is dat de lichte standaardachtergrond van de app.
+  useEffect(() => {
+    const html = document.documentElement.style.backgroundColor;
+    const body = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "#37352C";
+    document.body.style.backgroundColor = "#37352C";
+    return () => {
+      document.documentElement.style.backgroundColor = html;
+      document.body.style.backgroundColor = body;
+    };
+  }, []);
 
   // Interne links via de router, en altijd bovenaan beginnen op een nieuwe pagina.
   const klik = (e: MouseEvent<HTMLDivElement>) => {

@@ -825,7 +825,7 @@
 .d3.d3 .ftr-bollen{display:flex;gap:10px;margin-bottom:26px}
 .d3.d3 .fb{width:96px;height:96px;border-radius:50%;background:var(--k);color:var(--espresso);display:flex;flex-direction:column;justify-content:center;align-items:center;line-height:.82;font-weight:800;letter-spacing:-.06em;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
 .d3.d3 .fb b{font-size:15.5px}
-.d3.d3 .fb small{font-size:9px;padding-left:28%;margin-top:2px;letter-spacing:-.04em}
+.d3.d3 .fb small{font-size:9px;margin-top:2px;letter-spacing:-.04em}
 .d3.d3 .fb:hover, .d3.d3 .fb:focus-visible{transform:translateY(-4px) rotate(-6deg)}
 @media (max-width:760px){.d3.d3 .fb{width:84px;height:84px}
 .d3.d3 .fb b{font-size:13.5px}

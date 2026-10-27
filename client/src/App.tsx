@@ -215,10 +215,10 @@ function PageLoader() {
   // rendert als Suspense-fallback en moet nergens van afhangen.
   const engels = isEngelsPad(typeof window !== "undefined" ? window.location.pathname : "");
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950 flex items-center justify-center">
+    <div className="min-h-screen bg-[#37352C] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-full border-4 border-white/20 border-t-white animate-spin" />
-        <span className="text-white/60 text-sm font-medium">{engels ? "Loading..." : "Even laden..."}</span>
+        <div className="w-12 h-12 rounded-full border-4 border-[#F8F7F4]/20 border-t-[#F8F7F4] animate-spin" />
+        <span className="text-[#F8F7F4]/60 text-sm font-medium">{engels ? "Loading..." : "Even laden..."}</span>
       </div>
     </div>
   );
