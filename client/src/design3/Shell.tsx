@@ -15,7 +15,7 @@ import TerugbelPopup from "./TerugbelPopup";
 export type Sector = "horeca" | "events" | "logistiek" | "algemeen";
 
 /** Welke CSS-bestanden uit de mock-up op deze pagina gelden (zie d3.css). */
-export type CssSet = "events" | "hotels" | "logistiek" | "eventsland" | "werk" | "bedrijf" | "aanvraag" | "blog" | "vacature" | "functie" | "pagina" | "evland";
+export type CssSet = "events" | "hotels" | "logistiek" | "eventsland" | "werk" | "bedrijf" | "aanvraag" | "blog" | "vacature" | "functie" | "pagina" | "evland" | "selectie";
 
 export const CSS_BEDRIJF: CssSet[] = ["events", "hotels", "logistiek", "eventsland", "werk", "bedrijf", "functie", "pagina"];
 
@@ -26,6 +26,8 @@ interface ShellProps {
   werkzoekende?: boolean;
   /** Bestemming van de knop rechtsboven (standaard het aanvraagformulier). */
   knopHref?: string;
+  /** true op formulierpagina's: de knop rechtsboven wordt het telefoonnummer. */
+  telKnop?: boolean;
   bodyKlasse?: string;
   /** Kopregel transparant over de hero (homepage), of vast donker. */
   kopVast?: boolean;
@@ -34,7 +36,7 @@ interface ShellProps {
   children: ReactNode;
 }
 
-export default function Shell({ sector = "algemeen", css = [], werkzoekende = false, knopHref, bodyKlasse, kopVast = true, functies = [], children }: ShellProps) {
+export default function Shell({ sector = "algemeen", css = [], werkzoekende = false, knopHref, telKnop = false, bodyKlasse, kopVast = true, functies = [], children }: ShellProps) {
   const [, navigeer] = useLocation();
   const root = useRef<HTMLDivElement>(null);
   const [terugbel, setTerugbel] = useState(false);
@@ -86,7 +88,7 @@ export default function Shell({ sector = "algemeen", css = [], werkzoekende = fa
   return (
     <div ref={root} className={klassen} data-sector={sector} onClick={klik}>
       <Iconen />
-      <Kop werkzoekende={werkzoekende} knopHref={knopHref} vast={kopVast} />
+      <Kop werkzoekende={werkzoekende} knopHref={knopHref} telKnop={telKnop} vast={kopVast} />
       <main id="inhoud">{children}</main>
       <Voet />
       <TerugbelPopup open={terugbel} sluit={() => setTerugbel(false)} functies={functies} sector={sector} />
@@ -94,7 +96,7 @@ export default function Shell({ sector = "algemeen", css = [], werkzoekende = fa
   );
 }
 
-function Kop({ werkzoekende, knopHref, vast }: { werkzoekende: boolean; knopHref?: string; vast: boolean }) {
+function Kop({ werkzoekende, knopHref, telKnop, vast }: { werkzoekende: boolean; knopHref?: string; telKnop: boolean; vast: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   const [mobiel, setMobiel] = useState(false);
   const [links, setLinks] = useState(24);
@@ -175,7 +177,9 @@ function Kop({ werkzoekende, knopHref, vast }: { werkzoekende: boolean; knopHref
           ))}
         </nav>
         <a className="taal" href={engels} lang="en" aria-label="English version">EN</a>
-        {werkzoekende ? (
+        {telKnop ? (
+          <a className="knop" href="tel:0851305915"><Ic n="tel" /><span>085 130 59 15</span></a>
+        ) : werkzoekende ? (
           <a className="knop" href="/aanmelden" aria-label="Solliciteer direct"><Ic n="koffer" /><span>Solliciteer direct</span></a>
         ) : (
           <a className="knop" href={knopHref ?? "/personeelsaanvraag"}><Ic n="tel" /><span>Personeel aanvragen</span></a>
@@ -222,16 +226,16 @@ function Voet() {
       <div className="f3-kop">
         <div>
           <p className="f3-zin">
-            Het uitzendbureau voor <a href="/hotelpersoneel-inhuren" style={{ ["--k" as any]: "var(--rose)" }}>hotels</a>,{" "}
-            <a href="/logistiek-personeel-inhuren" style={{ ["--k" as any]: "var(--pistachio)" }}>logistiek</a> en{" "}
-            <a href="/eventpersoneel-inhuren" style={{ ["--k" as any]: "var(--sky)" }}>events</a>.
+            Het uitzendbureau voor <a href="/hotels" style={{ ["--k" as any]: "var(--rose)" }}>hotels</a>,{" "}
+            <a href="/logistiek" style={{ ["--k" as any]: "var(--pistachio)" }}>logistiek</a> en{" "}
+            <a href="/evenementen" style={{ ["--k" as any]: "var(--sky)" }}>events</a>.
           </p>
           <p className="f3-sub">Flexibel personeel in loondienst, met het unieke beloningssysteem EXTRAATje.</p>
         </div>
         <nav className="ftr-bollen" aria-label="Kies je branche">
-          <a href="/hotelpersoneel-inhuren" className="fb" style={{ ["--k" as any]: "var(--rose)" }}><b>Hospitality</b><small>experts</small></a>
-          <a href="/logistiek-personeel-inhuren" className="fb" style={{ ["--k" as any]: "var(--pistachio)" }}><b>Logistic</b><small>professionals</small></a>
-          <a href="/eventpersoneel-inhuren" className="fb" style={{ ["--k" as any]: "var(--sky)" }}><b>Event</b><small>manpower</small></a>
+          <a href="/hotels" className="fb" style={{ ["--k" as any]: "var(--rose)" }}><b>Hospitality</b><small>experts</small></a>
+          <a href="/logistiek" className="fb" style={{ ["--k" as any]: "var(--pistachio)" }}><b>Logistic</b><small>professionals</small></a>
+          <a href="/evenementen" className="fb" style={{ ["--k" as any]: "var(--sky)" }}><b>Event</b><small>manpower</small></a>
         </nav>
       </div>
       <div className="f3-rij">

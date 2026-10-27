@@ -88,7 +88,7 @@ function Slot() {
   return (
     <section className="slot2">
       <div className="foto"><img src="/d3/closeup.webp" alt="" loading="lazy" /></div>
-      <img className="tag" src="/d3/logo-tag-r.svg" alt="EXTRA, het uitzendbureau dat werkt" />
+      <img className="tag" src="/d3/logo-tag-w.svg" alt="EXTRA, het uitzendbureau dat werkt" />
       <h2 className="reus" ref={reus}><span className="l1">Klaar</span> <span className="l2">om samen te</span> <span className="l3">werken?</span></h2>
       <p className="intro">Of je nu extra personeel zoekt of extra werk: we regelen het snel en duidelijk.</p>
       <div className="acties"><div className="knoppen op-foto"><a className="knop vol" href="/personeelsaanvraag">Vraag extra personeel aan <Pijl /></a><a className="knop lijn" href="/vacatures">Ik zoek extra werk <Pijl /></a></div></div>

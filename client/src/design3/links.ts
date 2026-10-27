@@ -123,6 +123,7 @@ export const FOOTER: { kop: string; links: MenuLink[] }[] = [
       { label: "Over EXTRA", href: "/over-extra" },
       { label: "Ons team", href: "/ons-team" },
       { label: "Onze werkwijze", href: "/onze-werkwijze" },
+      { label: "Zo selecteren we", href: "/selectieproces" },
       { label: "Klantcases", href: "/klantcases-horeca" },
       { label: "NEN 4400-1", href: "/nen-4400-1-certificering" },
       { label: "Nieuws & blog", href: "/blog" },

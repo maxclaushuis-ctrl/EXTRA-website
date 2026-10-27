@@ -45,6 +45,10 @@ const D3_keukenpersoneel_inhuren = maakFragmentRoute("keukenpersoneel-inhuren");
 const D3_afwassers_inhuren = maakFragmentRoute("afwassers-inhuren");
 const D3_events_werk = maakFragmentRoute("events-werk");
 const D3_logistiek_werk = maakFragmentRoute("logistiek-werk");
+const D3_hotels = maakFragmentRoute("hotels");
+const D3_evenementen = maakFragmentRoute("evenementen");
+const D3_logistiek = maakFragmentRoute("logistiek");
+const D3_selectieproces = maakFragmentRoute("selectieproces");
 const D3_cookiebeleid = maakFragmentRoute("cookiebeleid");
 const NotFound = maakFragmentRoute("niet-gevonden");
 const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
@@ -378,6 +382,10 @@ function Router() {
           <Route path="/afwassers-inhuren" component={D3_afwassers_inhuren} />
           <Route path="/events-werk" component={D3_events_werk} />
           <Route path="/logistiek-werk" component={D3_logistiek_werk} />
+          <Route path="/hotels" component={D3_hotels} />
+          <Route path="/evenementen" component={D3_evenementen} />
+          <Route path="/logistiek" component={D3_logistiek} />
+          <Route path="/selectieproces" component={D3_selectieproces} />
           <Route path="/extraatje" component={D3_extraatje} />
           {/* P14: /beloningssysteem en /hoe-extra-werkt waren tweede URL's voor
               dezelfde Extraatje- resp. HoeExtraWerkt-component als /extraatje

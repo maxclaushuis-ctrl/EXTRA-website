@@ -43,6 +43,10 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/nen-4400-1-certificering` | I | nen 4400-1 uitzendbureau | WG | Personeel aanvragen | Sterkste juridische argument tegenover zzp-platforms. Verdient een link vanaf elke sectorpagina. |
 | `/extraatje` | I | extraatje beloningssysteem | B | Aanmelden | Publieke tegenhanger van het interne `/rewards`. Blogs linken hierheen, nooit naar `/rewards`. |
 | `/blog` | N | blog / kennisbank | B | — | Overzicht. Individuele artikelen staan niet in dit register; die volgen de blogskill en `docs/BLOG-KALENDER.md`. |
+| `/hotels` | N | uitzendbureau voor hotels (hub) | B | Kiezen: personeel of werk | Branchepagina (okt 2026). Verdeelt naar `/hotelpersoneel-inhuren` en `/horeca-vacatures-amsterdam`; claimt "hotelpersoneel inhuren" en "hotel vacatures" niet. |
+| `/evenementen` | N | uitzendbureau voor events (hub) | B | Kiezen: personeel of werk | Branchepagina (okt 2026). Verdeelt naar `/eventpersoneel-inhuren` en `/events-werk`. `/events` blijft de interne brochure (noindex). |
+| `/logistiek` | N | uitzendbureau voor logistiek (hub) | B | Kiezen: personeel of werk | Branchepagina (okt 2026). Verdeelt naar `/logistiek-personeel-inhuren` en `/logistiek-werk`. |
+| `/selectieproces` | I | hoe selecteert een uitzendbureau / selectieproces personeel | WG | Personeel aanvragen | Beoordeel zelf (okt 2026): campagnes, AI-recruiter Job, scorekaarten. Gelinkt vanaf de inhuurpagina's. |
 
 ## Werkgevers — sector
 

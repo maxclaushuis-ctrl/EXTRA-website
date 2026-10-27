@@ -113,9 +113,9 @@ export default function Home() {
         <div className="w hh-kies">
           <p className="kies-label"><span>Kies je branche</span></p>
           <nav className="kiesbollen" aria-label="Kies je branche">
-            <a className="kies" href="/hotelpersoneel-inhuren" style={v({ "--kleur": "var(--rose)" })}><small>Werk in</small><b>hotels</b><Ic n="pijl" /></a>
-            <a className="kies" href="/logistiek-personeel-inhuren" style={v({ "--kleur": "var(--pistachio)" })}><small>Werk in de</small><b>logistiek</b><Ic n="pijl" /></a>
-            <a className="kies" href="/eventpersoneel-inhuren" style={v({ "--kleur": "var(--sky)" })}><small>Werk in de</small><b>events</b><Ic n="pijl" /></a>
+            <a className="kies" href="/hotels" style={v({ "--kleur": "var(--rose)" })}><small>Werk in</small><b>hotels</b><Ic n="pijl" /></a>
+            <a className="kies" href="/logistiek" style={v({ "--kleur": "var(--pistachio)" })}><small>Werk in de</small><b>logistiek</b><Ic n="pijl" /></a>
+            <a className="kies" href="/evenementen" style={v({ "--kleur": "var(--sky)" })}><small>Werk in de</small><b>events</b><Ic n="pijl" /></a>
           </nav>
         </div>
         <div className="w"><dl className="hh-stats">
@@ -130,11 +130,11 @@ export default function Home() {
         <div className="w"><h2 className="groot">Wat zoek <span className="serif">jij?</span></h2><p className="lead zacht" style={{ textAlign: "center", margin: "-44px auto 64px" }}>Zoek je EXTRA personeel of zoek je een EXTRA baan?</p></div>
         <div className="takken">
           <Tak kleur="var(--rose)" foto="/d3/strip-hotelstaf.webp" pos="30% 30%" label={["Hospitality", "experts"]} kop="Hotels" tekst="Van housekeeping tot banqueting, van front office tot F&B."
-            k1={["Ik zoek hotelpersoneel", "/hotelpersoneel-inhuren"]} k2={["Ik zoek werk in hotels", "/horeca-vacatures-amsterdam"]} />
+            k1={["Ik zoek hotelpersoneel", "/hotels"]} k2={["Ik zoek werk in hotels", "/horeca-vacatures-amsterdam"]} />
           <Tak kleur="var(--pistachio)" foto="/d3/strip-logistiek.webp" pos="50% 25%" label={["Logistic", "professionals"]} kop="Logistiek" tekst="Van orderpicken tot heftruck."
-            k1={["Ik zoek logistiek personeel", "/logistiek-personeel-inhuren"]} k2={["Ik zoek werk in de logistiek", "/aanmelden"]} />
+            k1={["Ik zoek logistiek personeel", "/logistiek"]} k2={["Ik zoek werk in de logistiek", "/logistiek-werk"]} />
           <Tak kleur="var(--sky)" foto="/d3/strip-event.webp" pos="50% 20%" label={["Event", "manpower"]} kop="Events" tekst="Bediening, bar, catering, hosts en logistiek."
-            k1={["Ik zoek eventpersoneel", "/eventpersoneel-inhuren"]} k2={["Ik zoek werk bij events", "/horeca-werk"]} />
+            k1={["Ik zoek eventpersoneel", "/evenementen"]} k2={["Ik zoek werk bij events", "/events-werk"]} />
         </div>
         <div className="logos"><div className="w">
           <div className="logoband"><div className="logorij">
@@ -272,7 +272,7 @@ export default function Home() {
 
       <section className="slot2">
         <div className="foto"><img src="/d3/closeup.webp" alt="" loading="lazy" /></div>
-        <img className="tag" src="/d3/logo-tag-r.svg" alt="EXTRA, het uitzendbureau dat werkt" />
+        <img className="tag" src="/d3/logo-tag-w.svg" alt="EXTRA, het uitzendbureau dat werkt" />
         <h2 className="reus" ref={reus}><span className="l1">Klaar</span> <span className="l2">om samen te</span> <span className="l3">werken?</span></h2>
         <p className="intro">Of je nu extra personeel zoekt of extra werk: we regelen het snel en duidelijk.</p>
         <div className="acties"><div className="knoppen op-foto"><a className="knop vol" href="/personeelsaanvraag">Vraag extra personeel aan <Pijl /></a><a className="knop lijn" href="/vacatures">Ik zoek extra werk <Pijl /></a></div></div>

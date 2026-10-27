@@ -162,7 +162,7 @@ export function PersoneelAanvragen() {
   };
 
   return (
-    <Shell css={["events", "hotels", "werk", "bedrijf", "aanvraag"]} bodyKlasse="aanvraagpag">
+    <Shell css={["events", "hotels", "werk", "bedrijf", "aanvraag"]} bodyKlasse="aanvraagpag" telKnop>
       <section className="av-pag">
         <div className="w av-grid">
           <div className="av-links">
@@ -273,7 +273,7 @@ export function AanvraagOntvangen() {
   }, []);
 
   return (
-    <Shell css={["events", "hotels", "werk", "bedrijf", "aanvraag"]} bodyKlasse="aanvraagpag">
+    <Shell css={["events", "hotels", "werk", "bedrijf", "aanvraag"]} bodyKlasse="aanvraagpag" telKnop>
       <section className="av-pag av-dank">
         <div className="w">
           <div className="dk-kaart">

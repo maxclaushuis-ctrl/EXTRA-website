@@ -367,6 +367,43 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.85",
     changefreq: "weekly",
   },
+  // ── Branchepagina's en selectieproces (design 3.0, oktober 2026) ────
+  {
+    path: "/hotels",
+    title: "Uitzendbureau voor hotels in Amsterdam | EXTRA",
+    description:
+      "EXTRA voor hotels: zoek je hotelpersoneel of werk in een hotel in Amsterdam? Housekeeping, front office, F&B en keuken, iedereen in loondienst.",
+    prerender: true,
+    priority: "0.8",
+    changefreq: "monthly",
+  },
+  {
+    path: "/evenementen",
+    title: "Uitzendbureau voor events in Amsterdam | EXTRA",
+    description:
+      "EXTRA voor events: eventpersoneel inhuren of werken bij evenementen in Amsterdam. Bar, bediening, hosts en runners, snel geregeld en in loondienst.",
+    prerender: true,
+    priority: "0.8",
+    changefreq: "monthly",
+  },
+  {
+    path: "/logistiek",
+    title: "Uitzendbureau voor logistiek | Personeel en werk | EXTRA",
+    description:
+      "EXTRA voor logistiek: personeel inhuren voor magazijn en distributiecentrum, of werk als orderpicker, inpakker of heftruckchauffeur. Bekijk de mogelijkheden.",
+    prerender: true,
+    priority: "0.8",
+    changefreq: "monthly",
+  },
+  {
+    path: "/selectieproces",
+    title: "Zo selecteert EXTRA personeel | Beoordeel zelf | EXTRA",
+    description:
+      "Van campagne tot contract: zo selecteert EXTRA personeel. AI-recruiter Job, gesprek op kantoor, scorekaarten en compliance. Bekijk elke stap zelf.",
+    prerender: true,
+    priority: "0.7",
+    changefreq: "monthly",
+  },
   {
     path: "/chef-vacatures-amsterdam",
     title: "Chef vacatures Amsterdam | Kok werk via EXTRA",

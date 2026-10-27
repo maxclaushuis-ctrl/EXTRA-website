@@ -13,6 +13,11 @@ import type { Sector } from "./Shell";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
 
 // ───────────── types ─────────────
+/** Aanvraaglink met voorselectie van de branche. */
+function aanvraagLink(branche?: string): string {
+  return branche ? "/personeelsaanvraag?branche=" + branche : "/personeelsaanvraag";
+}
+
 export interface Knop { tekst: string; href: string | null }
 export interface HeroKnop { tekst: string; href: string; vol: boolean; tel: boolean }
 
@@ -26,7 +31,7 @@ export type Sectie =
   | { type: "reviews"; eyebrow: string; h2: string; items: { quote: string; naam: string; rol: string }[] }
   | { type: "poule"; eyebrow: string; h2: string; lead: string; items: { h3: string; sub: string; meta: string[]; b: string; small: string }[]; knop: Knop | null }
   | { type: "scores"; eyebrow: string; h2: string; lead: string; lijst: string[]; kaarten: ScoreKaart[]; noot: string; los?: boolean }
-  | { type: "screening"; id?: string; eyebrow: string; h2: string; lead: string; kaart: { avatar: string; b: string; span: string; tags: string[] } }
+  | { type: "screening"; id?: string; eyebrow: string; h2: string; lead: string; branche?: string; kaart: { avatar: string; b: string; span: string; tags: string[] } }
   | { type: "hoe"; werk: boolean; id: string | null; eyebrow: string; h2: string; lead: string; stappen: { h3: string; p: string }[]; knop: Knop | null; standaard: string | null }
   | { type: "portaal"; eyebrow: string; h2: string; lead: string; klant: string; variant?: "hotels" | "events" | "logistiek" }
   | { type: "data"; eyebrow: string; h2: string; lead: string; lijst: string[]; schermen: { src: string; alt: string }[] }
@@ -288,6 +293,7 @@ function Screening({ s }: { s: S<"screening"> }) {
         <span className="eyebrow">{s.eyebrow}</span>
         <h2 className="groot" style={{ marginTop: "22px", fontSize: "clamp(44px,5vw,84px)" }}><T t={s.h2} /></h2>
         <p className="lead zacht" style={{ marginTop: "24px" }}><T t={s.lead} /></p>
+        <div className="knoppen scr-knoppen"><a className="knop vol" href={aanvraagLink(s.branche)}>Vraag direct personeel aan <Pijl /></a><a className="knop lijn" href="/selectieproces">Beoordeel zelf <Pijl /></a></div>
       </div>
       <div className="scr-kaart" aria-label="Voorbeeld van een beoordeling">
         <div className="scr-kop"><span className="avatar">{s.kaart.avatar}</span><div><b>{s.kaart.b}</b><span>{s.kaart.span}</span></div></div>

@@ -98,7 +98,7 @@ export default function CvUpload() {
   const kop = voornaam ? `Hi ${voornaam}, upload hier je cv` : "Upload hier je cv";
 
   return (
-    <Shell css={["events", "hotels", "werk", "bedrijf", "aanvraag", "pagina"]} bodyKlasse="aanvraagpag" werkzoekende>
+    <Shell css={["events", "hotels", "werk", "bedrijf", "aanvraag", "pagina"]} bodyKlasse="aanvraagpag" werkzoekende telKnop>
       <section className="av-pag am-pag">
         <div className="w av-grid">
           <div className="av-links">

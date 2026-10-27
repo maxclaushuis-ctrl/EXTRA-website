@@ -480,6 +480,7 @@ export const hotels: PaginaContent = {
     },
     {
       "type": "screening",
+      "branche": "hotel",
       "eyebrow": "Screeningsproces",
       "h2": "Elke hotelmedewerker, [[persoonlijk gescreend]]",
       "lead": "Voordat een medewerker bij jouw hotel staat, is deze persoonlijk gezien op kantoor en digitaal beoordeeld op presentatie, gastvrijheid en vakkennis per hotelfunctie. Je weet altijd wie er achter je receptie of in je housekeeping staat.",
@@ -1058,6 +1059,7 @@ export const events: PaginaContent = {
     },
     {
       "type": "screening",
+      "branche": "event",
       "id": "selectie",
       "eyebrow": "Screeningsproces",
       "h2": "Elke eventmedewerker, [[persoonlijk gescreend]]",
@@ -1600,6 +1602,7 @@ export const logistiek: PaginaContent = {
     },
     {
       "type": "screening",
+      "branche": "logistiek",
       "id": "selectie",
       "eyebrow": "Screeningsproces",
       "h2": "Elke logistieke medewerker, [[persoonlijk gescreend]]",

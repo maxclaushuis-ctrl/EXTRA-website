@@ -13,6 +13,10 @@ import { ROUTE_META, SITE_ORIGIN, normalizeMetaPath } from "@shared/routeMeta";
 
 const GROUPS: { heading: string; paths: string[] }[] = [
   {
+    heading: "Branches: hotels, events en logistiek",
+    paths: ["/hotels", "/evenementen", "/logistiek"],
+  },
+  {
     heading: "Personeel aanvragen (voor werkgevers)",
     paths: [
       "/personeelsaanvraag",
@@ -61,7 +65,7 @@ const GROUPS: { heading: string; paths: string[] }[] = [
   },
   {
     heading: "Werkwijze en achtergrond",
-    paths: ["/horeca-uitzendbureau-amsterdam", "/horeca-uitzendbureau-amsterdam-werkwijze", "/onze-werkwijze", "/over-extra", "/ons-team", "/nen-4400-1-certificering", "/extraatje", "/klantcases-horeca", "/blog"],
+    paths: ["/horeca-uitzendbureau-amsterdam", "/horeca-uitzendbureau-amsterdam-werkwijze", "/onze-werkwijze", "/selectieproces", "/over-extra", "/ons-team", "/nen-4400-1-certificering", "/extraatje", "/klantcases-horeca", "/blog"],
   },
   {
     heading: "English",

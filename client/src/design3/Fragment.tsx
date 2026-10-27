@@ -39,6 +39,10 @@ export interface FragmentData {
   knop?: string | null;
   /** Functies voor de pop-up "Bel mij terug". */
   functies?: string[];
+  /** Elementen die bij scrollen in beeld schuiven (selector uit de mock-up). */
+  onthul?: string;
+  /** WhatsApp-gesprek met Job dat zich vanzelf afspeelt (selectieproces). */
+  chat?: { stappen: [string, string][]; kaart: string };
   html: string;
 }
 
@@ -90,6 +94,68 @@ export default function FragmentPagina({ d }: { d: FragmentData }) {
   useStapelTop(loon);
   useStapelTop(vacs);
   useConfetti(confetti);
+
+  // In beeld schuiven bij scrollen.
+  useEffect(() => {
+    const r = root.current;
+    if (!r || !d.onthul) return;
+    const els = Array.from(r.querySelectorAll<HTMLElement>(d.onthul));
+    els.forEach((e) => {
+      e.classList.add("anim");
+      const p = e.parentElement;
+      if (p) e.style.setProperty("--i", String(Array.prototype.indexOf.call(p.children, e)));
+    });
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      els.forEach((e) => e.classList.add("zien"));
+      return;
+    }
+    const io = new IntersectionObserver((en) => en.forEach((x) => {
+      if (x.isIntersecting) { x.target.classList.add("zien"); io.unobserve(x.target); }
+    }), { threshold: 0.18, rootMargin: "0px 0px -6% 0px" });
+    els.forEach((e) => io.observe(e));
+    return () => io.disconnect();
+  }, [d]);
+
+  // WhatsApp-gesprek met Job.
+  useEffect(() => {
+    const chat = root.current?.querySelector<HTMLElement>("#wa-chat");
+    if (!chat || !d.chat) return;
+    const { stappen, kaart } = d.chat;
+    const stil = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let i = 0;
+    let timer: number | undefined;
+    const tijd = () => { const n = new Date(); return ("0" + n.getHours()).slice(-2) + ":" + ("0" + n.getMinutes()).slice(-2); };
+    const bel = (soort: string, tekst: string) => {
+      const b = document.createElement("div");
+      b.className = "b " + soort;
+      b.textContent = tekst;
+      const k = document.createElement("small");
+      k.textContent = tijd();
+      b.appendChild(k);
+      return b;
+    };
+    const maakKaart = () => { const k = document.createElement("div"); k.className = "kaart"; k.innerHTML = kaart; return k; };
+    const snoei = () => { while (chat.children.length > 7) chat.removeChild(chat.firstChild!); };
+    const volgende = () => {
+      if (i >= stappen.length) { timer = window.setTimeout(() => { chat.innerHTML = ""; i = 0; volgende(); }, 5000); return; }
+      const [soort, tekst] = stappen[i++];
+      if (soort === "kaart") { chat.appendChild(maakKaart()); snoei(); timer = window.setTimeout(volgende, 2600); return; }
+      if (soort === "job") {
+        const typ = document.createElement("div");
+        typ.className = "typ";
+        typ.innerHTML = "<i></i><i></i><i></i>";
+        chat.appendChild(typ); snoei();
+        timer = window.setTimeout(() => { typ.remove(); chat.appendChild(bel("job", tekst)); snoei(); timer = window.setTimeout(volgende, 1500 + tekst.length * 12); }, 900 + tekst.length * 8);
+        return;
+      }
+      chat.appendChild(bel(soort, tekst)); snoei(); timer = window.setTimeout(volgende, 1300);
+    };
+    chat.innerHTML = "";
+    if (stil) { stappen.forEach(([s, t]) => chat.appendChild(s === "kaart" ? maakKaart() : bel(s, t))); snoei(); return; }
+    const io = new IntersectionObserver((e) => { if (e[0].isIntersecting) { io.disconnect(); volgende(); } }, { threshold: 0.3 });
+    io.observe(chat);
+    return () => { io.disconnect(); window.clearTimeout(timer); };
+  }, [d]);
 
   // Actuele Google-score en aantal reviews in de plekhouders.
   useEffect(() => {
