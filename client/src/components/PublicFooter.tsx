@@ -53,7 +53,6 @@ const FOOTER_COPY = {
     kolom3Kop: "Werkzoekenden",
     kolom3: [
       { label: "Solliciteer direct", href: "/aanmelden" },
-      { label: "Sollicitatieformulier", href: "/sollicitatieformulier" },
       { label: "Vacatures", href: "/vacatures" },
       { label: "Horeca vacatures Amsterdam", href: "/horeca-vacatures-amsterdam" },
       { label: "Horeca werk Amsterdam", href: "/horeca-werk-amsterdam" },

@@ -6924,7 +6924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Intake lookup — returns candidates by functionType for admin intake form
-  app.get("/api/intake/candidates", authMiddleware, async (req: Request, res: Response) => {
+  app.get("/api/intake/candidates", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const { functionType } = req.query;
       // Haal zowel in_behandeling als gepland op — alleen gepland-kandidaten komen in aanmerking voor het sollicitatieformulier
@@ -8700,7 +8700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sollicitatie", async (req: Request, res: Response) => {
+  app.post("/api/sollicitatie", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const data = req.body;
       
@@ -9180,6 +9180,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ─── Staffing requests (admin) ───────────────────────────────────────────
+  /**
+   * Hoe ziet de proxyketen er in productie werkelijk uit?
+   *
+   * Nodig om `trust proxy` goed te kunnen zetten. Die staat nu op 1, en achter
+   * de load balancer van Google levert dat vermoedelijk het Google-adres op in
+   * plaats van dat van de bezoeker. Dat raakt meer dan Promptwatch alleen: vijf
+   * rate limiters gebruiken req.ip als sleutel, en als die voor iedereen
+   * hetzelfde is, delen alle bezoekers één limiet. De auditlogging slaat dan
+   * ook een nutteloos adres op.
+   *
+   * Ik wil dat niet op gevoel aanpassen. Open deze route één keer als beheerder
+   * en vergelijk `expressIp` met het eerste adres in `forwardedForKeten`:
+   *
+   *   - zijn ze gelijk  → trust proxy staat goed, er is niets aan de hand;
+   *   - zijn ze anders  → zet trust proxy op het aantal adressen in de keten.
+   *
+   * Daarna mag deze route weg. Hij toont alleen gegevens over het verzoek van
+   * de beheerder zelf, geen gegevens van bezoekers.
+   */
+  app.get("/api/admin/proxy-check", adminMiddleware, async (req: Request, res: Response) => {
+    const { clientIp, ontleedForwardedFor } = await import("./clientIp");
+    const keten = ontleedForwardedFor(req.headers["x-forwarded-for"]);
+    res.json({
+      expressIp: req.ip ?? null,
+      socketIp: (req as any).socket?.remoteAddress ?? null,
+      forwardedForRuw: req.headers["x-forwarded-for"] ?? null,
+      forwardedForKeten: keten,
+      aantalHops: keten.length,
+      watNaarPromptwatchGaat: clientIp(req.headers["x-forwarded-for"], req.ip, (req as any).socket?.remoteAddress),
+      trustProxyInstelling: req.app.get("trust proxy fn") ? "gezet" : "niet gezet",
+      advies:
+        keten.length === 0
+          ? "Geen X-Forwarded-For gezien. Draai je lokaal? Herhaal dit op de productie-URL."
+          : req.ip === keten[0]
+            ? "trust proxy staat goed: req.ip is het adres van de bezoeker."
+            : `req.ip wijkt af van het eerste adres in de keten. Zet trust proxy op ${keten.length}.`,
+    });
+  });
+
   app.get("/api/admin/staffing-requests", adminMiddleware, async (_req: Request, res: Response) => {
     try {
       const { staffingRequests } = await import("@shared/schema");

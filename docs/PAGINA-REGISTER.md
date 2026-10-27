@@ -32,8 +32,8 @@ Laatst volledig nagelopen: 25 augustus 2026.
 
 | URL | Intentie | Keywordcluster (eigenaar) | Doel | CTA | Opmerkingen |
 |---|---|---|---|---|---|
-| `/` | T+N | horeca uitzendbureau amsterdam | WG | Personeel aanvragen | **Botst met `/horeca-uitzendbureau-amsterdam`** — beide op sitemapprioriteit 1.0, zelfde kernterm. Uit te zoeken met Search Console. Bedient nu twee doelgroepen even zwaar; de conversieaudit adviseert werkgever primair. |
-| `/horeca-uitzendbureau-amsterdam` | C | horeca uitzendbureau amsterdam (waarom EXTRA) | WG | Personeel aanvragen | Zie hierboven. Als hij blijft, moet hij duidelijk de *vergelijkende* intentie bedienen ("waarom dit bureau") en niet de generieke. |
+| `/` | T+N | horeca uitzendbureau amsterdam | WG | Personeel aanvragen | **Bezit dit cluster.** De botsing met `/horeca-uitzendbureau-amsterdam` is opgelost door die pagina op de vergelijkende intentie te richten; prioriteit daar naar 0.9. Bedient nog wel twee doelgroepen even zwaar; de conversieaudit adviseert werkgever primair. |
+| `/horeca-uitzendbureau-amsterdam` | C | horeca uitzendbureau amsterdam kiezen (vergelijkend) | WG | Personeel aanvragen | Gericht op de vergelijkende zoekvraag: H1 "Zo kies je een horeca uitzendbureau in Amsterdam" plus vijf toetsvragen. Mag niet terug naar de generieke term, want dan botst hij weer met `/`. Meetpunt: positie op "beste uitzendbureau (amsterdam)" in Search Console, terugkijken na acht weken. |
 | `/horeca-uitzendbureau-amsterdam-werkwijze` | I | werkwijze uitzendbureau horeca | B | Personeel aanvragen | **Overlapt met `/onze-werkwijze`** — zelfde stappenplan. Eén moet 301'en. |
 | `/onze-werkwijze` | I | hoe werkt het / werkwijze | B | Personeel aanvragen | Zie hierboven. Deze URL is korter en generieker; voorkeur om deze te houden. |
 | `/over-extra` | N | over extra uitzendbureau | B | Contact | Merkpagina. E-E-A-T-drager: hier horen oprichtingsjaar en SNA-nummer te komen. |
@@ -76,6 +76,7 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/horeca-personeel-inhuren` | T | horeca personeel inhuren | WG | Personeel aanvragen | Ligt dicht tegen `/horeca-personeel-amsterdam` aan; scheiding is "inhuren" versus "personeel". Zwak onderscheid, in de gaten houden. |
 | `/bediening-inhuren` | T | bediening inhuren | WG | Personeel aanvragen | Cluster wordt ook geclaimd door `/horecapersoneel-restaurants` en `/eventpersoneel-inhuren`. |
 | `/tijdelijk-horeca-personeel` | T | tijdelijk horecapersoneel | WG | Personeel aanvragen | Eigen intentie (tijdelijkheid), verdedigbaar naast de rest. |
+| `/uitzenden-of-zzp` | I/C | uitzendkracht versus zzp'er inhuren + wat kost horecapersoneel inhuren | WG | Personeel aanvragen | Nieuw 23-09-2026. Bedient de twee clusters die hierboven als kans stonden. Informatief, dus **niet** op "horeca personeel inhuren" mikken; dat is van `/horeca-personeel-inhuren`. Naast `/blog/zzp-inhuren-horeca`, dat het nieuws van 2026 behandelt en niet de keuze. Bewust zonder tarief: het uurtarief volgt uit de inlenersbeloning. Meetpunt: positie op "uitzendkracht of zzp" en "wat kost horecapersoneel inhuren", terugkijken na acht weken. |
 
 ## Werkzoekenden
 
@@ -139,13 +140,12 @@ pre-flight-check erbij.
 
 | Cluster | Intentie | Waarom relevant |
 |---|---|---|
-| wat kost horecapersoneel inhuren | I/C | Hoge koopintentie, volledig onbediend, en concurrenten winnen deze zoekvraag. |
-| uitzendkracht versus zzp'er inhuren | I/C | Sluit aan op het sterkste argument van EXTRA (loondienst, NEN 4400-1). |
 | hotelpersoneel schiphol | T+L | Alleen doen als daar echt geleverd wordt; Radisson Blu Schiphol is al klant. |
 
 ## Bewust niet in het register
 
 `/BHG-group`, `/xebia` (klantpagina's, `noindex, follow`), `/cv-upload`,
-`/sollicitatieformulier` (intern intakeformulier, sinds oktober 2026 `noindex, follow`),
+`/sollicitatieformulier` (intern intakeformulier, sinds oktober 2026 alleen voor
+ingelogde collega's; werkzoekenden gaan naar `/aanmelden`),
 `/aanvraag-ontvangen`, de brochures en alle dashboard- en app-routes. Die
 hebben geen zoekdoel en dus geen cluster.

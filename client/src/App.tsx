@@ -16,7 +16,6 @@ const D3_flexibel_horeca_personeel = maakFragmentRoute("flexibel-horeca-personee
 const D3_tijdelijk_horeca_personeel = maakFragmentRoute("tijdelijk-horeca-personeel");
 const D3_horeca_personeel_inhuren = maakFragmentRoute("horeca-personeel-inhuren");
 const D3_bediening_inhuren = maakFragmentRoute("bediening-inhuren");
-const D3_horeca_uitzendbureau_amsterdam = maakFragmentRoute("horeca-uitzendbureau-amsterdam");
 const D3_horeca_uitzendbureau_amsterdam_werkwijze = maakFragmentRoute("horeca-uitzendbureau-amsterdam-werkwijze");
 const D3_horeca_vacatures_amsterdam = maakFragmentRoute("horeca-vacatures-amsterdam");
 const D3_horeca_werk = maakFragmentRoute("horeca-werk");
@@ -52,6 +51,10 @@ const D3_selectieproces = maakFragmentRoute("selectieproces");
 const D3_cookiebeleid = maakFragmentRoute("cookiebeleid");
 const NotFound = maakFragmentRoute("niet-gevonden");
 const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
+// Oude opmaak, tijdelijk: deze twee pagina's kregen in oktober 2026 in productie nieuwe inhoud
+// (aparte zoekintentie, nieuwe pagina) die nog geen design 3.0-versie heeft.
+const SeoLandingPagina = lazy(() => import("@/pages/SeoLandingPaginas"));
+const HorecaUitzendbureau = lazy(() => import("@/pages/HorecaUitzendbureau"));
 const DashboardMockup = lazy(() => import("@/pages/DashboardMockup"));
 const WachtwoordInstellen = lazy(() => import("@/pages/WachtwoordInstellen"));
 const Brochure = lazy(() => import("@/pages/Brochure"));
@@ -183,6 +186,7 @@ const PUBLIC_PATHS = [
   '/inholland',
   '/bediening-inhuren',
   '/tijdelijk-horeca-personeel',
+  '/uitzenden-of-zzp',
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
   '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
@@ -282,6 +286,8 @@ function Router() {
           <Route path="/bediening-inhuren" component={D3_bediening_inhuren} />
           <Route path="/evenementen-personeel-inhuren">{() => { window.location.replace('/eventpersoneel-inhuren'); return null; }}</Route>
           <Route path="/tijdelijk-horeca-personeel" component={D3_tijdelijk_horeca_personeel} />
+          {/* Nog in de oude opmaak tot de design 3.0-versie is goedgekeurd (productie, september 2026). */}
+          <Route path="/uitzenden-of-zzp">{() => <SeoLandingPagina page="uitzenden-of-zzp" />}</Route>
           <Route path="/bijbaan-amsterdam" component={D3_bijbaan_amsterdam} />
           <Route path="/dagbetaling" component={D3_dagbetaling} />
           <Route path="/werken-in-de-horeca" component={D3_werken_in_de_horeca} />
@@ -308,7 +314,7 @@ function Router() {
           <Route path="/ik-zoek-extra-werk/front-office">{() => { window.location.replace('/front-office-vacatures-amsterdam'); return null; }}</Route>
 
           {/* SEO pillar & landingspagina's */}
-          <Route path="/horeca-uitzendbureau-amsterdam" component={D3_horeca_uitzendbureau_amsterdam} />
+          <Route path="/horeca-uitzendbureau-amsterdam" component={HorecaUitzendbureau} />
           <Route path="/horeca-uitzendbureau-amsterdam-werkwijze" component={D3_horeca_uitzendbureau_amsterdam_werkwijze} />
           <Route path="/horeca-personeel-amsterdam" component={D3_horeca_personeel_amsterdam} />
           <Route path="/horeca-personeel" component={D3_horeca_personeel} />

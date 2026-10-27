@@ -81,6 +81,7 @@ export const FOOTER: { kop: string; links: MenuLink[] }[] = [
       { label: "Restaurantpersoneel", href: "/horecapersoneel-restaurants" },
       { label: "Flexibel horecapersoneel", href: "/flexibel-horeca-personeel" },
       { label: "Tijdelijk horecapersoneel", href: "/tijdelijk-horeca-personeel" },
+      { label: "Uitzenden of zzp", href: "/uitzenden-of-zzp" },
       { label: "Horeca personeel inhuren", href: "/horeca-personeel-inhuren" },
       { label: "Horeca personeel gezocht", href: "/horeca-personeel-gezocht" },
     ],

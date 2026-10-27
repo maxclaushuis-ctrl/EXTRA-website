@@ -68,13 +68,25 @@ export const ROUTE_META: RouteMeta[] = [
   },
   // /landing bestaat niet meer als eigen pagina: "/" rendert de landings-
   // content nu direct en /landing 301't naar "/" (server/redirects.ts).
+  /**
+   * Deze pagina en "/" stonden allebei op de generieke term "horeca
+   * uitzendbureau amsterdam", allebei op sitemapprioriteit 1.0. Google wisselde
+   * ze af, waardoor het gecombineerde resultaat in Search Console op positie 12
+   * stond terwijl Ahrefs de losse pagina's op 4 en 5 mat. Het register wees dat
+   * al aan als botsing.
+   *
+   * Opgelost door de intenties te scheiden, niet door er een weg te halen: "/"
+   * houdt de generieke term, deze pagina bedient de vergelijkende zoekvraag
+   * ("welk bureau kies ik, en waarop let ik dan"). De prioriteit gaat mee naar
+   * beneden, want de homepage is de belangrijkste van de twee.
+   */
   {
     path: "/horeca-uitzendbureau-amsterdam",
-    title: "Horeca uitzendbureau Amsterdam | Persoonlijk | EXTRA",
+    title: "Beste horeca uitzendbureau Amsterdam kiezen | EXTRA",
     description:
-      "Op zoek naar een horeca uitzendbureau in Amsterdam? EXTRA levert gescreend horecapersoneel, iedereen in loondienst. Ontdek onze aanpak en vraag aan.",
+      "Waar let je op bij het kiezen van een horeca uitzendbureau in Amsterdam? Vijf vragen die het verschil laten zien, met het antwoord van EXTRA erbij.",
     prerender: true,
-    priority: "1.0",
+    priority: "0.9",
     changefreq: "weekly",
   },
   {
@@ -449,8 +461,8 @@ export const ROUTE_META: RouteMeta[] = [
     // WhatsApp-bericht. Zonder token valt er niets te uploaden, dus wie hier via
     // Google binnenkomt, komt per definitie verkeerd uit — Ahrefs zag dan ook
     // een <h1> "Ongeldige of verlopen link" onder een titel die uploaden
-    // belooft. follow: true, want de links naar /aanmelden en het
-    // sollicitatieformulier mogen wél gevolgd worden.
+    // belooft. follow: true, want de link naar /aanmelden mag wél gevolgd
+    // worden.
     noindex: true,
     follow: true,
     prerender: true,
@@ -459,17 +471,17 @@ export const ROUTE_META: RouteMeta[] = [
   },
   {
     path: "/sollicitatieformulier",
-    title: "Sollicitatieformulier | Werken via EXTRA",
+    title: "Intakeformulier | EXTRA",
     description:
-      "Vul het sollicitatieformulier in en ga aan de slag via EXTRA: horeca, housekeeping of logistiek werk in Amsterdam. Binnen enkele minuten geregeld.",
-    // Noindex (oktober 2026): dit is het interne formulier dat het team tijdens
-    // het intakegesprek invult, geen pagina voor werkzoekenden. Werkzoekenden
-    // horen op /aanmelden. follow: true, zodat de link naar /cv-upload gevolgd mag worden.
+      "Intern formulier waarmee collega's van EXTRA een intakegesprek vastleggen. Wil je bij EXTRA werken? Meld je aan via doehetextra.nl/aanmelden.",
+    // Intern gereedschap, alleen voor ingelogde collega's (adminMiddleware op
+    // POST /api/sollicitatie en GET /api/intake/candidates). Tot oktober 2026
+    // stond dit formulier open en werd het gelinkt als sollicitatiepagina; een
+    // werkzoekende moest zichzelf dan beoordelen. Werkzoekenden gaan nu naar
+    // /aanmelden. Geen fragment: server/seo.ts serveert elk bestaand fragment,
+    // dus dat is met deze wijziging verwijderd.
     noindex: true,
-    follow: true,
-    prerender: true,
-    priority: "0.6",
-    changefreq: "monthly",
+    prerender: false,
   },
   // /hoe-werkt-dagbetaling is per SEO-audit (P10) vervangen door /dagbetaling
   // en 301't daarnaartoe (server/redirects.ts).
@@ -492,6 +504,21 @@ export const ROUTE_META: RouteMeta[] = [
     prerender: true,
     priority: "0.85",
     changefreq: "weekly",
+  },
+  /**
+   * Informatieve tegenhanger van de transactionele inhuurpagina's: welke
+   * contractvorm past, en waarom er geen vast tarief bestaat. Mag niet op
+   * "horeca personeel inhuren" mikken, want dat cluster is van
+   * /horeca-personeel-inhuren. Zie docs/PAGINA-REGISTER.md.
+   */
+  {
+    path: "/uitzenden-of-zzp",
+    title: "Uitzendkracht of zzp'er inhuren? Zo kies je | EXTRA",
+    description:
+      "Uitzenden, payroll of eigen personeel: wie is werkgever, wie draagt de loonheffingen af en wat kost het? EXTRA doet alleen uitzenden, iedereen in loondienst.",
+    prerender: true,
+    priority: "0.8",
+    changefreq: "monthly",
   },
   {
     path: "/tijdelijk-horeca-personeel",
