@@ -17,7 +17,7 @@ import {
   type AiAttachmentFieldKey,
 } from '../../api/whatsappClient';
 
-const NAVY = '#7E22CE';
+const NAVY = '#2C2A23';
 const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 
 // De 8 hoofdvelden die de globale "Opslaan"-knop persisteert. Alleen wijzigingen
@@ -364,10 +364,10 @@ export default function WhatsAppAIInstellingen() {
   }
 
   // Kleur van de Opslaan-knop:
-  //  - paars (#7E22CE) actief zodra er wijzigingen zijn
+  //  - paars (#2C2A23) actief zodra er wijzigingen zijn
   //  - lichter / disabled-achtig als alles up-to-date is
-  const saveBtnBg = saving ? '#A78BFA' : (isDirty ? NAVY : '#E9D5FF');
-  const saveBtnColor = (isDirty || saving) ? '#fff' : '#A78BFA';
+  const saveBtnBg = saving ? '#A39E92' : (isDirty ? NAVY : '#E2DED5');
+  const saveBtnColor = (isDirty || saving) ? '#fff' : '#A39E92';
   const saveBtnCursor = saving ? 'wait' : (isDirty ? 'pointer' : 'default');
 
   return (

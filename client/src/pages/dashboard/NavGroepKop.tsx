@@ -41,7 +41,7 @@ export default function NavGroepKop({ label, expanded, onToggle, eerste }: Props
         fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
         textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
         letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-        color: HUISSTIJL.KLEUR.muted,
+        color: HUISSTIJL.KLEUR.zijMuted,
         padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
         marginTop: `${eerste ? HUISSTIJL.MAAT.sidebarGroepMarginTopEerste : HUISSTIJL.MAAT.sidebarGroepMarginTop}px`,
         marginBottom: `${HUISSTIJL.MAAT.sidebarGroepMarginBottom}px`,

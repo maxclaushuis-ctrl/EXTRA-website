@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import extraLogo from '@assets/extra-logo-zwart.svg';
+import '@/styles/dashboard3.css';
+import { D3Kop, D3Tegels, FunctieLabel, Persoon, Talen, Kanaal, StatusLabel, type StatusSoort } from '@/pages/dashboard/d3';
+import { BedDouble, ConciergeBell, Package, UtensilsCrossed } from 'lucide-react';
+// Wit woordmerk voor de donkere zijbalk (design 3.0).
+const extraLogoWit = '/d3/logo-w.svg';
 import { formatDatum, formatDatumTijd } from '@/lib/datum';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { useAuth } from '@/contexts/AuthContext';
@@ -113,15 +118,15 @@ type TwvCandidate = {
 };
 
 function getFunctionBadgeColor(functionType: string): string {
+  // Design 3.0: kleur van het vakgebied (hotels roze, logistiek pistache, horeca neutraal).
   switch (functionType?.toLowerCase()) {
-    case 'housekeeping': return 'bg-cyan-100 text-cyan-800 border-cyan-200';
-    case 'horecamedewerker': return 'bg-orange-100 text-orange-800 border-orange-200';
-    case 'chef': return 'bg-gray-100 text-gray-800 border-gray-200';
+    case 'housekeeping':
+    case 'chef':
     case 'receptie':
     case 'frontoffice':
-    case 'front-office': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'logistiek': return 'bg-green-100 text-green-800 border-green-200';
-    default: return 'bg-gray-100 text-gray-600 border-gray-200';
+    case 'front-office': return 'bg-[#EBD0E4] text-[#37352C] border-transparent';
+    case 'logistiek': return 'bg-[#CEDBBC] text-[#37352C] border-transparent';
+    default: return 'bg-[#F8F7F4] text-[#37352C] border-[#E4E0D8]';
   }
 }
 
@@ -171,6 +176,11 @@ function daysSince(dateStr: string): number {
 }
 
 export default function DashboardMockup() {
+  // Design 3.0: zolang het dashboard open staat geldt client/src/styles/dashboard3.css.
+  useEffect(() => {
+    document.body.classList.add('dash3');
+    return () => { document.body.classList.remove('dash3'); };
+  }, []);
   const { user, isAuthenticated, login, logout, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { notifications, clearNotifications } = useWebSocket();
@@ -970,10 +980,12 @@ export default function DashboardMockup() {
 
       {/* Sidebar */}
       <aside
-        className={`flex flex-col fixed h-full z-30 transition-[width,transform] duration-200 bg-white border-r transition-colors
+        className={`flex flex-col fixed h-full z-30 transition-[width,transform] duration-200 border-r transition-colors
           ${sidebarCollapsed ? 'w-16' : 'w-60'} ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${sidebarCollapsed ? 'dh-sidebar-collapsed' : ''}`}
         style={{
-          borderRightColor: HUISSTIJL.KLEUR.rand,
+          borderRightColor: HUISSTIJL.KLEUR.zijRand,
+          backgroundColor: HUISSTIJL.KLEUR.zijbalk,
+          color: HUISSTIJL.KLEUR.zijTekst,
         }}
       >
         {/* Desktop collapse-knop: kleine ronde knop op de rechterrand, half over de border (VS Code stijl). */}
@@ -999,15 +1011,15 @@ export default function DashboardMockup() {
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <img src={extraLogo} alt="EXTRA" className="dh-logo-mini w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay * 0.85}px` }} />
+            <img src={extraLogoWit} alt="EXTRA" className="dh-logo-mini w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay * 0.85}px` }} />
             <div className="dh-logo-text min-w-0">
-              <img src={extraLogo} alt="EXTRA" className="w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay}px` }} />
-              <div className="mt-1" style={{ ...HUISSTIJL.TYPOGRAFIE.topbarSubtitel, fontSize: '11px', color: HUISSTIJL.KLEUR.muted }}>Dashboard</div>
+              <img src={extraLogoWit} alt="EXTRA" className="w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay}px` }} />
+              <div className="mt-1" style={{ ...HUISSTIJL.TYPOGRAFIE.topbarSubtitel, fontSize: '11px', color: HUISSTIJL.KLEUR.zijMuted }}>Dashboard</div>
             </div>
           </div>
           <button
             className="md:hidden p-1 rounded-lg transition-colors"
-            style={{ color: HUISSTIJL.KLEUR.muted }}
+            style={{ color: HUISSTIJL.KLEUR.zijMuted }}
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -1057,8 +1069,8 @@ export default function DashboardMockup() {
                     fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                     padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                     gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                   }}
                 >
                   <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1090,8 +1102,8 @@ export default function DashboardMockup() {
                     fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                     padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                     gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                   }}
                 >
                   <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1140,8 +1152,8 @@ export default function DashboardMockup() {
                     fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                     padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                     gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                   }}
                 >
                   <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1164,8 +1176,8 @@ export default function DashboardMockup() {
                   fontWeight: activeTab === 'blog' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                   padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                   gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'blog' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'blog' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  color: activeTab === 'blog' ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                  backgroundColor: activeTab === 'blog' ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                 }}
               >
                 <BookOpen className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1185,8 +1197,8 @@ export default function DashboardMockup() {
                   fontWeight: activeTab === 'vacatures-cms' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                   padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                   gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'vacatures-cms' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'vacatures-cms' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  color: activeTab === 'vacatures-cms' ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                  backgroundColor: activeTab === 'vacatures-cms' ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                 }}
               >
                 <Briefcase className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1206,8 +1218,8 @@ export default function DashboardMockup() {
                   fontWeight: activeTab === 'stats' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                   padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                   gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'stats' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'stats' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  color: activeTab === 'stats' ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                  backgroundColor: activeTab === 'stats' ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                 }}
               >
                 <BarChart3 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1222,8 +1234,8 @@ export default function DashboardMockup() {
                   fontWeight: activeTab === 'kpi' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                   padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                   gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'kpi' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'kpi' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  color: activeTab === 'kpi' ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                  backgroundColor: activeTab === 'kpi' ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                 }}
               >
                 <TrendingUp className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1238,8 +1250,8 @@ export default function DashboardMockup() {
                   fontWeight: activeTab === 'google-reviews' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
                   padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
                   gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'google-reviews' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'google-reviews' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  color: activeTab === 'google-reviews' ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+                  backgroundColor: activeTab === 'google-reviews' ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
                 }}
               >
                 <Star className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1257,7 +1269,7 @@ export default function DashboardMockup() {
               fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
               textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
               letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-              color: HUISSTIJL.KLEUR.muted,
+              color: HUISSTIJL.KLEUR.zijMuted,
             }}>Systeem</span>
           </div>
           <button
@@ -1269,8 +1281,8 @@ export default function DashboardMockup() {
               fontWeight: activeTab === 'admin-beheer' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
               padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
               gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-              color: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-              backgroundColor: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+              color: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+              backgroundColor: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
             }}
           >
             <Settings2 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1278,13 +1290,13 @@ export default function DashboardMockup() {
           </button>
         </div>
 
-        <div className="dh-userinfo" style={{ padding: `8px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, borderTop: `1px solid ${HUISSTIJL.KLEUR.rand}`, marginTop: '8px' }}>
+        <div className="dh-userinfo" style={{ padding: `8px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, borderTop: `1px solid ${HUISSTIJL.KLEUR.zijRand}`, marginTop: '8px' }}>
           <div className="truncate" style={{
             fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
             fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
             textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
             letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-            color: HUISSTIJL.KLEUR.muted,
+            color: HUISSTIJL.KLEUR.zijMuted,
             padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
             marginBottom: '4px',
           }}>{user?.firstName} {user?.lastName}</div>
@@ -1297,7 +1309,7 @@ export default function DashboardMockup() {
               fontWeight: HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
               padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
               gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-              color: HUISSTIJL.KLEUR.inkt,
+              color: HUISSTIJL.KLEUR.zijTekst,
             }}
           >
             <Settings2 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1306,13 +1318,13 @@ export default function DashboardMockup() {
           <button
             onClick={() => logout()}
             title="Uitloggen"
-            className="dh-nav-item w-full flex items-center rounded-xl transition-colors hover:text-red-600"
+            className="dh-nav-item w-full flex items-center rounded-xl transition-colors"
             style={{
               fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
               fontWeight: HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
               padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
               gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-              color: HUISSTIJL.KLEUR.inkt,
+              color: HUISSTIJL.KLEUR.zijTekst,
             }}
           >
             <LogOut className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
@@ -1690,61 +1702,32 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
 
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-xl font-bold">Kandidaten</h1>
-                  <p className="text-xs text-gray-500 hidden sm:block">Alle aanmeldingen via /aanmelden — realtime gesynchroniseerd</p>
-                </div>
+              {/* Kop en tegels (design 3.0): de tegels zijn ook de tabbladen. */}
+              <D3Kop titel="Kandidaten" uitleg="Alle aanmeldingen via /aanmelden, realtime gesynchroniseerd.">
                 <button
+                  type="button"
                   onClick={() => { setShowWeekCalendar(v => !v); if (showWeekCalendar) { setWeekDayFilter(null); setWeekOffset(0); } }}
-                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all duration-200 ${
-                    showWeekCalendar
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-                  }`}
+                  className={`d3-knop${showWeekCalendar ? ' vol' : ''}`}
+                  aria-pressed={showWeekCalendar}
                 >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Week agenda</span>
-                  {(kanGesprekGepland.length + kanUitgenodigd.length) > 0 && !showWeekCalendar && (
-                    <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full ml-0.5">{kanGesprekGepland.length + kanUitgenodigd.length}</span>
+                  <Calendar />
+                  <span>Weekagenda</span>
+                  {(kanGesprekGepland.length + kanUitgenodigd.length) > 0 && (
+                    <span className="tel">{kanGesprekGepland.length + kanUitgenodigd.length}</span>
                   )}
                 </button>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
-                <Card className="bg-white border-l-4 border-l-purple-500">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1">In proces</p>
-                    <p className="text-2xl font-bold text-purple-700">{kanInProces.length}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Wacht op CV</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-l-4 border-l-amber-500">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1">Beoordelen</p>
-                    <p className="text-2xl font-bold text-amber-600">{kanBeoordelen.length}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">CV ter beoordeling</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-l-4 border-l-blue-500">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1 leading-tight">Gepland</p>
-                    <p className="text-2xl font-bold text-blue-600">{kanGesprekGepland.length}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      {kanUitgenodigd.length > 0 ? `+${kanUitgenodigd.length} wacht op Calendly` : 'Interview ingepland'}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-l-4 border-l-red-500">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1">Afgewezen</p>
-                    <p className="text-2xl font-bold text-red-600">{kanAfgewezen.length}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Niet geschikt</p>
-                  </CardContent>
-                </Card>
-              </div>
+              </D3Kop>
+              <D3Tegels
+                label="Kandidaten per fase"
+                actief={kandidatenSubtab}
+                kies={(k) => { setKandidatenSubtab(k); if (k !== 'gesprek_gepland') setWeekDayFilter(null); }}
+                tegels={[
+                  { sleutel: 'in_proces', titel: 'In proces', getal: kanInProces.length, sub: 'Wachten op cv' },
+                  { sleutel: 'beoordelen', titel: 'Beoordelen', getal: kanBeoordelen.length, sub: 'Cv ter beoordeling', soort: 'letop' },
+                  { sleutel: 'gesprek_gepland', titel: 'Gesprek gepland', getal: kanGesprekGepland.length + kanUitgenodigd.length, sub: `${kanGesprekGepland.length} ingepland, ${kanUitgenodigd.length} wachten op Calendly`, soort: 'goed' },
+                  { sleutel: 'afgewezen', titel: 'Afgewezen', getal: kanAfgewezen.length, sub: 'Niet geschikt', soort: 'stop' },
+                ]}
+              />
 
               {/* Week Calendar Panel */}
               {showWeekCalendar && (() => {
@@ -1936,44 +1919,20 @@ export default function DashboardMockup() {
                 );
               })()}
 
-              {/* Subtabs */}
-              <div className="flex items-center gap-0 mb-4 border-b">
-                {([
-                  { key: 'in_proces', labelFull: 'In proces', labelShort: 'In proces', count: kanInProces.length, color: 'text-purple-700 border-purple-500' },
-                  { key: 'beoordelen', labelFull: 'Beoordelen', labelShort: 'Beoordelen', count: kanBeoordelen.length, color: 'text-amber-600 border-amber-500' },
-                  { key: 'gesprek_gepland', labelFull: 'Gesprek gepland', labelShort: 'Gepland', count: kanGesprekGepland.length + kanUitgenodigd.length, color: 'text-blue-600 border-blue-500' },
-                  { key: 'afgewezen', labelFull: 'Afgewezen', labelShort: 'Afgewezen', count: kanAfgewezen.length, color: 'text-red-600 border-red-500' },
-                ] as const).map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => { setKandidatenSubtab(tab.key); if (tab.key !== 'gesprek_gepland') setWeekDayFilter(null); }}
-                    className={`flex-1 px-2 py-2.5 text-xs sm:text-sm font-semibold border-b-2 -mb-px transition-colors text-center ${
-                      kandidatenSubtab === tab.key
-                        ? tab.color + ' bg-transparent'
-                        : 'text-gray-500 border-transparent hover:text-gray-700'
-                    }`}
-                  >
-                    <span className="sm:hidden">{tab.labelShort}</span>
-                    <span className="hidden sm:inline">{tab.labelFull}</span>
-                    <span className={`ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                      kandidatenSubtab === tab.key ? 'bg-gray-100' : 'bg-gray-100 text-gray-400'
-                    }`}>{tab.count}</span>
-                  </button>
-                ))}
-              </div>
 
-              {/* Search + Filters */}
-              <div className="space-y-2 mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Zoeken en filters op één regel (design 3.0) */}
+              <div className="d3-filters">
+                <div className="d3-zoek">
+                  <Search />
                   <Input
-                    placeholder="Zoek naam, e-mail of woonplaats..."
-                    className="pl-10 h-9 text-sm w-full"
+                    placeholder="Zoek op naam, e-mail of woonplaats"
+                    className="w-full"
                     value={kandidatenSearch}
                     onChange={e => setKandidatenSearch(e.target.value)}
+                    aria-label="Zoek kandidaten"
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="contents">
                   <Select value={kandidatenFunctionFilter} onValueChange={setKandidatenFunctionFilter}>
                     <SelectTrigger className="flex-1 h-9 text-sm min-w-0">
                       <SelectValue placeholder="Functie" />
@@ -2007,10 +1966,10 @@ export default function DashboardMockup() {
                       <SelectItem value="overig">Overig</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm shrink-0" onClick={() => refetchCandidates()}>
-                    <RefreshCw className="h-3.5 w-3.5" />
+                  <button type="button" className="d3-knop" onClick={() => refetchCandidates()}>
+                    <RefreshCw />
                     <span className="hidden sm:inline">Vernieuwen</span>
-                  </Button>
+                  </button>
                 </div>
               </div>
 
@@ -2076,9 +2035,9 @@ export default function DashboardMockup() {
                 </div>
               )}
 
-              {/* Table */}
-              <Card>
-                <CardContent className="p-0">
+              {/* Tabel (design 3.0) */}
+              <div className="d3-paneel">
+                <div>
                   {candidatesLoading ? (
                     <div className="p-6 space-y-3">
                       <Skeleton className="h-10 w-full" />
@@ -2097,36 +2056,34 @@ export default function DashboardMockup() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="text-sm w-full">
-                        <thead className="bg-gray-50 border-b">
+                      <table className="d3-tabel">
+                        <thead>
                           <tr>
                             <th
-                              className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap cursor-pointer select-none hover:text-gray-700 hidden sm:table-cell"
+                              className="cursor-pointer select-none hidden sm:table-cell"
                               onClick={() => setKanSortDesc(v => !v)}
                             >
                               {kandidatenSubtab === 'gesprek_gepland' ? 'Gesprek' : 'Datum'} {kanSortDesc ? '↓' : '↑'}
                             </th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Naam</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Functie</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden md:table-cell">Woonplaats</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">E-mail</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">Telefoon</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Nat.</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Taal</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">Kanaal</th>
+                            <th>Naam</th>
+                            <th>Functie</th>
+                            <th className="hidden lg:table-cell">Contact</th>
+                            <th className="hidden xl:table-cell">Nationaliteit</th>
+                            <th className="hidden xl:table-cell">Taal</th>
+                            <th className="hidden lg:table-cell">Kanaal</th>
                             {kandidatenSubtab === 'afgewezen' && (
-                              <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Reden</th>
+                              <th>Reden</th>
                             )}
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase">CV</th>
+                            <th><span className="sr-only">Cv en acties</span></th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody>
                           {kanSubset.map(c => {
                             const missing = kanMissingItems(c);
                             return (
-                              <tr key={c.id} className="hover:bg-gray-50 align-middle">
+                              <tr key={c.id}>
                                 {/* DATUM / GESPREK */}
-                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">
+                                <td className="d3-datum hidden sm:table-cell">
                                   {kandidatenSubtab === 'gesprek_gepland' && c.interviewDate ? (
                                     <div>
                                       <div className="font-medium text-gray-700">
@@ -2140,80 +2097,48 @@ export default function DashboardMockup() {
                                     new Date(c.createdAt).toLocaleDateString('nl-NL')
                                   )}
                                 </td>
-                                {/* NAAM */}
-                                <td className="px-3 py-3 whitespace-nowrap">
-                                  <div className="flex items-center gap-1.5">
-                                    <Avatar className="h-6 w-6 flex-shrink-0">
-                                      <AvatarFallback className={`text-xs ${getFunctionBadgeColor(c.functionType)}`}>
-                                        {getInitials(c.firstName, c.lastName)}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                        {c.firstName} {c.lastName}
-                                      </span>
-                                      <div className="text-xs text-gray-400 sm:hidden">
-                                        {kandidatenSubtab === 'gesprek_gepland' && c.interviewDate
-                                          ? `${new Date(c.interviewDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}${c.interviewTime ? ' ' + c.interviewTime.slice(0, 5) : ''}`
-                                          : new Date(c.createdAt).toLocaleDateString('nl-NL')}
-                                      </div>
-                                    </div>
-                                  </div>
+                                {/* NAAM met woonplaats */}
+                                <td>
+                                  <Persoon
+                                    voornaam={c.firstName}
+                                    achternaam={c.lastName}
+                                    functie={c.functionType}
+                                    sub={<>
+                                      <span className="sm:hidden">{kandidatenSubtab === 'gesprek_gepland' && c.interviewDate
+                                        ? `${new Date(c.interviewDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}${c.interviewTime ? ' ' + c.interviewTime.slice(0, 5) : ''}, `
+                                        : `${new Date(c.createdAt).toLocaleDateString('nl-NL')}, `}</span>
+                                      {c.city || 'Woonplaats onbekend'}
+                                    </>}
+                                  />
                                 </td>
                                 {/* FUNCTIE */}
-                                <td className="px-3 py-3 whitespace-nowrap">
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-xs ${getFunctionBadgeColor(c.functionType)} whitespace-nowrap`}
-                                  >
-                                    {c.functionType || '—'}
-                                  </Badge>
-                                </td>
-                                {/* WOONPLAATS */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden md:table-cell">
-                                  {c.city || '—'}
-                                </td>
-                                {/* E-MAIL */}
-                                <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap hidden lg:table-cell">
-                                  {c.email || '—'}
-                                </td>
-                                {/* TELEFOON */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden lg:table-cell">
-                                  {c.phone || '—'}
+                                <td><FunctieLabel functie={c.functionType} /></td>
+                                {/* CONTACT: e-mail met telefoon eronder */}
+                                <td className="hidden lg:table-cell whitespace-nowrap">
+                                  {c.email || <span className="d3-zacht">Geen e-mail</span>}
+                                  <span className="sub">{c.phone || 'Geen telefoon'}</span>
                                 </td>
                                 {/* NATIONALITEIT */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden xl:table-cell">
-                                  {c.nationality || '—'}
-                                </td>
-                                {/* VOERTAAL */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden xl:table-cell">
-                                  {c.language || '—'}
-                                </td>
+                                <td className="hidden xl:table-cell whitespace-nowrap">{c.nationality || <span className="d3-zacht">Onbekend</span>}</td>
+                                {/* TAAL */}
+                                <td className="hidden xl:table-cell"><Talen taal={c.language} /></td>
                                 {/* KANAAL */}
-                                <td className="px-3 py-3 text-xs whitespace-nowrap hidden lg:table-cell">
-                                  {c.sourceChannel ? (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 max-w-[120px] truncate" title={c.sourceChannel}>
-                                      {c.sourceChannel}
-                                    </span>
-                                  ) : '—'}
-                                </td>
+                                <td className="hidden lg:table-cell"><Kanaal bron={c.sourceChannel} /></td>
                                 {/* REDEN AFWIJZING (alleen op Afgewezen-tab) */}
                                 {kandidatenSubtab === 'afgewezen' && (
-                                  <td className="px-3 py-3 text-xs whitespace-nowrap">
+                                  <td className="whitespace-nowrap">
                                     {(() => {
                                       const r = (c as any).rejectionReason as string | null | undefined;
                                       if (!r) return <span className="text-gray-300">—</span>;
                                       const label = formatRejectionReason(r);
                                       return (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100 max-w-[180px] truncate" title={label}>
-                                          {label}
-                                        </span>
+                                        <span className="d3-st stop max-w-[200px] truncate" title={label}>{label}</span>
                                       );
                                     })()}
                                   </td>
                                 )}
                                 {/* CV + ACTIES */}
-                                <td className="px-3 py-3">
+                                <td className="text-right">
                                   {kandidatenSubtab === 'beoordelen' ? (
                                     <div className="flex items-center gap-1">
                                       <Button
@@ -2293,8 +2218,8 @@ export default function DashboardMockup() {
                       </table>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           ) : activeTab === 'sollicitanten' ? (
             /* Sollicitanten Tab — Applications from HR intake form */
@@ -3271,21 +3196,15 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
 
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-xl font-bold">Sollicitanten</h1>
-                  <p className="text-xs text-gray-500 hidden sm:block">Ingevulde HR-intakeformulieren per functie</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="h-8" onClick={() => refetchApplications()}>
-                    <RefreshCw className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-1.5">Vernieuwen</span>
-                  </Button>
+              <D3Kop titel="Sollicitanten" uitleg="Ingevulde intakeformulieren per functie.">
+                  <button type="button" className="d3-knop" onClick={() => refetchApplications()}>
+                    <RefreshCw />
+                    <span className="hidden sm:inline">Vernieuwen</span>
+                  </button>
                   {['horecamedewerker', 'chef', 'housekeeping'].includes(appTab) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 border-green-300 text-green-700 hover:bg-green-50"
+                    <button
+                      type="button"
+                      className="d3-knop"
                       onClick={() => {
                         const roleMap: Record<string, 'horeca' | 'housekeeping' | 'chef'> = {
                           horecamedewerker: 'horeca', chef: 'chef', housekeeping: 'housekeeping',
@@ -3299,50 +3218,49 @@ export default function DashboardMockup() {
                         setImportModalOpen(true);
                       }}
                     >
-                      <FileSpreadsheet className="h-4 w-4" />
-                      <span className="hidden sm:inline ml-1.5">Import .xlsx</span>
-                    </Button>
+                      <FileSpreadsheet />
+                      <span className="hidden sm:inline">Import .xlsx</span>
+                    </button>
                   )}
-                  <a href="/sollicitatieformulier" target="_blank">
-                    <Button size="sm" className="h-8 bg-purple-600 hover:bg-purple-700">
-                      <FileText className="h-4 w-4" />
-                      <span className="hidden sm:inline ml-1.5">Intakeformulier</span>
-                    </Button>
+                  <a href="/sollicitatieformulier" target="_blank" className="d3-knop vol">
+                    <FileText />
+                    <span className="hidden sm:inline">Intakeformulier</span>
                   </a>
-                </div>
-              </div>
+              </D3Kop>
 
-              {/* Functie-tabs — primaire navigatie */}
-              <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-                {[
-                  { val: 'alle',            label: 'Alle',            count: appCounts.alle,            active: 'bg-purple-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'horecamedewerker',label: 'Horecamedewerker',count: appCounts.horecamedewerker,active: 'bg-orange-500 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'chef',            label: 'Chef',            count: appCounts.chef,            active: 'bg-gray-700 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'housekeeping',    label: 'Housekeeping',    count: appCounts.housekeeping,    active: 'bg-cyan-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'frontoffice',     label: 'Front-office',    count: appCounts.frontoffice,     active: 'bg-blue-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'logistiek',       label: 'Logistiek',       count: appCounts.logistiek,       active: 'bg-green-600 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'afgewezen',       label: 'Afgewezen',       count: appCounts.afgewezen,       active: 'bg-red-500 text-white',    inactive: 'bg-white border border-red-200 text-red-600' },
-                ].map(({ val, label, count, active, inactive }) => (
+              {/* Functie-tabs (design 3.0): kleur van het vakgebied, afgewezen in rood. */}
+              <div className="d3-tabs" role="tablist" aria-label="Sollicitanten per functie">
+                {([
+                  { val: 'alle', label: 'Alle', count: appCounts.alle, cls: '' },
+                  { val: 'horecamedewerker', label: 'Horecamedewerker', count: appCounts.horecamedewerker, cls: '', icoon: UtensilsCrossed },
+                  { val: 'chef', label: 'Chef', count: appCounts.chef, cls: 'f-hos', icoon: ChefHat },
+                  { val: 'housekeeping', label: 'Housekeeping', count: appCounts.housekeeping, cls: 'f-hos', icoon: BedDouble },
+                  { val: 'frontoffice', label: 'Front office', count: appCounts.frontoffice, cls: 'f-hos', icoon: ConciergeBell },
+                  { val: 'logistiek', label: 'Logistiek', count: appCounts.logistiek, cls: 'f-log', icoon: Package },
+                  { val: 'afgewezen', label: 'Afgewezen', count: appCounts.afgewezen, cls: 'rood' },
+                ] as { val: string; label: string; count: number; cls: string; icoon?: typeof Package }[]).map(({ val, label, count, cls, icoon: Icoon }) => (
                   <button
                     key={val}
+                    type="button"
+                    role="tab"
+                    aria-selected={appTab === val}
                     onClick={() => { setAppTab(val); setAppSortField('date'); setAppSortDesc(true); }}
-                    className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${appTab === val ? active : inactive}`}
+                    className={`d3-tab ${cls}`}
                   >
+                    {Icoon && <Icoon className="ic" aria-hidden="true" />}
                     {label}
-                    <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${appTab === val ? 'bg-white/20' : val === 'afgewezen' ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
-                      {count}
-                    </span>
+                    <span className="tel">{count}</span>
                   </button>
                 ))}
               </div>
 
-              {/* Filters — zoek + wie + datum sortering */}
-              <div className="flex gap-2 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Zoeken, interviewer en sortering (design 3.0) */}
+              <div className="d3-filters">
+                <div className="d3-zoek">
+                  <Search />
                   <Input
-                    placeholder="Naam of e-mail..."
-                    className="pl-9"
+                    placeholder="Zoek op naam of e-mail"
+                    aria-label="Zoek sollicitanten"
                     value={appSearch}
                     onChange={(e) => setAppSearch(e.target.value)}
                   />
@@ -3360,16 +3278,15 @@ export default function DashboardMockup() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 gap-1.5 text-xs"
+                <button
+                  type="button"
+                  className="d3-knop"
                   onClick={() => setAppSortDesc(prev => !prev)}
                   title="Sorteren op datum"
                 >
-                  <ArrowUpDown className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{appSortDesc ? 'Nieuwst eerst' : 'Oudst eerst'}</span>
-                </Button>
+                  <ArrowUpDown />
+                  <span className="hidden sm:inline">{appSortDesc ? 'Nieuwste eerst' : 'Oudste eerst'}</span>
+                </button>
               </div>
 
               {/* Applications Table */}
@@ -3401,17 +3318,22 @@ export default function DashboardMockup() {
                   );
                 };
 
+                // Score als balkje met percentage (design 3.0); onder de 70% in oker.
                 const ScoreCell = ({ score }: { score: number | null | undefined }) => {
-                  if (score === null || score === undefined) return <span className="text-gray-300 text-xs">—</span>;
-                  if (score === 100) return <span className="text-xs font-bold text-yellow-600">⭐ 100%</span>;
-                  return <span className="text-xs font-semibold text-gray-700">{score}%</span>;
+                  if (score === null || score === undefined) return <span className="d3-zacht">Geen</span>;
+                  const v = Math.max(0, Math.min(100, Number(score)));
+                  return (
+                    <span className={`d3-score${v < 70 ? ' laag' : ''}`}>
+                      <span className="m" aria-hidden="true"><i style={{ width: `${v}%` }} /></span>{v}%
+                    </span>
+                  );
                 };
 
                 const boolCell = (v: any) => {
                   const yes = v === true || v === 'true' || v === 'ja';
                   return yes
-                    ? <span className="text-green-600 text-xs font-medium">Ja</span>
-                    : <span className="text-gray-300 text-xs">Nee</span>;
+                    ? <span className="font-semibold text-[#456B2E]">Ja</span>
+                    : <span className="d3-zacht">Nee</span>;
                 };
 
                 const fnLabels: Record<string, string> = {
@@ -3421,10 +3343,10 @@ export default function DashboardMockup() {
                 };
 
                 const ActionCell = ({ app }: { app: any }) => (
-                  <td className="px-2 py-2 sticky right-0 bg-white border-l" onClick={(e) => e.stopPropagation()}>
+                  <td className="sticky right-0 bg-white" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-0.5">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
-                        <Eye className="h-3.5 w-3.5 text-purple-500" />
+                        <Eye className="h-4 w-4 text-[#37352C]" />
                       </Button>
                       {app.status !== 'afgewezen' && (
                         <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-red-50" onClick={() => setAppRejectConfirmApp(app)} title="Afwijzen">
@@ -3436,19 +3358,19 @@ export default function DashboardMockup() {
                 );
 
                 const Th = ({ children }: { children: React.ReactNode }) => (
-                  <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50">{children}</th>
+                  <th>{children}</th>
                 );
                 const SortTh = ({ field, children }: { field: string; children: React.ReactNode }) => {
                   const active = appSortField === field;
                   return (
                     <th
-                      className="px-3 py-2.5 font-medium text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 cursor-pointer select-none hover:bg-gray-100 transition-colors group"
+                      className="cursor-pointer select-none group"
                       onClick={() => {
                         if (appSortField === field) setAppSortDesc(d => !d);
                         else { setAppSortField(field); setAppSortDesc(true); }
                       }}
                     >
-                      <span className={`flex items-center gap-1 ${active ? 'text-purple-600' : 'text-gray-500'}`}>
+                      <span className={`flex items-center gap-1 ${active ? 'text-[#37352C]' : ''}`}>
                         {children}
                         {active
                           ? <span className="font-bold">{appSortDesc ? '↓' : '↑'}</span>
@@ -3459,29 +3381,19 @@ export default function DashboardMockup() {
                   );
                 };
                 const Td = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-                  <td className={`px-3 py-2.5 text-xs text-gray-700 whitespace-nowrap ${className}`}>{children}</td>
+                  <td className={`whitespace-nowrap ${className}`}>{children}</td>
                 );
 
                 const rowClass = (app: any) => {
                   const ss = app.softskillsScore;
-                  const base = 'border-b hover:bg-gray-50/60 cursor-pointer transition-colors';
-                  if (ss !== null && ss !== undefined && ss < 40) return `${base} bg-red-50 hover:bg-red-100/60`;
+                  const base = 'cursor-pointer';
+                  if (ss !== null && ss !== undefined && ss < 40) return `${base} d3-rij-laag`;
                   return base;
                 };
 
                 const NameCell = ({ app }: { app: any }) => (
-                  <td className="px-3 py-2.5 sticky left-0 bg-white border-r z-10">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                        app.functionType === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
-                        app.functionType === 'chef' ? 'bg-gray-100 text-gray-600' :
-                        app.functionType === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {getInitials(app.firstName, app.lastName)}
-                      </div>
-                      <span className="font-medium text-gray-900 text-xs whitespace-nowrap">{app.firstName} {app.lastName}</span>
-                    </div>
+                  <td className="sticky left-0 bg-white z-10">
+                    <Persoon voornaam={app.firstName} achternaam={app.lastName} functie={app.functionType} />
                   </td>
                 );
 
@@ -3556,7 +3468,7 @@ export default function DashboardMockup() {
                           ) : <span />}
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
-                              <Eye className="h-3.5 w-3.5 text-purple-500" />
+                              <Eye className="h-4 w-4 text-[#37352C]" />
                             </Button>
                             {app.status !== 'afgewezen' && (
                               <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50" onClick={() => setAppRejectConfirmApp(app)}>
@@ -3592,13 +3504,13 @@ export default function DashboardMockup() {
                     </div>
                     {/* Desktop table */}
                     <div className="hidden md:block">
-                      <Card><CardContent className="p-0">
+                      <div className="d3-paneel">
                         <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead className="bg-gray-50 border-b text-left">
+                          <table className="d3-tabel">
+                            <thead>
                               <tr>
                                 <Th>Datum</Th>
-                                <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                                <th className="sticky left-0 z-10">Naam</th>
                                 <Th>Functie</Th>
                                 <Th>Woonplaats</Th>
                                 <Th>Referentie</Th>
@@ -3613,7 +3525,7 @@ export default function DashboardMockup() {
                                 <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
                                   <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
                                   <NameCell app={app} />
-                                  <Td><Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>{fnLabels[app.functionType] || app.functionType}</Badge></Td>
+                                  <Td><FunctieLabel functie={app.functionType} /></Td>
                                   <Td>{app.city || '—'}</Td>
                                   <Td>{app.adminNotes ? <span className="text-green-600 font-medium text-xs">Ja</span> : <span className="text-gray-400 text-xs">Nee</span>}</Td>
                                   <Td>{app.email || '—'}</Td>
@@ -3625,7 +3537,7 @@ export default function DashboardMockup() {
                             </tbody>
                           </table>
                         </div>
-                      </CardContent></Card>
+                      </div>
                     </div>
                   </>
                 );
@@ -3637,14 +3549,14 @@ export default function DashboardMockup() {
                       {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
-                    <Card><CardContent className="p-0">
+                    <div className="d3-paneel">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b text-left">
+                      <table className="d3-tabel">
+                        <thead>
                           <tr>
                             <Th>Datum</Th>
                             <Th>Wie</Th>
-                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <th className="sticky left-0 z-10">Naam</th>
                             <SortTh field="softskillsScore">Softskills</SortTh>
                             <SortTh field="barScore">Bar</SortTh>
                             <SortTh field="bedieningScore">Bediening</SortTh>
@@ -3735,7 +3647,7 @@ export default function DashboardMockup() {
                         </tbody>
                       </table>
                     </div>
-                  </CardContent></Card>
+                  </div>
                     </div>
                   </>
                 );
@@ -3747,14 +3659,14 @@ export default function DashboardMockup() {
                       {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
-                  <Card><CardContent className="p-0">
+                  <div className="d3-paneel">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b text-left">
+                      <table className="d3-tabel">
+                        <thead>
                           <tr>
                             <Th>Datum</Th>
                             <Th>Wie</Th>
-                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <th className="sticky left-0 z-10">Naam</th>
                             <SortTh field="softskillsScore">Score</SortTh>
                             <Th>Telefoon</Th>
                             <Th>Taal</Th>
@@ -3805,7 +3717,7 @@ export default function DashboardMockup() {
                         </tbody>
                       </table>
                     </div>
-                  </CardContent></Card>
+                  </div>
                     </div>
                   </>
                 );
@@ -3817,14 +3729,14 @@ export default function DashboardMockup() {
                       {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
-                  <Card><CardContent className="p-0">
+                  <div className="d3-paneel">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b text-left">
+                      <table className="d3-tabel">
+                        <thead>
                           <tr>
                             <Th>Datum</Th>
                             <Th>Wie</Th>
-                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <th className="sticky left-0 z-10">Naam</th>
                             <SortTh field="softskillsScore">Indruk</SortTh>
                             <Th>Telefoon</Th>
                             <Th>Taal</Th>
@@ -3873,7 +3785,7 @@ export default function DashboardMockup() {
                         </tbody>
                       </table>
                     </div>
-                  </CardContent></Card>
+                  </div>
                     </div>
                   </>
                 );
@@ -3885,14 +3797,14 @@ export default function DashboardMockup() {
                       {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
-                    <Card><CardContent className="p-0">
+                    <div className="d3-paneel">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b text-left">
+                      <table className="d3-tabel">
+                        <thead>
                           <tr>
                             <Th>Datum</Th>
                             <Th>Wie</Th>
-                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <th className="sticky left-0 z-10">Naam</th>
                             <SortTh field="softskillsScore">Score</SortTh>
                             <Th>Telefoon</Th>
                             <Th>Taal</Th>
@@ -3965,7 +3877,7 @@ export default function DashboardMockup() {
                         </tbody>
                       </table>
                     </div>
-                  </CardContent></Card>
+                  </div>
                     </div>
                   </>
                 );
@@ -3977,14 +3889,14 @@ export default function DashboardMockup() {
                       {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
-                  <Card><CardContent className="p-0">
+                  <div className="d3-paneel">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b text-left">
+                      <table className="d3-tabel">
+                        <thead>
                           <tr>
                             <Th>Datum</Th>
                             <Th>Wie</Th>
-                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <th className="sticky left-0 z-10">Naam</th>
                             <Th>Softskills</Th>
                             <Th>Telefoon</Th>
                             <Th>Taal</Th>
@@ -4039,7 +3951,7 @@ export default function DashboardMockup() {
                         </tbody>
                       </table>
                     </div>
-                  </CardContent></Card>
+                  </div>
                     </div>
                   </>
                 );
@@ -4488,52 +4400,21 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                 </DialogContent>
               </Dialog>
 
-              {/* Header */}
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <div>
-                  <h1 className="text-xl font-bold flex items-center gap-2">
-                    <ShieldAlert className="h-5 w-5 text-amber-600" />
-                    TWV Beheer
-                  </h1>
-                  <p className="text-sm text-gray-500">Tewerkstellingsvergunningen overzicht en beheer</p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs h-8"
-                    onClick={() => window.open('/api/admin/twv/export', '_blank')}
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    Exporteer CSV
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs h-8 border-blue-200 text-blue-700 hover:bg-blue-50"
-                    onClick={() => setTwvImportOpen(true)}
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                    CSV importeren
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-xs h-8"
-                    onClick={() => setTwvManualAddOpen(true)}
-                  >
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Handmatig toevoegen
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-1.5 bg-green-500 hover:bg-green-600 text-xs h-8"
-                    onClick={() => refetchTwv()}
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    Vernieuwen
-                  </Button>
-                </div>
-              </div>
+              {/* Kop (design 3.0) */}
+              <D3Kop titel="TWV-beheer" uitleg="Overzicht en beheer van tewerkstellingsvergunningen.">
+                <button type="button" className="d3-knop" onClick={() => window.open('/api/admin/twv/export', '_blank')}>
+                  <Download /> Exporteer csv
+                </button>
+                <button type="button" className="d3-knop" onClick={() => setTwvImportOpen(true)}>
+                  <Upload /> Csv importeren
+                </button>
+                <button type="button" className="d3-knop" onClick={() => refetchTwv()}>
+                  <RefreshCw /> Vernieuwen
+                </button>
+                <button type="button" className="d3-knop vol" onClick={() => setTwvManualAddOpen(true)}>
+                  <UserPlus /> Handmatig toevoegen
+                </button>
+              </D3Kop>
 
               {(() => {
                 const today = new Date();
@@ -4559,12 +4440,12 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                 });
 
                 const TWV_TABS = [
-                  { key: 'alle',           label: 'Alle',             active: 'bg-purple-600 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { key: 'twv_nodig',      label: 'TWV Nodig',        active: 'bg-gray-700 text-white',    inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { key: 'twv_aangevraagd',label: 'TWV Aangevraagd',  active: 'bg-blue-600 text-white',    inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { key: 'info_nodig',     label: 'Info nodig',       active: 'bg-amber-500 text-white',   inactive: 'bg-white border border-amber-200 text-amber-700' },
-                  { key: 'twv_verstrekt',  label: 'TWV Verstrekt',    active: 'bg-green-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { key: 'twv_verlopen',   label: 'TWV Verlopen',     active: 'bg-red-500 text-white',     inactive: 'bg-white border border-red-200 text-red-600' },
+                  { key: 'alle', label: 'Alle', cls: '' },
+                  { key: 'twv_nodig', label: 'TWV nodig', cls: '' },
+                  { key: 'twv_aangevraagd', label: 'TWV aangevraagd', cls: '' },
+                  { key: 'info_nodig', label: 'Info nodig', cls: '' },
+                  { key: 'twv_verstrekt', label: 'TWV verstrekt', cls: '' },
+                  { key: 'twv_verlopen', label: 'TWV verlopen', cls: 'rood' },
                 ];
 
                 /* Een lege twv_status telt niet meer stilzwijgend als "TWV Nodig".
@@ -4582,29 +4463,26 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   : filtered.filter(c => c.twvStatus === twvStatusTab);
 
                 const STATUS_LABELS: Record<string, string> = {
-                  twv_nodig: 'TWV Nodig',
-                  twv_aangevraagd: 'TWV Aangevraagd',
+                  twv_nodig: 'TWV nodig',
+                  twv_aangevraagd: 'TWV aangevraagd',
                   info_nodig: 'Info nodig',
-                  twv_verstrekt: 'TWV Verstrekt',
-                  twv_verlopen: 'TWV Verlopen',
+                  twv_verstrekt: 'TWV verstrekt',
+                  twv_verlopen: 'TWV verlopen',
                   geen_status: 'Geen status',
                 };
 
+                // Status als stip met tekst (design 3.0).
                 function statusBadge(c: TwvCandidate) {
                   const s = c.twvStatus ?? 'geen_status';
-                  const classes: Record<string, string> = {
-                    twv_nodig: 'bg-gray-100 text-gray-700',
-                    twv_aangevraagd: 'bg-blue-100 text-blue-700',
-                    info_nodig: 'bg-amber-100 text-amber-700',
-                    twv_verstrekt: 'bg-green-100 text-green-700',
-                    twv_verlopen: 'bg-red-100 text-red-700',
-                    geen_status: 'bg-amber-100 text-amber-700',
+                  const soort: Record<string, StatusSoort> = {
+                    twv_nodig: 'stop',
+                    twv_aangevraagd: 'nieuw',
+                    info_nodig: 'letop',
+                    twv_verstrekt: 'goed',
+                    twv_verlopen: 'stop',
+                    geen_status: 'neutraal',
                   };
-                  return (
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${classes[s] ?? 'bg-gray-100 text-gray-600'}`}>
-                      {STATUS_LABELS[s] ?? s}
-                    </span>
-                  );
+                  return <StatusLabel soort={soort[s] ?? 'neutraal'}>{STATUS_LABELS[s] ?? s}</StatusLabel>;
                 }
 
                 function expiryBadge(c: TwvCandidate) {
@@ -4612,9 +4490,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   const end = new Date(c.twvEndDate);
                   end.setHours(0, 0, 0, 0);
                   const days = Math.round((end.getTime() - today.getTime()) / 86400000);
-                  if (days < 0) return <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600"><AlertTriangle className="h-3.5 w-3.5" /> Verlopen</span>;
-                  if (days <= 30) return <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600"><AlertTriangle className="h-3.5 w-3.5" /> {days} dagen</span>;
-                  return <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 className="h-3.5 w-3.5" /> Geldig</span>;
+                  if (days < 0) return <StatusLabel soort="stop">Verlopen</StatusLabel>;
+                  if (days <= 30) return <StatusLabel soort="letop">{`Verloopt over ${days} ${days === 1 ? 'dag' : 'dagen'}`}</StatusLabel>;
+                  return <StatusLabel soort="goed">Verstrekt</StatusLabel>;
                 }
 
                 const FUNCTION_LABELS: Record<string, string> = {
@@ -4626,43 +4504,45 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
                 return (
                   <>
-                    {/* Status tabs */}
-                    <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-                      {TWV_TABS.map(({ key, label, active, inactive }) => (
+                    {/* Statustabs (design 3.0) */}
+                    <div className="d3-tabs" role="tablist" aria-label="TWV per status">
+                      {TWV_TABS.map(({ key, label, cls }) => (
                         <button
                           key={key}
+                          type="button"
+                          role="tab"
+                          aria-selected={twvStatusTab === key}
                           onClick={() => setTwvStatusTab(key)}
-                          className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${twvStatusTab === key ? active : inactive}`}
+                          className={`d3-tab ${cls}`}
                         >
                           {label}
-                          <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${twvStatusTab === key ? 'bg-white/20' : key === 'info_nodig' ? 'bg-amber-50 text-amber-600' : key === 'twv_verlopen' ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
-                            {countFor(key)}
-                          </span>
+                          <span className="tel">{countFor(key)}</span>
                         </button>
                       ))}
                     </div>
 
-                    {/* Search */}
-                    <div className="relative mb-4">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Zoek op naam, ID of nationaliteit…"
-                        value={twvSearch}
-                        onChange={e => setTwvSearch(e.target.value)}
-                        className="pl-9 bg-white"
-                      />
+                    {/* Zoeken */}
+                    <div className="d3-filters">
+                      <div className="d3-zoek">
+                        <Search />
+                        <Input
+                          placeholder="Zoek op naam, ID of nationaliteit"
+                          value={twvSearch}
+                          onChange={e => setTwvSearch(e.target.value)}
+                          aria-label="Zoek in TWV"
+                        />
+                      </div>
                     </div>
 
                     {/* Table */}
-                    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                      {/* Table header */}
-                      <div className="grid grid-cols-[2fr_1fr_1fr_1.5fr_1fr_1.2fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <div className="d3-paneel">
+                      <div className="d3-twv d3-twv-kop" aria-hidden="true">
                         <span>Medewerker</span>
                         <span>Nationaliteit</span>
                         <span>Functie</span>
-                        <span>TWV periode</span>
+                        <span>TWV-periode</span>
                         <span>Geldigheid</span>
-                        <span>Status / Acties</span>
+                        <span>Status en acties</span>
                       </div>
 
                       {twvLoading ? (
@@ -4677,17 +4557,11 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                       ) : visibleCandidates.map((c, idx) => (
                         <div
                           key={c.id}
-                          className={`grid grid-cols-[2fr_1fr_1fr_1.5fr_1fr_1.2fr] gap-4 px-5 py-4 items-center transition-colors hover:bg-gray-50 ${idx > 0 ? 'border-t border-gray-100' : ''}`}
+                          className="d3-twv d3-twv-rij"
                         >
                           {/* Medewerker */}
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-sm font-bold text-purple-700 shrink-0">
-                              {c.firstName[0]}{c.lastName[0]}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-gray-900 truncate">{c.firstName} {c.lastName}</p>
-                              <p className="text-xs text-gray-400">ID #{c.id}</p>
-                            </div>
+                          <div className="min-w-0">
+                            <Persoon voornaam={c.firstName} achternaam={c.lastName} functie={(c as any).functionType} sub={`ID #${c.id}`} />
                           </div>
 
                           {/* Nationaliteit — de vrije tekst blijft altijd zichtbaar.
@@ -4695,22 +4569,22 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                               is de TWV-zone bekend. Zo niet, dan is dat expliciet
                               "Onbekend land" in plaats van stilzwijgend niets, want
                               zonder code valt er niet op te filteren. */}
-                          <div className="text-sm text-gray-600">
+                          <div>
                             {c.nationality ? (
-                              <span className="inline-flex flex-col">
-                                <span>🌍 {c.nationality}</span>
+                              <span className="d3-land">
+                                <b>{c.nationality}</b>
                                 {c.nationalityIso ? (
-                                  <span className="text-[11px] font-medium text-gray-400">
+                                  <span>
                                     {c.nationalityIso}
                                     {c.nationalityZone ? ` · ${c.nationalityZone === 'NON_EU' ? 'buiten EU' : c.nationalityZone}` : ''}
                                   </span>
                                 ) : (
-                                  <span className="text-[11px] font-medium text-amber-600">Onbekend land</span>
+                                  <span className="onbekend">Land onbekend</span>
                                 )}
                               </span>
                             ) : (
                               <button
-                                className="text-xs text-purple-500 hover:text-purple-700 hover:underline"
+                                className="d3-link"
                                 onClick={() => {
                                   setTwvEditCandidate(c);
                                   setTwvEditFirstName(c.firstName);
@@ -4724,29 +4598,29 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                                 }}
                                 data-testid={`btn-twv-add-nationality-${c.id}`}
                               >
-                                + Toevoegen
+                                Toevoegen
                               </button>
                             )}
                           </div>
 
                           {/* Functie */}
-                          <div className="text-sm text-gray-600">
-                            {FUNCTION_LABELS[(c as any).functionType] ?? (c as any).functionType ?? <span className="text-gray-300">—</span>}
+                          <div>
+                            <FunctieLabel functie={(c as any).functionType} />
                           </div>
 
                           {/* TWV periode */}
-                          <div className="text-sm text-gray-600">
+                          <div>
                             {(c.twvStartDate || c.twvEndDate) ? (
-                              <div>
-                                <div>{c.twvStartDate ? new Date(c.twvStartDate).toLocaleDateString('nl-NL') : '—'}</div>
-                                <div className="text-xs text-gray-400">t/m {c.twvEndDate ? new Date(c.twvEndDate).toLocaleDateString('nl-NL') : '—'}</div>
+                              <div className="d3-periode">
+                                <b>{c.twvStartDate ? new Date(c.twvStartDate).toLocaleDateString('nl-NL') : 'Onbekend'}</b>
+                                <span>t/m {c.twvEndDate ? new Date(c.twvEndDate).toLocaleDateString('nl-NL') : 'onbekend'}</span>
                               </div>
                             ) : (
                               <button
-                                className="text-xs text-purple-500 hover:text-purple-700 hover:underline"
+                                className="d3-link"
                                 onClick={() => { setTwvEditCandidate(c); setTwvEditStartDate(''); setTwvEditEndDate(''); setTwvEditOpen(true); }}
                               >
-                                + Datums instellen
+                                Datums instellen
                               </button>
                             )}
                           </div>
@@ -4756,7 +4630,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                             {expiryBadge(c) ?? statusBadge(c)}
                             {(c.twvStartDate || c.twvEndDate) && (
                               <button
-                                className="block text-[11px] text-purple-500 hover:text-purple-700 hover:underline mt-1"
+                                className="d3-link block mt-1"
                                 onClick={() => { setTwvEditCandidate(c); setTwvEditStartDate(c.twvStartDate || ''); setTwvEditEndDate(c.twvEndDate || ''); setTwvEditOpen(true); }}
                               >
                                 Datums aanpassen
@@ -4765,9 +4639,10 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                           </div>
 
                           {/* Status / Acties */}
-                          <div className="flex flex-col gap-1.5">
+                          <div className="d3-twv-acties">
                             <select
-                              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-pointer"
+                              className="d3-statuskies"
+                              aria-label={`TWV-status van ${c.firstName} ${c.lastName}`}
                               /* Een lege status krijgt een eigen, niet-selecteerbare
                                  optie in plaats van stilzwijgend "TWV Nodig" te
                                  tonen. Anders lijkt de status gezet terwijl er in
@@ -4776,14 +4651,16 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                               onChange={e => updateTwvMutation.mutate({ id: c.id, twvStatus: e.target.value })}
                             >
                               {!c.twvStatus && <option value="" disabled>Geen status</option>}
-                              <option value="twv_nodig">TWV Nodig</option>
-                              <option value="twv_aangevraagd">TWV Aangevraagd</option>
+                              <option value="twv_nodig">TWV nodig</option>
+                              <option value="twv_aangevraagd">TWV aangevraagd</option>
                               <option value="info_nodig">Info nodig</option>
-                              <option value="twv_verstrekt">TWV Verstrekt</option>
-                              <option value="twv_verlopen">TWV Verlopen</option>
+                              <option value="twv_verstrekt">TWV verstrekt</option>
+                              <option value="twv_verlopen">TWV verlopen</option>
                             </select>
                             <button
-                              className="flex items-center gap-1 text-[11px] text-purple-500 hover:text-purple-700 transition-colors"
+                              className="d3-actie"
+                              title="Gegevens bewerken"
+                              aria-label={`Gegevens van ${c.firstName} ${c.lastName} bewerken`}
                               onClick={() => {
                                 setTwvEditCandidate(c);
                                 setTwvEditFirstName(c.firstName);
@@ -4797,10 +4674,10 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                               }}
                               data-testid={`btn-twv-edit-${c.id}`}
                             >
-                              <Pencil className="h-3 w-3" /> Gegevens bewerken
+                              <Pencil />
                             </button>
                             <button
-                              className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                              className="d3-link"
                               onClick={() => {
                                 setTwvNotesExpanded(prev => {
                                   const next = new Set(prev);
@@ -4814,8 +4691,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                                 });
                               }}
                             >
-                              {c.twvNotes && <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
-                              {twvNotesExpanded.has(c.id) ? '▾' : '▸'} {c.twvNotes ? 'Notitie' : 'Notitie toevoegen'}
+                              {c.twvNotes ? 'Notitie (1)' : 'Notitie'}
                             </button>
                           </div>
                         </div>
@@ -4823,7 +4699,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
                       {/* Inline notes (below expanded rows) */}
                       {visibleCandidates.map(c => twvNotesExpanded.has(c.id) && (
-                        <div key={`notes-${c.id}`} className="px-5 pb-4 border-t border-gray-100 bg-amber-50/40">
+                        <div key={`notes-${c.id}`} className="px-5 pb-4 border-t border-[#EFECE6] bg-[#FBF1DC]/40">
                           <p className="text-xs font-semibold text-gray-500 mb-1.5 pt-3">Notitie voor {c.firstName} {c.lastName}</p>
                           <div className="flex gap-2">
                             <textarea
@@ -4834,7 +4710,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                               onChange={e => setTwvNotesDraft(d => ({ ...d, [c.id]: e.target.value }))}
                             />
                             <button
-                              className="text-sm bg-purple-600 text-white rounded-lg px-4 py-2 hover:bg-purple-700 disabled:opacity-50 self-end"
+                              className="d3-knop vol self-end"
                               disabled={updateTwvMutation.isPending}
                               onClick={() => updateTwvMutation.mutate({ id: c.id, twvNotes: twvNotesDraft[c.id] ?? '' })}
                             >

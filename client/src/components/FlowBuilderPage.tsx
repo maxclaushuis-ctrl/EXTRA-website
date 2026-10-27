@@ -71,7 +71,7 @@ interface Props {
 
 const NODE_STYLES: Record<NodeType, { border: string; bg: string; text: string; icon: any }> = {
   trigger:    { border: '#059669', bg: '#D1FAE5', text: '#065F46', icon: Play },
-  email:      { border: '#7C3AED', bg: '#EDE9FE', text: '#4C1D95', icon: Mail },
+  email:      { border: '#37352C', bg: '#EDEAE4', text: '#1A1914', icon: Mail },
   wait:       { border: '#2563EB', bg: '#DBEAFE', text: '#1E3A8A', icon: Clock },
   condition:  { border: '#D97706', bg: '#FEF3C7', text: '#78350F', icon: HelpCircle },
   tag_action: { border: '#CA8A04', bg: '#FEF9C3', text: '#713F12', icon: Tag },

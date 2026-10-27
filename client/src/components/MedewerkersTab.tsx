@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Search, Plus, Mail, MailCheck, X, Pencil, Trash2, Paperclip, Loader2,
-  CheckCircle2, Briefcase, MapPin, Phone, Calendar, Tag, FileText, Send, AlertCircle,
+  CheckCircle2, Briefcase, MapPin, Phone, Calendar, Tag, FileText, Send, AlertCircle, ChevronDown, SlidersHorizontal,
 } from 'lucide-react';
 import type { Employee, OnboardingLog, OnboardingTemplate, OnboardingBijlage } from '@shared/schema';
+import { D3Kop, D3Tegels, FunctieLabel, Persoon, StatusLabel, type StatusSoort } from '@/pages/dashboard/d3';
 import { telVaardigheden, type EmployeeMetVaardigheden } from '@shared/vaardigheden';
 
 type TemplateLite = Pick<OnboardingTemplate, 'id' | 'naam' | 'taal' | 'functiegroep' | 'opdrachtgever'>;
@@ -24,11 +25,11 @@ type TemplateMetBijlagen = OnboardingTemplate & {
 
 const BRANCHES = ['Hotel', 'Restaurant', 'Cateraar', 'Evenementenlocatie', 'Logistiek'];
 const CONTRACT_TYPES = ['oproepkracht', 'parttimer', 'fulltimer'];
-const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  nieuw: { label: 'Nieuw', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
-  actief: { label: 'Actief', cls: 'bg-green-100 text-green-700 border-green-200' },
-  inactief: { label: 'Inactief', cls: 'bg-gray-100 text-gray-700 border-gray-200' },
-  uitgestroomd: { label: 'Uitgestroomd', cls: 'bg-red-100 text-red-700 border-red-200' },
+const STATUS_LABELS: Record<string, { label: string; cls: string; soort: StatusSoort }> = {
+  nieuw: { label: 'Nieuw', cls: 'bg-[#F8F7F4] text-[#37352C] border-[#E4E0D8]', soort: 'nieuw' },
+  actief: { label: 'Actief', cls: 'bg-[#EEF3E7] text-[#456B2E] border-[#CEDBBC]', soort: 'goed' },
+  inactief: { label: 'Inactief', cls: 'bg-[#EDEAE4] text-[#5C594F] border-[#E4E0D8]', soort: 'neutraal' },
+  uitgestroomd: { label: 'Uitgestroomd', cls: 'bg-[#F9E3E1] text-[#9A3A2F] border-[#E6B3AE]', soort: 'stop' },
 };
 
 type EmployeeWithLogs = Employee & { onboardingLogs?: OnboardingLog[] };
@@ -194,77 +195,77 @@ export default function MedewerkersTab() {
 
   return (
     <div data-testid="medewerkers-tab">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Medewerkers</h1>
-          <p className="text-sm text-gray-500">Beheer actieve medewerkers en stuur onboarding mails</p>
-        </div>
-        <div className="flex gap-2">
+      <D3Kop titel="Medewerkers" uitleg="Beheer actieve medewerkers en stuur onboardingmails.">
           {bulkSelectMode ? (
             <>
-              <Button
-                variant="outline"
+              <button
+                type="button"
+                className="d3-knop"
                 onClick={() => { setBulkSelectMode(false); setBulkSelectedIds(new Set()); }}
                 data-testid="btn-bulk-cancel"
               >
-                <X className="h-4 w-4 mr-1" /> Annuleren
-              </Button>
-              <Button
-                className="bg-purple-600 hover:bg-purple-700"
+                <X /> Annuleren
+              </button>
+              <button
+                type="button"
+                className="d3-knop vol"
                 disabled={bulkSelectedIds.size === 0}
                 onClick={() => setBulkConfirmOpen(true)}
                 data-testid="btn-bulk-versturen"
               >
-                <Send className="h-4 w-4 mr-1" /> Verstuur {bulkSelectedIds.size > 0 ? `(${bulkSelectedIds.size})` : ''}
-              </Button>
+                <Send /> Verstuur {bulkSelectedIds.size > 0 ? `(${bulkSelectedIds.size})` : ''}
+              </button>
             </>
           ) : (
             <>
-              <Button
-                variant="outline"
+              <button
+                type="button"
+                className="d3-knop"
                 onClick={() => { setBulkSelectMode(true); setBulkSelectedIds(new Set()); }}
                 data-testid="btn-bulk-mode"
               >
-                <Mail className="h-4 w-4 mr-1" /> Bulk onboarding
-              </Button>
-              <Button onClick={() => setShowCreateModal(true)} className="bg-purple-600 hover:bg-purple-700" data-testid="btn-nieuwe-medewerker">
-                <Plus className="h-4 w-4 mr-1" /> Nieuwe medewerker
-              </Button>
+                <Mail /> Bulk onboarding
+              </button>
+              <button type="button" onClick={() => setShowCreateModal(true)} className="d3-knop vol" data-testid="btn-nieuwe-medewerker">
+                <Plus /> Nieuwe medewerker
+              </button>
             </>
           )}
-        </div>
-      </div>
+      </D3Kop>
 
-      {/* Stats balk */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Totaal" value={stats.totaal} />
-        <StatCard label="Actief" value={stats.actief} accent="green" />
-        <StatCard label="Nieuw" value={stats.nieuw} accent="blue" />
-        <StatCard
-          label="Onboarding nog te sturen"
-          value={stats.onbTeSturen}
-          accent="orange"
-          onClick={() => { setOnboardingFilter('nee'); setStatusFilter('alles'); }}
-        />
-      </div>
+      {/* Tegels die ook filters zijn (design 3.0) */}
+      <D3Tegels
+        label="Medewerkers per status"
+        actief={onboardingFilter === 'nee' ? 'onb' : statusFilter === 'actief' ? 'actief' : statusFilter === 'nieuw' ? 'nieuw' : statusFilter === 'alles' ? 'totaal' : null}
+        kies={(k) => {
+          if (k === 'onb') { setOnboardingFilter('nee'); setStatusFilter('alles'); return; }
+          setOnboardingFilter('alles');
+          setStatusFilter(k === 'totaal' ? 'alles' : k);
+        }}
+        tegels={[
+          { sleutel: 'totaal', titel: 'Totaal', getal: stats.totaal, sub: 'Alle medewerkers' },
+          { sleutel: 'actief', titel: 'Actief', getal: stats.actief, sub: 'Werkt via EXTRA', soort: 'goed' },
+          { sleutel: 'nieuw', titel: 'Nieuw', getal: stats.nieuw, sub: 'Nog niet ingezet' },
+          { sleutel: 'onb', titel: 'Onboarding nog te sturen', getal: stats.onbTeSturen, sub: 'Mail met inloggegevens staat klaar', soort: stats.onbTeSturen > 0 ? 'aandacht' : 'standaard' },
+        ]}
+      />
 
-      {/* Search + filter */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
-        <div className="flex gap-2 items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      {/* Zoeken en filters (design 3.0) */}
+      <div className="d3-filters">
+          <div className="d3-zoek">
+            <Search />
             <Input
-              placeholder="Zoek op naam, email of opdrachtgever…"
+              placeholder="Zoek op naam, e-mail of opdrachtgever"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9"
+              aria-label="Zoek medewerkers"
               data-testid="input-search-medewerkers"
             />
           </div>
           {vaardigheidFilter ? (
-            <Button
-              variant="outline"
-              className="border-purple-300 bg-purple-50 text-purple-800 hover:bg-purple-100 hover:text-purple-900 gap-1.5"
+            <button
+              type="button"
+              className="d3-knop vol"
               onClick={() => { setShowVaardigheden(v => !v); setShowFilters(false); }}
               data-testid="btn-vaardigheid"
             >
@@ -274,29 +275,31 @@ export default function MedewerkersTab() {
                 aria-label="Vaardigheidsfilter wissen"
                 title="Wissen"
                 onClick={e => { e.stopPropagation(); setVaardigheidFilter(null); setShowVaardigheden(false); }}
-                className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-purple-200 text-[11px] leading-none hover:bg-purple-300"
+                className="tel"
               >
                 ✕
               </span>
-            </Button>
+            </button>
           ) : (
-            <Button
-              variant="outline"
+            <button
+              type="button"
+              className="d3-knop"
               onClick={() => { setShowVaardigheden(v => !v); setShowFilters(false); }}
               disabled={vaardigheidOpties.length === 0}
               title={vaardigheidOpties.length === 0
-                ? 'Nog niemand met een ingevulde vaardigheid — dit komt uit het aanmeldformulier'
+                ? 'Nog niemand met een ingevulde vaardigheid; dit komt uit het aanmeldformulier'
                 : undefined}
               data-testid="btn-vaardigheid"
             >
-              Vaardigheid {showVaardigheden ? '▴' : '▾'}
-            </Button>
+              Vaardigheid <ChevronDown />
+            </button>
           )}
-          <Button variant="outline" onClick={() => { setShowFilters(s => !s); setShowVaardigheden(false); }}>
-            Filters {showFilters ? '▴' : '▾'}
-          </Button>
-        </div>
-
+          <button type="button" className={`d3-knop${showFilters ? ' vol' : ''}`} onClick={() => { setShowFilters(s => !s); setShowVaardigheden(false); }}>
+            <SlidersHorizontal /> Filters
+          </button>
+      </div>
+      {(showVaardigheden || showFilters) && (
+      <div className="d3-paneel p-4 mb-4">
         {/* Vaardigheden — subfuncties zoals opgegeven bij de aanmelding. Klapt
             dicht zodra je kiest, zodat de rij geen ruimte blijft innemen. */}
         {showVaardigheden && (
@@ -383,23 +386,24 @@ export default function MedewerkersTab() {
           </div>
         )}
       </div>
+      )}
 
-      {/* Lijst */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      {/* Lijst (design 3.0) */}
+      <div className="d3-paneel">
         {isLoading ? (
           <div className="p-4 space-y-2">
             {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-14 w-full" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-gray-400">
-            <CheckCircle2 className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+          <div className="p-12 text-center d3-zacht">
+            <CheckCircle2 className="h-10 w-10 mx-auto mb-3 opacity-40" />
             <p className="text-sm">Geen medewerkers gevonden</p>
             {employees.length === 0 && (
               <p className="text-xs mt-1">Begin door een sollicitant aan te nemen of maak handmatig een medewerker aan.</p>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div>
             {bulkSelectMode && (
               <div className="px-4 py-2 bg-purple-50 border-b border-purple-100 flex items-center gap-3 text-sm">
                 <Checkbox
@@ -421,79 +425,79 @@ export default function MedewerkersTab() {
                 </span>
               </div>
             )}
+            <div className="d3-lijstkop" aria-hidden="true">
+              <span>Medewerker</span><span>Functie</span><span>Opdrachtgever</span><span>Status</span><span>Onboarding</span>
+            </div>
+            <ul className="d3-lijst">
             {filtered.map(emp => {
               const st = STATUS_LABELS[emp.status] || STATUS_LABELS.nieuw;
               const checked = bulkSelectedIds.has(emp.id);
               const disableSelect = emp.onboardingSent;
+              const kies = () => {
+                if (bulkSelectMode) {
+                  if (disableSelect) return;
+                  const ids = new Set(bulkSelectedIds);
+                  if (ids.has(emp.id)) ids.delete(emp.id); else ids.add(emp.id);
+                  setBulkSelectedIds(ids);
+                } else {
+                  setSelectedId(emp.id); setEditMode(false); setProfileTab('gegevens');
+                }
+              };
               return (
-                <div
+                <li
                   key={emp.id}
-                  className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors ${
-                    selectedId === emp.id ? 'bg-purple-50' : ''
-                  } ${bulkSelectMode && checked ? 'bg-purple-50' : ''}`}
+                  className={selectedId === emp.id || (bulkSelectMode && checked) ? 'gekozen' : undefined}
                   data-testid={`row-employee-${emp.id}`}
                 >
-                  {bulkSelectMode && (
-                    <Checkbox
-                      checked={checked}
-                      disabled={disableSelect}
-                      onCheckedChange={(c) => {
-                        const ids = new Set(bulkSelectedIds);
-                        if (c) ids.add(emp.id); else ids.delete(emp.id);
-                        setBulkSelectedIds(ids);
-                      }}
-                      data-testid={`checkbox-employee-${emp.id}`}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (bulkSelectMode) {
-                        if (disableSelect) return;
-                        const ids = new Set(bulkSelectedIds);
-                        if (ids.has(emp.id)) ids.delete(emp.id); else ids.add(emp.id);
-                        setBulkSelectedIds(ids);
-                      } else {
-                        setSelectedId(emp.id); setEditMode(false); setProfileTab('gegevens');
-                      }
-                    }}
-                    className="flex-1 flex items-center gap-3 text-left min-w-0"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold shrink-0">
-                      {emp.firstName?.[0]}{emp.lastName?.[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900 truncate">{emp.firstName} {emp.lastName}</span>
-                        <span className="text-xs text-gray-400">— {emp.functie || 'geen functie'}</span>
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">{emp.opdrachtgever || '—'}</div>
-                    </div>
-                    <Badge variant="outline" className={`${st.cls} text-xs`}>{st.label}</Badge>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (bulkSelectMode) return;
-                      setSelectedId(emp.id);
-                      setEditMode(false);
-                      setProfileTab('gegevens');
-                    }}
-                    disabled={bulkSelectMode}
-                    title={emp.onboardingSent ? 'Onboarding verstuurd — klik om opnieuw te versturen of details te bekijken' : 'Onboarding nog niet verstuurd — klik om te versturen'}
-                    className="shrink-0 p-1 rounded hover:bg-gray-100 disabled:cursor-not-allowed"
-                    data-testid={`btn-envelop-${emp.id}`}
-                  >
-                    {emp.onboardingSent ? (
-                      <MailCheck className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Mail className="h-4 w-4 text-gray-400" />
+                  <span className="wie">
+                    {bulkSelectMode && (
+                      <Checkbox
+                        checked={checked}
+                        disabled={disableSelect}
+                        onCheckedChange={(c) => {
+                          const ids = new Set(bulkSelectedIds);
+                          if (c) ids.add(emp.id); else ids.delete(emp.id);
+                          setBulkSelectedIds(ids);
+                        }}
+                        data-testid={`checkbox-employee-${emp.id}`}
+                      />
                     )}
-                  </button>
-                </div>
+                    <button type="button" onClick={kies} className="text-left min-w-0">
+                      <Persoon voornaam={emp.firstName} achternaam={emp.lastName} functie={emp.functie} sub={emp.email || undefined} />
+                    </button>
+                  </span>
+                  <span>{emp.functie ? <FunctieLabel functie={emp.functie} /> : <span className="d3-fn f-geen">Geen functie</span>}</span>
+                  <span className={`opdr${emp.opdrachtgever ? '' : ' leeg'}`}>{emp.opdrachtgever || 'Nog niet ingezet'}</span>
+                  <span><StatusLabel soort={st.soort}>{st.label}</StatusLabel></span>
+                  <span>
+                    {emp.onboardingSent ? (
+                      <button
+                        type="button"
+                        className="d3-onb klaar"
+                        onClick={(e) => { e.stopPropagation(); if (bulkSelectMode) return; setSelectedId(emp.id); setEditMode(false); setProfileTab('gegevens'); }}
+                        disabled={bulkSelectMode}
+                        title="Onboarding verstuurd; klik om opnieuw te versturen of details te bekijken"
+                        data-testid={`btn-envelop-${emp.id}`}
+                      >
+                        <MailCheck /> Verstuurd
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="d3-onb"
+                        onClick={(e) => { e.stopPropagation(); if (bulkSelectMode) return; setSelectedId(emp.id); setEditMode(false); setProfileTab('gegevens'); }}
+                        disabled={bulkSelectMode}
+                        title="Onboarding nog niet verstuurd; klik om te versturen"
+                        data-testid={`btn-envelop-${emp.id}`}
+                      >
+                        <Mail /> Onboarding sturen
+                      </button>
+                    )}
+                  </span>
+                </li>
               );
             })}
+            </ul>
           </div>
         )}
       </div>

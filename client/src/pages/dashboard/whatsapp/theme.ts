@@ -19,8 +19,8 @@ export const WA = {
   text: '#111b21',
   textSub: '#667781',
   unread: '#25d366',
-  purple: '#7c3aed',
-  purpleDark: '#6025c9',
+  purple: '#37352C',
+  purpleDark: '#2C2A23',
   check: '#53bdeb',
 } as const;
 

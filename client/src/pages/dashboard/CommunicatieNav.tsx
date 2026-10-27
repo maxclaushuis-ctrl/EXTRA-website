@@ -46,7 +46,8 @@ function Badge({ aantal, titel, testId }: { aantal: number; titel: string; testI
   if (aantal <= 0) return null;
   return (
     <span
-      className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold shadow-sm"
+      className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold"
+      style={{ backgroundColor: HUISSTIJL.KLEUR.zijActiefVlak, color: HUISSTIJL.KLEUR.zijActiefTekst }}
       title={titel}
       data-testid={testId}
     >
@@ -79,8 +80,8 @@ function MenuItem({
         fontWeight: actief ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
         padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
         gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-        color: actief ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-        backgroundColor: actief ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+        color: actief ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+        backgroundColor: actief ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
       }}
     >
       <Icon

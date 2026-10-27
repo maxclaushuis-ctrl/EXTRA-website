@@ -33,7 +33,7 @@ import {
   type GroupMember,
 } from '../../api/whatsappClient';
 
-const NAVY = '#7E22CE';
+const NAVY = '#2C2A23';
 const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 
 const TYPE_LABEL: Record<WaContactType, string> = {
@@ -45,7 +45,7 @@ const TYPE_LABEL: Record<WaContactType, string> = {
 const TYPE_KLEUR: Record<WaContactType, { bg: string; fg: string }> = {
   sollicitant: { bg: '#EFF6FF', fg: '#1D4ED8' },
   kandidaat:   { bg: '#ECFEFF', fg: '#0E7490' },
-  medewerker:  { bg: '#F3E8FF', fg: '#7E22CE' },
+  medewerker:  { bg: '#EDEAE4', fg: '#2C2A23' },
 };
 
 const OPTIN_LABEL: Record<WaOptInStatus, string> = {
@@ -392,7 +392,7 @@ export default function WhatsAppContacten() {
             onClick={() => setToonNieuweGroepModal(true)}
             style={{
               flex: '0 0 auto', minWidth: 200, height: 76, borderRadius: 10,
-              border: `1.5px dashed ${NAVY}`, background: '#FAF5FF',
+              border: `1.5px dashed ${NAVY}`, background: '#F6F4EF',
               cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600,
               color: NAVY, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}

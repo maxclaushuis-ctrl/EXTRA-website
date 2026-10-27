@@ -54,7 +54,7 @@ import {
 
 // Primaire accentkleur — afgestemd op de rest van het dashboard (Tailwind purple-700).
 // Variabele heet nog NAVY voor backwards compatibiliteit met alle inline-styles in dit bestand.
-const NAVY = '#7E22CE';
+const NAVY = '#2C2A23';
 const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 
 type Tab = 'candidate' | 'prospect' | 'unmatched';
@@ -80,7 +80,7 @@ const STATUS_LABEL: Record<string, string> = {
 const LABEL_COLORS: Record<string, string> = {
   urgent: '#DC2626',
   opvolgen: '#F59E0B',
-  wacht: '#6366F1',
+  wacht: '#37352C',
   belangrijk: '#059669',
   nieuw: '#3B82F6',
 };
@@ -932,9 +932,9 @@ export default function WhatsAppBeheer() {
                         display: 'inline-flex', alignItems: 'center', gap: 5,
                         padding: '4px 10px', borderRadius: 999, flexShrink: 0,
                         fontSize: 11, fontWeight: 600, fontFamily: FONT, cursor: 'pointer',
-                        background: active ? '#9333EA' : '#fff',
+                        background: active ? '#37352C' : '#fff',
                         color: active ? '#fff' : '#4B5563',
-                        border: active ? '1px solid #9333EA' : '1px solid #E5E7EB',
+                        border: active ? '1px solid #37352C' : '1px solid #E5E7EB',
                         transition: 'all 0.15s',
                       }}
                     >
@@ -976,8 +976,8 @@ export default function WhatsAppBeheer() {
                       flexShrink: 0, width: 28, height: 28, display: 'inline-flex',
                       alignItems: 'center', justifyContent: 'center',
                       borderRadius: 6, cursor: 'pointer',
-                      background: (filterAssignee !== 'all' || filterLabel !== 'all') ? '#F3E8FF' : '#fff',
-                      border: '1px solid ' + ((filterAssignee !== 'all' || filterLabel !== 'all') ? '#C4B5FD' : '#E5E7EB'),
+                      background: (filterAssignee !== 'all' || filterLabel !== 'all') ? '#EDEAE4' : '#fff',
+                      border: '1px solid ' + ((filterAssignee !== 'all' || filterLabel !== 'all') ? '#CFC9BE' : '#E5E7EB'),
                       color: (filterAssignee !== 'all' || filterLabel !== 'all') ? NAVY : '#6B7280',
                       position: 'relative',
                     }}
@@ -1221,7 +1221,7 @@ export default function WhatsAppBeheer() {
                             onClick={() => setShowLabelPopover(v => !v)}
                             style={{
                               fontSize: 10, color: NAVY, background: 'none',
-                              border: '1px dashed #C4B5FD', borderRadius: 3,
+                              border: '1px dashed #CFC9BE', borderRadius: 3,
                               padding: '2px 7px', cursor: 'pointer', display: 'inline-flex',
                               alignItems: 'center', gap: 3, fontWeight: 600,
                             }}
@@ -2020,7 +2020,7 @@ export default function WhatsAppBeheer() {
                                   const checked = selectedContacts.has(c.phoneNumber);
                                   return (
                                     <div key={c.phoneNumber} onClick={() => toggleContactSelection(c.phoneNumber)}
-                                      style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                      style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#F6F4EF' : '#fff' }}>
                                       <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
                                       </div>
@@ -2059,7 +2059,7 @@ export default function WhatsAppBeheer() {
                                     const checked = selectedContacts.has(c.phone);
                                     return (
                                       <div key={c.id} onClick={() => toggleContactSelection(c.phone)}
-                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#F6F4EF' : '#fff' }}>
                                         <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                           {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>{'\u2713'}</span>}
                                         </div>
@@ -2101,7 +2101,7 @@ export default function WhatsAppBeheer() {
                                     const checked = selectedContacts.has(c.phone);
                                     return (
                                       <div key={c.id} onClick={() => toggleContactSelection(c.phone)}
-                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#F6F4EF' : '#fff' }}>
                                         <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                           {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
                                         </div>
@@ -2140,7 +2140,7 @@ export default function WhatsAppBeheer() {
                                     const checked = selectedContacts.has(c.phone);
                                     return (
                                       <div key={c.id} onClick={() => toggleContactSelection(c.phone)}
-                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#F6F4EF' : '#fff' }}>
                                         <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                           {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
                                         </div>
@@ -2186,7 +2186,7 @@ export default function WhatsAppBeheer() {
                                       const checked = selectedContacts.has(c.phone);
                                       return (
                                         <div key={i} onClick={() => !c.alreadyInGroup && toggleContactSelection(c.phone)}
-                                          style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: c.alreadyInGroup ? 'default' : 'pointer', background: c.alreadyInGroup ? '#F9FAFB' : checked ? '#EEF2FF' : '#fff', opacity: c.alreadyInGroup ? 0.5 : 1 }}>
+                                          style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: c.alreadyInGroup ? 'default' : 'pointer', background: c.alreadyInGroup ? '#F9FAFB' : checked ? '#F6F4EF' : '#fff', opacity: c.alreadyInGroup ? 0.5 : 1 }}>
                                           <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${c.alreadyInGroup ? '#E5E7EB' : checked ? NAVY : '#D1D5DB'}`, background: c.alreadyInGroup ? '#E5E7EB' : checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                             {(checked || c.alreadyInGroup) && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
                                           </div>
@@ -2325,7 +2325,7 @@ export default function WhatsAppBeheer() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
                               <div style={{
                                 width: 32, height: 32, borderRadius: '50%',
-                                background: m.displayName ? '#E0E7FF' : '#F1F5F9',
+                                background: m.displayName ? '#EDEAE4' : '#F1F5F9',
                                 color: m.displayName ? NAVY : '#94A3B8',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: 11, fontWeight: 700, flexShrink: 0,

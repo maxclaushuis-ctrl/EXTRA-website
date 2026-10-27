@@ -167,7 +167,7 @@ type Block =
 function defaultBlock(type: Block['type']): Block {
   if (type === 'heading') return { type, text: 'Kopregel', align: 'left' };
   if (type === 'text') return { type, text: 'Schrijf hier je tekst. Gebruik {{naam}} en {{bedrijf}} voor personalisatie.' };
-  if (type === 'button') return { type, label: 'Meer informatie', url: '{{klik_link}}', color: '#7c3aed' };
+  if (type === 'button') return { type, label: 'Meer informatie', url: '{{klik_link}}', color: '#37352C' };
   if (type === 'spacer') return { type, height: 24 };
   if (type === 'divider') return { type };
   return { type: 'image', url: '', alt: '' };
@@ -1112,7 +1112,7 @@ function ABRapportageTab({ campaign }: { campaign: Campaign }) {
       {/* Twee kolommen vergelijking */}
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: 'Variant A', data: a, color: '#7C3AED', bgHeader: 'bg-purple-600', isWinnaar: winnaar === 'A', isVerliezer: !!winnaar && winnaar !== 'A' },
+          { label: 'Variant A', data: a, color: '#37352C', bgHeader: 'bg-purple-600', isWinnaar: winnaar === 'A', isVerliezer: !!winnaar && winnaar !== 'A' },
           { label: 'Variant B', data: b, color: '#2563EB', bgHeader: 'bg-blue-600', isWinnaar: winnaar === 'B', isVerliezer: !!winnaar && winnaar !== 'B' },
         ].map(v => (
           <div key={v.label} className={`rounded-xl border overflow-hidden ${v.isVerliezer ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
@@ -1176,7 +1176,7 @@ function ABRapportageTab({ campaign }: { campaign: Campaign }) {
               <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="Variant A opens" stroke="#7C3AED" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Variant A opens" stroke="#37352C" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Variant B opens" stroke="#2563EB" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>

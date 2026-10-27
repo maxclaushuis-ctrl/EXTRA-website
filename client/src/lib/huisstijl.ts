@@ -10,38 +10,53 @@
 // 1. KLEUREN — het volledige palet
 // ============================================================================
 export const KLEUR = {
-  // Brand (violet)
-  primair: '#7C3AED',
-  primairHover: '#6D28D9',
-  primairVlak: '#F5F0FF',
-  primairVlakActief: '#F3EEFF',
-  primairRand: '#C4B5FD',
+  // Design 3.0 (oktober 2026): espresso en off-white uit het brandbook, in
+  // plaats van violet. De namen blijven gelijk, zodat elk scherm dat deze
+  // tokens gebruikt vanzelf meegaat. Zie ook client/src/styles/dashboard3.css.
+  primair: '#37352C',
+  primairHover: '#2C2A23',
+  primairVlak: '#F3F1EC',
+  primairVlakActief: '#EDEAE4',
+  primairRand: '#CFC9BE',
 
   // Typografie & basis
-  inkt: '#111111',               // koppen + body
-  donkergrijs: '#374151',        // nadruk
-  secundair: '#6B7280',          // tekst/iconen
-  muted: '#9CA3AF',              // hints/placeholders
-  stil: '#D1D5DB',               // disabled/decoratief
+  inkt: '#37352C',               // koppen + body
+  donkergrijs: '#45433A',        // nadruk
+  secundair: '#5C594F',          // tekst/iconen
+  muted: '#7A7468',              // hints/placeholders
+  stil: '#CFC9BE',               // disabled/decoratief
 
   // Structuur
-  rand: '#E5E7EB',               // overal gebruikt
-  paginaAchtergrond: '#F9F9FB',
+  rand: '#E4E0D8',               // overal gebruikt
+  paginaAchtergrond: '#F8F7F4',
   kaart: '#FFFFFF',
-  vlak: '#F3F4F6',               // neutrale achtergrond
-  zebra: '#FAFAFA',              // alternatieve rij-kleur
+  vlak: '#EDEAE4',               // neutrale achtergrond
+  zebra: '#FBFAF8',              // alternatieve rij-kleur
+
+  // Zijbalk (donker, design 3.0)
+  zijbalk: '#37352C',
+  zijTekst: 'rgba(248, 247, 244, 0.86)',
+  zijMuted: 'rgba(248, 247, 244, 0.5)',
+  zijRand: 'rgba(248, 247, 244, 0.12)',
+  zijActiefVlak: '#F8F7F4',
+  zijActiefTekst: '#37352C',
+
+  // Branchekleuren
+  rose: '#EBD0E4',
+  pistachio: '#CEDBBC',
+  sky: '#C7DFF4',
 
   // Status
-  succes: '#059669',
-  succesVlak: '#D1FAE5',
-  fout: '#DC2626',
-  foutVlak: '#FEE2E2',
-  foutRand: '#FECACA',
-  waarschuwing: '#B45309',
-  waarschuwingVlak: '#FEF3C7',
-  waarschuwingRand: '#FCD34D',
-  info: '#1E40AF',
-  infoVlak: '#DBEAFE',
+  succes: '#456B2E',
+  succesVlak: '#EEF3E7',
+  fout: '#9A3A2F',
+  foutVlak: '#F9E3E1',
+  foutRand: '#E6B3AE',
+  waarschuwing: '#8A6414',
+  waarschuwingVlak: '#FBF1DC',
+  waarschuwingRand: '#EBCF95',
+  info: '#2F5D86',
+  infoVlak: '#E6F0FA',
 } as const;
 
 // ============================================================================
@@ -52,7 +67,7 @@ export const TYPOGRAFIE = {
   // zelf-gehoste variabele bestand (zie de @import bovenaan index.css). Zonder
   // die naam valt de stack door naar -apple-system en krijg je op een Mac San
   // Francisco in plaats van Inter — precies het verschil dat we hier wegnemen.
-  primair: '"Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  primair: '"Jakarta", "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
   gewichten: {
     light: 400,
     normal: 400,
@@ -98,9 +113,9 @@ export const TYPOGRAFIE = {
     color: KLEUR.muted,
   },
   menuItem: {
-    fontSize: '13px',
-    fontWeightInactief: 400,
-    fontWeightActief: 500,
+    fontSize: '14px',
+    fontWeightInactief: 500,
+    fontWeightActief: 700,
     color: KLEUR.inkt,
   },
   secundair: {
@@ -114,10 +129,10 @@ export const TYPOGRAFIE = {
     color: KLEUR.inkt,
   },
   sidebarGroupHeader: {
-    fontSize: '10px',
+    fontSize: '10.5px',
     fontWeight: 600,
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
+    letterSpacing: '0.14em',
     color: KLEUR.muted,
   },
   tabelKop: {
@@ -208,7 +223,7 @@ export const MAAT = {
 
   // Scrollbar
   scrollbarBreedte: 5,
-  scrollbarThumb: '#E0E0E0',
+  scrollbarThumb: '#D9D4CA',
 
   // Logo
   logoRechteMVerhoudingDashboard: 3.85,

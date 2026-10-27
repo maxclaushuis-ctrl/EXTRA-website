@@ -408,7 +408,7 @@ export default function ProspectStatistiekenDashboard() {
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
                 <Bar yAxisId="left" dataKey="verzonden" name="Verzonden" fill="#BFDBFE" radius={[3, 3, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="open_rate" name="Open rate"
-                  stroke="#7C3AED" strokeWidth={2.5} dot={false} />
+                  stroke="#37352C" strokeWidth={2.5} dot={false} />
                 <Line yAxisId="right" type="monotone" dataKey="click_rate" name="Click rate"
                   stroke="#059669" strokeWidth={2.5} dot={false} />
               </ComposedChart>

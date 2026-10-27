@@ -151,7 +151,7 @@ function FunnelBar({ label, count, total, eerste }: { label: string; count: numb
     <div className="flex items-center gap-3.5 py-2 text-[13px]">
       <div className="w-44 text-gray-500 text-right shrink-0">{label}</div>
       <div className="flex-1 bg-[#fafafa] rounded-full h-7 relative overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 3)}%`, background: eerste ? '#7c3aed' : '#d5cdeb' }} />
+        <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 3)}%`, background: eerste ? '#37352C' : '#d5cdeb' }} />
         <span className={`absolute inset-0 flex items-center justify-center text-[12.5px] font-bold ${eerste ? 'text-white' : 'text-gray-800'}`}>
           {count.toLocaleString('nl-NL')}
         </span>
@@ -260,7 +260,7 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4, onN
                   <Bar dataKey="aanmeldingen" name="Aanmeldingen" radius={[5, 5, 0, 0]} maxBarSize={44}
                     label={{ position: 'top', fontSize: 11.5, fill: '#374151', fontWeight: 600 }}>
                     {monthlyData.map((_, i) => (
-                      <Cell key={i} fill={i === monthlyData.length - 1 ? '#7c3aed' : '#e5e2ee'} />
+                      <Cell key={i} fill={i === monthlyData.length - 1 ? '#37352C' : '#e5e2ee'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -277,7 +277,7 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4, onN
                   <div key={naam} className={`flex items-center gap-2.5 py-2.5 text-[13px] ${i < functieData.length - 1 ? 'border-b border-[#ececef]' : ''}`}>
                     <span className="w-32 text-gray-800 truncate">{naam}</span>
                     <span className="flex-1 h-1.5 bg-[#fafafa] rounded-full overflow-hidden">
-                      <i className="block h-full rounded-full" style={{ width: `${Math.max((n / functieMax) * 100, 3)}%`, background: i === 0 ? '#7c3aed' : '#d5cdeb' }} />
+                      <i className="block h-full rounded-full" style={{ width: `${Math.max((n / functieMax) * 100, 3)}%`, background: i === 0 ? '#37352C' : '#d5cdeb' }} />
                     </span>
                     <span className="w-9 text-right font-bold text-gray-900">{n}</span>
                   </div>
@@ -515,7 +515,7 @@ function TabSeo({ blogs, isLoading }: { blogs: BlogPost[]; isLoading: boolean })
 
 // ─── Tab GA4: Google Analytics ────────────────────────────────────────────────
 
-const GA4_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
+const GA4_COLORS = ['#37352C', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
 
 function fmtDuration(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -574,8 +574,8 @@ function TabGa4({ overview, trend, sources, pages, devices, isLoading }: {
                 <AreaChart data={trendData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                   <defs>
                     <linearGradient id="grad-sess" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#37352C" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="#37352C" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="grad-user" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.12} />
@@ -587,7 +587,7 @@ function TabGa4({ overview, trend, sources, pages, devices, isLoading }: {
                   <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Area type="monotone" dataKey="sessies"    stroke="#7c3aed" fill="url(#grad-sess)" strokeWidth={2} name="Sessies"    dot={false} />
+                  <Area type="monotone" dataKey="sessies"    stroke="#37352C" fill="url(#grad-sess)" strokeWidth={2} name="Sessies"    dot={false} />
                   <Area type="monotone" dataKey="gebruikers" stroke="#3b82f6" fill="url(#grad-user)" strokeWidth={2} name="Gebruikers" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>

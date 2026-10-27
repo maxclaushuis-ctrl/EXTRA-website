@@ -32,7 +32,7 @@ import {
   type GroupChatMessage,
 } from '../../api/whatsappClient';
 
-const NAVY = '#7E22CE';
+const NAVY = '#2C2A23';
 const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 const MAX_PARTICIPANTS = 8;
 
@@ -41,7 +41,7 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, fontFamily: FONT, boxSizing: 'border-box',
 };
 const primaryBtn = (busy: boolean): React.CSSProperties => ({
-  background: busy ? '#C4B5FD' : NAVY, color: '#fff', border: 'none', borderRadius: 6,
+  background: busy ? '#CFC9BE' : NAVY, color: '#fff', border: 'none', borderRadius: 6,
   padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer',
 });
 const secondaryBtn: React.CSSProperties = {
@@ -338,7 +338,7 @@ function MessageBubble({ m }: { m: GroupChatMessage }) {
   return (
     <div style={{ display: 'flex', justifyContent: eigen ? 'flex-end' : 'flex-start' }}>
       <div style={{
-        maxWidth: '70%', background: eigen ? '#EDE9FE' : '#fff', border: '1px solid #E5E7EB',
+        maxWidth: '70%', background: eigen ? '#EDEAE4' : '#fff', border: '1px solid #E5E7EB',
         borderRadius: 10, padding: '8px 12px', fontSize: 13,
       }}>
         {!eigen && (
@@ -398,7 +398,7 @@ export default function WhatsAppGroepen() {
                 onClick={() => setGeselecteerd(g.id)}
                 style={{
                   padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #F3F4F6',
-                  background: geselecteerd === g.id ? '#F5F3FF' : 'transparent',
+                  background: geselecteerd === g.id ? '#F6F4EF' : 'transparent',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -25,7 +25,7 @@ import {
   type Group,
 } from '../../api/whatsappClient';
 
-const NAVY = '#7E22CE';
+const NAVY = '#2C2A23';
 const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 
 const STATUS_LABEL: Record<WhatsappTemplate['status'], string> = {
@@ -311,7 +311,7 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, fontFamily: FONT, boxSizing: 'border-box',
 };
 const primaryBtn = (busy: boolean): React.CSSProperties => ({
-  background: busy ? '#C4B5FD' : NAVY, color: '#fff', border: 'none', borderRadius: 6,
+  background: busy ? '#CFC9BE' : NAVY, color: '#fff', border: 'none', borderRadius: 6,
   padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer',
 });
 const secondaryBtn: React.CSSProperties = {
