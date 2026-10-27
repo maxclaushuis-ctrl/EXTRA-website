@@ -19,10 +19,13 @@
  * gesprek geboekt is (via Calendly), dus dat zou de cijfers en herinneringen
  * verstoren. Stap 3 legt daarom uit hoe het gesprek gepland wordt, zoals nu.
  *
- * Taal: ?lang=en (knoppen op de Engelse site) begint in het Engels; kandidaten
- * met een nationaliteit buiten Nederland krijgen na stap 1 de Engelse teksten.
+ * Taal: /en/apply en ?lang=en beginnen in het Engels (het pad wint; bron
+ * mock-up en/apply.html); kandidaten met een nationaliteit buiten Nederland
+ * krijgen na stap 1 de Engelse teksten. Op de Engelse pagina gaan de links
+ * (homepage, privacybeleid) naar de Engelse tegenhangers.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { useLocation } from "wouter";
 import Shell from "@/design3/Shell";
 import { Ic, Pijl } from "@/design3/basis";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
@@ -30,6 +33,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { meldAanmelding } from "@/lib/meting";
 import { herkomstVoorFormulier } from "@/lib/herkomst";
 import { ALLE_LANDNAMEN, LANDEN_SCHEIDING, bepaalZone, type LandZone } from "@shared/landen";
+import { taalVanPad } from "@shared/taal";
 import { Direct } from "./Aanvraag";
 
 type Flow = LandZone;
@@ -37,7 +41,7 @@ type Stap = "basics" | "distance_check" | "skills" | "twv" | "cv" | "klaar" | "r
 type Taal = "NL" | "EN";
 
 const FUNCTIES = [
-  { waarde: "horecamedewerker", NL: "Bediening of bar", EN: "Service or bar" },
+  { waarde: "horecamedewerker", NL: "Bediening of bar", EN: "Waiting staff or bar" },
   { waarde: "housekeeping", NL: "Housekeeping", EN: "Housekeeping" },
   { waarde: "chef", NL: "Keuken", EN: "Kitchen" },
   { waarde: "logistiek", NL: "Logistiek", EN: "Logistics" },
@@ -110,13 +114,13 @@ function binnen50km(stad: string): boolean {
 }
 
 const LANDCODES = [
-  { code: "+31", naam: "Nederland" }, { code: "+32", naam: "België" }, { code: "+49", naam: "Duitsland" },
-  { code: "+44", naam: "Verenigd Koninkrijk" }, { code: "+33", naam: "Frankrijk" }, { code: "+48", naam: "Polen" },
-  { code: "+40", naam: "Roemenië" }, { code: "+90", naam: "Turkije" }, { code: "+212", naam: "Marokko" },
-  { code: "+234", naam: "Nigeria" }, { code: "+91", naam: "India" }, { code: "+597", naam: "Suriname" },
-  { code: "+359", naam: "Bulgarije" }, { code: "+36", naam: "Hongarije" }, { code: "+39", naam: "Italië" },
-  { code: "+34", naam: "Spanje" }, { code: "+351", naam: "Portugal" }, { code: "+1", naam: "VS / Canada" },
-  { code: "+other", naam: "Anders" },
+  { code: "+31", naam: "Nederland", en: "Netherlands" }, { code: "+32", naam: "België", en: "Belgium" }, { code: "+49", naam: "Duitsland", en: "Germany" },
+  { code: "+44", naam: "Verenigd Koninkrijk", en: "United Kingdom" }, { code: "+33", naam: "Frankrijk", en: "France" }, { code: "+48", naam: "Polen", en: "Poland" },
+  { code: "+40", naam: "Roemenië", en: "Romania" }, { code: "+90", naam: "Turkije", en: "Turkey" }, { code: "+212", naam: "Marokko", en: "Morocco" },
+  { code: "+234", naam: "Nigeria", en: "Nigeria" }, { code: "+91", naam: "India", en: "India" }, { code: "+597", naam: "Suriname", en: "Suriname" },
+  { code: "+359", naam: "Bulgarije", en: "Bulgaria" }, { code: "+36", naam: "Hongarije", en: "Hungary" }, { code: "+39", naam: "Italië", en: "Italy" },
+  { code: "+34", naam: "Spanje", en: "Spain" }, { code: "+351", naam: "Portugal", en: "Portugal" }, { code: "+1", naam: "VS / Canada", en: "US / Canada" },
+  { code: "+other", naam: "Anders", en: "Other" },
 ];
 
 export function normalizeToE164(landcode: string, nummer: string): string {
@@ -130,13 +134,18 @@ export function isValidE164(e164: string): boolean {
   return /^\+\d{7,15}$/.test(e164);
 }
 
-/** Functie uit het korte formulier op de werkpagina's naar een keuze hier. */
+/**
+ * Functie uit het korte formulier op de werkpagina's naar een keuze hier. De
+ * Engelse woorden zijn de vertalingen van de Nederlandse (kitchen = keuken,
+ * dish = afwas, logistics = logistiek, waiting = bediening), uit het
+ * inschrijfblok op de Engelse pagina's.
+ */
 function functieUitKort(f: string): string {
   const s = f.toLowerCase();
   if (s.includes("housekeeping")) return "housekeeping";
-  if (s.includes("keuken") || s.includes("afwas")) return "chef";
-  if (s.includes("logistiek")) return "logistiek";
-  if (/bediening|bar|banqueting|f&(amp;)?b/.test(s)) return "horecamedewerker";
+  if (s.includes("keuken") || s.includes("afwas") || s.includes("kitchen") || s.includes("dish")) return "chef";
+  if (s.includes("logistiek") || s.includes("logistics")) return "logistiek";
+  if (/bediening|waiting|bar|banqueting|f&(amp;)?b/.test(s)) return "horecamedewerker";
   return "";
 }
 
@@ -169,6 +178,7 @@ const T = {
       "Past je profiel, dan krijg je een mail met een link om zelf een moment voor het gesprek te kiezen.",
       "Na het gesprek hoor je snel of je bij EXTRA aan de slag kunt.",
     ],
+    emailPlaceholder: "jouw@email.nl",
     privacy: <>We gebruiken je gegevens alleen voor je aanmelding en om contact met je op te nemen. Lees ons <a href="/privacybeleid">privacybeleid</a>.</>,
     klaarKop: <>Top, je aanmelding <span className="serif">is ontvangen!</span></>,
     klaarTekst: "Je ontvangt zo een bevestiging per mail met alle details. App ons gerust als je nog vragen hebt.",
@@ -195,36 +205,37 @@ const T = {
     },
   },
   EN: {
-    stappen: ["Personal", "Skills", "CV and interview"],
-    basics: "Let's start with the basics",
+    stappen: ["Personal", "Skills", "CV and meeting"],
+    basics: "First, the basics",
     firstName: "First name", lastName: "Last name", birthDate: "Date of birth", phone: "Phone number",
-    email: "Email address", city: "City", postcode: "Postal code", nationality: "Nationality",
+    email: "Email address", city: "Town or city", postcode: "Postcode", nationality: "Nationality",
     kiesLand: "Choose your nationality", landcode: "Country code", optioneel: "optional",
     functie: "Preferred role",
-    kanaal: "How did you find EXTRA?",
-    kanaalPlaceholder: "E.g. Instagram, Indeed, via a friend",
+    kanaal: "How did you find out about EXTRA?",
+    kanaalPlaceholder: "E.g. Instagram, Indeed, through a friend",
     kanaalVast: "Filled in automatically from the link you used.",
     verder: "Continue", terug: "Back", verstuur: "Submit application", bezig: "Please wait",
     nl: "How well do you speak Dutch?", en: "How well do you speak English?",
-    niveau: { niet: "Not at all", basis: "Basic", redelijk: "Conversational", goed: "Fluent" },
+    niveau: { niet: "Not at all", basis: "Basic", redelijk: "Fair", goed: "Good" },
     ervaring: "How much relevant experience do you have in this role?",
-    waarom: "Why do we ask this?",
-    waaromTekst: "Most of our assignments involve direct contact with guests and colleagues, so communicating well in Dutch or English is essential. Our clients also expect a certain level of experience. This helps us make the right match.",
+    waarom: "Why do we ask?",
+    waaromTekst: "In almost all our assignments you deal with guests and colleagues, so communicating well in Dutch or English is essential. Our clients also expect a certain level of experience, and this helps us make the right match.",
     cvKop: "Upload your CV",
-    cvUitleg: "Your CV helps us see which assignments suit you. Without a CV we can't schedule an interview yet.",
+    cvUitleg: "Before you book a meeting, we'd like to see your CV. That way we can look properly at which assignments suit you.",
     cvKies: "Choose file", cvAnder: "Choose a different file", cvFormaten: "PDF, DOC or DOCX (max. 10 MB)",
     cvLater: "No CV at hand? Just submit your application. We'll email you a link to upload it later.",
     cvType: "We can't open this file type. Choose a PDF, DOC or DOCX.",
     cvGroot: "This file is larger than 10 MB.",
-    gesprekKop: "Your interview",
+    gesprekKop: "Your meeting",
     gesprek: [
       "Our team reviews your application, usually within 1 to 2 working days.",
-      "If your profile is a match, we'll email you a link to pick a time for the interview.",
-      "After the interview you'll quickly hear whether you can start working with EXTRA.",
+      "If your profile fits, you'll get an email with a link to choose a time for the meeting yourself.",
+      "After the meeting you'll soon hear whether you can start working with EXTRA.",
     ],
-    privacy: <>We only use your details for your application and to contact you. Read our <a href="/privacybeleid">privacy policy</a>.</>,
+    emailPlaceholder: "you@email.nl",
+    privacy: <>We only use your details for your application and to contact you. Read our <a href="/en/privacy-policy">privacy policy</a>.</>,
     klaarKop: <>Great, your application <span className="serif">has been received!</span></>,
-    klaarTekst: "You'll receive a confirmation email shortly with all the details. Feel free to message us if you have any questions.",
+    klaarTekst: "You'll shortly receive a confirmation email with all the details. Feel free to message us if you have any questions.",
     cvOntvangen: "CV received", cvVolgt: "CV to follow", aanmeldingOntvangen: "Application received",
     home: "Back to the homepage",
     afstandKop: "Just checking",
@@ -239,12 +250,12 @@ const T = {
     functieNiet: "Due to Dutch labour law and work permit regulations, we can't accept your application for this role at this time. This is not a judgment of you as a person, but purely a legal requirement.",
     twvBlokkeert: "We can only continue if your work permit allows you to work via EXTRA.",
     fout: {
-      firstName: "First name is required", lastName: "Last name is required", birthDate: "Date of birth is required",
-      phone: "Phone number is required", phoneOngeldig: "Enter a valid phone number (at least 7 digits)",
-      email: "Email is required", emailOngeldig: "Invalid email address", city: "City is required",
-      nationality: "Nationality is required", functie: "Please select a role",
-      dutchLevel: "Please select your Dutch level", englishLevel: "Please select your English level",
-      experience: "Please select your experience", algemeen: "Something went wrong. Please try again.",
+      firstName: "Enter your first name", lastName: "Enter your last name", birthDate: "Enter your date of birth",
+      phone: "Enter your phone number", phoneOngeldig: "Enter a valid phone number (at least 7 digits)",
+      email: "Enter your email address", emailOngeldig: "Enter a valid email address", city: "Enter your town or city",
+      nationality: "Choose your nationality", functie: "Choose a role",
+      dutchLevel: "Choose how well you speak Dutch", englishLevel: "Choose how well you speak English",
+      experience: "Choose your experience", algemeen: "Something went wrong. Please try again.",
     },
   },
 };
@@ -288,6 +299,7 @@ function Blok({ nr, kop, children }: { nr: number; kop: ReactNode; children: Rea
 }
 
 export default function Aanmelden() {
+  const [pad] = useLocation();
   const [stap, setStap] = useState<Stap>("basics");
   const [flow, setFlow] = useState<Flow>("NL");
   const [afwijzing, setAfwijzing] = useState<{ kop: string; tekst: string } | null>(null);
@@ -338,8 +350,10 @@ export default function Aanmelden() {
     return leeg;
   });
 
-  const paginaTaal: Taal = begin.taal === "en" ? "EN" : "NL";
-  const taal: Taal = begin.taal === "en" ? "EN" : flow === "NL" ? "NL" : "EN";
+  // Het pad wint (/en/apply), daarna ?lang=en.
+  const paginaTaal: Taal = taalVanPad(pad) === "en" || begin.taal === "en" ? "EN" : "NL";
+  const taal: Taal = paginaTaal === "EN" ? "EN" : flow === "NL" ? "NL" : "EN";
+  const homeHref = paginaTaal === "EN" ? "/en" : "/";
   const t = T[taal];
   const nummer = stap === "basics" || stap === "distance_check" ? 1 : stap === "skills" || stap === "twv" ? 2 : 3;
 
@@ -607,10 +621,10 @@ export default function Aanmelden() {
   const land = LANDCODES.find((l) => l.code === g.phoneCountryCode) ?? LANDCODES[0];
   const links = paginaTaal === "EN"
     ? {
-      eyebrow: "Apply", h1: <>Sign up as hospitality staff <span className="serif">at EXTRA</span></>,
-      lead: "Signed up in three steps. After that we'll plan an introduction at our office.",
-      stappen: [["Personal", "First the basics: your details and preferred role."], ["Skills", "Language and experience, so we can make the right match."], ["CV and interview", "Upload your CV and we'll invite you for an interview."]],
-      bewijs: ["Employed", "everyone, no freelancers"], dag: ["Next day", "paid"], direct: "Question?", uit: "from",
+      eyebrow: "Sign up", h1: <>Sign up as a hospi{"\u00AD"}tality worker <span className="serif">with EXTRA</span></>,
+      lead: "Signed up in three steps. We then schedule an introduction meeting at our office.",
+      stappen: [["Personal", "First some basics: your details and preferred role."], ["Skills", "Language and experience, so we can make the right match."], ["CV and meeting", "Upload your CV and we'll invite you for a meeting."]],
+      bewijs: ["On our payroll", "everyone, no freelancers"], dag: ["Paid", "the next day"], direct: "Question?", uit: "from",
     }
     : {
       eyebrow: "Aanmelden", h1: <>Aanmelden als horeca{"\u00AD"}medewerker <span className="serif">bij EXTRA</span></>,
@@ -631,10 +645,10 @@ export default function Aanmelden() {
               {links.stappen.map(([b, s]) => <li key={b}><b>{b}</b><span>{s}</span></li>)}
             </ol>
             <Bewijs taal={paginaTaal} uit={links.uit} derde={links.bewijs as [string, string]} vierde={links.dag as [string, string]} />
-            <Direct label={links.direct} />
+            <Direct label={links.direct} taal={paginaTaal === "EN" ? "en" : "nl"} />
           </div>
 
-          <form ref={kaart} className="av-kaart am-kaart" id="aanmelden" noValidate aria-label={paginaTaal === "EN" ? "Sign up as staff" : "Aanmelden als medewerker"}
+          <form ref={kaart} className="av-kaart am-kaart" id="aanmelden" noValidate aria-label={paginaTaal === "EN" ? "Sign up as an employee" : "Aanmelden als medewerker"}
             onSubmit={(e) => { e.preventDefault(); if (stap === "cv") rondAf(); }}>
             {stap !== "klaar" && stap !== "rejected" && (
               <ol className="am-voortgang" aria-label={taal === "EN" ? "Progress" : "Voortgang"}>
@@ -655,7 +669,7 @@ export default function Aanmelden() {
                         <span className="am-land">
                           <b aria-hidden="true">{land.code === "+other" ? "+" : land.code}</b>
                           <select aria-label={t.landcode} value={g.phoneCountryCode} onChange={(e) => zet("phoneCountryCode", e.target.value)}>
-                            {LANDCODES.map((l) => <option key={l.code} value={l.code}>{l.naam}{l.code !== "+other" ? ` ${l.code}` : ""}</option>)}
+                            {LANDCODES.map((l) => <option key={l.code} value={l.code}>{taal === "EN" ? l.en : l.naam}{l.code !== "+other" ? ` ${l.code}` : ""}</option>)}
                           </select>
                         </span>
                         <input name="phone" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="06 12 34 56 78" required value={g.phone}
@@ -663,7 +677,7 @@ export default function Aanmelden() {
                       </div>
                       {fouten.phone && <em>{fouten.phone}</em>}
                     </label>
-                    {veld("email", t.email, { type: "email", autoComplete: "email", placeholder: "jouw@email.nl" })}
+                    {veld("email", t.email, { type: "email", autoComplete: "email", placeholder: t.emailPlaceholder })}
                     {veld("city", t.city, { autoComplete: "address-level2", placeholder: "Amsterdam" })}
                     {veld("postcode", t.postcode, { autoComplete: "postal-code", placeholder: "1012 AB" }, true)}
                     <label className={`veld${fouten.nationality ? " fout" : ""}`}>
@@ -788,7 +802,7 @@ export default function Aanmelden() {
                   <li className={cv ? "ja" : undefined}><Ic n="vink" />{cv ? t.cvOntvangen : t.cvVolgt}</li>
                 </ul>
                 <ol className="am-volgende">{t.gesprek.map((s) => <li key={s}>{s}</li>)}</ol>
-                <a className="knop vol" href="/">{t.home} <Pijl /></a>
+                <a className="knop vol" href={homeHref}>{t.home} <Pijl /></a>
               </div>
             )}
 
@@ -796,7 +810,7 @@ export default function Aanmelden() {
               <div className="am-klaar am-af" role="status">
                 <h2>{afwijzing.kop}</h2>
                 <p>{afwijzing.tekst}</p>
-                <a className="knop vol" href="/">{t.home} <Pijl /></a>
+                <a className="knop vol" href={homeHref}>{t.home} <Pijl /></a>
               </div>
             )}
           </form>

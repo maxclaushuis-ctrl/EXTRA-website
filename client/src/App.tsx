@@ -8,6 +8,8 @@ import { maakFragmentRoute } from "@/design3/fragmentRoute";
 const Home = lazy(() => import("@/pages/d3/Home"));
 // Design 3.0, levering 2: inhoudspagina's uit de mock-up (client/src/design3/paginas).
 const D3_cateringpersoneel_inhuren = maakFragmentRoute("cateringpersoneel-inhuren");
+const D3_horeca_uitzendbureau_amsterdam = maakFragmentRoute("horeca-uitzendbureau-amsterdam");
+const D3_uitzenden_of_zzp = maakFragmentRoute("uitzenden-of-zzp");
 const D3_horecapersoneel_restaurants = maakFragmentRoute("horecapersoneel-restaurants");
 const D3_horeca_personeel_gezocht = maakFragmentRoute("horeca-personeel-gezocht");
 const D3_horeca_personeel_amsterdam = maakFragmentRoute("horeca-personeel-amsterdam");
@@ -17,6 +19,42 @@ const D3_tijdelijk_horeca_personeel = maakFragmentRoute("tijdelijk-horeca-person
 const D3_horeca_personeel_inhuren = maakFragmentRoute("horeca-personeel-inhuren");
 const D3_bediening_inhuren = maakFragmentRoute("bediening-inhuren");
 const D3_horeca_uitzendbureau_amsterdam_werkwijze = maakFragmentRoute("horeca-uitzendbureau-amsterdam-werkwijze");
+// Engelse site in design 3.0 (mock-up en/*.html), gegenereerd door fragment.py.
+const EN_home = maakFragmentRoute("en");
+const EN_about = maakFragmentRoute("en-about");
+const EN_banqueting_staff = maakFragmentRoute("en-banqueting-staff");
+const EN_catering_staff_amsterdam = maakFragmentRoute("en-catering-staff-amsterdam");
+const EN_chef_jobs = maakFragmentRoute("en-chef-jobs");
+const EN_client_stories = maakFragmentRoute("en-client-stories");
+const EN_contact = maakFragmentRoute("en-contact");
+const EN_cookie_policy = maakFragmentRoute("en-cookie-policy");
+const EN_daily_pay = maakFragmentRoute("en-daily-pay");
+const EN_dishwashers = maakFragmentRoute("en-dishwashers");
+const EN_event_jobs = maakFragmentRoute("en-event-jobs");
+const EN_event_staff_amsterdam = maakFragmentRoute("en-event-staff-amsterdam");
+const EN_food_and_beverage_staff = maakFragmentRoute("en-food-and-beverage-staff");
+const EN_front_office_jobs = maakFragmentRoute("en-front-office-jobs");
+const EN_front_office_staff = maakFragmentRoute("en-front-office-staff");
+const EN_hospitality_jobs = maakFragmentRoute("en-hospitality-jobs");
+const EN_hospitality_staff_amsterdam = maakFragmentRoute("en-hospitality-staff-amsterdam");
+const EN_hospitality_work = maakFragmentRoute("en-hospitality-work");
+const EN_hotel_staffing_amsterdam = maakFragmentRoute("en-hotel-staffing-amsterdam");
+const EN_housekeeping_jobs = maakFragmentRoute("en-housekeeping-jobs");
+const EN_housekeeping_staff = maakFragmentRoute("en-housekeeping-staff");
+const EN_how_we_select = maakFragmentRoute("en-how-we-select");
+const EN_how_we_work = maakFragmentRoute("en-how-we-work");
+const EN_kitchen_staff = maakFragmentRoute("en-kitchen-staff");
+const EN_logistics_jobs = maakFragmentRoute("en-logistics-jobs");
+const EN_logistics_staff_amsterdam = maakFragmentRoute("en-logistics-staff-amsterdam");
+const EN_nen_4400_1_certification = maakFragmentRoute("en-nen-4400-1-certification");
+const EN_our_team = maakFragmentRoute("en-our-team");
+const EN_part_time_jobs_amsterdam = maakFragmentRoute("en-part-time-jobs-amsterdam");
+const EN_privacy_policy = maakFragmentRoute("en-privacy-policy");
+const EN_restaurant_staff_amsterdam = maakFragmentRoute("en-restaurant-staff-amsterdam");
+const EN_rewards = maakFragmentRoute("en-rewards");
+const EN_terms_and_conditions = maakFragmentRoute("en-terms-and-conditions");
+const EN_waiting_staff = maakFragmentRoute("en-waiting-staff");
+const EN_working_in_hospitality = maakFragmentRoute("en-working-in-hospitality");
 const D3_horeca_vacatures_amsterdam = maakFragmentRoute("horeca-vacatures-amsterdam");
 const D3_horeca_werk = maakFragmentRoute("horeca-werk");
 const D3_horeca_werk_amsterdam = maakFragmentRoute("horeca-werk-amsterdam");
@@ -53,8 +91,6 @@ const NotFound = maakFragmentRoute("niet-gevonden");
 const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
 // Oude opmaak, tijdelijk: deze twee pagina's kregen in oktober 2026 in productie nieuwe inhoud
 // (aparte zoekintentie, nieuwe pagina) die nog geen design 3.0-versie heeft.
-const SeoLandingPagina = lazy(() => import("@/pages/SeoLandingPaginas"));
-const HorecaUitzendbureau = lazy(() => import("@/pages/HorecaUitzendbureau"));
 const DashboardMockup = lazy(() => import("@/pages/DashboardMockup"));
 const WachtwoordInstellen = lazy(() => import("@/pages/WachtwoordInstellen"));
 const Brochure = lazy(() => import("@/pages/Brochure"));
@@ -81,23 +117,6 @@ const VacatureDetail = lazy(() => import("@/pages/VacatureDetail"));
 const BHGGroupPage = lazy(() => import("@/pages/BHGGroupPage"));
 const XebiaPage = lazy(() => import("@/pages/XebiaPage"));
 
-const LandingPageEn = lazy(() => import("@/pages/en/LandingPageEn"));
-const HospitalityStaffAmsterdam = lazy(() => import("@/pages/en/HospitalityStaffAmsterdam"));
-const HotelStaffingAmsterdam = lazy(() => import("@/pages/en/HotelStaffingAmsterdam"));
-const EventStaffAmsterdam = lazy(() => import("@/pages/en/EventStaffAmsterdam"));
-const CateringStaffAmsterdam = lazy(() => import("@/pages/en/CateringStaffAmsterdam"));
-const RestaurantStaffAmsterdam = lazy(() => import("@/pages/en/RestaurantStaffAmsterdam"));
-const AboutExtra = lazy(() => import("@/pages/en/AboutExtra"));
-const OurTeam = lazy(() => import("@/pages/en/OurTeam"));
-const ContactEn = lazy(() => import("@/pages/en/ContactEn"));
-const ClientStories = lazy(() => import("@/pages/en/ClientStories"));
-const HowWeWork = lazy(() => import("@/pages/en/HowWeWork"));
-const RewardsEn = lazy(() => import("@/pages/en/RewardsEn"));
-const HospitalityJobsAmsterdam = lazy(() => import("@/pages/en/HospitalityJobsAmsterdam"));
-const HospitalityWorkEn = lazy(() => import("@/pages/en/HospitalityWorkEn"));
-const HousekeepingJobsEn = lazy(() => import("@/pages/en/HousekeepingJobsEn"));
-const ChefJobsEn = lazy(() => import("@/pages/en/ChefJobsEn"));
-const FrontOfficeJobsEn = lazy(() => import("@/pages/en/FrontOfficeJobsEn"));
 
 const UserProfile = lazy(() => import("@/pages/user/Profile"));
 const Rewards = lazy(() => import("@/pages/user/Rewards"));
@@ -200,12 +219,6 @@ const PUBLIC_PATHS = [
   '/voorwaarden', '/cookiebeleid', '/nen-4400-1-certificering',
   '/vacatures',
   '/en',
-  '/en/hospitality-staff-amsterdam', '/en/hotel-staffing-amsterdam',
-  '/en/event-staff-amsterdam', '/en/catering-staff-amsterdam', '/en/restaurant-staff-amsterdam',
-  '/en/about', '/en/our-team', '/en/contact', '/en/client-stories',
-  '/en/how-we-work', '/en/rewards',
-  '/en/hospitality-jobs', '/en/hospitality-work',
-  '/en/housekeeping-jobs', '/en/chef-jobs', '/en/front-office-jobs',
 ];
 
 function PageLoader() {
@@ -287,7 +300,7 @@ function Router() {
           <Route path="/evenementen-personeel-inhuren">{() => { window.location.replace('/eventpersoneel-inhuren'); return null; }}</Route>
           <Route path="/tijdelijk-horeca-personeel" component={D3_tijdelijk_horeca_personeel} />
           {/* Nog in de oude opmaak tot de design 3.0-versie is goedgekeurd (productie, september 2026). */}
-          <Route path="/uitzenden-of-zzp">{() => <SeoLandingPagina page="uitzenden-of-zzp" />}</Route>
+          <Route path="/uitzenden-of-zzp" component={D3_uitzenden_of_zzp} />
           <Route path="/bijbaan-amsterdam" component={D3_bijbaan_amsterdam} />
           <Route path="/dagbetaling" component={D3_dagbetaling} />
           <Route path="/werken-in-de-horeca" component={D3_werken_in_de_horeca} />
@@ -314,36 +327,52 @@ function Router() {
           <Route path="/ik-zoek-extra-werk/front-office">{() => { window.location.replace('/front-office-vacatures-amsterdam'); return null; }}</Route>
 
           {/* SEO pillar & landingspagina's */}
-          <Route path="/horeca-uitzendbureau-amsterdam" component={HorecaUitzendbureau} />
+          <Route path="/horeca-uitzendbureau-amsterdam" component={D3_horeca_uitzendbureau_amsterdam} />
           <Route path="/horeca-uitzendbureau-amsterdam-werkwijze" component={D3_horeca_uitzendbureau_amsterdam_werkwijze} />
           <Route path="/horeca-personeel-amsterdam" component={D3_horeca_personeel_amsterdam} />
           <Route path="/horeca-personeel" component={D3_horeca_personeel} />
           <Route path="/flexibel-horeca-personeel" component={D3_flexibel_horeca_personeel} />
 
-          {/* English landing page */}
-          <Route path="/en" component={LandingPageEn} />
-
-          {/* English employer pages */}
-          <Route path="/en/hospitality-staff-amsterdam" component={HospitalityStaffAmsterdam} />
-          <Route path="/en/hotel-staffing-amsterdam" component={HotelStaffingAmsterdam} />
-          <Route path="/en/event-staff-amsterdam" component={EventStaffAmsterdam} />
-          <Route path="/en/catering-staff-amsterdam" component={CateringStaffAmsterdam} />
-          <Route path="/en/restaurant-staff-amsterdam" component={RestaurantStaffAmsterdam} />
-
-          {/* English other pages */}
-          <Route path="/en/about" component={AboutExtra} />
-          <Route path="/en/our-team" component={OurTeam} />
-          <Route path="/en/contact" component={ContactEn} />
-          <Route path="/en/client-stories" component={ClientStories} />
-          <Route path="/en/how-we-work" component={HowWeWork} />
-          <Route path="/en/rewards" component={RewardsEn} />
-
-          {/* English candidate pages */}
-          <Route path="/en/hospitality-jobs" component={HospitalityJobsAmsterdam} />
-          <Route path="/en/hospitality-work" component={HospitalityWorkEn} />
-          <Route path="/en/housekeeping-jobs" component={HousekeepingJobsEn} />
-          <Route path="/en/chef-jobs" component={ChefJobsEn} />
-          <Route path="/en/front-office-jobs" component={FrontOfficeJobsEn} />
+          {/* Engelse site in design 3.0. Formulieren en vacatures zijn de Nederlandse componenten, die hun taal uit het pad halen. */}
+          <Route path="/en" component={EN_home} />
+          <Route path="/en/about" component={EN_about} />
+          <Route path="/en/banqueting-staff" component={EN_banqueting_staff} />
+          <Route path="/en/catering-staff-amsterdam" component={EN_catering_staff_amsterdam} />
+          <Route path="/en/chef-jobs" component={EN_chef_jobs} />
+          <Route path="/en/client-stories" component={EN_client_stories} />
+          <Route path="/en/contact" component={EN_contact} />
+          <Route path="/en/cookie-policy" component={EN_cookie_policy} />
+          <Route path="/en/daily-pay" component={EN_daily_pay} />
+          <Route path="/en/dishwashers" component={EN_dishwashers} />
+          <Route path="/en/event-jobs" component={EN_event_jobs} />
+          <Route path="/en/event-staff-amsterdam" component={EN_event_staff_amsterdam} />
+          <Route path="/en/food-and-beverage-staff" component={EN_food_and_beverage_staff} />
+          <Route path="/en/front-office-jobs" component={EN_front_office_jobs} />
+          <Route path="/en/front-office-staff" component={EN_front_office_staff} />
+          <Route path="/en/hospitality-jobs" component={EN_hospitality_jobs} />
+          <Route path="/en/hospitality-staff-amsterdam" component={EN_hospitality_staff_amsterdam} />
+          <Route path="/en/hospitality-work" component={EN_hospitality_work} />
+          <Route path="/en/hotel-staffing-amsterdam" component={EN_hotel_staffing_amsterdam} />
+          <Route path="/en/housekeeping-jobs" component={EN_housekeeping_jobs} />
+          <Route path="/en/housekeeping-staff" component={EN_housekeeping_staff} />
+          <Route path="/en/how-we-select" component={EN_how_we_select} />
+          <Route path="/en/how-we-work" component={EN_how_we_work} />
+          <Route path="/en/kitchen-staff" component={EN_kitchen_staff} />
+          <Route path="/en/logistics-jobs" component={EN_logistics_jobs} />
+          <Route path="/en/logistics-staff-amsterdam" component={EN_logistics_staff_amsterdam} />
+          <Route path="/en/nen-4400-1-certification" component={EN_nen_4400_1_certification} />
+          <Route path="/en/our-team" component={EN_our_team} />
+          <Route path="/en/part-time-jobs-amsterdam" component={EN_part_time_jobs_amsterdam} />
+          <Route path="/en/privacy-policy" component={EN_privacy_policy} />
+          <Route path="/en/restaurant-staff-amsterdam" component={EN_restaurant_staff_amsterdam} />
+          <Route path="/en/rewards" component={EN_rewards} />
+          <Route path="/en/terms-and-conditions" component={EN_terms_and_conditions} />
+          <Route path="/en/waiting-staff" component={EN_waiting_staff} />
+          <Route path="/en/working-in-hospitality" component={EN_working_in_hospitality} />
+          <Route path="/en/request-staff" component={PersoneelsAanvraag} />
+          <Route path="/en/request-received" component={AanvraagOntvangen} />
+          <Route path="/en/jobs" component={Vacatures} />
+          <Route path="/en/apply" component={Aanmelden} />
 
           {/* Blog */}
           <Route path="/blog" component={NieuwsPage} />

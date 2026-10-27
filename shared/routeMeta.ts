@@ -838,6 +838,229 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.6",
     changefreq: "weekly",
   },
+  // ── Engelse site in design 3.0 (oktober 2026): de 22 nieuwe pagina's ──
+  {
+    path: "/en/request-staff",
+    title: "Request staff | We call you back | EXTRA",
+    description:
+      "Need hospitality, event or logistics staff in Amsterdam? Leave your details and EXTRA calls you back, usually within the hour on working days.",
+    prerender: true,
+    lang: "en",
+    priority: "0.8",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/request-received",
+    title: "Request received | EXTRA",
+    description:
+      "Thank you for your request. You will receive a confirmation by email and on working days we usually call you back within the hour.",
+    noindex: true,
+    follow: true,
+    prerender: false,
+    lang: "en",
+    priority: "0.1",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/housekeeping-staff",
+    title: "Hire housekeeping staff in Amsterdam | EXTRA",
+    description:
+      "Hire housekeeping staff for your hotel in Amsterdam. Room attendants who work to your standard, on our payroll and NEN 4400-1 certified.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/front-office-staff",
+    title: "Hire front office staff in Amsterdam | EXTRA",
+    description:
+      "Hire front office staff for reception, check-in and guest relations. Presentable, familiar with hotel systems and employed by EXTRA.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/food-and-beverage-staff",
+    title: "Hire F&B staff in Amsterdam | EXTRA",
+    description:
+      "Hire F&B staff for breakfast, restaurant and room service in your hotel. Experienced hospitality workers on our payroll, ready when you need them.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/banqueting-staff",
+    title: "Hire banqueting staff in Amsterdam | EXTRA",
+    description:
+      "Hire banqueting staff for everything from boardroom lunches to gala dinners. Experienced service staff on our payroll, scaled to your event.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/kitchen-staff",
+    title: "Hire chefs and kitchen staff | EXTRA",
+    description:
+      "Hire chefs and kitchen staff in Amsterdam, from line cooks to chefs de partie. A full brigade on our payroll, even when someone is out.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/dishwashers",
+    title: "Hire dishwashers and kitchen porters | EXTRA",
+    description:
+      "Hire dishwashers and kitchen porters in Amsterdam who keep up the pace in busy kitchens. On our payroll, available at short notice.",
+    prerender: true,
+    lang: "en",
+    priority: "0.6",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/waiting-staff",
+    title: "Hire waiting staff in Amsterdam | EXTRA",
+    description:
+      "Hire waiting staff your guests remember, for restaurants, hotels and events in Amsterdam. Presentable, trained and on our payroll.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/logistics-staff-amsterdam",
+    title: "Hire logistics staff in Amsterdam | EXTRA",
+    description:
+      "Hire logistics staff for your warehouse or distribution centre: order pickers, forklift drivers and packers, screened and on our payroll.",
+    prerender: true,
+    lang: "en",
+    priority: "0.8",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/how-we-select",
+    title: "How EXTRA selects staff | Judge for yourself",
+    description:
+      "Only a small share of applicants makes it onto the floor. See every step of EXTRA's selection, from first contact to scorecard, and judge for yourself.",
+    prerender: true,
+    lang: "en",
+    priority: "0.6",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/jobs",
+    title: "Hospitality jobs Amsterdam | All vacancies | EXTRA",
+    description:
+      "All open jobs at EXTRA: hotels, events and logistics in Amsterdam. Daily pay, EXTRAATje points and shifts you choose yourself. Apply now.",
+    prerender: true,
+    lang: "en",
+    priority: "0.8",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/event-jobs",
+    title: "Event jobs in Amsterdam | Work at events | EXTRA",
+    description:
+      "Work at the finest events in Amsterdam as waiting staff, bartender, host or runner. Choose your own shifts and get paid the next day.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/logistics-jobs",
+    title: "Logistics jobs in Amsterdam | EXTRA",
+    description:
+      "Work in logistics as an order picker, packer or forklift driver. Choose your own shifts, work on our payroll and get paid the next day.",
+    prerender: true,
+    lang: "en",
+    priority: "0.7",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/apply",
+    title: "Apply at EXTRA | Sign up as hospitality worker",
+    description:
+      "Sign up with EXTRA in three steps and we schedule an introduction at our office. Work in hotels, at events or in logistics, paid the next day.",
+    prerender: true,
+    lang: "en",
+    priority: "0.8",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/part-time-jobs-amsterdam",
+    title: "Part-time jobs in Amsterdam | EXTRA",
+    description:
+      "A part-time job in Amsterdam that fits your week. Choose your own shifts in hotels, at events or in logistics and get paid the next day.",
+    prerender: true,
+    lang: "en",
+    priority: "0.6",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/daily-pay",
+    title: "Daily pay: work today, paid tomorrow | EXTRA",
+    description:
+      "With EXTRA you work today and get paid tomorrow. See how daily pay works, what it costs and how to request your payout in the app.",
+    prerender: true,
+    lang: "en",
+    priority: "0.6",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/working-in-hospitality",
+    title: "Working in hospitality: how to start | EXTRA",
+    description:
+      "Want to work in hospitality in Amsterdam? What the work involves, which roles there are, what you earn and how to get started with EXTRA.",
+    prerender: true,
+    lang: "en",
+    priority: "0.6",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/nen-4400-1-certification",
+    title: "NEN 4400-1 certification | EXTRA",
+    description:
+      "EXTRA Uitzendbureau is registered under NEN 4400-1. What the standard covers and what it means in practice for clients and employees.",
+    prerender: true,
+    lang: "en",
+    priority: "0.4",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/privacy-policy",
+    title: "Privacy policy | EXTRA",
+    description:
+      "Privacy policy of EXTRA and the EXTRA Employee app: which personal data we process, why we do so and which rights you have. English translation.",
+    prerender: true,
+    lang: "en",
+    priority: "0.2",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/terms-and-conditions",
+    title: "Terms and conditions | EXTRA",
+    description:
+      "General terms and conditions of EXTRA Uitzendbureau for use of the website, requests for staff and registrations. English translation.",
+    prerender: true,
+    lang: "en",
+    priority: "0.2",
+    changefreq: "monthly",
+  },
+  {
+    path: "/en/cookie-policy",
+    title: "Cookie policy | EXTRA",
+    description:
+      "Which cookies and similar techniques the EXTRA website uses, why we use them and how you can change your choice. English translation.",
+    prerender: true,
+    lang: "en",
+    priority: "0.2",
+    changefreq: "monthly",
+  },
 
   // ── INTERN / NIET INDEXEREN ────────────────────────────────────────
   { path: "/brochure", title: "Brochure | EXTRA", description: "Interne brochurepagina van EXTRA.", noindex: true },
@@ -936,6 +1159,28 @@ export const HREFLANG_GROUPS: { nl: string; en: string }[] = [
   { nl: "/housekeeping-werk", en: "/en/housekeeping-jobs" },
   { nl: "/chef-vacatures-amsterdam", en: "/en/chef-jobs" },
   { nl: "/front-office-vacatures-amsterdam", en: "/en/front-office-jobs" },
+  // Design 3.0, oktober 2026
+  { nl: "/personeelsaanvraag", en: "/en/request-staff" },
+  { nl: "/housekeeping-personeel-inhuren", en: "/en/housekeeping-staff" },
+  { nl: "/front-office-personeel-inhuren", en: "/en/front-office-staff" },
+  { nl: "/fb-personeel-inhuren", en: "/en/food-and-beverage-staff" },
+  { nl: "/banqueting-personeel-inhuren", en: "/en/banqueting-staff" },
+  { nl: "/keukenpersoneel-inhuren", en: "/en/kitchen-staff" },
+  { nl: "/afwassers-inhuren", en: "/en/dishwashers" },
+  { nl: "/bediening-inhuren", en: "/en/waiting-staff" },
+  { nl: "/logistiek-personeel-inhuren", en: "/en/logistics-staff-amsterdam" },
+  { nl: "/selectieproces", en: "/en/how-we-select" },
+  { nl: "/vacatures", en: "/en/jobs" },
+  { nl: "/events-werk", en: "/en/event-jobs" },
+  { nl: "/logistiek-werk", en: "/en/logistics-jobs" },
+  { nl: "/aanmelden", en: "/en/apply" },
+  { nl: "/bijbaan-amsterdam", en: "/en/part-time-jobs-amsterdam" },
+  { nl: "/dagbetaling", en: "/en/daily-pay" },
+  { nl: "/werken-in-de-horeca", en: "/en/working-in-hospitality" },
+  { nl: "/nen-4400-1-certificering", en: "/en/nen-4400-1-certification" },
+  { nl: "/privacybeleid", en: "/en/privacy-policy" },
+  { nl: "/voorwaarden", en: "/en/terms-and-conditions" },
+  { nl: "/cookiebeleid", en: "/en/cookie-policy" },
 ];
 
 /** Snelle lookup: genormaliseerd pad → de andere taalversie. Uit HREFLANG_GROUPS afgeleid, niet los onderhouden. */

@@ -22,7 +22,17 @@ const LOCATIE_SECTOR: Record<string, string> = { horeca: "hotel", events: "event
 
 type Veld = "companyName" | "contactName" | "phone";
 
-export default function TerugbelPopup({ open, sluit, functies, sector }: { open: boolean; sluit: () => void; functies: string[]; sector: string }) {
+const TB = {
+  nl: { anders: "Anders", fout: "Vul je bedrijfsnaam, naam en een geldig telefoonnummer in.", mislukt: "Versturen lukte niet.", bel: "Bel ons gerust op", tel: TELEFOON, dank: "/aanvraag-ontvangen",
+    sluit: "Sluiten", titel: "Bel mij terug", uitleg: "Laat je gegevens achter. Op werkdagen bellen we je meestal binnen een uur terug.",
+    bedrijf: "Bedrijfsnaam", bedrijfPh: "Naam van je bedrijf", naam: "Naam", naamPh: "Voor en achternaam", telefoon: "Telefoon", functie: "Functie", kies: "Kies een functie", bezig: "Even geduld", liever: "Liever zelf bellen?" },
+  en: { anders: "Other", fout: "Please enter your company, name and a valid phone number.", mislukt: "Sending failed.", bel: "Feel free to call us on", tel: "+31 85 130 59 15", dank: "/en/request-received",
+    sluit: "Close", titel: "Call me back", uitleg: "Leave your details. On working days we usually call back within the hour.",
+    bedrijf: "Company", bedrijfPh: "Your company name", naam: "Name", naamPh: "First and last name", telefoon: "Phone", functie: "Role", kies: "Choose a role", bezig: "One moment", liever: "Rather call us?" },
+};
+
+export default function TerugbelPopup({ open, sluit, functies, sector, taal = "nl" }: { open: boolean; sluit: () => void; functies: string[]; sector: string; taal?: "nl" | "en" }) {
+  const t = TB[taal];
   const [location, naar] = useLocation();
   const dialoog = useRef<HTMLDialogElement>(null);
   const eerste = useRef<HTMLInputElement>(null);
@@ -35,7 +45,7 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
   const [lijstOpen, setLijstOpen] = useState(false);
   const [bezig, setBezig] = useState(false);
   const [melding, setMelding] = useState<string | null>(null);
-  const opties = functies.length ? (functies.includes("Anders") ? functies : [...functies, "Anders"]) : [];
+  const opties = functies.length ? (functies.includes(t.anders) ? functies : [...functies, t.anders]) : [];
 
   useEffect(() => {
     const d = dialoog.current;
@@ -83,7 +93,7 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
     setFouten(nieuw);
     const fout = (["companyName", "contactName", "phone"] as Veld[]).find((v) => nieuw[v]);
     if (fout) {
-      setMelding("Vul je bedrijfsnaam, naam en een geldig telefoonnummer in.");
+      setMelding(t.fout);
       dialoog.current?.querySelector<HTMLInputElement>(`input[name="${fout}"]`)?.focus();
       return;
     }
@@ -107,14 +117,14 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
       });
       if (!res.ok) {
         const j = await res.json().catch(() => null);
-        throw new Error(j?.message || "Versturen lukte niet.");
+        throw new Error(j?.message || t.mislukt);
       }
       sluit();
       onthoudVoornaam(waarden.contactName);
-      naar("/aanvraag-ontvangen");
+      naar(t.dank);
       window.scrollTo(0, 0);
     } catch (err: any) {
-      setMelding(`${err?.message || "Versturen lukte niet."} Bel ons gerust op ${TELEFOON}.`);
+      setMelding(`${err?.message || t.mislukt} ${t.bel} ${t.tel}.`);
     } finally {
       setBezig(false);
     }
@@ -133,12 +143,12 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
       }}
     >
       <form className="tb-form" noValidate onSubmit={verstuur}>
-        <button type="button" className="tb-x" aria-label="Sluiten" onClick={sluit}>&#x2715;</button>
-        <p className="tb-kop"><b id={`tb-titel-${id}`}>Bel mij terug</b><span>Laat je gegevens achter. Op werkdagen bellen we je meestal binnen een uur terug.</span></p>
+        <button type="button" className="tb-x" aria-label={t.sluit} onClick={sluit}>&#x2715;</button>
+        <p className="tb-kop"><b id={`tb-titel-${id}`}>{t.titel}</b><span>{t.uitleg}</span></p>
         {([
-          ["companyName", "Bedrijfsnaam", { autoComplete: "organization", placeholder: "Naam van je bedrijf" }],
-          ["contactName", "Naam", { autoComplete: "name", placeholder: "Voor en achternaam" }],
-          ["phone", "Telefoon", { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "06 12 34 56 78" }],
+          ["companyName", t.bedrijf, { autoComplete: "organization", placeholder: t.bedrijfPh }],
+          ["contactName", t.naam, { autoComplete: "name", placeholder: t.naamPh }],
+          ["phone", t.telefoon, { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "06 12 34 56 78" }],
         ] as [Veld, string, Record<string, string>][]).map(([v, label, props]) => (
           <label key={v} className={fouten[v] ? "tb-fout" : undefined}>
             <span>{label}</span>
@@ -147,7 +157,7 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
         ))}
         {opties.length > 0 && (
           <div className="tb-veld">
-            <span id={`tb-fl-${id}`}>Functie</span>
+            <span id={`tb-fl-${id}`}>{t.functie}</span>
             <div className="tb-keuze">
               <button
                 ref={keuzeKnop}
@@ -159,7 +169,7 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
                 onClick={() => setLijstOpen(!lijstOpen)}
                 onKeyDown={(e) => { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setLijstOpen(true); } }}
               >
-                <span id={`tb-fw-${id}`} className={functie ? undefined : "leeg"}>{functie || "Kies een functie"}</span>
+                <span id={`tb-fw-${id}`} className={functie ? undefined : "leeg"}>{functie || t.kies}</span>
               </button>
               {lijstOpen && (
                 <ul ref={lijst} className="tb-lijst" role="listbox" aria-labelledby={`tb-fl-${id}`}>
@@ -172,8 +182,8 @@ export default function TerugbelPopup({ open, sluit, functies, sector }: { open:
           </div>
         )}
         {melding && <p className="tb-melding" role="alert">{melding}</p>}
-        <button className="knop vol" type="submit" disabled={bezig}>{bezig ? "Even geduld" : "Bel mij terug"} <Pijl /></button>
-        <p className="tb-of">Liever zelf bellen? <a href={TELEFOON_HREF}>{TELEFOON}</a></p>
+        <button className="knop vol" type="submit" disabled={bezig}>{bezig ? t.bezig : t.titel} <Pijl /></button>
+        <p className="tb-of">{t.liever} <a href={TELEFOON_HREF}>{t.tel}</a></p>
       </form>
     </dialog>
   );

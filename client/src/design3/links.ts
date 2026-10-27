@@ -133,7 +133,129 @@ export const FOOTER: { kop: string; links: MenuLink[] }[] = [
   },
 ];
 
+/* ───────────── Engels (design 3.0, mock-up en/*.html) ───────────── */
+
+export const MENU_EN: MenuGroep[] = [
+  {
+    label: "I need extra staff",
+    kop: "Sectors",
+    links: [
+      { label: "Hotels", href: "/en/hotel-staffing-amsterdam", sub: "Housekeeping, front office, F&B, kitchen", kleur: "rose" },
+      { label: "Logistics", href: "/en/logistics-staff-amsterdam", sub: "Order pickers, forklift, packing", kleur: "pistachio" },
+      { label: "Events", href: "/en/event-staff-amsterdam", sub: "Waiting staff, bar, hosts, catering", kleur: "sky" },
+    ],
+    cta: { kop: "Need someone tomorrow?", knop: { label: "Call me back", href: "/en/request-staff" }, onder: { label: "+31 85 130 59 15", href: "tel:0851305915", tel: true } },
+  },
+  {
+    label: "I want extra work",
+    kop: "Work",
+    links: [
+      { label: "All jobs", href: "/en/jobs" },
+      { label: "Work in hotels", href: "/en/hospitality-jobs", kleur: "rose" },
+      { label: "Work in logistics", href: "/en/logistics-jobs", kleur: "pistachio" },
+      { label: "Work at events", href: "/en/event-jobs", kleur: "sky" },
+    ],
+    cta: { kop: "Want to start today?", knop: { label: "Apply now", href: "/en/apply" }, onder: { label: "Paid the next day", href: "/en/daily-pay" } },
+  },
+  {
+    label: "About EXTRA",
+    kop: "About us",
+    links: [
+      { label: "About EXTRA", href: "/en/about" },
+      { label: "How it works", href: "/en/how-we-work" },
+      { label: "Daily pay", href: "/en/daily-pay" },
+      { label: "EXTRAATje", href: "/en/rewards" },
+      { label: "Client stories", href: "/en/client-stories" },
+      { label: "Blog", href: "/blog" },
+      { label: "Contact", href: "/en/contact" },
+    ],
+  },
+];
+
+export const FOOTER_EN: { kop: string; links: MenuLink[] }[] = [
+  {
+    kop: "Employers",
+    links: [
+      { label: "Request staff", href: "/en/request-staff" },
+      { label: "How it works", href: "/en/how-we-work" },
+      { label: "Why EXTRA", href: "/en" },
+      { label: "Hospitality staff Amsterdam", href: "/en/hospitality-staff-amsterdam" },
+      { label: "Hire hotel staff", href: "/en/hotel-staffing-amsterdam" },
+      { label: "Hire event staff", href: "/en/event-staff-amsterdam" },
+      { label: "Hire catering staff", href: "/en/catering-staff-amsterdam" },
+      { label: "Restaurant staff", href: "/en/restaurant-staff-amsterdam" },
+      { label: "Hire logistics staff", href: "/en/logistics-staff-amsterdam" },
+      { label: "How we select", href: "/en/how-we-select" },
+    ],
+  },
+  {
+    kop: "Roles",
+    links: [
+      { label: "Housekeeping staff", href: "/en/housekeeping-staff" },
+      { label: "Front office staff", href: "/en/front-office-staff" },
+      { label: "F&B staff", href: "/en/food-and-beverage-staff" },
+      { label: "Banqueting staff", href: "/en/banqueting-staff" },
+      { label: "Chefs and kitchen staff", href: "/en/kitchen-staff" },
+      { label: "Dishwashers and kitchen porters", href: "/en/dishwashers" },
+      { label: "Hire waiting staff", href: "/en/waiting-staff" },
+    ],
+  },
+  {
+    kop: "Job seekers",
+    links: [
+      { label: "Apply now", href: "/en/apply" },
+      { label: "Jobs", href: "/en/jobs" },
+      { label: "Hospitality jobs Amsterdam", href: "/en/hospitality-jobs" },
+      { label: "Hospitality work Amsterdam", href: "/en/hospitality-work" },
+      { label: "Housekeeping jobs", href: "/en/housekeeping-jobs" },
+      { label: "Chef jobs", href: "/en/chef-jobs" },
+      { label: "Front office jobs", href: "/en/front-office-jobs" },
+      { label: "Work at events", href: "/en/event-jobs" },
+      { label: "Work in logistics", href: "/en/logistics-jobs" },
+      { label: "Part-time jobs Amsterdam", href: "/en/part-time-jobs-amsterdam" },
+      { label: "Working in hospitality", href: "/en/working-in-hospitality" },
+      { label: "How daily pay works", href: "/en/daily-pay" },
+      { label: "EXTRAATje rewards", href: "/en/rewards" },
+    ],
+  },
+  {
+    kop: "Company",
+    links: [
+      { label: "About EXTRA", href: "/en/about" },
+      { label: "Our team", href: "/en/our-team" },
+      { label: "How we work", href: "/en/how-we-work" },
+      { label: "Client stories", href: "/en/client-stories" },
+      { label: "NEN 4400-1", href: "/en/nen-4400-1-certification" },
+      { label: "News & blog", href: "/blog" },
+      { label: "Contact", href: "/en/contact" },
+    ],
+  },
+];
+
+/**
+ * Taalknop vanaf een Nederlandse zoekwoordvariant zonder eigen Engelse pagina:
+ * naar de Engelse eigenaar van het cluster. Bewust geen hreflang (dat moet
+ * wederzijds zijn), alleen de bestemming van de knop.
+ */
+export const TAALKNOP_NAAR_EN: Record<string, string> = {
+  "/horeca-uitzendbureau-amsterdam": "/en",
+  "/horeca-uitzendbureau-amsterdam-werkwijze": "/en/how-we-work",
+  "/horeca-personeel-amsterdam": "/en/hospitality-staff-amsterdam",
+  "/horeca-personeel": "/en/hospitality-staff-amsterdam",
+  "/flexibel-horeca-personeel": "/en/hospitality-staff-amsterdam",
+  "/horeca-personeel-inhuren": "/en/hospitality-staff-amsterdam",
+  "/tijdelijk-horeca-personeel": "/en/hospitality-staff-amsterdam",
+  "/uitzenden-of-zzp": "/en/hospitality-staff-amsterdam",
+  "/horeca-werk-amsterdam": "/en/hospitality-work",
+  "/housekeeping-vacatures-amsterdam": "/en/housekeeping-jobs",
+  "/hotels": "/en/hotel-staffing-amsterdam",
+  "/evenementen": "/en/event-staff-amsterdam",
+  "/logistiek": "/en/logistics-staff-amsterdam",
+  "/aanvraag-ontvangen": "/en/request-received",
+};
+
 export const TELEFOON = "085 130 59 15";
+export const TELEFOON_EN = "+31 85 130 59 15";
 export const TELEFOON_HREF = "tel:0851305915";
 export const WHATSAPP_HREF = "https://wa.me/31851305915";
 export const EMAIL = "info@doehetextra.nl";

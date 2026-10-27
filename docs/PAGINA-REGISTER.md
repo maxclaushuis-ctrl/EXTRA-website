@@ -120,7 +120,7 @@ is steeds de Engelse zoekterm, niet de vertaling van de Nederlandse.
 | `/en/restaurant-staff-amsterdam` | T | restaurant staff amsterdam | WG | Request staff | |
 | `/en/about` | N | about extra | B | Contact | |
 | `/en/our-team` | N | extra team | B | Contact | |
-| `/en/contact` | N | contact extra amsterdam | B | Contact | Dient nu ook als "request staff"-bestemming; `/en/request-staff` is gebouwd maar niet toegepast. |
+| `/en/contact` | N | contact extra amsterdam | B | Contact | |
 | `/en/client-stories` | C | hospitality staffing client stories | WG | Request staff | |
 | `/en/how-we-work` | I | how hospitality staffing works | B | Request staff | |
 | `/en/rewards` | I | hospitality staff rewards | WZ | Apply | Partner van `/extraatje`. |
@@ -129,6 +129,27 @@ is steeds de Engelse zoekterm, niet de vertaling van de Nederlandse.
 | `/en/housekeeping-jobs` | T | housekeeping jobs amsterdam | WZ | Apply | |
 | `/en/chef-jobs` | T | chef jobs amsterdam | WZ | Apply | |
 | `/en/front-office-jobs` | T | front office jobs amsterdam | WZ | Apply | |
+| `/en/request-staff` | T | request hospitality staff | WG | Call me back | Design 3.0 (okt 2026). Partner van `/personeelsaanvraag`. Formulier; geen eigen zoekcluster naast de sectorpagina's. |
+| `/en/housekeeping-staff` | T | hire housekeeping staff | WG | Request staff | Partner van `/housekeeping-personeel-inhuren`. |
+| `/en/front-office-staff` | T | hire front office staff | WG | Request staff | Partner van `/front-office-personeel-inhuren`. |
+| `/en/food-and-beverage-staff` | T | hire f&b staff | WG | Request staff | Partner van `/fb-personeel-inhuren`. |
+| `/en/banqueting-staff` | T | hire banqueting staff | WG | Request staff | Partner van `/banqueting-personeel-inhuren`. |
+| `/en/kitchen-staff` | T | hire chefs and kitchen staff | WG | Request staff | Partner van `/keukenpersoneel-inhuren`. |
+| `/en/dishwashers` | T | hire dishwashers kitchen porters | WG | Request staff | Partner van `/afwassers-inhuren`. |
+| `/en/waiting-staff` | T | hire waiting staff | WG | Request staff | Partner van `/bediening-inhuren`. |
+| `/en/logistics-staff-amsterdam` | T | logistics staff amsterdam | WG | Request staff | Partner van `/logistiek-personeel-inhuren`. |
+| `/en/how-we-select` | I | how a staffing agency selects staff | WG | Request staff | Partner van `/selectieproces`. |
+| `/en/jobs` | T | jobs amsterdam hospitality (overzicht) | WZ | Apply | Partner van `/vacatures`. Vacatures zelf zijn Nederlandstalig (CMS). |
+| `/en/event-jobs` | T | event jobs amsterdam | WZ | Apply | Partner van `/events-werk`. |
+| `/en/logistics-jobs` | T | logistics jobs amsterdam | WZ | Apply | Partner van `/logistiek-werk`. |
+| `/en/apply` | T | apply hospitality work amsterdam | WZ | Apply | Partner van `/aanmelden`. Vervangt `/aanmelden?lang=en`. |
+| `/en/part-time-jobs-amsterdam` | T | part-time jobs amsterdam | WZ | Apply | Partner van `/bijbaan-amsterdam`. |
+| `/en/daily-pay` | I | daily pay jobs amsterdam | WZ | Apply | Partner van `/dagbetaling`. |
+| `/en/working-in-hospitality` | I | working in hospitality | WZ | Apply | Partner van `/werken-in-de-horeca`. |
+| `/en/nen-4400-1-certification` | N | nen 4400-1 staffing agency | B | Contact | Partner van `/nen-4400-1-certificering`. |
+| `/en/privacy-policy` | N | — | B | — | Vertaling met disclaimer: de Nederlandse tekst is leidend. |
+| `/en/terms-and-conditions` | N | — | B | — | Vertaling met disclaimer: de Nederlandse tekst is leidend. |
+| `/en/cookie-policy` | N | — | B | — | Vertaling met disclaimer: de Nederlandse tekst is leidend. |
 
 ---
 

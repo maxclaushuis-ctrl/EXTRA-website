@@ -16,17 +16,26 @@
  * Gestructureerde gegevens: CollectionPage, ItemList, BreadcrumbList en (op de
  * gewone variant) FAQPage. Bewust géén JobPosting: dat hoort alleen op de
  * detailpagina van een vacature (server/seo.ts).
+ *
+ * Taal: dezelfde pagina staat ook op /en/jobs (bron: mock-up en/jobs.html).
+ * De taal volgt uit het pad. De vacatures zelf blijven zoals ze in het CMS
+ * staan; alleen de vaste teksten, de filterlabels (afdeling, uren), het
+ * loonformaat en het inschrijfblok zijn Engels. Detaillinks blijven
+ * /vacatures/:slug, inschrijven gaat naar /en/apply. De FAQ staat alleen op de
+ * Nederlandse pagina: er is geen goedgekeurde Engelse versie van.
  */
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import Shell, { type Sector } from "@/design3/Shell";
-import { Ic } from "@/design3/basis";
+import { Ic, Pijl } from "@/design3/basis";
+import { useReus } from "@/design3/gedrag";
 import { Faq } from "@/design3/secties";
 import KandidaatSlot, { type KandidaatSlotProps } from "@/design3/KandidaatSlot";
 import {
   afdelingVan, brancheVan, isBranche, korteTitel, plaats, loonLabel, tel, opsomming, type VacBranche,
 } from "@shared/vacatureWeergave";
+import { taalVanPad, type Taal } from "@shared/taal";
 
 const SITE = "https://www.doehetextra.nl";
 
@@ -123,6 +132,107 @@ const VARIANTEN: Record<Variant, VariantInfo> = {
   },
 };
 
+const HOTEL_FUNCTIES_EN = ["Housekeeping", "Front office", "F&B", "Banqueting", "Kitchen", "Dishwashing and kitchen porter"];
+const SLOT_EN = { kop: "Signed up in 2 minutes", sub: "We'll then contact you to arrange an introduction meeting." };
+
+/** Engelse varianten (en/jobs.html; events en logistiek uit en/event-jobs en en/logistics-jobs). */
+const VARIANTEN_EN: Record<Variant, VariantInfo> = {
+  alle: {
+    sector: "horeca",
+    h1: ["Jobs in ", "hotels"],
+    lead: (p) => `Daily pay, EXTRAATje points and regular hotels${p ? ` in ${p}` : ""}. Pick a job and apply now.`,
+    midden: null,
+    binnenkort: null,
+    binnenkortMeta: "",
+    slot: {
+      foto: "/d3/w-slot.webp", tag: "/d3/logo-tag-r.svg", regels: ["Sign up", "for EXTRA", "work in hotels"], ...SLOT_EN,
+      functies: HOTEL_FUNCTIES_EN, beschikbaarheid: ["Weekdays", "Weekend", "Evenings"],
+    },
+  },
+  hotels: {
+    sector: "horeca",
+    h1: ["Jobs in ", "hotels"],
+    lead: (p) => `Daily pay, EXTRAATje points and regular hotels${p ? ` in ${p}` : ""}. Pick a job and apply now.`,
+    midden: ["Work in hotels", "/en/hospitality-jobs"],
+    binnenkort: null,
+    binnenkortMeta: "",
+    slot: {
+      foto: "/d3/w-slot.webp", tag: "/d3/logo-tag-r.svg", regels: ["Sign up", "for EXTRA", "work in hotels"], ...SLOT_EN,
+      functies: HOTEL_FUNCTIES_EN, beschikbaarheid: ["Weekdays", "Weekend", "Evenings"],
+    },
+  },
+  events: {
+    sector: "events",
+    h1: ["Jobs at ", "events"],
+    lead: () => "Waiting staff, bar, hosts and runners at events in Amsterdam. With daily pay and EXTRAATje points.",
+    midden: ["Work at events", "/en/event-jobs"],
+    binnenkort: [
+      ["Waiting staff", "Dinners, drinks and receptions"],
+      ["Bar staff", "Cocktails, wine service, high pace"],
+      ["Dinner runner", "Serving out and refilling platters"],
+      ["Runner", "From kitchen to floor"],
+      ["Host or hostess", "Welcome, cloakroom, registration"],
+    ],
+    binnenkortMeta: "Evenings and weekends",
+    slot: {
+      foto: "/d3/e-slot.webp", tag: "/d3/logo-tag-b.svg", regels: ["Sign up", "for EXTRA", "work at events"], laag: true, ...SLOT_EN,
+      functies: ["Waiting staff", "Bar staff", "Dinner runner", "Runner", "Host or hostess", "Event supervisor"], beschikbaarheid: ["Evening", "Weekend", "Weekdays"],
+    },
+  },
+  logistiek: {
+    sector: "logistiek",
+    h1: ["Jobs in ", "logistics"],
+    lead: () => "Order picking, forklift work, packing and dispatch in warehouses and distribution centres. With daily pay and EXTRAATje points.",
+    midden: ["Work in logistics", "/en/logistics-jobs"],
+    binnenkort: [
+      ["Order picker", "Voice picking, scanning, batch picking"],
+      ["Forklift driver", "Forklift, reach truck, EPT"],
+      ["Packer", "Packing, repacking, labelling"],
+      ["Dispatch operative", "Loading and unloading, docking, returns"],
+      ["Warehouse operative", "Goods in, storage, goods out"],
+    ],
+    binnenkortMeta: "Shift work possible",
+    slot: {
+      foto: "/d3/l-slot.webp", tag: "/d3/logo-tag-g.svg", regels: ["Sign up", "for EXTRA", "logistics work"], ...SLOT_EN,
+      functies: ["Order picker", "Forklift or reach truck", "Packing and production", "Dispatch", "Warehouse operative", "Stock and quality"], beschikbaarheid: ["Day shift", "Shift work", "Weekend"],
+    },
+  },
+};
+
+/** Vaste teksten van de lijst in beide talen. */
+const TEKST = {
+  nl: {
+    home: "/", kruimelLabel: "Kruimelpad", vacatures: "Vacatures", vacaturesHref: "/vacatures", filterLabel: "Filter vacatures", alle: "Alle",
+    laden: "Vacatures laden", binnenkortChip: "Binnenkort vacatures", aantal: (n: number) => `${n} openstaande ${n === 1 ? "vacature" : "vacatures"}`,
+    eersteBinnenkort: " De eerste vacatures komen binnenkort online.", geenFilter: "Geen vacatures met deze filters.",
+    nogGeen: "Nog geen openstaande vacatures", komenEraan: "Nieuwe vacatures komen eraan", alvast: "Schrijf je alvast in. We bellen je zodra er werk is dat bij je past.",
+    nietGevonden: "Niet gevonden wat je zoekt?", algemeen: "Schrijf je algemeen in. We bellen je zodra er werk is dat bij je past.", inschrijven: "Schrijf je in",
+    binnenkort: "Binnenkort", binnenkortSub: "schrijf je alvast in",
+  },
+  en: {
+    home: "/en", kruimelLabel: "Breadcrumb", vacatures: "Jobs", vacaturesHref: "/en/jobs", filterLabel: "Filter jobs", alle: "All",
+    laden: "Loading jobs", binnenkortChip: "Jobs coming soon", aantal: (n: number) => `${n} open ${n === 1 ? "vacancy" : "vacancies"}`,
+    eersteBinnenkort: " The first jobs will be online soon.", geenFilter: "No jobs match these filters.",
+    nogGeen: "No open vacancies yet", komenEraan: "New jobs are on their way", alvast: "Sign up now. We'll call you as soon as there's work that suits you.",
+    nietGevonden: "Can't find what you're looking for?", algemeen: "Sign up anyway. We'll call you as soon as there's work that suits you.", inschrijven: "Sign up",
+    binnenkort: "Coming soon", binnenkortSub: "sign up now",
+  },
+};
+
+/** Engelse weergave van wat uit het CMS komt; de waarden zelf (filter, data-attributen) blijven Nederlands. */
+const AFDELING_EN: Record<string, string> = { Keuken: "Kitchen", Afwas: "Dishwashing", Logistiek: "Logistics", Overig: "Other" };
+const UREN_EN: Record<string, string> = { fulltime: "Full-time", parttime: "Part-time", bijbaan: "Side job", oproep: "On call" };
+const afdelingLabel = (a: string, taal: Taal) => (taal === "en" ? AFDELING_EN[a] ?? a : a);
+const urenLabel = (u: string, taal: Taal) => (taal === "en" ? UREN_EN[u.toLowerCase()] ?? u : u);
+const plaatsLabel = (p: string, taal: Taal) => (taal === "en" ? p.replace(/\bDen Haag\b/g, "The Hague") : p);
+const loonTekst = (l: string, taal: Taal) => (taal === "en" ? l.replace(/,/g, ".").replace(" tot ", " to ") : l);
+/** "Amsterdam and Scheveningen": de Engelse tegenhanger van opsomming(). */
+function opsommingEn(woorden: string[]): string {
+  const u = woorden.filter((w, i) => w && woorden.indexOf(w) === i);
+  if (u.length <= 1) return u[0] || "";
+  return `${u.slice(0, -1).join(", ")} and ${u[u.length - 1]}`;
+}
+
 export interface VacatureRij {
   slug: string;
   title: string;
@@ -155,13 +265,16 @@ export function naarRij(p: any): VacatureRij {
 }
 
 /** Eén regel in de donkere lijst (ook gebruikt op de detailpagina). */
-export function VacRegel({ v, nr }: { v: VacatureRij; nr: number }) {
+export function VacRegel({ v, nr, taal = "nl" }: { v: VacatureRij; nr: number; taal?: Taal }) {
+  const en = taal === "en";
   return (
     <a className="vac" href={`/vacatures/${v.slug}`} data-afd={v.afdeling} data-uren={v.serviceType}>
       <span className="vac-nr">{String(nr).padStart(2, "0")}</span>
       <span className="vac-kop"><h3>{v.kort}</h3>{v.client && <span>{v.client}</span>}</span>
-      <span className="vac-meta"><span>{v.location}</span>{v.serviceType && <span>{v.serviceType}</span>}</span>
-      <span className="vac-loon">{v.loon ? <><b>{v.loon}</b><small>all-in per uur</small></> : <><b>In overleg</b><small>uurloon</small></>}</span>
+      <span className="vac-meta"><span>{plaatsLabel(v.location, taal)}</span>{v.serviceType && <span>{urenLabel(v.serviceType, taal)}</span>}</span>
+      <span className="vac-loon">{v.loon
+        ? <><b>{loonTekst(v.loon, taal)}</b><small>{en ? "all-in per hour" : "all-in per uur"}</small></>
+        : <><b>{en ? "To be agreed" : "In overleg"}</b><small>{en ? "hourly wage" : "uurloon"}</small></>}</span>
       <i aria-hidden="true"><Ic n="pijl" /></i>
     </a>
   );
@@ -176,8 +289,11 @@ function leesParams(): { variant: Variant; afdeling: string | null } {
 
 export default function Vacatures() {
   const [location] = useLocation();
+  const taal = taalVanPad(location);
+  const en = taal === "en";
+  const t = TEKST[taal];
   const { variant, afdeling: vooraf } = useMemo(leesParams, [location]);
-  const info = VARIANTEN[variant];
+  const info = (en ? VARIANTEN_EN : VARIANTEN)[variant];
 
   const { data, isLoading } = useQuery<{ posts: any[] }>({ queryKey: ["/api/vacatures"], staleTime: 60_000 });
 
@@ -202,17 +318,17 @@ export default function Vacatures() {
   }, [vooraf, afdelingen]);
 
   const zichtbaar = lijst.filter((v) => (afd === "alle" || v.afdeling === afd) && (!uur || v.serviceType === uur));
-  const plaatsen = opsomming(lijst.map((v) => v.plaats));
+  const plaatsen = en ? opsommingEn(lijst.map((v) => plaatsLabel(v.plaats, taal))) : opsomming(lijst.map((v) => v.plaats));
   const leeg = !isLoading && lijst.length === 0;
 
   const ld = useMemo(() => {
     const kruimels = [
-      { name: "Home", item: `${SITE}/` },
+      { name: "Home", item: en ? `${SITE}/en` : `${SITE}/` },
       ...(info.midden ? [{ name: info.midden[0], item: `${SITE}${info.midden[1]}` }] : []),
-      { name: "Vacatures", item: `${SITE}/vacatures` },
+      { name: t.vacatures, item: `${SITE}${t.vacaturesHref}` },
     ];
     const blokken: Record<string, unknown>[] = [
-      { "@context": "https://schema.org", "@type": "CollectionPage", name: `${info.h1.join("")} | EXTRA`, url: `${SITE}/vacatures`, description: info.lead(plaatsen) },
+      { "@context": "https://schema.org", "@type": "CollectionPage", name: `${info.h1.join("")} | EXTRA`, url: `${SITE}${t.vacaturesHref}`, description: info.lead(plaatsen) },
       { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: kruimels.map((k, i) => ({ "@type": "ListItem", position: i + 1, ...k })) },
     ];
     if (lijst.length) {
@@ -222,67 +338,132 @@ export default function Vacatures() {
       });
     }
     return blokken;
-  }, [info, lijst, plaatsen]);
+  }, [info, lijst, plaatsen, en, t]);
 
-  const chip = isLoading ? "Vacatures laden" : leeg ? "Binnenkort vacatures" : `${lijst.length} openstaande ${lijst.length === 1 ? "vacature" : "vacatures"}`;
+  const chip = isLoading ? t.laden : leeg ? t.binnenkortChip : t.aantal(lijst.length);
+  const gekozen = afd !== "alle"
+    ? (en ? ({ Keuken: "Kitchen", Afwas: "Dishwashing and kitchen porter" } as Record<string, string>)[afd] ?? afd : afd === "Afwas" ? "Afwas en keukenhulp" : afd)
+    : undefined;
 
   return (
     <Shell sector={info.sector} css={["events", "hotels", "werk", "vacature"]} werkzoekende>
       {ld.map((b, i) => <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(b) }} />)}
 
       <section className="vhero voverzicht"><div className="w">
-        <nav className="kruimel" aria-label="Kruimelpad">
-          <a href="/">Home</a><span>/</span>
+        <nav className="kruimel" aria-label={t.kruimelLabel}>
+          <a href={t.home}>Home</a><span>/</span>
           {info.midden && <><a href={info.midden[1]}>{info.midden[0]}</a><span>/</span></>}
-          <span aria-current="page">Vacatures</span>
+          <span aria-current="page">{t.vacatures}</span>
         </nav>
         <span className="chip"><i></i>{chip}</span>
         <h1 className="vh-h1">{info.h1[0]}<span className="serif">{info.h1[1]}</span></h1>
         <p className="vo-lead">
           {info.lead(plaatsen)}
-          {leeg && info.binnenkort ? " De eerste vacatures komen binnenkort online." : ""}
+          {leeg && info.binnenkort ? t.eersteBinnenkort : ""}
         </p>
       </div></section>
 
       <section className="donker vacs vo-lijst"><div className="w">
         {lijst.length > 1 && (
-          <div className="vo-filter" role="group" aria-label="Filter vacatures">
-            <button type="button" className={afd === "alle" ? "aan" : undefined} aria-pressed={afd === "alle"} onClick={() => setAfd("alle")}>Alle <b>{lijst.length}</b></button>
+          <div className="vo-filter" role="group" aria-label={t.filterLabel}>
+            <button type="button" className={afd === "alle" ? "aan" : undefined} aria-pressed={afd === "alle"} onClick={() => setAfd("alle")}>{t.alle} <b>{lijst.length}</b></button>
             {afdelingen.length > 1 && afdelingen.map(([a, n]) => (
-              <button key={a} type="button" className={afd === a ? "aan" : undefined} aria-pressed={afd === a} onClick={() => setAfd(a)}>{a} <b>{n}</b></button>
+              <button key={a} type="button" className={afd === a ? "aan" : undefined} aria-pressed={afd === a} onClick={() => setAfd(a)}>{afdelingLabel(a, taal)} <b>{n}</b></button>
             ))}
             {uren.length > 1 && <span className="vo-sep"></span>}
             {uren.length > 1 && uren.map((u) => (
-              <button key={u} type="button" className={uur === u ? "aan" : undefined} aria-pressed={uur === u} onClick={() => setUur(uur === u ? null : u)}>{u}</button>
+              <button key={u} type="button" className={uur === u ? "aan" : undefined} aria-pressed={uur === u} onClick={() => setUur(uur === u ? null : u)}>{urenLabel(u, taal)}</button>
             ))}
           </div>
         )}
 
         <div className="vac-lijst">
-          {zichtbaar.map((v, i) => <VacRegel key={v.slug} v={v} nr={i + 1} />)}
+          {zichtbaar.map((v, i) => <VacRegel key={v.slug} v={v} nr={i + 1} taal={taal} />)}
           {leeg && info.binnenkort && info.binnenkort.map(([f, s], i) => (
             <a className="vac" href="#inschrijven" key={f}>
               <span className="vac-nr">{String(i + 1).padStart(2, "0")}</span>
               <span className="vac-kop"><h3>{f}</h3><span>{s}</span></span>
               <span className="vac-meta"><span>{info.binnenkortMeta}</span></span>
-              <span className="vac-loon"><b>Binnenkort</b><small>schrijf je alvast in</small></span>
+              <span className="vac-loon"><b>{t.binnenkort}</b><small>{t.binnenkortSub}</small></span>
               <i aria-hidden="true"><Ic n="pijl" /></i>
             </a>
           ))}
         </div>
-        {!isLoading && lijst.length > 0 && zichtbaar.length === 0 && <p className="vo-leeg">Geen vacatures met deze filters.</p>}
+        {!isLoading && lijst.length > 0 && zichtbaar.length === 0 && <p className="vo-leeg">{t.geenFilter}</p>}
 
         <div className="vo-niet">
           {leeg
-            ? <div><b>{info.binnenkort ? "Nog geen openstaande vacatures" : "Nieuwe vacatures komen eraan"}</b><span>Schrijf je alvast in. We bellen je zodra er werk is dat bij je past.</span></div>
-            : <div><b>Niet gevonden wat je zoekt?</b><span>Schrijf je algemeen in. We bellen je zodra er werk is dat bij je past.</span></div>}
-          <a className="knop vol" href="#inschrijven">Schrijf je in <svg><use href="#pijl" /></svg></a>
+            ? <div><b>{info.binnenkort ? t.nogGeen : t.komenEraan}</b><span>{t.alvast}</span></div>
+            : <div><b>{t.nietGevonden}</b><span>{t.algemeen}</span></div>}
+          <a className="knop vol" href="#inschrijven">{t.inschrijven} <svg><use href="#pijl" /></svg></a>
         </div>
       </div></section>
 
-      {variant === "alle" && <Faq s={{ type: "faq", eyebrow: "Veelgestelde vragen", h2: "Werken via [[EXTRA]]", items: VACATURE_FAQS }} />}
+      {variant === "alle" && !en && <Faq s={{ type: "faq", eyebrow: "Veelgestelde vragen", h2: "Werken via [[EXTRA]]", items: VACATURE_FAQS }} />}
 
-      <KandidaatSlot {...info.slot} gekozen={afd !== "alle" ? (afd === "Afwas" ? "Afwas en keukenhulp" : afd) : undefined} />
+      {en ? <KandidaatSlotEn {...info.slot} gekozen={gekozen} /> : <KandidaatSlot {...info.slot} gekozen={gekozen} />}
     </Shell>
+  );
+}
+
+/**
+ * Engelse tegenhanger van KandidaatSlot (teksten uit en/jobs.html). Werkt
+ * hetzelfde: naam, telefoon en functie via sessionStorage naar /en/apply, geen
+ * persoonsgegevens in de URL. Aanmelden.tsx herkent de Engelse functienamen.
+ */
+function KandidaatSlotEn({ id = "inschrijven", foto, tag, regels, kop, sub, functies, gekozen, beschikbaarheid, knop = "Sign up", laag }: KandidaatSlotProps) {
+  const reus = useRef<HTMLHeadingElement>(null);
+  useReus(reus, 0.55);
+  const [location, naar] = useLocation();
+  const [fout, setFout] = useState<string | null>(null);
+  const KIES = "Choose a role";
+
+  function verstuur(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const w = (k: string) => String(fd.get(k) ?? "").trim();
+    const functie = w("functie");
+    if (!w("naam") || w("phone").replace(/\D/g, "").length < 8) {
+      setFout("Please enter your name and a valid phone number.");
+      return;
+    }
+    setFout(null);
+    try {
+      sessionStorage.setItem("extra-aanmelden", JSON.stringify({
+        naam: w("naam"),
+        telefoon: w("phone"),
+        functie: functie && functie !== KIES ? functie : "",
+        via: location,
+      }));
+    } catch { /* privémodus: dan vul je het op de volgende pagina in */ }
+    naar("/en/apply");
+    window.scrollTo(0, 0);
+  }
+
+  return (
+    <section className={`slot2 slot-werk${laag ? " slot-laag" : ""}`} id={id}>
+      <div className="foto"><img src={foto} alt="" loading="lazy" /></div>
+      <img className="tag" src={tag} alt="EXTRA, the staffing agency that works" loading="lazy" />
+      <h2 className="reus" ref={reus}><span className="l1">{regels[0]}</span> <span className="l2">{regels[1]}</span> <span className="l3">{regels[2]}</span></h2>
+      <div className="acties">
+        <form className="inschrijf" noValidate onSubmit={verstuur} aria-label="Sign up with EXTRA">
+          <p className="if-kop"><b>{kop}</b><span>{sub}</span></p>
+          <label><span>Name</span><input name="naam" type="text" autoComplete="name" placeholder="First and last name" /></label>
+          <label><span>Phone</span><input name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="06 12 34 56 78" /></label>
+          <label><span>Role</span>
+            <select name="functie" defaultValue={gekozen && functies.includes(gekozen) ? gekozen : KIES}>
+              <option>{KIES}</option>
+              {functies.map((f) => <option key={f}>{f}</option>)}
+            </select>
+          </label>
+          <fieldset><legend>Availability</legend><div className="if-chips">
+            {beschikbaarheid.map((b) => <label key={b}><input type="checkbox" name="beschikbaarheid" value={b} /><span>{b}</span></label>)}
+          </div></fieldset>
+          {fout && <p className="form-fout" role="alert">{fout}</p>}
+          <button className="knop vol" type="submit">{knop} <Pijl /></button>
+          <a className="if-wa" href="https://wa.me/31851305915">Got a question first? Message us on WhatsApp <Ic n="pijl" /></a>
+        </form>
+      </div>
+    </section>
   );
 }
