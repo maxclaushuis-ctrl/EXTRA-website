@@ -10,6 +10,7 @@ import { storage } from "./storage";
 import { pool } from "./db";
 import { sendCvReminderEmail } from "./mail";
 import { registerRedirects } from "./redirects";
+import { registerPitchdecks } from "./pitchdecks";
 import { wwwDoelUrl } from "./wwwRedirect";
 import { registerLlmsTxt } from "./llms";
 import { scheduleSalesflowDailyJob, ensureSalesflowSchema } from "./salesflow";
@@ -397,6 +398,9 @@ const OPSTART_DB_MAX_MS = 10_000;
   // Registreer 301 redirects vóór alle andere routes
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);
+
+  // Presentaties voor prospects (/pitchdeck/gofo), niet indexeerbaar. Zie server/pitchdecks.ts.
+  registerPitchdecks(app);
 
   // /llms.txt en /llms-full.txt voor AI-crawlers (llmstxt.org-conventie).
   // Vóór de static/catch-all-middleware zodat ze als text/plain geserveerd worden.
