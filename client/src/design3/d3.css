@@ -46,6 +46,8 @@
 .d3.d3 .lijst li{display:flex;gap:12px;align-items:center}
 .d3.d3 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .d3.d3 .hdr{position:absolute;top:0;left:0;right:0;z-index:20;color:var(--offwhite)}
+.d3.d3 .hdr{pointer-events:none}
+.d3.d3 .hdr a, .d3.d3 .hdr button, .d3.d3 .hdr .nv-drop{pointer-events:auto}
 .d3.d3 .hdr .w{display:flex;align-items:center;height:92px;gap:40px;max-width:none;padding:0 48px}
 .d3.d3 .hdr .logo{height:34px}
 .d3.d3 .hdr .logo img{height:100%;width:auto}
