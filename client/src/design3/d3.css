@@ -1594,8 +1594,8 @@
 .d3.css-werk .deal-merk{font-size:22px;font-weight:800;letter-spacing:-.04em}
 .d3.css-werk .deal-cat{font-size:12px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid currentColor;border-radius:99px;padding:6px 11px;opacity:.75;white-space:nowrap}
 .d3.css-werk .deal-waarde{margin:auto 0 0;padding-top:40px;line-height:.85}
-.d3.css-werk .deal-waarde b{display:block;font-size:clamp(96px,10vw,168px);font-weight:800;letter-spacing:-.075em;color:var(--k)}
-.d3.css-werk .deal-waarde span{display:block;font-size:clamp(30px,2.8vw,44px);letter-spacing:-.03em;margin-top:10px}
+.d3.css-werk .deal-waarde b{display:block;font-size:clamp(96px,10vw,168px);font-weight:800;letter-spacing:-.075em;color:var(--k);line-height:.85!important}
+.d3.css-werk .deal-waarde span{display:block;font-size:clamp(30px,2.8vw,44px);letter-spacing:-.03em;margin-top:10px;line-height:1!important}
 .d3.css-werk .deal footer{margin-top:44px;padding-top:20px;border-top:2px dashed color-mix(in srgb,currentColor 30%,transparent);display:flex;flex-direction:column;gap:6px;font-size:16px}
 .d3.css-werk .deal footer span:first-child{font-weight:650}
 .d3.css-werk .deal-voor{font-size:13px;opacity:.65}

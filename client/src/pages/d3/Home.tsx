@@ -131,7 +131,7 @@ export default function Home() {
       <section className="zoek">
         <div className="w"><h2 className="groot">Wat zoek <span className="serif">jij?</span></h2><p className="lead zacht" style={{ textAlign: "center", margin: "-44px auto 64px" }}>Zoek je EXTRA personeel of zoek je een EXTRA baan?</p></div>
         <div className="takken">
-          <Tak kleur="var(--rose)" foto="/d3/strip-hotelstaf.webp" pos="30% 30%" label={["Hospitality", "experts"]} kop="Hotels" tekst="Van housekeeping tot banqueting, van front office tot F&B."
+          <Tak kleur="var(--rose)" foto="/d3/h-barista.webp" pos="50% 30%" label={["Hospitality", "experts"]} kop="Hotels" tekst="Van housekeeping tot banqueting, van front office tot F&B."
             k1={["Ik zoek hotelpersoneel", "/hotels"]} k2={["Ik zoek werk in hotels", "/horeca-vacatures-amsterdam"]} />
           <Tak kleur="var(--pistachio)" foto="/d3/strip-logistiek.webp" pos="50% 25%" label={["Logistic", "professionals"]} kop="Logistiek" tekst="Van orderpicken tot heftruck."
             k1={["Ik zoek logistiek personeel", "/logistiek"]} k2={["Ik zoek werk in de logistiek", "/logistiek-werk"]} />
