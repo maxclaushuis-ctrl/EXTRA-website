@@ -35,6 +35,3 @@
 .logo-roze{display:block;width:clamp(260px,46vw,760px);aspect-ratio:660/170;background:var(--accent);-webkit-mask:url(/d3/logo-w.svg) left center/contain no-repeat;mask:url(/d3/logo-w.svg) left center/contain no-repeat}
 .slogan2{margin:0;font-weight:700;letter-spacing:-.045em;line-height:1;color:var(--accent);white-space:nowrap}
 .slogan2 span{display:inline-block}
-
-/* Vitam: klantnaam als woordmerk tot er een logo is */
-.klantlogo{background:#F8F7F4!important;color:#37352C!important}

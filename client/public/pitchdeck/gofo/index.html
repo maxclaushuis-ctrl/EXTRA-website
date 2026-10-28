@@ -326,4 +326,43 @@
   addEventListener('beforeprint',function(){els.forEach(function(e){e.classList.add('zien')})});
 })();
 </script>
+<!-- pasin: elke slide past op het scherm, pijltjes springen per hele slide -->
+<style>
+@media (min-width:901px) and (min-height:560px){
+  html.pd-pas{scroll-snap-type:y mandatory}
+  html.pd-pas main > .slide{height:100vh;height:100svh;min-height:0;padding-top:92px;padding-bottom:52px}
+}
+</style>
+<script>
+(function(){
+  var root=document.documentElement;
+  function slides(){return [].slice.call(document.querySelectorAll('main > .slide')).filter(function(s){return !s.hidden;});}
+  function pas(){
+    var aan=innerWidth>900&&innerHeight>=560&&!matchMedia('print').matches;
+    root.classList.toggle('pd-pas',aan);
+    slides().forEach(function(s){
+      var w=s.querySelector('.w'); if(!w) return;
+      w.style.zoom='';
+      if(!aan) return;
+      var cs=getComputedStyle(s),ruimte=s.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+      var h=w.getBoundingClientRect().height;
+      if(h>ruimte) w.style.zoom=Math.max(.55,ruimte/h).toFixed(3);
+    });
+  }
+  function naar(s){ if(s) scrollTo({top:s.getBoundingClientRect().top+scrollY,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+  addEventListener('keydown',function(e){
+    if(/input|textarea|select/i.test(e.target.tagName)) return;
+    var vooruit=['ArrowDown','PageDown',' '].indexOf(e.key)>-1, terug=['ArrowUp','PageUp'].indexOf(e.key)>-1;
+    if(!vooruit&&!terug) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var z=slides(),i=0,best=1e9;
+    z.forEach(function(s,k){var d=Math.abs(s.getBoundingClientRect().top);if(d<best){best=d;i=k;}});
+    naar(z[Math.min(z.length-1,Math.max(0,i+(vooruit?1:-1)))]);
+  },true);
+  addEventListener('resize',pas);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(pas);
+  addEventListener('load',pas); pas();
+  new MutationObserver(function(){requestAnimationFrame(pas);}).observe(document.querySelector('main'),{attributes:true,subtree:false,childList:true,attributeFilter:['hidden']});
+})();
+</script>
 </body></html>

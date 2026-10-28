@@ -21,9 +21,9 @@
 var DECK = {
   klant: "Vitam",
   kleur: "#F8F7F4",
-  logo: "",
+  logo: "/pitchdeck/vitam/logo-vitam.png",
   branche: "hotels",
-  slides: ["cover","situatie","uitdagingen","regio","werving","proces","campagnes","job","binden","inzicht","schaal","compliance","inspectie","wtta","wtta-eisen","referenties","klanten","vervolg"]
+  slides: ["cover","situatie","uitdagingen","werving","proces","campagnes","job","binden","inzicht","schaal","compliance","inspectie","wtta","wtta-eisen","referenties","klanten","vervolg"]
 };
 </script>
 </head>
@@ -81,24 +81,6 @@ var DECK = {
       <article class="anim"><span class="nr" aria-hidden="true">01</span><h3>Weg van zzp, met behoud van flex</h3><p>Iedereen werkt bij ons in loondienst. Snel schakelen blijft mogelijk, zonder risico op schijnzelfstandigheid.</p><a href="#compliance">Naar compliance <svg width="16" height="16"><use href="#pijl"/></svg></a></article>
       <article class="anim"><span class="nr" aria-hidden="true">02</span><h3>Een vaste pool per locatie</h3><p>Niet steeds een ander gezicht, maar mensen die de locatie kennen. Beoordeeld na elke inzet en steeds gerichter geselecteerd.</p><a href="#inzicht">Naar inzicht <svg width="16" height="16"><use href="#pijl"/></svg></a></article>
       <article class="anim"><span class="nr" aria-hidden="true">03</span><h3>Lokale werving per locatie</h3><p>Per locatie een eigen campagne, gericht op afstand, beschikbaarheid en functieprofiel. Ook buiten de Randstad.</p><a href="#werving">Naar werving <svg width="16" height="16"><use href="#pijl"/></svg></a></article>
-    </div>
-  </div>
-  <span class="pd-nr" data-nr></span>
-</section>
-<!-- ============ regio ============ -->
-<section class="slide licht" data-slide="regio" data-titel="Waar we starten" id="regio">
-  <div class="w">
-    <div class="pd-kop"><div><span class="eyebrow">Lokale werving</span><h2>Direct starten, <span class="serif">stap voor stap opschalen</span></h2></div>
-      <p>In de Randstad kunnen we direct diensten invullen. Rond andere locaties bouwen we gericht een pool op. Daar hebben we iets meer voorbereidingstijd nodig, maar juist met structurele uren schalen we er stap voor stap verder op.</p></div>
-    <div class="loc2">
-      <ol class="vest">
-        <li class="anim"><span class="radar" aria-hidden="true"></span><div><b>Groot-Amsterdam</b><span class="sub">Bestaande pool · direct diensten invullen</span></div><span class="st goed">Direct inzetbaar</span></li>
-        <li class="anim"><span class="radar" aria-hidden="true"></span><div><b>Utrecht</b><span class="sub">Bestaande pool · direct diensten invullen</span></div><span class="st goed">Direct inzetbaar</span></li>
-        <li class="anim"><span class="radar" aria-hidden="true"></span><div><b>A2 Amsterdam tot Utrecht</b><span class="sub">Grotere locaties · lokale campagne per locatie</span></div><span class="st">Snel op te bouwen</span></li>
-        <li class="anim"><span class="radar" aria-hidden="true"></span><div><b>A2 richting het zuiden</b><span class="sub">Lokale campagne · pool per locatie</span></div><span class="st">Met voorbereidingstijd</span></li>
-        <li class="anim"><span class="radar" aria-hidden="true"></span><div><b>Overige locaties</b><span class="sub">Gerichte campagne op afstand en functieprofiel</span></div><span class="st">Op aanvraag</span></li>
-      </ol>
-      <div class="loc-foto anim"><img src="/d3/e-bediening.webp" alt="" style="object-position:50% 25%"><p>Wie dichtbij woont, komt vaker en blijft langer. <span class="serif">Daarom werven we per locatie.</span></p></div>
     </div>
   </div>
   <span class="pd-nr" data-nr></span>
@@ -299,7 +281,6 @@ var DECK = {
         <li class="anim"><b>Cao en gelijkwaardige beloning</b><small>Inlenersbeloning en toeslagen automatisch in de loonberekening</small><span class="st goed">Ingericht</span></li>
         <li class="anim"><b>Identiteit en werkrecht</b><small>ID-checker bij inschrijving, document- en verblijfsgegevens vastgelegd</small><span class="st goed">Bij inschrijving</span></li>
         <li class="anim"><b>Arbeidstijdenwet</b><small>Rusttijden en maximale weekuren bewaakt vóór het inplannen</small><span class="st goed">Automatisch</span></li>
-        <li class="anim"><b>Meerdere werkgevers</b><small>Bij aanmelding vinkt de medewerker aan dat hij alleen bij EXTRA werkt en bevestigt dat hij daarbuiten geen uren maakt</small><span class="st letop">Oplosbaar</span></li>
         <li class="anim"><b>Geen zzp</b><small>Iedereen werkt bij EXTRA in loondienst, ook bij korte inzet</small><span class="st goed">Altijd</span></li>
         <li class="anim"><b>Onderaanneming</b><small>Uitsluitend eigen medewerkers in loondienst, geen onderhuur</small><span class="st goed">Nooit</span></li>
                 <li class="anim"><b>ABU</b><small>Lidmaatschap</small><span class="st">In aanvraag</span></li>
@@ -522,6 +503,45 @@ var DECK = {
     try { navigator.clipboard.writeText(url); e.target.textContent = 'Gekopieerd'; } catch(_) { e.target.textContent = 'Kopiëren lukt hier niet'; }
     setTimeout(function(){ e.target.textContent = 'Kopieer link'; }, 2000);
   });
+})();
+</script>
+<!-- pasin: elke slide past op het scherm, pijltjes springen per hele slide -->
+<style>
+@media (min-width:901px) and (min-height:560px){
+  html.pd-pas{scroll-snap-type:y mandatory}
+  html.pd-pas main > .slide{height:100vh;height:100svh;min-height:0;padding-top:92px;padding-bottom:52px}
+}
+</style>
+<script>
+(function(){
+  var root=document.documentElement;
+  function slides(){return [].slice.call(document.querySelectorAll('main > .slide')).filter(function(s){return !s.hidden;});}
+  function pas(){
+    var aan=innerWidth>900&&innerHeight>=560&&!matchMedia('print').matches;
+    root.classList.toggle('pd-pas',aan);
+    slides().forEach(function(s){
+      var w=s.querySelector('.w'); if(!w) return;
+      w.style.zoom='';
+      if(!aan) return;
+      var cs=getComputedStyle(s),ruimte=s.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+      var h=w.getBoundingClientRect().height;
+      if(h>ruimte) w.style.zoom=Math.max(.55,ruimte/h).toFixed(3);
+    });
+  }
+  function naar(s){ if(s) scrollTo({top:s.getBoundingClientRect().top+scrollY,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+  addEventListener('keydown',function(e){
+    if(/input|textarea|select/i.test(e.target.tagName)) return;
+    var vooruit=['ArrowDown','PageDown',' '].indexOf(e.key)>-1, terug=['ArrowUp','PageUp'].indexOf(e.key)>-1;
+    if(!vooruit&&!terug) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var z=slides(),i=0,best=1e9;
+    z.forEach(function(s,k){var d=Math.abs(s.getBoundingClientRect().top);if(d<best){best=d;i=k;}});
+    naar(z[Math.min(z.length-1,Math.max(0,i+(vooruit?1:-1)))]);
+  },true);
+  addEventListener('resize',pas);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(pas);
+  addEventListener('load',pas); pas();
+  new MutationObserver(function(){requestAnimationFrame(pas);}).observe(document.querySelector('main'),{attributes:true,subtree:false,childList:true,attributeFilter:['hidden']});
 })();
 </script>
 <script>document.fonts.ready.then(function(){var l=document.querySelector(".logo-roze"),p=document.querySelector(".slogan2"),s=p&&p.querySelector("span");if(!l||!s)return;function z(){p.style.fontSize="40px";p.style.fontSize=(40*l.getBoundingClientRect().width/s.getBoundingClientRect().width)+"px";}z();addEventListener("resize",z);});</script>
