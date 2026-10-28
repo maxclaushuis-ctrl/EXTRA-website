@@ -44,7 +44,7 @@ const T = {
   nl: {
     home: "/", logoLabel: "EXTRA, naar de homepage", hoofdmenu: "Hoofdmenu", aanvragen: "Personeel aanvragen", aanvragenHref: "/personeelsaanvraag",
     solliciteer: "Solliciteer direct", solliciteerHref: "/aanmelden", tel: TELEFOON, menuOpen: "Menu openen", menuSluit: "Menu sluiten",
-    andereTaal: "EN", andereLang: "en", andereLabel: "English version", andereLang2: "English",
+    andereTaal: "EN", andereLang: "en", andereLabel: "English version",
     zin: <>Het uitzendbureau voor <a href="/hotels" style={{ ["--k" as any]: "var(--rose)" }}>hotels</a>,{" "}<a href="/logistiek" style={{ ["--k" as any]: "var(--pistachio)" }}>logistiek</a> en{" "}<a href="/evenementen" style={{ ["--k" as any]: "var(--sky)" }}>events</a>.</>,
     sub: "Flexibel personeel in loondienst, met het unieke beloningssysteem EXTRAATje.",
     bollen: ["/hotels", "/logistiek", "/evenementen"], bollenLabel: "Kies je branche",
@@ -54,7 +54,7 @@ const T = {
   en: {
     home: "/en", logoLabel: "EXTRA, to the homepage", hoofdmenu: "Main menu", aanvragen: "Request staff", aanvragenHref: "/en/request-staff",
     solliciteer: "Apply now", solliciteerHref: "/en/apply", tel: TELEFOON_EN, menuOpen: "Open menu", menuSluit: "Close menu",
-    andereTaal: "NL", andereLang: "nl", andereLabel: "Dutch version", andereLang2: "Nederlands",
+    andereTaal: "NL", andereLang: "nl", andereLabel: "Dutch version",
     zin: <>The staffing agency for <a href="/en/hotel-staffing-amsterdam" style={{ ["--k" as any]: "var(--rose)" }}>hotels</a>,{" "}<a href="/en/logistics-staff-amsterdam" style={{ ["--k" as any]: "var(--pistachio)" }}>logistics</a> and{" "}<a href="/en/event-staff-amsterdam" style={{ ["--k" as any]: "var(--sky)" }}>events</a>.</>,
     sub: "Flexible staff on our payroll, with the unique EXTRAATje rewards programme.",
     bollen: ["/en/hotel-staffing-amsterdam", "/en/logistics-staff-amsterdam", "/en/event-staff-amsterdam"], bollenLabel: "Choose your sector",
@@ -251,7 +251,6 @@ function Kop({ werkzoekende, knopHref, telKnop, vast, taal }: { werkzoekende: bo
                 <div className="mm-in">{paneel(g, true)}</div>
               </details>
             ))}
-            <a className="nv-mob-taal" href={anderePagina} lang={t.andereLang}>{t.andereLang2}</a>
           </div>
           <div className="nv-mob-voet">
             <a className="knop vol" href={aanvraagHref}>{t.aanvragen}</a>
