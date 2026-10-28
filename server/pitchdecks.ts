@@ -1,7 +1,7 @@
 /**
  * Presentaties voor prospects, als losse pagina buiten de React-app.
  *
- * /pitchdeck/gofo serveert client/public/pitchdeck/gofo/index.html. Bewust
+ * /pitchdeck/gofo en /pitchdeck/dpd serveren client/public/pitchdeck/<naam>/index.html. Bewust
  * niet vindbaar: geen route in shared/routeMeta.ts (dus niet in de sitemap of
  * llms.txt), een robots-meta in de pagina en X-Robots-Tag in de header. De
  * stijl en de beelden komen uit /d3 en uit de map van de presentatie zelf.
@@ -13,7 +13,7 @@ import fs from "fs";
 import path from "path";
 import type { Express, Request, Response } from "express";
 
-const DECKS = ["gofo"];
+const DECKS = ["gofo", "dpd"];
 
 function vindPagina(naam: string): string | null {
   const kandidaten = [
