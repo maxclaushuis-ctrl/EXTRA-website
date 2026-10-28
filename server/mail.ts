@@ -3,6 +3,7 @@ import { storage } from './storage';
 import { EmailTemplate, User } from '@shared/schema';
 import fs from 'fs';
 import path from 'path';
+import { AFZENDER, AFZENDER_NAAM } from '@shared/aanvraagMails';
 import { downloadCvFile } from './objectStorageFiles';
 import {
   mailOpmaak, bannerUrl, brancheVanFunctie, escapeHtml,
@@ -350,7 +351,7 @@ export async function sendCandidateConfirmationEmail(candidate: {
   const useEnglish = !speaksDutch && !isNlNationality;
 
   const fromEmail = "max@doehetextra.nl";
-  const fromName = "EXTRA";
+  const fromName = AFZENDER_NAAM;
 
   const INSTAGRAM_URL = "https://www.instagram.com/doehetextra/";
   const branche = brancheVanFunctie(candidate.functionType);
@@ -559,7 +560,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   const results = await Promise.all(recipients.map(to =>
     sendEmail({
       to,
-      from: 'EXTRA 🚀 <max@doehetextra.nl>',
+      from: AFZENDER,
       subject: `Nieuwe aanmelding: ${candidate.firstName} ${candidate.lastName} (${label})`,
       html,
       text,
@@ -608,7 +609,7 @@ export async function sendAdminCandidateNoCvEmail(candidate: {
   const results = await Promise.all(recipients.map(to =>
     sendEmail({
       to,
-      from: 'EXTRA 🚀 <max@doehetextra.nl>',
+      from: AFZENDER,
       subject: `Nieuwe aanmelding zonder cv: ${candidate.firstName} ${candidate.lastName} (${label})`,
       html,
       text,
@@ -649,7 +650,7 @@ export async function sendCalendlyInviteEmail(candidate: {
 
   return await sendEmail({
     to: candidate.email,
-    from: 'EXTRA <max@doehetextra.nl>',
+    from: AFZENDER,
     subject: 'Plan je gesprek 📅',
     html,
     text,
@@ -695,7 +696,7 @@ export async function sendApplicationRejectionEmail(applicant: {
 
   return await sendEmail({
     to: applicant.email,
-    from: 'EXTRA <max@doehetextra.nl>',
+    from: AFZENDER,
     subject: 'Update over je sollicitatie bij EXTRA',
     html,
     text,
@@ -723,7 +724,7 @@ export async function sendCandidateRejectionEmailDiensten(candidate: {
 
   return await sendEmail({
     to: candidate.email,
-    from: 'EXTRA <max@doehetextra.nl>',
+    from: AFZENDER,
     subject: 'Bedankt voor je aanmelding bij EXTRA',
     html,
     text,
@@ -750,7 +751,7 @@ export async function sendCandidateRejectionEmailCv(candidate: {
 
   return await sendEmail({
     to: candidate.email,
-    from: 'EXTRA <max@doehetextra.nl>',
+    from: AFZENDER,
     subject: 'Update over je sollicitatie bij EXTRA',
     html,
     text,
@@ -788,7 +789,7 @@ export async function sendCvUploadFirstEmail(candidate: CvUploadKandidaat): Prom
 
   return await sendEmail({
     to: candidate.email,
-    from: 'EXTRA <max@doehetextra.nl>',
+    from: AFZENDER,
     subject: 'Upload je cv om een gesprek in te plannen',
     html,
     text: `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding bij EXTRA!\n\nOm een gesprek in te plannen hebben we nog je cv nodig. Ga naar ${uploadUrl} om je cv te uploaden.\n\nTot snel! 🤎\nTeam EXTRA`,
@@ -816,7 +817,7 @@ export async function sendCvReminderEmail(candidate: CvUploadKandidaat): Promise
 
   return await sendEmail({
     to: candidate.email,
-    from: 'EXTRA <max@doehetextra.nl>',
+    from: AFZENDER,
     subject: 'Herinnering: upload je cv om een gesprek in te plannen',
     html,
     text: `Hi ${candidate.firstName},\n\nJe cv ontbreekt nog bij je aanmelding bij EXTRA. Zonder cv kunnen we geen gesprek inplannen.\n\nGa naar ${uploadUrl} om je cv te uploaden.\n\nTot snel! 🤎\nTeam EXTRA`,
@@ -968,7 +969,7 @@ export async function sendAdminWelcomeEmail(params: {
 
   return sendEmail({
     to,
-    from: 'EXTRA <max@doehetextra.nl>',
+    from: AFZENDER,
     subject: `Welkom bij het EXTRA admin-portaal, ${firstName}!`,
     html,
     text,

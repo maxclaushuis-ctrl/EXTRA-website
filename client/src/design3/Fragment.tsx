@@ -18,7 +18,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import { useLocation } from "wouter";
 import Shell, { type CssSet, type Sector } from "./Shell";
-import { useCarrousel, useConfetti, useReus, useSpoor, useStapelTop } from "./gedrag";
+import { useCarrousel, useConfetti, useReus, useSpoor, useStapelTop, useDekking } from "./gedrag";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { herkomstVoorFormulier } from "@/lib/herkomst";
@@ -113,6 +113,7 @@ export default function FragmentPagina({ d }: { d: FragmentData }) {
   useReus(reus, d.reus);
   useStapelTop(loon);
   useStapelTop(vacs);
+  useDekking(root, [d]);
   useConfetti(confetti);
 
   // In beeld schuiven bij scrollen.

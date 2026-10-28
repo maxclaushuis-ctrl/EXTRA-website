@@ -29,7 +29,9 @@ export const MAILADRES = "info@doehetextra.nl";
 export const ADRES = "Herengracht 372, 1016 CH Amsterdam";
 export const OPENINGSTIJDEN = "ma t/m vr 9:00 tot 18:00";
 export const INTERNE_ONTVANGERS = ["max@doehetextra.nl", "eveline@doehetextra.nl"];
-export const AFZENDER = "EXTRA <max@doehetextra.nl>";
+/** Vaste afzender van alle mails aan kandidaten, medewerkers en klanten. Interne meldingen gaan als "EXTRA Systeem". */
+export const AFZENDER_NAAM = "EXTRA 🤎";
+export const AFZENDER = `${AFZENDER_NAAM} <max@doehetextra.nl>`;
 
 import {
   escapeHtml, mailOpmaak, brancheVanLocatie,

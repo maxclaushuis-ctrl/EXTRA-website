@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Shell from "@/design3/Shell";
 import { Ic, Pijl, Woorden, initialen } from "@/design3/basis";
-import { useCarrousel, useConfetti, useReus, useStapelTop } from "@/design3/gedrag";
+import { useCarrousel, useConfetti, useDekking, useReus, useStapelTop } from "@/design3/gedrag";
 import { BeloningenBand, Faq, ReviewScore } from "@/design3/secties";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -76,6 +76,7 @@ export default function Home() {
   useEffect(() => { trackPageView({ path: "/", variant: "a" }); }, [trackPageView]);
 
   const loon = useRef<HTMLElement>(null);
+  const stapel = useRef<HTMLDivElement>(null);
   const confetti = useRef<HTMLDivElement>(null);
   const reus = useRef<HTMLHeadingElement>(null);
   const carrousel = useRef<HTMLDivElement>(null);
@@ -83,6 +84,7 @@ export default function Home() {
   const [groep, setGroep] = useState<"klanten" | "medewerkers">("klanten");
   const [wissel, setWissel] = useState(false);
   useStapelTop(loon);
+  useDekking(stapel);
   useConfetti(confetti);
   useReus(reus, 0.72);
   useCarrousel(carrousel, [groep]);
@@ -147,7 +149,7 @@ export default function Home() {
         </div></div>
       </section>
 
-      <div className="stapel">
+      <div className="stapel" ref={stapel}>
         <section className="donker loon" ref={loon}>
           <div className="w loon-grid">
             <div className="loon-tekst">

@@ -144,6 +144,61 @@ export function useReus(ref: RefObject<HTMLElement>, factor = 0.55) {
   }, [ref, factor]);
 }
 
+/**
+ * Dekeffect bij stapels en de kleurovergang naar Kortingsacties. Het vlak dat
+ * wordt bedekt krijgt --dek (0 tot 1), de branchekleur krijgt --kleur. Dit
+ * stond eerst op benoemde scroll-timelines met timeline-scope; Safari kent
+ * die niet en toonde daardoor meteen de eindstand (wazig, grijs, geen kleur).
+ * De voortgang volgt dezelfde "entry"-reeks als die timelines.
+ */
+export function useDekking(ref: RefObject<HTMLElement>, deps: unknown[] = []) {
+  useEffect(() => {
+    const r = ref.current;
+    if (!r || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    type Paar = { doelen: HTMLElement[]; dekker: HTMLElement; van: number; tot: number; varNaam: string; attr: string };
+    const paren: Paar[] = [];
+    const volgende = (el: HTMLElement) => {
+      let n = el.nextElementSibling as HTMLElement | null;
+      while (n && n.classList.contains("stapel-pauze")) n = n.nextElementSibling as HTMLElement | null;
+      return n;
+    };
+    r.querySelectorAll<HTMLElement>(".stapel > .loon, .stapel2 > .vacs").forEach((el) => {
+      const d = volgende(el);
+      if (d) paren.push({ doelen: [el], dekker: d, van: 0, tot: 1, varNaam: "--dek", attr: "data-dek" });
+    });
+    const deals = r.querySelector<HTMLElement>(".deals.deals-kleur");
+    if (deals) {
+      const doelen = [deals, ...Array.from(r.querySelectorAll<HTMLElement>(".dag.dag-roze"))];
+      paren.push({ doelen, dekker: deals, van: 0.25, tot: 0.85, varNaam: "--kleur", attr: "data-kleur" });
+    }
+    if (!paren.length) return;
+    let wacht = 0;
+    const zet = () => {
+      wacht = 0;
+      const vh = window.innerHeight;
+      paren.forEach((p) => {
+        const b = p.dekker.getBoundingClientRect();
+        const entry = (vh - b.top) / Math.max(1, Math.min(b.height, vh));
+        const v = Math.min(1, Math.max(0, (entry - p.van) / (p.tot - p.van)));
+        p.doelen.forEach((el) => {
+          if (v > 0) { el.setAttribute(p.attr, ""); el.style.setProperty(p.varNaam, v.toFixed(3)); }
+          else { el.removeAttribute(p.attr); el.style.removeProperty(p.varNaam); }
+        });
+      });
+    };
+    const plan = () => { if (!wacht) wacht = window.requestAnimationFrame(zet); };
+    zet();
+    window.addEventListener("scroll", plan, { passive: true });
+    window.addEventListener("resize", plan);
+    return () => {
+      window.removeEventListener("scroll", plan);
+      window.removeEventListener("resize", plan);
+      if (wacht) window.cancelAnimationFrame(wacht);
+      paren.forEach((p) => p.doelen.forEach((el) => { el.removeAttribute(p.attr); el.style.removeProperty(p.varNaam); }));
+    };
+  }, [ref, ...deps]);
+}
+
 /** Sticky sectie die langer is dan het scherm: plakt pas als de onderkant in beeld is. */
 export function useStapelTop(ref: RefObject<HTMLElement>) {
   useEffect(() => {

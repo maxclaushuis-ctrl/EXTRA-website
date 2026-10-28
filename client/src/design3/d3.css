@@ -767,10 +767,10 @@
 .d3.d3 .beloning em{color:rgba(248,247,244,.55)}
 .d3.d3 .beloning::after{background:rgba(248,247,244,.4);width:7px;height:7px}
 .d3.d3 .beloning b{font-size:clamp(24px,2.2vw,34px)}
-.d3.d3 .stapel{position:relative;timeline-scope:--dag}
+.d3.d3 .stapel{position:relative}
 .d3.d3 .stapel .loon{position:sticky;top:0;z-index:1}
 .d3.d3 .stapel .loon::after{content:"";position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
-.d3.d3 .dag{position:relative;z-index:2;background:var(--offwhite);border-radius:44px 44px 0 0;margin-top:-44px;box-shadow:0 -30px 60px -20px rgba(0,0,0,.45);padding:120px 0 130px;view-timeline-name:--dag}
+.d3.d3 .dag{position:relative;z-index:2;background:var(--offwhite);border-radius:44px 44px 0 0;margin-top:-44px;box-shadow:0 -30px 60px -20px rgba(0,0,0,.45);padding:120px 0 130px}
 .d3.d3 .dag-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center}
 .d3.d3 .dag-h2{margin-top:22px;font-size:clamp(56px,7vw,116px)}
 .d3.d3 .dag-h2 .d2{display:block;padding-left:10%}
@@ -792,10 +792,8 @@
 .d3.d3 .k3{left:6%;bottom:60px;transform:rotate(-2deg);background:var(--wit);color:var(--espresso)}
 .d3.d3 .k3 small, .d3.d3 .k3 span{color:var(--tekst-2)}
 .d3.d3 .dag + .hoe, .d3.d3 .stapel + .hoe{border-top:1px solid var(--lijn)}
-@supports (animation-timeline: view()) {@media (prefers-reduced-motion: no-preference) {.d3.d3 .stapel .loon::after{animation:verduister linear both;animation-timeline:--dag;animation-range:entry 0% entry 100%}
-@keyframes verduister{to{opacity:.55}}
-.d3.d3 .stapel .loon .loon-grid{animation:krimp linear both;animation-timeline:--dag;animation-range:entry 0% entry 100%;transform-origin:50% 0}
-@keyframes krimp{to{transform:scale(.92);filter:blur(2px)}}
+@supports (animation-timeline: view()) {@media (prefers-reduced-motion: no-preference) {.d3.d3 .stapel .loon::after{opacity:calc(var(--dek,0) * .55)}
+.d3.d3 .stapel .loon[data-dek] .loon-grid{transform:scale(calc(1 - var(--dek) * .08));filter:blur(calc(var(--dek) * 2px));transform-origin:50% 0}
 .d3.d3 .dag-kaart{animation:kaart-in linear both;animation-timeline:view();animation-range:entry 30% cover 45%}
 .d3.d3 .k2{animation-range:entry 45% cover 52%}
 .d3.d3 .k3{animation-range:entry 60% cover 58%}
@@ -826,8 +824,9 @@
 .d3.d3 .carrousel{min-width:0}
 .d3.d3 .ftr-bollen{display:flex;gap:10px;margin-bottom:26px}
 .d3.d3 .fb{width:96px;height:96px;border-radius:50%;background:var(--k);color:var(--espresso);display:flex;flex-direction:column;justify-content:center;align-items:center;line-height:.82;font-weight:800;letter-spacing:-.06em;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
-.d3.d3 .fb b{font-size:15.5px}
-.d3.d3 .fb small{font-size:9px;margin-top:2px;letter-spacing:-.04em}
+.d3.d3 .fb{position:relative}
+.d3.d3 .fb b{display:block;font-size:15.5px}
+.d3.d3 .fb small{position:absolute;top:calc(50% + .8em);left:62%;transform:translateX(-50%);margin:0;white-space:nowrap;font-size:9px;letter-spacing:-.04em}
 .d3.d3 .fb:hover, .d3.d3 .fb:focus-visible{transform:translateY(-4px) rotate(-6deg)}
 @media (max-width:760px){.d3.d3 .fb{width:84px;height:84px}
 .d3.d3 .fb b{font-size:13.5px}
@@ -1320,9 +1319,8 @@
 .d3.css-hotels .sc-fav span{font-size:13px;font-weight:600;padding:6px 11px;border-radius:99px;background:var(--sc-spoor)}
 .d3.css-hotels .sc-fav span::before{content:"♥";margin-right:6px;font-size:11px}
 .d3.css-hotels .sc-noot{margin-top:14px;font-size:14px;color:var(--tekst-2)}
-@supports (animation-timeline: view()) {@media (prefers-reduced-motion: no-preference) {.d3.css-hotels .stapel2{timeline-scope:--scores}
-.d3.css-hotels .stapel2 > .vacs::after{animation:verduister linear both;animation-timeline:--scores;animation-range:entry 0% entry 100%}
-.d3.css-hotels .stapel2 > .vacs > .w{animation:krimp linear both;animation-timeline:--scores;animation-range:entry 0% entry 100%;transform-origin:50% 0}
+@supports (animation-timeline: view()) {@media (prefers-reduced-motion: no-preference) {.d3.css-hotels .stapel2 > .vacs::after{opacity:calc(var(--dek,0) * .55)}
+.d3.css-hotels .stapel2 > .vacs[data-dek] > .w{transform:scale(calc(1 - var(--dek) * .08));filter:blur(calc(var(--dek) * 2px));transform-origin:50% 0}
 .d3.css-hotels .sc-ring circle.v{animation:ring-vul linear both;animation-timeline:view(inline);animation-range:entry 20% cover 45%}
 @keyframes ring-vul{from{stroke-dashoffset:326.7}}
 .d3.css-hotels .sc-bars i{animation:balk-vul linear both;animation-timeline:view(inline);animation-range:entry 20% cover 45%}
@@ -1635,10 +1633,7 @@
 @media (max-width:760px){.d3.css-werk .loon-licht{border-radius:28px 28px 0 0}}
 .d3.css-werk .dag.dag-roze{background:var(--accent)}
 @media (max-width:900px){.d3.css-werk .dag-roze .dag-stappen li:last-child::before{background:var(--espresso);color:var(--accent)}}
-.d3.css-werk:has(.deals-kleur){timeline-scope:--deals}
-.d3.css-werk .deals.deals-kleur{view-timeline-name:--deals}
-@supports (animation-timeline: view()) {@media (prefers-reduced-motion: no-preference) {.d3.css-werk .dag.dag-roze, .d3.css-werk .deals.deals-kleur{animation:roze-naar-licht linear both;animation-timeline:--deals;animation-range:entry 25% entry 85%}
-@keyframes roze-naar-licht{from{background-color:var(--accent)}to{background-color:var(--offwhite)}}}}
+@supports (animation-timeline: view()) {@media (prefers-reduced-motion: no-preference) {.d3.css-werk .dag.dag-roze[data-kleur], .d3.css-werk .deals.deals-kleur[data-kleur]{background-color:color-mix(in srgb,var(--offwhite) calc(var(--kleur) * 100%),var(--accent))}}}
 .d3.css-werk .dag.dag-roze, .d3.css-werk .loon-licht{clip-path:inset(-120px 0 0 0)}
 .d3.css-werk .dag.dag-roze{margin-bottom:-2px}
 .d3.css-werk .deals.deals-kleur{padding-top:142px;position:relative;z-index:3}

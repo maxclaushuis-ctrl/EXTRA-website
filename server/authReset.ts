@@ -18,6 +18,7 @@ import { db } from "./db";
 import { log } from "./vite";
 import { sendEmail } from "./mail";
 import { mailOpmaak, escapeHtml, alinea, knop, knoppen, afsluiting } from "@shared/mailOpmaak";
+import { AFZENDER } from "@shared/aanvraagMails";
 
 const rows = (r: any): any[] => r.rows ?? r ?? [];
 const one = (r: any): any | undefined => rows(r)[0];
@@ -82,7 +83,7 @@ export async function verstuurWachtwoordInstelLink(email: string): Promise<void>
   });
   const ok = await sendEmail({
     to: user.email,
-    from: "EXTRA <max@doehetextra.nl>",
+    from: AFZENDER,
     subject: "Stel je wachtwoord in voor het EXTRA dashboard",
     html,
     text: `Hoi ${user.firstName ?? ""},\n\nStel je wachtwoord in via: ${link}\n\nDe link is 24 uur geldig en eenmalig bruikbaar. Niet zelf aangevraagd? Negeer deze mail.`,
