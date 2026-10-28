@@ -69,6 +69,14 @@ const VELDEN: { naam: Veld; label: string; fout: string; props: Record<string, s
   { naam: "email", label: "E-mail", fout: "Vul een geldig e-mailadres in", props: { type: "email", autoComplete: "email", placeholder: "naam@bedrijf.nl" } },
 ];
 
+/** Voorbeeld bij bedrijfsnaam, passend bij de gekozen branche. Zonder keuze of bij "anders": het hotel. */
+const BEDRIJF_VOORBEELD: Record<Branche, { nl: string; en: string }> = {
+  hotel: { nl: "Bijv. Hotel Amsterdam", en: "E.g. Hotel Amsterdam" },
+  event: { nl: "Bijv. Evenementenlocatie Amsterdam", en: "E.g. Event venue Amsterdam" },
+  logistiek: { nl: "Bijv. DC Amsterdam", en: "E.g. DC Amsterdam" },
+  anders: { nl: "Bijv. Hotel Amsterdam", en: "E.g. Hotel Amsterdam" },
+};
+
 /** Engelse label, foutmelding en placeholder per veld (en/request-staff.html). */
 const VELDEN_EN: Record<Veld, { label: string; fout: string; placeholder: string }> = {
   companyName: { label: "Company name", fout: "Enter your company name", placeholder: "E.g. Hotel Amsterdam" },
@@ -294,6 +302,7 @@ export function PersoneelAanvragen() {
                       required
                       {...v.props}
                       {...(en ? { placeholder: VELDEN_EN[v.naam].placeholder } : {})}
+                      {...(v.naam === "companyName" ? { placeholder: BEDRIJF_VOORBEELD[branche ?? "anders"][en ? "en" : "nl"] } : {})}
                       value={waarden[v.naam]}
                       onChange={(e) => zet(v.naam, e.target.value)}
                       onBlur={(e) => { if (e.target.value) setFouten((f) => ({ ...f, [v.naam]: !veldOk(v.naam, e.target.value) })); }}
