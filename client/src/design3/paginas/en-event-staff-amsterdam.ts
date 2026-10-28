@@ -4,7 +4,14 @@ import type { FragmentData } from "../Fragment";
 
 const pagina: FragmentData = {
  "sector": "events",
- "css": [],
+ "css": [
+  "events",
+  "hotels",
+  "logistiek",
+  "eventsland",
+  "werk",
+  "bedrijf"
+ ],
  "werkzoekende": false,
  "knop": "/en/request-staff?branche=event",
  "functies": [
