@@ -188,7 +188,7 @@ export default function Home() {
             <div className="dag-beeld">
               <div className="confetti" aria-hidden="true" ref={confetti}></div>
               <figure className="dag-bon" aria-hidden="true"><span className="db-label"><i></i>Voorschot klaar in Jixbee</span><img src="/d3/jix-bon.webp" alt="" loading="lazy" /></figure>
-              <img className="dag-tel" src="/d3/jix-payout.webp" alt="Jixbee: je opname wordt verwerkt" loading="lazy" />
+              <img className="dag-tel" src="/d3/jix-transactie.webp" alt="Jixbee: je transactie wordt verwerkt" loading="lazy" />
             </div>
           </div>
         </section>
