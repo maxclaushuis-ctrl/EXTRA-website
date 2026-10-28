@@ -33,6 +33,8 @@ import type { BlogPost, VacancyPost } from "@shared/schema";
 
 interface PageMeta {
   title: string;
+  /** Afwijkende titel bij delen (og:title, twitter:title). */
+  ogTitle?: string;
   description: string;
   canonicalUrl: string;
   noindex?: boolean;
@@ -65,12 +67,12 @@ export function injectMeta(shell: string, meta: PageMeta, fragment?: string): st
     `$1${meta.noindex ? (meta.follow ? "noindex, follow" : "noindex, nofollow") : "index, follow"}$2`
   );
   html = html.replace(/(<meta\s+property="og:url"\s+content=")[^"]*(")/, `$1${escapeAttr(meta.canonicalUrl)}$2`);
-  html = html.replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/, `$1${escapeAttr(meta.title)}$2`);
+  html = html.replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/, `$1${escapeAttr(meta.ogTitle ?? meta.title)}$2`);
   html = html.replace(
     /(<meta\s+property="og:description"\s+content=")[^"]*(")/,
     `$1${escapeAttr(meta.description)}$2`
   );
-  html = html.replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*(")/, `$1${escapeAttr(meta.title)}$2`);
+  html = html.replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*(")/, `$1${escapeAttr(meta.ogTitle ?? meta.title)}$2`);
   html = html.replace(
     /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,
     `$1${escapeAttr(meta.description)}$2`
@@ -156,6 +158,7 @@ function metaFromRoute(m: RouteMeta): PageMeta {
   const breadcrumb = m.noindex ? undefined : breadcrumbJsonLd(canonicalPath, m.title, m.lang);
   return {
     title: m.title,
+    ogTitle: m.ogTitle,
     description: m.description,
     canonicalUrl: `${SITE_ORIGIN}${canonicalPath}`,
     noindex: m.noindex,

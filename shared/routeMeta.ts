@@ -48,6 +48,8 @@ export interface RouteMeta {
   prerender?: boolean;
   /** 'en' voor Engelstalige pagina's (og:locale) */
   lang?: "nl" | "en";
+  /** Titel bij delen (og:title, twitter:title) als die moet afwijken van de zoektitel. */
+  ogTitle?: string;
   /** Sitemap-prioriteit (alleen gebruikt voor indexeerbare routes) */
   priority?: string;
   changefreq?: string;
@@ -59,9 +61,10 @@ export const ROUTE_META: RouteMeta[] = [
   // ── KERNPAGINA'S (NL) ──────────────────────────────────────────────
   {
     path: "/",
-    title: "Horeca uitzendbureau Amsterdam | EXTRA",
+    title: "Uitzendbureau Amsterdam: horeca, events en logistiek | EXTRA",
+    ogTitle: "EXTRA | Het uitzendbureau dat werkt",
     description:
-      "EXTRA levert flexibel horecapersoneel voor hotels, restaurants, events en cateraars in Amsterdam. Iedereen in loondienst, dagbetaling mogelijk.",
+      "Personeel voor hotels, horeca, events en logistiek in Amsterdam en omgeving. Iedereen in loondienst, NEN 4400-1 gecertificeerd en dagbetaling mogelijk.",
     prerender: true,
     priority: "1.0",
     changefreq: "weekly",
