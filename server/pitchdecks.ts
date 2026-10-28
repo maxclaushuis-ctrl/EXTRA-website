@@ -1,7 +1,7 @@
 /**
  * Presentaties voor prospects, als losse pagina buiten de React-app.
  *
- * /pitchdeck/gofo, /dpd, /eg en /vitam serveren client/public/pitchdeck/<naam>/index.html. Bewust
+ * /pitchdeck/gofo, /dpd, /eg, /vitam en /csu serveren client/public/pitchdeck/<naam>/index.html. Bewust
  * niet vindbaar: geen route in shared/routeMeta.ts (dus niet in de sitemap of
  * llms.txt), een robots-meta in de pagina en X-Robots-Tag in de header. De
  * stijl en de beelden komen uit /d3 en uit de map van de presentatie zelf.
@@ -13,7 +13,7 @@ import fs from "fs";
 import path from "path";
 import type { Express, Request, Response } from "express";
 
-const DECKS = ["gofo", "dpd", "eg", "vitam"];
+const DECKS = ["gofo", "dpd", "eg", "vitam", "csu"];
 
 function vindPagina(naam: string): string | null {
   const kandidaten = [
