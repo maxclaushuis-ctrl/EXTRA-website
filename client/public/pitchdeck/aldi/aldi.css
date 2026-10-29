@@ -44,6 +44,25 @@
 .wit .docsrij small{color:var(--tekst-2);opacity:1}
 
 .pd-cover .klantlogo{background:#fff;color:#37352C;font-weight:800;font-size:30px;letter-spacing:-.045em;padding:8px 20px;border-radius:14px;line-height:1}
+/* Introductie: de drie brandbookkleuren */
+.intro3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.intro3{grid-template-rows:auto auto 1fr}
+.intro3 article{border-radius:26px;padding:30px 30px 32px;display:grid;grid-row:span 3;grid-template-rows:subgrid;row-gap:12px;align-content:start;color:var(--espresso);position:relative;overflow:hidden}
+.intro3 .i-p{background:#CEDBBC}.intro3 .i-s{background:#DCE5CF}.intro3 .i-r{background:#E9EFE1}
+.intro3 article::after{content:"";position:absolute;right:-46px;top:-46px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.35)}
+.intro3 .i-lab{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7;position:relative;z-index:1}
+.intro3 h3{font-size:clamp(26px,2.3vw,34px);line-height:1;letter-spacing:-.045em;margin:6px 0 4px;position:relative;z-index:1}
+.slide .intro3 p{margin:0;color:var(--espresso)!important;font-size:16px!important;line-height:1.45!important;position:relative;z-index:1}
+.intro-voet{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:34px;flex-wrap:wrap}
+.intro-slot{font-weight:800;font-size:clamp(40px,4.2vw,66px);letter-spacing:-.05em;line-height:1;color:var(--espresso)}
+.intro-slot .serif{color:var(--espresso)}
+.intro-chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.intro-chips li{background:var(--espresso);color:var(--offwhite);border-radius:99px;padding:9px 16px;font-weight:650;font-size:14px}
+@media (max-width:900px){.intro3{grid-template-columns:1fr;grid-template-rows:none}.intro3 article{grid-row:auto;display:flex;flex-direction:column}}
+
+/* Introductie op een groene slide */
+.accent .intro3 .i-p{background:#F8F7F4}.accent .intro3 .i-s{background:rgba(248,247,244,.62)}.accent .intro3 .i-r{background:rgba(248,247,244,.36)}
+.accent .intro3 article::after{background:rgba(206,219,188,.45)}
 
 .pd-cover .klantlogo{background:transparent!important;padding:0!important;box-shadow:none!important}
 .pd-cover .klantlogo img{height:76px!important}
