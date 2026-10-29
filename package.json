@@ -30,6 +30,7 @@
     "fragment:test": "tsx server/contentFragment.test.ts",
     "jsonld:test": "tsx shared/jsonLd.test.ts",
     "levendelinks:test": "tsx shared/levendeLinks.test.ts",
+    "pitchdecks:test": "tsx shared/pitchdecks.test.ts",
     "www:test": "tsx server/wwwRedirect.test.ts",
     "verwant:test": "tsx shared/verwanteLinks.test.ts",
     "taal:test": "tsx shared/taal.test.ts",

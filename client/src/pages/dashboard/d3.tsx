@@ -27,7 +27,7 @@ export type TegelSoort = "standaard" | "letop" | "goed" | "stop" | "aandacht";
 export interface Tegel<K extends string> {
   sleutel: K;
   titel: string;
-  getal: number;
+  getal: number | string;
   sub?: ReactNode;
   soort?: TegelSoort;
 }

@@ -8950,6 +8950,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     registerGoogleReviewRoutes(app, adminMiddleware);
   }
 
+  // Pitchdeck-tracker: wie opent welke presentatie. Zie server/pitchdeckTracker.ts.
+  {
+    const { registerPitchdeckTracker } = await import("./pitchdeckTracker");
+    registerPitchdeckTracker(app, adminMiddleware);
+  }
+
   /** Contactberichten voor het dashboard, nieuwste eerst. */
   app.get("/api/admin/contact-berichten", adminMiddleware, async (_req: Request, res: Response) => {
     try {

@@ -1202,6 +1202,39 @@ export const googleReviews = pgTable("google_reviews", {
 
 export type GoogleReviewDbRij = typeof googleReviews.$inferSelect;
 
+// ── Pitchdeck-tracker (shared/pitchdecks.ts) ──────────────────────────────
+// Eén link per ontvanger; de naam staat alleen hier, nooit in de link.
+export const pitchdeckLinks = pgTable("pitchdeck_links", {
+  id: serial("id").primaryKey(),
+  deck: text("deck").notNull(),
+  code: text("code").notNull().unique(),
+  ontvanger: text("ontvanger").notNull(),
+  bedrijf: text("bedrijf"),
+  actief: boolean("actief").notNull().default(true),
+  aangemaaktDoor: integer("aangemaakt_door"),
+  aangemaaktOp: timestamp("aangemaakt_op").defaultNow(),
+});
+
+// Elke opening van een deck. Geen IP-adres, alleen het soort apparaat.
+export const pitchdeckOpeningen = pgTable("pitchdeck_openingen", {
+  id: serial("id").primaryKey(),
+  deck: text("deck").notNull(),
+  linkId: integer("link_id"),
+  sleutel: text("sleutel").notNull(),
+  apparaat: text("apparaat").notNull().default("Onbekend"),
+  aantalSlides: integer("aantal_slides").notNull().default(0),
+  maxSlide: integer("max_slide").notNull().default(0),
+  kijktijdSec: integer("kijktijd_sec").notNull().default(0),
+  geopendOp: timestamp("geopend_op").defaultNow(),
+  laatstGezien: timestamp("laatst_gezien").defaultNow(),
+}, (t) => ({
+  linkIdx: index("pitchdeck_openingen_link_idx").on(t.linkId),
+  geopendIdx: index("pitchdeck_openingen_geopend_idx").on(t.geopendOp),
+}));
+
+export type PitchdeckLink = typeof pitchdeckLinks.$inferSelect;
+export type PitchdeckOpening = typeof pitchdeckOpeningen.$inferSelect;
+
 export const insertStaffingRequestSchema = createInsertSchema(staffingRequests).omit({
   id: true,
   status: true,

@@ -40,6 +40,8 @@ import ProspectCampagnesTab from '@/components/ProspectCampagnesTab';
 import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import GoogleReviewsTab from './dashboard/GoogleReviewsTab';
+import PitchdecksTab from './dashboard/PitchdecksTab';
+import { Presentation as PresentatieIcoon } from 'lucide-react';
 // Fase 2: nieuwe WhatsApp-inbox (mockup-herbouw). WhatsAppBeheer blijft bestaan tot fase 4.
 import WhatsAppInbox from './dashboard/whatsapp';
 import CommunicatieNav from './dashboard/CommunicatieNav';
@@ -237,6 +239,8 @@ export default function DashboardMockup() {
   useEffect(() => {
     try {
       if (new URLSearchParams(window.location.search).has('google')) setActiveTab('google-reviews');
+      // Link uit de pitchdeck-mail (/dashboard?tab=pitchdecks).
+      if (new URLSearchParams(window.location.search).get('tab') === 'pitchdecks') setActiveTab('pitchdecks');
     } catch { /* geen URL beschikbaar */ }
   }, []);
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
@@ -1086,6 +1090,7 @@ export default function DashboardMockup() {
             <>
               {[
                 { icon: Building2, label: 'Personeelsaanvragen', tab: 'bedrijven-aanvragen' },
+                { icon: PresentatieIcoon, label: 'Pitchdecks', tab: 'pitchdecks' },
                 { icon: TrendingUp, label: 'Leads & Prospects', tab: 'crm-leads' },
                 { icon: Target, label: 'Salesflow', tab: 'sales-flow' },
                 { icon: Users, label: 'Bestaande klanten', tab: 'crm-klanten' },
@@ -4759,6 +4764,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
           ) : activeTab === 'crm-klanten' ? (
             <CrmKlantenTab />
+
+          ) : activeTab === 'pitchdecks' ? (
+            <PitchdecksTab />
 
           ) : activeTab === 'crm-reminders' ? (
             <CrmRemindersTab onOpenCompany={(companyId) => { sessionStorage.setItem('crmOpenCompanyId', String(companyId)); setActiveTab('crm-leads'); }} />
