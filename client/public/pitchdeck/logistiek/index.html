@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>EXTRA Logistiek · Presentatie</title>
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/pitchdeck/logistiek/stijl3.css"><link rel="stylesheet" href="/pitchdeck/logistiek/selectie.css"><link rel="stylesheet" href="/pitchdeck/logistiek/pitch.css"><link rel="stylesheet" href="/pitchdeck/logistiek/logistiek.css">
+<script>
+/* ================================================================
+   DECK-INSTELLINGEN: dit is het enige blok dat per klant verandert.
+   klant:    naam zoals hij in de deck staat
+   kleur:    hoofdkleur van de klant (voor campagnes en labels)
+   logo:     pad naar het klantlogo (leeg = naam als tekst)
+   branche:  hotels | events | logistiek (bepaalt de accentkleur)
+   slides:   volgorde van de slides; alles wat er niet in staat, wordt verborgen.
+             Bibliotheek: cover, situatie, uitdagingen, compliance, inspectie, wtta,
+             wtta-eisen, werving, proces, regio, campagnes, job, binden, opkomst,
+             inzicht, budbee, vervolg, locaties (reserve)
+   Een variant maak je ook via de link: ?slides=cover,compliance,vervolg
+   ================================================================ */
+var DECK = {
+  klant: "Logistiek",
+  kleur: "#F8F7F4",
+  logo: "",
+  branche: "logistiek",
+  slides: ["cover","proces","scores","binden","compliance","inspectie","budbee","klanten","vervolg"]
+};
+</script>
+</head>
+<body data-sector="logistiek">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="pijl" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+ <symbol id="vink" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+ <symbol id="pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+ <symbol id="wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 12 12 0 0 0 4.6 4.1c1.7.7 2.4.8 3.2.7a2.8 2.8 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></symbol>
+</svg>
+
+<div class="pd-voortgang" aria-hidden="true"></div>
+<div class="pd-balk">
+  <div class="pd-merk"><img src="/d3/logo-w.svg" alt="EXTRA"><span class="x">×</span><span class="klantnaam" data-klant>Logistiek</span></div>
+  <div class="pd-rechts"><span class="pd-teller"><b data-nu>1</b>/<span data-tot>17</span></span><button class="pd-knop" type="button" data-bib-open>Slides</button></div>
+</div>
+
+<main>
+<!-- ============ cover ============ -->
+<section class="slide pd-cover" data-slide="cover" data-titel="Cover">
+  <div class="foto"><img src="/d3/l-dozen.webp" srcset="/d3/l-dozen-1280.webp 1280w, /d3/l-dozen.webp 2400w" sizes="100vw" alt="" style="object-position:50% 40%"></div>
+  <div class="w">
+    <div class="duo anim"><img src="/d3/logo-w.svg" alt="EXTRA"><span class="x">×</span><span class="klantlogo" data-klantlogo><span data-klant>Logistiek</span></span></div>
+    <h1 class="anim">Logistiek personeel.<br><span class="serif">Dat blijft.</span></h1>
+    <p class="lead anim">Gericht geworven, persoonlijk geselecteerd en iedereen in loondienst. Met dagbetaling en EXTRAATje blijven ze, en in het klantportaal zie je alles terug.</p>
+    <div class="meta anim"><span>Branche<b>Logistiek</b></span><span>Functies<b>Orderpicken tot heftruck</b></span><span>Contract<b>Iedereen in loondienst</b></span><span>Certificering<b>NEN 4400-1</b></span></div>
+  </div>
+  <div class="pd-badge" role="img" aria-label="Uitzendbureau dat werkt!"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="pdring" d="M100,100 m-82,0 a82,82 0 1,1 164,0 a82,82 0 1,1 -164,0"/></defs><text><textPath href="#pdring" textLength="508">UITZENDBUREAU DAT WERKT! · UITZENDBUREAU DAT WERKT! · </textPath></text></svg><div class="lockup"><b>Logistic</b><small>professionals</small></div></div>
+  <div class="pd-scroll" aria-hidden="true">Scroll<i></i></div>
+</section>
+<!-- ============ proces ============ -->
+<section class="slide donker" data-slide="proces" data-titel="Selectieproces" id="proces">
+  <div class="w">
+    <div class="pd-kop"><div><span class="eyebrow">Selectie</span><h2>Van advertentie tot contract, <span class="serif">in zes stappen</span></h2></div>
+      <p>Iedereen die bij jullie op de vloer staat, heeft alle zes stappen doorlopen. Elke stap filtert, en elke stap is vastgelegd.</p></div>
+    <div class="proces anim">
+      <span class="spoor2" aria-hidden="true"><i></i></span>
+      <div class="stap6"><span class="bol"><svg viewBox="0 0 24 24"><path d="M4 11v2a1 1 0 0 0 1 1h2l5 4V6L7 10H5a1 1 0 0 0-1 1zM16 9a3 3 0 0 1 0 6M18.5 6.5a7 7 0 0 1 0 11"/></svg></span><small>Stap 1</small><h3>Wervingscampagne</h3><p>Social campagnes rond het DC, met WhatsApp als enige knop.</p></div>
+      <div class="stap6"><span class="bol"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></svg></span><small>Stap 2</small><h3>WhatsApp-kwalificatie</h3><p>Job toetst reistijd, beschikbaarheid, certificaten en werkrecht.</p></div>
+      <div class="stap6"><span class="bol"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.6c2 .6 3.2 2.4 3.5 5.4"/></svg></span><small>Stap 3</small><h3>Gesprek op kantoor</h3><p>Persoonlijk, met scores op hard en soft skills in het dashboard.</p></div>
+      <div class="stap6"><span class="bol"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-3 8.3-7 10-4-1.7-7-5.4-7-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span><small>Stap 4</small><h3>Compliance check</h3><p>ID-checker, werkrecht en de bevestiging dat er geen andere werkgever is.</p></div>
+      <div class="stap6"><span class="bol"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></span><small>Stap 5</small><h3>Referentie</h3><p>We bellen een eerdere werkgever over opkomst en werkhouding.</p></div>
+      <div class="stap6"><span class="bol"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><small>Stap 6</small><h3>Contract</h3><p>In loondienst, met een cao-conform afmeld- en boetebeding.</p></div>
+    </div>
+    <p class="proces-voet anim">Pas na stap 6 kan iemand worden ingepland. <span class="serif">Daarvoor niet.</span></p>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ scores ============ -->
+<section class="slide licht" data-slide="scores" data-titel="Scorekaarten" id="scores">
+  <div class="w">
+    <div class="pd-kop"><div><span class="eyebrow">Onze EXTRA's in cijfers</span><h2>Na elke dienst <span class="serif">beoordeeld</span></h2></div>
+      <p>Opdrachtgevers beoordelen onze medewerkers na iedere dienst op houding, vaardigheid, kleding en uitstraling. Zo zie je precies wie je binnenhaalt.</p></div>
+    <div class="sc-rij"><article class="sc">
+      <header class="sc-kop"><div><small>EXTRA #0518</small><h3>Orderpicker</h3><span>Magazijn · bij EXTRA sinds 2025</span></div><span class="sc-status">Gold</span></header>
+      <div class="sc-midden"><div class="sc-ring" style="--p:96.0"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"/><circle class="v" cx="60" cy="60" r="52"/></svg><div><b>9,6</b><small>EXTRA-score</small></div></div>
+        <ul class="sc-bars"><li><span>Houding</span><b>100%</b><i style="--v:100%"></i></li><li><span>Vaardigheid</span><b>98%</b><i style="--v:98%"></i></li><li><span>Kleding</span><b>96%</b><i style="--v:96%"></i></li><li><span>Uitstraling</span><b>92%</b><i style="--v:92%"></i></li></ul></div>
+      <dl class="sc-cijfers"><div><dt>Diensten</dt><dd>148</dd></div><div><dt>Opkomst</dt><dd>99%</dd></div><div><dt>Betrouwbaar</dt><dd>9,8</dd></div><div><dt>EXTRA-punten</dt><dd>10.240</dd></div></dl>
+      <footer class="sc-fav"><small>Favoriet bij:</small><div><span>Distributiecentrum</span><span>E-commerce magazijn</span></div></footer>
+    </article><article class="sc">
+      <header class="sc-kop"><div><small>EXTRA #0721</small><h3>Heftruckchauffeur</h3><span>Magazijn · bij EXTRA sinds 2024</span></div><span class="sc-status">Diamond</span></header>
+      <div class="sc-midden"><div class="sc-ring" style="--p:98.0"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"/><circle class="v" cx="60" cy="60" r="52"/></svg><div><b>9,8</b><small>EXTRA-score</small></div></div>
+        <ul class="sc-bars"><li><span>Houding</span><b>100%</b><i style="--v:100%"></i></li><li><span>Vaardigheid</span><b>100%</b><i style="--v:100%"></i></li><li><span>Kleding</span><b>98%</b><i style="--v:98%"></i></li><li><span>Uitstraling</span><b>98%</b><i style="--v:98%"></i></li></ul></div>
+      <dl class="sc-cijfers"><div><dt>Diensten</dt><dd>206</dd></div><div><dt>Opkomst</dt><dd>100%</dd></div><div><dt>Betrouwbaar</dt><dd>9,9</dd></div><div><dt>EXTRA-punten</dt><dd>16.880</dd></div></dl>
+      <footer class="sc-fav"><small>Favoriet bij:</small><div><span>Distributiecentrum</span><span>Cross-dock</span></div></footer>
+    </article><article class="sc">
+      <header class="sc-kop"><div><small>EXTRA #0904</small><h3>Inpakker</h3><span>Productie · bij EXTRA sinds 2025</span></div><span class="sc-status">Gold</span></header>
+      <div class="sc-midden"><div class="sc-ring" style="--p:95.0"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"/><circle class="v" cx="60" cy="60" r="52"/></svg><div><b>9,5</b><small>EXTRA-score</small></div></div>
+        <ul class="sc-bars"><li><span>Houding</span><b>98%</b><i style="--v:98%"></i></li><li><span>Vaardigheid</span><b>100%</b><i style="--v:100%"></i></li><li><span>Kleding</span><b>94%</b><i style="--v:94%"></i></li><li><span>Uitstraling</span><b>92%</b><i style="--v:92%"></i></li></ul></div>
+      <dl class="sc-cijfers"><div><dt>Diensten</dt><dd>121</dd></div><div><dt>Opkomst</dt><dd>98%</dd></div><div><dt>Betrouwbaar</dt><dd>9,6</dd></div><div><dt>EXTRA-punten</dt><dd>8.430</dd></div></dl>
+      <footer class="sc-fav"><small>Favoriet bij:</small><div><span>E-commerce magazijn</span></div></footer>
+    </article><article class="sc">
+      <header class="sc-kop"><div><small>EXTRA #1046</small><h3>Expeditiemedewerker</h3><span>Expeditie · bij EXTRA sinds 2025</span></div><span class="sc-status">Silver</span></header>
+      <div class="sc-midden"><div class="sc-ring" style="--p:93.0"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"/><circle class="v" cx="60" cy="60" r="52"/></svg><div><b>9,3</b><small>EXTRA-score</small></div></div>
+        <ul class="sc-bars"><li><span>Houding</span><b>96%</b><i style="--v:96%"></i></li><li><span>Vaardigheid</span><b>98%</b><i style="--v:98%"></i></li><li><span>Kleding</span><b>92%</b><i style="--v:92%"></i></li><li><span>Uitstraling</span><b>90%</b><i style="--v:90%"></i></li></ul></div>
+      <dl class="sc-cijfers"><div><dt>Diensten</dt><dd>84</dd></div><div><dt>Opkomst</dt><dd>97%</dd></div><div><dt>Betrouwbaar</dt><dd>9,4</dd></div><div><dt>EXTRA-punten</dt><dd>5.610</dd></div></dl>
+      <footer class="sc-fav"><small>Favoriet bij:</small><div><span>Distributiecentrum</span></div></footer>
+    </article></div>
+    <p class="sc-noot">Voorbeeldprofielen. Echte scores, diensten en punten komen rechtstreeks uit het EXTRA-dashboard.</p>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ binden ============ -->
+<section class="slide accent" data-slide="binden" data-titel="Binden">
+  <div class="w bind2">
+    <div class="fones" aria-hidden="true">
+      <div class="fone f1 anim"><img src="/d3/app-extraatje.webp" alt=""></div>
+      <div class="fone f2 anim"><img src="/d3/jix-transactie.webp" alt=""></div>
+    </div>
+    <div>
+      <span class="eyebrow">Motiveringssysteem</span>
+      <h2 class="anim">Goed voor je mensen. <span class="serif">Dan zijn zij het ook voor jou.</span></h2>
+      <p class="anim" style="margin-top:22px;max-width:32em">Een uniek motiveringssysteem: dagbetaling en beloningen op soft skills. Gemotiveerde mensen melden zich minder af en komen terug.</p>
+      <div class="duo2">
+        <div class="anim"><b>Beloning op soft skills</b><p>Punten in EXTRAATje voor goede beoordelingen, betrouwbaar werken en het oppakken van diensten. Een extra bovenop de reguliere arbeidsvoorwaarden, los van de gelijkwaardige beloning.</p></div>
+        <div class="anim"><b>Dagbetaling</b><p>Gewerkt, uren goedgekeurd, geld klaar. Geen wachten tot het einde van de maand.</p></div>
+      </div>
+      <div class="bewijs anim"><b>94%</b><span class="pijl3"></span><b>98%</b><p>Zo verbinden we goede medewerkers langer aan ons en aan een locatie.</p></div>
+    </div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ compliance ============ -->
+<section class="slide wit" data-slide="compliance" data-titel="Compliance" id="compliance">
+  <div class="w">
+    <div class="pd-kop sit-kop"><div><span class="eyebrow">Compliance</span><h2>Iedereen in loondienst. <span class="serif">Zonder discussie.</span></h2></div>
+      <p>Wie via EXTRA bij jou werkt, is bij ons in loondienst. Geen zzp, geen onderaanneming. Cao, gelijkwaardige beloning en de Arbeidstijdenwet regelen we vooraf, niet achteraf.</p></div>
+    <div class="feiten">
+      <div class="feit anim"><b>100%</b><span>in loondienst bij EXTRA, ook bij korte inzet</span></div>
+      <div class="feit anim"><b>NEN</b><span>4400-1 gecertificeerd</span></div>
+      <div class="feit anim"><b>SNA</b><span>opgenomen in het register van de Stichting Normering Arbeid</span></div>
+      <div class="feit anim"><b>0</b><span>zzp'ers en onderaannemers</span></div>
+    </div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ inspectie ============ -->
+<section class="slide licht" data-slide="inspectie" data-titel="Personeelsbeheer in het klantportaal">
+  <div class="w portaal2">
+    <div>
+      <span class="eyebrow">Personeelsbeheer</span>
+      <h2 class="anim" style="font-size:clamp(44px,5.4vw,88px);line-height:.9;letter-spacing:-.06em;margin:20px 0 0">Administratie <span class="serif">in het klantportaal.</span></h2>
+      <p class="anim" style="margin-top:22px;max-width:30em;color:var(--tekst-2)">De volledige administratie van het personeelsbeheer, per locatie in te zien. Alleen medewerkers met een compleet dossier komen in het portaal. Dreigt een document te verlopen, dan krijgen wij daar tijdig een melding van.</p>
+      <ul class="dossier-v anim">
+        <li><svg viewBox="0 0 24 24"><use href="#vink"/></svg>Alleen complete dossiers in het portaal</li>
+        <li><svg viewBox="0 0 24 24"><use href="#vink"/></svg>Melding voordat een document verloopt</li>
+        <li><svg viewBox="0 0 24 24"><use href="#vink"/></svg>Bij inspectie direct alles bij de hand</li>
+      </ul>
+    </div>
+    <div class="docs anim" aria-label="Voorbeeld van het personeelsdossier in het klantportaal">
+      <header><div><b>Distributiecentrum · vandaag</b><br><span style="color:var(--tekst-2)">Vroege dienst</span></div><span class="st goed">Alles in orde</span></header>
+      <table><thead><tr><th>Medewerker</th><th>Dossier</th><th>ID en werkrecht</th><th>ATW</th></tr></thead>
+        <tbody>
+          <tr><td>R. Kramer</td><td><span class="st goed">Compleet</span></td><td>Geldig</td><td><span class="st goed">Binnen grens</span></td></tr>
+          <tr><td>A. Popescu</td><td><span class="st goed">Compleet</span></td><td>Geldig</td><td><span class="st goed">Binnen grens</span></td></tr>
+          <tr><td>S. de Boer</td><td><span class="st goed">Compleet</span></td><td>Geldig</td><td><span class="st letop">Rusttijd let op</span></td></tr>
+          <tr><td>B. Haddou</td><td><span class="st goed">Compleet</span></td><td>Geldig</td><td><span class="st goed">Binnen grens</span></td></tr>
+          <tr><td>M. Okafor</td><td><span class="st goed">Compleet</span></td><td>Geldig</td><td><span class="st goed">Binnen grens</span></td></tr>
+        </tbody></table>
+      <div class="meldingen">
+        <small>Meldingen</small>
+        <p><span class="st letop">Over 10 dagen</span><span><b>M. Okafor</b> · TWV verloopt. Verlenging is aangevraagd.</span></p>
+        <p><span class="st letop">Over 21 dagen</span><span><b>B. Haddou</b> · verblijfsdocument verloopt. Nieuw document is opgevraagd.</span></p>
+      </div>
+      <footer>Fictieve namen. Voorbeeld van het klantportaal.</footer>
+    </div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ budbee ============ -->
+<section class="slide wit" data-slide="budbee" data-titel="Budbee in cijfers">
+  <div class="w">
+    <div class="pd-kop"><div><span class="eyebrow">Klantcase</span><h2>Budbee <span class="serif">in cijfers</span></h2></div>
+      <p>Sinds april 2026 leveren we logistiek personeel aan Budbee in Vianen. 986 diensten, waarvan 979 gevuld.</p></div>
+    <div class="case2">
+      <ul class="cijferlijst">
+        <li class="anim"><b>99,3%</b><span>vervullingsgraad, 979 van 986 diensten</span></li>
+        <li class="anim"><b>100%</b><span>op tijd, over alle diensten</span></li>
+        <li class="anim"><b>97,8%</b><span>bekende gezichten, werkte hier eerder</span></li>
+        <li class="anim"><b>0%</b><span>ziekteverzuim, 0 ziekmeldingen</span></li>
+        <li class="anim"><b>8,9</b><span>gemiddelde klantbeoordeling, over alle diensten</span></li>
+      </ul>
+      <div class="case2-r">
+        <div class="review anim"><span class="q" aria-hidden="true">“</span><p>We’ve been working with EXTRA since April, following their takeover of Eurotalents, and have seen a significant improvement in the quality of staff provided. Sickness absence has decreased and productivity has increased, making a clear difference to our day-to-day operations. These results have strengthened our confidence in EXTRA, and we’ve steadily increased their share of our staffing needs. We’re pleased with the progress and look forward to continuing our partnership.</p><footer>Budbee · Vianen</footer></div>
+        <div class="transparant anim">
+          <h3>Wat er niet goed ging</h3>
+          <ul><li><span>Afgemeld volgens protocol</span><b>5</b></li><li><span>No-show</span><b>2</b></li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ klanten ============ -->
+<section class="slide wit" data-slide="klanten" data-titel="Klanten">
+  <div class="w">
+    <div class="pd-kop"><div><span class="eyebrow">Opdrachtgevers</span><h2>Vertrouwd door <span class="serif">logistiek, hotels en venues</span></h2></div>
+      <p>Een overzicht van de opdrachtgevers die met EXTRA werken.</p></div>
+    <div class="lbanden"><div class="lband"><ul><li><img src="/d3/logo-budbee.webp" alt="Budbee" style="max-height:40px"></li><li><img src="/d3/logo-tma.webp" alt="TMA Logistics" style="max-height:52px"></li><li><img src="/d3/logo-hanos.webp" alt="HANOS" style="max-height:44px"></li><li><img src="/d3/logo-cupstack.webp" alt="Cupstack" style="max-height:46px"></li><li><img src="/d3/logo-budbee.webp" alt="" style="max-height:40px"></li><li><img src="/d3/logo-tma.webp" alt="" style="max-height:52px"></li><li><img src="/d3/logo-hanos.webp" alt="" style="max-height:44px"></li><li><img src="/d3/logo-cupstack.webp" alt="" style="max-height:46px"></li></ul><ul aria-hidden="true"><li><img src="/d3/logo-budbee.webp" alt="" style="max-height:40px"></li><li><img src="/d3/logo-tma.webp" alt="" style="max-height:52px"></li><li><img src="/d3/logo-hanos.webp" alt="" style="max-height:44px"></li><li><img src="/d3/logo-cupstack.webp" alt="" style="max-height:46px"></li><li><img src="/d3/logo-budbee.webp" alt="" style="max-height:40px"></li><li><img src="/d3/logo-tma.webp" alt="" style="max-height:52px"></li><li><img src="/d3/logo-hanos.webp" alt="" style="max-height:44px"></li><li><img src="/d3/logo-cupstack.webp" alt="" style="max-height:46px"></li></ul></div><div class="lband terug"><ul><li><img src="/d3/Logo_Marriott_1771267205959.webp" alt="Marriott"></li><li><img src="/d3/Logo_Hilton_1771267205959.webp" alt="Hilton"></li><li><img src="/d3/logo-mercure.webp" alt="Mercure Hotels"></li><li><img src="/d3/Logo_Pulitzer_1773389329669.webp" alt="Pulitzer Amsterdam"></li><li><img src="/d3/Logo_amrath_1771267205959.webp" alt="Amrâth Hotels"></li></ul><ul aria-hidden="true"><li><img src="/d3/Logo_Marriott_1771267205959.webp" alt=""></li><li><img src="/d3/Logo_Hilton_1771267205959.webp" alt=""></li><li><img src="/d3/logo-mercure.webp" alt=""></li><li><img src="/d3/Logo_Pulitzer_1773389329669.webp" alt=""></li><li><img src="/d3/Logo_amrath_1771267205959.webp" alt=""></li></ul></div><div class="lband"><ul><li><img src="/d3/logo-select.webp" alt="Select Catering"></li><li><img src="/d3/logo-appel.webp" alt="Appèl"></li><li><img src="/d3/logo-westweelde.webp" alt="Westweelde"></li><li><img src="/d3/logo-hart.webp" alt="H'ART Museum"></li><li><img src="/d3/Logo_FcUtrecht_1771267205959.webp" alt="FC Utrecht"></li><li><img src="/d3/Logo_funda_1771267205959.webp" alt="Funda"></li><li><img src="/d3/Logo_hetepeper_1771267205959.webp" alt="Hete Peper"></li></ul><ul aria-hidden="true"><li><img src="/d3/logo-select.webp" alt=""></li><li><img src="/d3/logo-appel.webp" alt=""></li><li><img src="/d3/logo-westweelde.webp" alt=""></li><li><img src="/d3/logo-hart.webp" alt=""></li><li><img src="/d3/Logo_FcUtrecht_1771267205959.webp" alt=""></li><li><img src="/d3/Logo_funda_1771267205959.webp" alt=""></li><li><img src="/d3/Logo_hetepeper_1771267205959.webp" alt=""></li></ul></div></div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ vervolg ============ -->
+<section class="slide pd-slot" data-slide="vervolg" data-titel="Afsluiting">
+  <div class="w afsluit">
+    <div class="slot-merk anim">
+      <span class="logo-roze" role="img" aria-label="EXTRA"></span>
+      <div class="slogan2"><span>Het uitzendbureau dat werkt</span></div>
+    </div>
+    <div class="contactkaart anim"><img src="/pitchdeck/logistiek/max.webp" alt="Max Claushuis"><div><b>Max Claushuis</b><span>Founder · +31 85 130 5915 · max@doehetextra.nl</span></div><a class="knop vol" href="mailto:max@doehetextra.nl">Plan een vervolggesprek <svg><use href="#pijl"/></svg></a></div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+</main>
+
+<aside class="pd-bib" hidden aria-label="Slides kiezen">
+  <h3>Slides in deze deck</h3>
+  <p>Vink slides aan of uit en zet ze in de gewenste volgorde. De link onderaan bewaart deze variant.</p>
+  <ol data-bib-lijst></ol>
+  <div class="rij"><button type="button" data-bib-link>Kopieer link</button><button type="button" data-bib-dicht>Sluiten</button></div>
+</aside>
+
+<script>
+(function(){
+  /* klantgegevens invullen */
+  var q = new URLSearchParams(location.search);
+  if (q.get('slides')) DECK.slides = q.get('slides').split(',');
+  if (q.get('klant')) DECK.klant = q.get('klant');
+  if (q.get('kleur')) DECK.kleur = '#' + q.get('kleur').replace('#','');
+  document.documentElement.style.setProperty('--klant', DECK.kleur);
+  [].forEach.call(document.querySelectorAll('[data-klant]'), function(e){ e.textContent = DECK.klant; });
+  if (DECK.logo) [].forEach.call(document.querySelectorAll('[data-klantlogo]'), function(e){ e.innerHTML = '<img src="' + DECK.logo + '" alt="' + DECK.klant + '" style="height:46px">'; e.style.background = '#fff'; });
+  document.title = 'EXTRA × ' + DECK.klant + ' · Pitchdeck';
+
+  /* volgorde en selectie */
+  var main = document.querySelector('main'), alle = [].slice.call(main.querySelectorAll('.slide'));
+  var perId = {}; alle.forEach(function(s){ perId[s.dataset.slide] = s; });
+  function zicht(){ return [].slice.call(main.querySelectorAll('.slide')).filter(function(s){ return !s.hidden; }); }
+  function toepassen(){
+    alle.forEach(function(s){ s.hidden = true; });
+    DECK.slides.forEach(function(id){ var s = perId[id]; if (s) { s.hidden = false; main.appendChild(s); } });
+    alle.forEach(function(s){ if (s.hidden) main.appendChild(s); });
+    var zichtbaar = zicht();
+    zichtbaar.forEach(function(s, i){ var n = s.querySelector('[data-nr]'); if (n) n.textContent = String(i + 1).padStart(2,'0') + ' / ' + String(zichtbaar.length).padStart(2,'0'); });
+    document.querySelector('[data-tot]').textContent = zichtbaar.length;
+  }
+  toepassen();
+
+  /* teller en voortgang */
+  var nu = document.querySelector('[data-nu]'), balk = document.querySelector('.pd-voortgang');
+  function teller(){
+    var zichtbaar = zicht(), mid = innerHeight / 2, idx = 0;
+    zichtbaar.forEach(function(s, i){ if (s.getBoundingClientRect().top < mid) idx = i; });
+    nu.textContent = idx + 1;
+    var h = document.documentElement.scrollHeight - innerHeight; balk.style.width = (h > 0 ? scrollY / h * 100 : 0) + '%';
+  }
+  addEventListener('scroll', teller, {passive:true}); teller();
+
+  /* pijltjestoetsen en spatie: volgende of vorige slide */
+  addEventListener('keydown', function(e){
+    if (/input|textarea/i.test(e.target.tagName)) return;
+    var zichtbaar = zicht(), i = Number(nu.textContent) - 1;
+    if (['ArrowDown','PageDown',' '].indexOf(e.key) > -1) { e.preventDefault(); (zichtbaar[i+1] || zichtbaar[i]).scrollIntoView(); }
+    if (['ArrowUp','PageUp'].indexOf(e.key) > -1) { e.preventDefault(); (zichtbaar[i-1] || zichtbaar[0]).scrollIntoView(); }
+  });
+
+  /* scroll-effecten */
+  var els = [].slice.call(document.querySelectorAll('.anim, .opkaart, .verschil, .trechter'));
+  els.forEach(function(e){ if (!e.classList.contains('anim')) return; var i = [].indexOf.call(e.parentNode.children, e); e.style.setProperty('--i', Math.min(i, 8)); });
+  if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) { els.forEach(function(e){ e.classList.add('zien'); }); }
+  else { var io = new IntersectionObserver(function(en){ en.forEach(function(x){ if (x.isIntersecting) { x.target.classList.add('zien'); io.unobserve(x.target); } }); }, {threshold:.15}); els.forEach(function(e){ io.observe(e); }); }
+
+  /* Job: WhatsApp-gesprek, logistiek */
+  var chat = document.getElementById('wa-chat');
+  if (chat) {
+    var stappen = [
+      ['kand','Hoi EXTRA, ik heb interesse in de vacature Orderpicker in Zwaagdijk.'],
+      ['bot','Hi Ruben, ik ben Job, de AI-recruiter van EXTRA. Leuk dat je reageert! Voordat we een gesprek kunnen inplannen, heb ik nog een paar korte vragen.'],
+      ['bot','In welke plaats woon je, en hoe reis je naar het distributiecentrum in Zwaagdijk?'],
+      ['kand','In Hoorn. Met de scooter, twintig minuten.'],
+      ['bot','Het DC draait vroege, late en nachtdiensten, ook in het weekend. Welke diensten kun je draaien?'],
+      ['kand','Vroeg en nacht. Zaterdag ook.'],
+      ['bot','Heb je ervaring in een distributiecentrum of met een handscanner?'],
+      ['kand','Twee jaar orderpicken bij een webshop, met scanner.'],
+      ['bot','Werk je op dit moment ook bij een andere werkgever? Dat vragen we vanwege de Arbeidstijdenwet.'],
+      ['kand','Nee, alleen hier als het lukt.'],
+      ['bot','Mag je in Nederland werken zonder werkvergunning?'],
+      ['kand','Ja, ik heb een Nederlands paspoort.'],
+      ['bot','Dankjewel voor je reacties, Ruben. Zou je via deze link je cv willen uploaden? Dan plannen we daarna een gesprek op ons kantoor.'],
+      ['link','']
+    ];
+    var i = 0, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function tijd(){ var d = new Date(2026,0,1,19,12 + i); return ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2); }
+    function bel(t, s){ var b = document.createElement('div'); b.className = 'b ' + t; b.textContent = s; var k = document.createElement('small'); k.textContent = tijd(); b.appendChild(k); return b; }
+    function kaart(){ var k = document.createElement('div'); k.className = 'b bot wa-link'; k.innerHTML = '<span class="wl-kaart"><b>Upload je cv · EXTRA</b><span>doehetextra.nl/cv-upload</span></span><small>' + tijd() + '</small>'; return k; }
+    function snoei(){ while (chat.children.length > 8) chat.removeChild(chat.firstChild); }
+    function volgende(){
+      if (i >= stappen.length) { setTimeout(function(){ chat.innerHTML = ''; i = 0; volgende(); }, 6000); return; }
+      var s = stappen[i++];
+      if (s[0] === 'link') { chat.appendChild(kaart()); snoei(); setTimeout(volgende, 2600); return; }
+      if (s[0] === 'bot') { var t = document.createElement('div'); t.className = 'typ'; t.innerHTML = '<i></i><i></i><i></i>'; chat.appendChild(t); snoei();
+        setTimeout(function(){ t.remove(); chat.appendChild(bel('bot', s[1])); snoei(); setTimeout(volgende, 1400 + s[1].length * 14); }, 900 + s[1].length * 6); return; }
+      chat.appendChild(bel(s[0], s[1])); snoei(); setTimeout(volgende, 1300);
+    }
+    if (reduce) { stappen.forEach(function(s){ chat.appendChild(s[0] === 'link' ? kaart() : bel(s[0], s[1])); }); snoei(); }
+    else { var ioc = new IntersectionObserver(function(e){ if (e[0].isIntersecting) { ioc.disconnect(); volgende(); } }, {threshold:.3}); ioc.observe(chat); }
+  }
+
+  /* bibliotheek: slides kiezen en volgorde aanpassen */
+  var bib = document.querySelector('.pd-bib'), lijst = document.querySelector('[data-bib-lijst]');
+  function tekenBib(){
+    var volgorde = DECK.slides.concat(alle.map(function(s){ return s.dataset.slide; }).filter(function(id){ return DECK.slides.indexOf(id) < 0; }));
+    lijst.innerHTML = '';
+    volgorde.forEach(function(id){
+      var aan = DECK.slides.indexOf(id) > -1, li = document.createElement('li'); if (!aan) li.className = 'uit';
+      li.innerHTML = '<input type="checkbox"' + (aan ? ' checked' : '') + ' aria-label="Toon ' + id + '"><span>' + (perId[id].dataset.titel || id) + '<small>' + id + '</small></span><button type="button" aria-label="Omhoog">↑</button><button type="button" aria-label="Omlaag">↓</button>';
+      li.querySelector('input').addEventListener('change', function(e){ if (e.target.checked) DECK.slides.push(id); else DECK.slides = DECK.slides.filter(function(x){ return x !== id; }); toepassen(); tekenBib(); teller(); });
+      var knoppen = li.querySelectorAll('button');
+      knoppen[0].addEventListener('click', function(){ var p = DECK.slides.indexOf(id); if (p > 0) { DECK.slides.splice(p,1); DECK.slides.splice(p-1,0,id); toepassen(); tekenBib(); } });
+      knoppen[1].addEventListener('click', function(){ var p = DECK.slides.indexOf(id); if (p > -1 && p < DECK.slides.length-1) { DECK.slides.splice(p,1); DECK.slides.splice(p+1,0,id); toepassen(); tekenBib(); } });
+      lijst.appendChild(li);
+    });
+  }
+  document.querySelector('[data-bib-open]').addEventListener('click', function(){ tekenBib(); bib.hidden = !bib.hidden; });
+  document.querySelector('[data-bib-dicht]').addEventListener('click', function(){ bib.hidden = true; });
+  document.querySelector('[data-bib-link]').addEventListener('click', function(e){
+    var url = location.href.split('?')[0] + '?slides=' + DECK.slides.join(',');
+    try { navigator.clipboard.writeText(url); e.target.textContent = 'Gekopieerd'; } catch(_) { e.target.textContent = 'Kopiëren lukt hier niet'; }
+    setTimeout(function(){ e.target.textContent = 'Kopieer link'; }, 2000);
+  });
+})();
+</script>
+<script>document.fonts.ready.then(function(){var l=document.querySelector(".logo-roze"),p=document.querySelector(".slogan2"),s=p&&p.querySelector("span");if(!l||!s)return;function z(){p.style.fontSize="40px";p.style.fontSize=(40*l.getBoundingClientRect().width/s.getBoundingClientRect().width)+"px";}z();addEventListener("resize",z);});</script>
+<!-- pasin: elke slide past op het scherm, pijltjes springen per hele slide -->
+<style>
+@media (min-width:901px) and (min-height:560px){
+  html.pd-pas{scroll-snap-type:y mandatory}
+  html.pd-pas main > .slide{height:100vh;height:100svh;min-height:0;padding-top:92px;padding-bottom:52px}
+}
+</style>
+<script>
+(function(){
+  var root=document.documentElement;
+  function slides(){return [].slice.call(document.querySelectorAll('main > .slide')).filter(function(s){return !s.hidden;});}
+  function pas(){
+    var aan=innerWidth>900&&innerHeight>=560&&!matchMedia('print').matches;
+    root.classList.toggle('pd-pas',aan);
+    slides().forEach(function(s){
+      var w=s.querySelector('.w'); if(!w) return;
+      w.style.zoom='';
+      if(!aan) return;
+      var cs=getComputedStyle(s),ruimte=s.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+      var h=w.getBoundingClientRect().height;
+      if(h>ruimte) w.style.zoom=Math.max(.55,ruimte/h).toFixed(3);
+    });
+    // Cijfers op één regel: is er één te breed, dan krijgt de hele rij dezelfde kleinere maat.
+    [].slice.call(document.querySelectorAll('.feiten')).forEach(function(rij){
+      var bs=[].slice.call(rij.querySelectorAll('.feit > b')); if(!bs.length) return;
+      bs.forEach(function(b){b.style.fontSize='';});
+      var f=1; bs.forEach(function(b){var ruim=b.parentNode.clientWidth-parseFloat(getComputedStyle(b.parentNode).paddingLeft)-parseFloat(getComputedStyle(b.parentNode).paddingRight); if(b.scrollWidth>ruim) f=Math.min(f,ruim/b.scrollWidth);});
+      if(f<1){var px=parseFloat(getComputedStyle(bs[0]).fontSize)*f*0.98; bs.forEach(function(b){b.style.fontSize=px.toFixed(1)+'px';});}
+    });
+  }
+  function naar(s){ if(s) scrollTo({top:s.getBoundingClientRect().top+scrollY,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+  addEventListener('keydown',function(e){
+    if(/input|textarea|select/i.test(e.target.tagName)) return;
+    var vooruit=['ArrowDown','PageDown',' '].indexOf(e.key)>-1, terug=['ArrowUp','PageUp'].indexOf(e.key)>-1;
+    if(!vooruit&&!terug) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var z=slides(),i=0,best=1e9;
+    z.forEach(function(s,k){var d=Math.abs(s.getBoundingClientRect().top);if(d<best){best=d;i=k;}});
+    naar(z[Math.min(z.length-1,Math.max(0,i+(vooruit?1:-1)))]);
+  },true);
+  addEventListener('resize',pas);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(pas);
+  addEventListener('load',pas); pas();
+  new MutationObserver(function(){requestAnimationFrame(pas);}).observe(document.querySelector('main'),{attributes:true,subtree:false,childList:true,attributeFilter:['hidden']});
+})();
+</script>
+</body></html>

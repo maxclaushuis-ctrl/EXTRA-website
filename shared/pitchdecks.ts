@@ -24,6 +24,7 @@ export const PITCHDECKS: Deck[] = [
   { naam: "csu", titel: "CSU", kleur: "pistachio" },
   { naam: "action", titel: "Action", kleur: "pistachio" },
   { naam: "aldi", titel: "ALDI", kleur: "pistachio" },
+  { naam: "logistiek", titel: "Logistiek algemeen", kleur: "pistachio" },
 ];
 
 export const DECK_NAMEN = PITCHDECKS.map((d) => d.naam);
