@@ -45,4 +45,5 @@
 
 .pd-cover .klantlogo{background:#fff;color:#37352C;font-weight:800;font-size:30px;letter-spacing:-.045em;padding:8px 20px;border-radius:14px;line-height:1}
 
-.pd-cover .klantlogo img{height:64px!important}
+.pd-cover .klantlogo{background:transparent!important;padding:0!important;box-shadow:none!important}
+.pd-cover .klantlogo img{height:76px!important}

@@ -144,7 +144,7 @@ var DECK = {
 <section class="slide wit" data-slide="campagnes" data-titel="Lokale campagnes" id="opschalen-werving">
   <div class="w">
     <div class="pd-kop"><div><span class="eyebrow">Lokale werving</span><h2>Campagnes <span class="serif">rond elk DC</span></h2></div>
-      <p>Per locatie draait een eigen campagne met korte video-advertenties op Instagram en Facebook, gericht op de omgeving van het DC. Eén knop: WhatsApp. Geen formulier, geen cv vooraf. Binnen twee uur live, en de campagne optimaliseert zichzelf.</p></div>
+      <p>Per locatie draait een eigen campagne met korte video-advertenties op Instagram en Facebook, gericht op de omgeving van het DC. Eén knop: WhatsApp. Geen formulier, geen cv vooraf. Binnen een uur live, en de campagne wordt continu geoptimaliseerd.</p></div>
     <div class="reels">
       <article class="reel anim">
         <div class="reel-scherm">
@@ -260,7 +260,7 @@ var DECK = {
       <ol>
         <li><time>13:20</time><div><b>Afmelding per telefoon</b><span>Ziek gemeld bij de planning. Reden en tijdstip vastgelegd.</span><span class="st goed">Op tijd, voor 15:00</span></div></li>
         <li><time>13:35</time><div><b>Vervanging uitgezet</b><span>Het systeem zet de dienst direct uit bij de lokale pool, op volgorde van opkomst en beoordeling.</span></div></li>
-        <li><time>16:50</time><div><b>Vervanger bevestigd</b><span>Last-minute dienst opgepakt, beloond met extra EXTRAATje-punten.</span></div></li>
+        <li><time>16:50</time><div><b>Vervanger bevestigd</b><span>Dienst opgepakt door iemand uit de vaste pool, beloond met extra EXTRAATje-punten.</span></div></li>
         <li><time>06:00</time><div><b>Dienst gestart</b><span>Vervanger aanwezig en ingecheckt.</span><span class="st goed">Bezetting gehaald</span></div></li>
       </ol>
       <p class="te-laat"><span class="st letop">Na 15:00</span> Te late afmelding: het boetebeding uit het contract is van toepassing en het telt mee in de opkomstscore.</p>
@@ -277,19 +277,19 @@ var DECK = {
     <div class="inzicht">
       <div class="plan anim" aria-label="Voorbeeld van de planning">
         <header><div><b>Morgen 06:00 · DC Echt</b><span>Orderpicken · 3 plekken</span></div><span class="st goed">3 van 3 ingepland</span></header>
-        <table><thead><tr><th>Medewerker</th><th>Opkomst</th><th>Beoordeling</th><th>Last-minute</th><th>Status</th></tr></thead>
+        <table><thead><tr><th>Medewerker</th><th>Opkomst</th><th>Beoordeling</th><th>Ervaringsscore</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td class="naam"><span class="av">RK</span>R. Kramer</td><td><span class="mini"><i style="--v:98%"></i>98%</span></td><td>9,4</td><td>11</td><td><span class="st goed">Ingepland</span></td></tr>
-            <tr><td class="naam"><span class="av">AP</span>A. Popescu</td><td><span class="mini"><i style="--v:97%"></i>97%</span></td><td>9,1</td><td>7</td><td><span class="st goed">Ingepland</span></td></tr>
-            <tr><td class="naam"><span class="av">BH</span>B. Haddou</td><td><span class="mini"><i style="--v:96%"></i>96%</span></td><td>8,8</td><td>9</td><td><span class="st goed">Ingepland</span></td></tr>
-            <tr class="reserve"><td class="naam"><span class="av">TV</span>T. Visser</td><td><span class="mini"><i style="--v:84%"></i>84%</span></td><td>7,2</td><td>1</td><td><span class="st letop">Reserve</span></td></tr>
+            <tr><td class="naam"><span class="av">RK</span>R. Kramer</td><td><span class="mini"><i style="--v:98%"></i>98%</span></td><td>9,4</td><td>8,8</td><td><span class="st goed">Ingepland</span></td></tr>
+            <tr><td class="naam"><span class="av">AP</span>A. Popescu</td><td><span class="mini"><i style="--v:97%"></i>97%</span></td><td>9,1</td><td>8,2</td><td><span class="st goed">Ingepland</span></td></tr>
+            <tr><td class="naam"><span class="av">BH</span>B. Haddou</td><td><span class="mini"><i style="--v:96%"></i>96%</span></td><td>8,8</td><td>8,5</td><td><span class="st goed">Ingepland</span></td></tr>
+            <tr class="reserve"><td class="naam"><span class="av">TV</span>T. Visser</td><td><span class="mini"><i style="--v:84%"></i>84%</span></td><td>7,2</td><td>6,4</td><td><span class="st letop">Reserve</span></td></tr>
           </tbody></table>
         <footer>Fictieve namen en cijfers. Voorbeeld uit het EXTRA-dashboard.</footer>
       </div>
       <ol class="uitleg2">
         <li class="anim"><span class="nb">1</span><div><b>Opkomst telt het zwaarst</b><span>Percentage over de afgelopen periode, inclusief te late afmeldingen.</span></div></li>
         <li class="anim"><span class="nb">2</span><div><b>Jullie beoordeling stuurt mee</b><span>Na elke dienst beoordeelt het DC. Dat cijfer bepaalt mee wie terugkomt.</span></div></li>
-        <li class="anim"><span class="nb">3</span><div><b>Last-minute telt extra</b><span>Wie inspringt als het nodig is, krijgt voorrang bij vaste diensten.</span></div></li>
+        <li class="anim"><span class="nb">3</span><div><b>Ervaringsscore</b><span>Relevante werkervaring en vaardigheden, gescoord in het gesprek en bijgewerkt na elke dienst.</span></div></li>
       </ol>
     </div>
   </div>
@@ -305,7 +305,6 @@ var DECK = {
         <li class="anim"><b>99,3%</b><span>vervullingsgraad, 979 van 986 diensten</span></li>
         <li class="anim"><b>100%</b><span>op tijd, over alle diensten</span></li>
         <li class="anim"><b>97,8%</b><span>bekende gezichten, werkte hier eerder</span></li>
-        <li class="anim"><b>0%</b><span>ziekteverzuim, 0 ziekmeldingen</span></li>
         <li class="anim"><b>8,9</b><span>gemiddelde klantbeoordeling, over alle diensten</span></li>
       </ul>
       <div class="case2-r">
