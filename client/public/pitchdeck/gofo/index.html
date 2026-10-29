@@ -348,6 +348,13 @@
       var h=w.getBoundingClientRect().height;
       if(h>ruimte) w.style.zoom=Math.max(.55,ruimte/h).toFixed(3);
     });
+    // Cijfers op één regel: is er één te breed, dan krijgt de hele rij dezelfde kleinere maat.
+    [].slice.call(document.querySelectorAll('.feiten')).forEach(function(rij){
+      var bs=[].slice.call(rij.querySelectorAll('.feit > b')); if(!bs.length) return;
+      bs.forEach(function(b){b.style.fontSize='';});
+      var f=1; bs.forEach(function(b){var ruim=b.parentNode.clientWidth-parseFloat(getComputedStyle(b.parentNode).paddingLeft)-parseFloat(getComputedStyle(b.parentNode).paddingRight); if(b.scrollWidth>ruim) f=Math.min(f,ruim/b.scrollWidth);});
+      if(f<1){var px=parseFloat(getComputedStyle(bs[0]).fontSize)*f*0.98; bs.forEach(function(b){b.style.fontSize=px.toFixed(1)+'px';});}
+    });
   }
   function naar(s){ if(s) scrollTo({top:s.getBoundingClientRect().top+scrollY,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
   addEventListener('keydown',function(e){

@@ -58,7 +58,7 @@ var DECK = {
 <!-- ============ situatie ============ -->
 <section class="slide licht" data-slide="situatie" data-titel="De opgave">
   <div class="w">
-    <div class="pd-kop sit-kop"><div><span class="eyebrow">Wat we hoorden</span><h2>Meer dan capaciteit. <span class="serif">Stabiele teams.</span></h2></div>
+    <div class="pd-kop sit-kop"><div><span class="eyebrow">De opgave</span><h2>Meer dan capaciteit. <span class="serif">Stabiele teams.</span></h2></div>
       <p>Jullie zoeken een partij die snel kan schakelen op moeilijk invulbare locaties, en tegelijk helpt om stabiele teams op te bouwen. Op de volgende pagina's laten we zien hoe we dat inrichten.</p></div>
     <div class="feiten">
       <div class="feit anim"><b>5</b><span>pilotlocaties, bewust de lastigst in te vullen</span></div>
@@ -549,6 +549,7 @@ var DECK = {
   });
 })();
 </script>
+<script>document.fonts.ready.then(function(){var l=document.querySelector(".logo-roze"),p=document.querySelector(".slogan2"),s=p&&p.querySelector("span");if(!l||!s)return;function z(){p.style.fontSize="40px";p.style.fontSize=(40*l.getBoundingClientRect().width/s.getBoundingClientRect().width)+"px";}z();addEventListener("resize",z);});</script>
 <!-- pasin: elke slide past op het scherm, pijltjes springen per hele slide -->
 <style>
 @media (min-width:901px) and (min-height:560px){
@@ -571,6 +572,13 @@ var DECK = {
       var h=w.getBoundingClientRect().height;
       if(h>ruimte) w.style.zoom=Math.max(.55,ruimte/h).toFixed(3);
     });
+    // Cijfers op één regel: is er één te breed, dan krijgt de hele rij dezelfde kleinere maat.
+    [].slice.call(document.querySelectorAll('.feiten')).forEach(function(rij){
+      var bs=[].slice.call(rij.querySelectorAll('.feit > b')); if(!bs.length) return;
+      bs.forEach(function(b){b.style.fontSize='';});
+      var f=1; bs.forEach(function(b){var ruim=b.parentNode.clientWidth-parseFloat(getComputedStyle(b.parentNode).paddingLeft)-parseFloat(getComputedStyle(b.parentNode).paddingRight); if(b.scrollWidth>ruim) f=Math.min(f,ruim/b.scrollWidth);});
+      if(f<1){var px=parseFloat(getComputedStyle(bs[0]).fontSize)*f*0.98; bs.forEach(function(b){b.style.fontSize=px.toFixed(1)+'px';});}
+    });
   }
   function naar(s){ if(s) scrollTo({top:s.getBoundingClientRect().top+scrollY,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
   addEventListener('keydown',function(e){
@@ -588,5 +596,4 @@ var DECK = {
   new MutationObserver(function(){requestAnimationFrame(pas);}).observe(document.querySelector('main'),{attributes:true,subtree:false,childList:true,attributeFilter:['hidden']});
 })();
 </script>
-<script>document.fonts.ready.then(function(){var l=document.querySelector(".logo-roze"),p=document.querySelector(".slogan2"),s=p&&p.querySelector("span");if(!l||!s)return;function z(){p.style.fontSize="40px";p.style.fontSize=(40*l.getBoundingClientRect().width/s.getBoundingClientRect().width)+"px";}z();addEventListener("resize",z);});</script>
 </body></html>

@@ -617,3 +617,21 @@ body{background:var(--offwhite)}
 .cijferlijst li{grid-template-columns:250px 1fr}@media (max-width:900px){.cijferlijst li{grid-template-columns:132px 1fr}}
 @media (max-width:600px){.docs th,.docs td{padding:10px 12px}.docs .st{font-size:11.5px;padding:0 8px}}
 .wv4 h3{align-items:flex-start}
+
+/* ── Uitlijning, voor alle decks (feedback 29 okt) ─────────────────────────
+   Kaarten en cijferrijen delen hun rijen via subgrid: koppen, cijfers en
+   teksten beginnen in elke kolom op dezelfde hoogte, ook als één kop of cijfer
+   langer is. Cijfers breken nooit af; pasin verkleint een te breed cijfer en
+   geeft de hele rij dezelfde maat. */
+@supports (grid-template-rows: subgrid) {
+  .drie{grid-template-rows:auto auto auto 1fr}
+  .drie article{display:grid;grid-row:span 4;grid-template-rows:subgrid;row-gap:14px;align-content:start}
+  .drie h3{display:block;min-height:0;align-self:start}
+  .drie a{align-self:end}
+  .feiten{grid-template-rows:auto auto}
+  .feit{display:grid;grid-row:span 2;grid-template-rows:subgrid;row-gap:0;align-content:start}
+  .feit b{align-self:end}
+  .feit span{align-self:start}
+}
+.feit b{white-space:nowrap}
+@media (max-width:900px){@supports (grid-template-rows: subgrid){.drie article{grid-row:auto;display:flex}.feiten{grid-template-rows:none}.feit{grid-row:auto;display:block}}}
