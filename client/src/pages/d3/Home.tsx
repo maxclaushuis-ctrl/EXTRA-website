@@ -135,7 +135,7 @@ export default function Home() {
             k1={["Ik zoek hotelpersoneel", "/hotels"]} k2={["Ik zoek werk in hotels", "/horeca-vacatures-amsterdam"]} />
           <Tak kleur="var(--pistachio)" foto="/d3/strip-logistiek.webp" pos="50% 25%" label={["Logistic", "professionals"]} kop="Logistiek" tekst="Van orderpicken tot heftruck."
             k1={["Ik zoek logistiek personeel", "/logistiek"]} k2={["Ik zoek werk in de logistiek", "/logistiek-werk"]} />
-          <Tak kleur="var(--sky)" foto="/d3/strip-event.webp" pos="50% 20%" label={["Event", "manpower"]} kop="Events" tekst="Bediening, bar, catering, hosts en logistiek."
+          <Tak kleur="var(--sky)" foto="/d3/ev-hero-m.webp" pos="30% 18%" label={["Event", "manpower"]} kop="Events" tekst="Bediening, bar, catering, hosts en logistiek."
             k1={["Ik zoek eventpersoneel", "/evenementen"]} k2={["Ik zoek werk bij events", "/events-werk"]} />
         </div>
         <div className="logos"><div className="w">
