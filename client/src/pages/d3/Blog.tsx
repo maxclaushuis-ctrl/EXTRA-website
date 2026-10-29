@@ -10,7 +10,7 @@ import { useParams } from "wouter";
 import Shell from "@/design3/Shell";
 import SnelAanvraag from "@/design3/SnelAanvraag";
 import { Pijl } from "@/design3/basis";
-import { useReus } from "@/design3/gedrag";
+import { useLevendeLinks, useReus } from "@/design3/gedrag";
 import { TELEFOON, TELEFOON_HREF } from "@/design3/links";
 import { verwanteItems } from "@shared/verwanteLinks";
 
@@ -223,6 +223,7 @@ export function BlogArtikel() {
   }, [post]);
 
   const { html, koppen } = useMemo(() => bewerk(post?.content ?? ""), [post]);
+  useLevendeLinks(tekst, [html]);
   const verwant = useMemo(() => {
     const ring = verwanteItems(posts.map((p) => ({ slug: p.slug, title: p.title, groep: p.category ?? null })), slug);
     return ring.map((r) => posts.find((p) => p.slug === r.slug)).filter(Boolean) as Post[];

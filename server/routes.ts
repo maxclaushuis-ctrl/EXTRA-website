@@ -66,6 +66,7 @@ import { uploadCvFile, downloadCvFile, isObjectStoragePath, uploadWaAiAttachment
 
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
 import rateLimit from "express-rate-limit";
+import { lopendeVacatures } from "@shared/levendeLinks";
 
 // ─── Jaicob.ai webhook helper ─────────────────────────────────────────────────
 async function sendJaicobWebhook(candidate: {
@@ -10631,7 +10632,9 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
   app.get('/sitemap.xml', async (_req: Request, res: Response) => {
     try {
       const { posts } = await storage.getBlogPosts({ status: 'published', limit: 500 });
-      const { posts: vacancies } = await storage.getVacancyPosts({ status: 'published', limit: 500 });
+      const { posts: alleVacatures } = await storage.getVacancyPosts({ status: 'published', limit: 500 });
+      // Verlopen vacatures geven een 404 (server/seo.ts) en horen dus niet in de sitemap.
+      const vacancies = lopendeVacatures(alleVacatures);
       // Bewust géén BASE_URL-fallback naar een ander (sub)domein: het canonical
       // domein staat vast. BASE_URL kan het alleen expliciet overschrijven.
       const baseUrl = process.env.BASE_URL || SITE_ORIGIN;
@@ -10689,6 +10692,12 @@ ${vacancies.map(v => `  <url>
       const functionType = req.query.functionType as string | undefined;
       const location = req.query.location as string | undefined;
       const result = await storage.getVacancyPosts({ status: status || 'published', functionType, location });
+      // Publiek (zonder status-filter): alleen vacatures die nog geldig zijn,
+      // anders linkt de vacaturelijst naar pagina's die een 404 geven.
+      if (!status) {
+        const posts = lopendeVacatures(result.posts);
+        return res.json({ ...result, posts, total: result.total - (result.posts.length - posts.length) });
+      }
       res.json(result);
     } catch (err: any) {
       res.status(500).json({ message: err.message });

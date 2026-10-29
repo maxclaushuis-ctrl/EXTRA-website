@@ -5,6 +5,7 @@
  * ruimt zichzelf op bij het verlaten van de pagina.
  */
 import { useEffect, type RefObject } from "react";
+import { levendPad, type LevendeSlugs } from "@shared/levendeLinks";
 
 const zacht = (): ScrollBehavior =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
@@ -227,4 +228,42 @@ export function useConfetti(ref: RefObject<HTMLElement>) {
       c.appendChild(p);
     }
   }, [ref]);
+}
+
+/**
+ * Links naar verlopen vacatures of niet-bestaande artikelen omleiden naar het
+ * overzicht. De server doet dit al voor crawlers (server/seo.ts); dit is
+ * dezelfde regel voor bezoekers, want de vaste vacaturekaarten op de
+ * design-3.0-pagina's staan in de code en verlopen niet vanzelf mee.
+ * Eén keer per paginabezoek opgehaald; bij een fout verandert er niets.
+ */
+let levendBelofte: Promise<LevendeSlugs> | null = null;
+function haalLevend(): Promise<LevendeSlugs> {
+  if (!levendBelofte) {
+    const set = (r: Response) => (r.ok ? r.json() : Promise.reject(r.status));
+    const slugs = (j: any) => new Set<string>(((j?.posts ?? []) as any[]).map((p) => String(p.slug).toLowerCase()));
+    levendBelofte = Promise.all([
+      fetch("/api/vacatures").then(set).then(slugs).catch(() => null),
+      fetch("/api/blog?limit=500").then(set).then(slugs).catch(() => null),
+    ]).then(([vacatures, blogs]) => ({ vacatures, blogs }));
+  }
+  return levendBelofte;
+}
+
+export function useLevendeLinks(ref: RefObject<HTMLElement>, deps: unknown[] = []) {
+  useEffect(() => {
+    let weg = false;
+    haalLevend().then((levend) => {
+      const r = ref.current;
+      if (weg || !r) return;
+      r.querySelectorAll<HTMLAnchorElement>('a[href*="/vacatures/"], a[href*="/blog/"], a[href*="/nieuws/"]').forEach((a) => {
+        const href = a.getAttribute("href") || "";
+        const pad = href.replace(/^https?:\/\/(www\.)?doehetextra\.nl/i, "");
+        const nieuw = levendPad(pad, levend);
+        if (nieuw !== pad) a.setAttribute("href", nieuw);
+      });
+    });
+    return () => { weg = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 }

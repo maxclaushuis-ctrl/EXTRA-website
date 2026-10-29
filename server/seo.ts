@@ -31,6 +31,7 @@ import { leesUurloon } from "@shared/uurloon";
 import { TtlCache, metCache } from "./paginaCache";
 import type { BlogPost, VacancyPost } from "@shared/schema";
 import { veiligeJsonLd } from "@shared/jsonLd";
+import { buigDodeLinksOm, lopendeVacatures, vacatureGeldigTot, type LevendeSlugs } from "@shared/levendeLinks";
 
 interface PageMeta {
   title: string;
@@ -171,13 +172,11 @@ function metaFromRoute(m: RouteMeta): PageMeta {
 }
 
 /** Rollende validThrough (P12/Google-advies voor doorlopende werving): 90 dagen vanaf datePosted. */
-const VALID_THROUGH_DAYS = 90;
 
 function vacancyValidThrough(vacancy: VacancyPost): Date {
-  const posted = new Date(vacancy.publishedAt || vacancy.createdAt || Date.now());
-  const validThrough = new Date(posted);
-  validThrough.setDate(validThrough.getDate() + VALID_THROUGH_DAYS);
-  return validThrough;
+  // Eén bron voor de geldigheid: dezelfde regel bepaalt welke vacatures in de
+  // sitemap, de lijsten en de links staan (shared/levendeLinks.ts).
+  return vacatureGeldigTot(vacancy);
 }
 
 const EMPLOYMENT_TYPE_BY_SERVICE_TYPE: Record<string, string> = {
@@ -332,7 +331,7 @@ async function overzichtLijst(pad: string): Promise<string | null> {
     }
     if (pad === "/vacatures") {
       const { posts } = await storage.getVacancyPosts({ status: "published", limit: 200 });
-      return lijstFragment("/vacatures", "Alle vacatures", posts.map(v => ({
+      return lijstFragment("/vacatures", "Alle vacatures", lopendeVacatures(posts).map(v => ({
         slug: v.slug,
         title: v.title,
         bij: (v as any).location ?? null,
@@ -360,7 +359,7 @@ async function verwanteLijst(soort: "blog" | "vacature", slug: string): Promise<
   try {
     if (soort === "vacature") {
       const { posts } = await storage.getVacancyPosts({ status: "published", limit: 200 });
-      const items = posts.map(v => ({ slug: v.slug, title: v.title, groep: (v as any).location ?? null }));
+      const items = lopendeVacatures(posts).map(v => ({ slug: v.slug, title: v.title, groep: (v as any).location ?? null }));
       return verwantFragment("/vacatures", "Andere vacatures", verwanteItems(items, slug));
     }
     const { posts } = await storage.getBlogPosts({ status: "published", limit: 200 });
@@ -370,6 +369,31 @@ async function verwanteLijst(soort: "blog" | "vacature", slug: string): Promise<
     console.error(`[seo] verwante links voor ${soort}/${slug} mislukt:`, err);
     return "";
   }
+}
+
+/**
+ * Welke vacatures en artikelen bestaan er nu echt? Een minuut gecachet, zodat
+ * niet elk paginaverzoek twee extra databasevragen kost. Bij een storing is
+ * het antwoord null: dan blijven links ongemoeid (zie buigDodeLinksOm).
+ */
+let levendCache: { tot: number; waarde: LevendeSlugs } | null = null;
+async function levendeSlugs(): Promise<LevendeSlugs> {
+  if (levendCache && levendCache.tot > Date.now()) return levendCache.waarde;
+  const waarde: LevendeSlugs = { vacatures: null, blogs: null };
+  try {
+    const { posts } = await storage.getVacancyPosts({ status: "published", limit: 500 });
+    waarde.vacatures = new Set(lopendeVacatures(posts).map(v => v.slug.toLowerCase()));
+  } catch (err) {
+    console.error("[seo] lijst met vacatures voor links mislukt:", err);
+  }
+  try {
+    const { posts } = await storage.getBlogPosts({ status: "published", limit: 500 });
+    waarde.blogs = new Set(posts.map(p => p.slug.toLowerCase()));
+  } catch (err) {
+    console.error("[seo] lijst met artikelen voor links mislukt:", err);
+  }
+  levendCache = { tot: Date.now() + 60_000, waarde };
+  return waarde;
 }
 
 export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
@@ -399,11 +423,14 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
     if (/\.[a-zA-Z0-9]+$/.test(req.path)) return res.status(404).type("text/plain").send("Not found");
 
     const normalized = normalizeMetaPath(req.path);
-    const send = (status: number, meta: PageMeta, fragment?: string) => {
+    const send = async (status: number, meta: PageMeta, fragment?: string) => {
+      // Links naar verlopen vacatures of niet-bestaande artikelen gaan naar het
+      // overzicht in plaats van naar een 404.
+      const schoon = fragment ? buigDodeLinksOm(fragment, await levendeSlugs()) : fragment;
       res
         .status(status)
         .set({ "Content-Type": "text/html; charset=utf-8" })
-        .send(injectMeta(loadShell(), meta, fragment));
+        .send(injectMeta(loadShell(), meta, schoon));
     };
 
     // 1. Statische route uit het manifest
