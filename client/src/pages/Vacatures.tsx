@@ -36,6 +36,7 @@ import {
   afdelingVan, brancheVan, isBranche, korteTitel, plaats, loonLabel, tel, opsomming, type VacBranche,
 } from "@shared/vacatureWeergave";
 import { taalVanPad, type Taal } from "@shared/taal";
+import { veiligeJsonLd } from "@shared/jsonLd";
 
 const SITE = "https://www.doehetextra.nl";
 
@@ -347,7 +348,7 @@ export default function Vacatures() {
 
   return (
     <Shell sector={info.sector} css={["events", "hotels", "werk", "vacature"]} werkzoekende>
-      {ld.map((b, i) => <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(b) }} />)}
+      {ld.map((b, i) => <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: veiligeJsonLd(b) }} />)}
 
       <section className="vhero voverzicht"><div className="w">
         <nav className="kruimel" aria-label={t.kruimelLabel}>

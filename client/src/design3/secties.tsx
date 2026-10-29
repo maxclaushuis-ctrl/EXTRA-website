@@ -11,6 +11,7 @@ import { useCarrousel, useReus, useSpoor, useStapelTop } from "./gedrag";
 import SnelAanvraag, { type Branche } from "./SnelAanvraag";
 import type { Sector } from "./Shell";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
+import { veiligeJsonLd } from "@shared/jsonLd";
 
 // ───────────── types ─────────────
 /** Aanvraaglink met voorselectie van de branche. */
@@ -502,7 +503,7 @@ export function Faq({ s }: { s: S<"faq"> }) {
           <details name="faq" open={i === 0} key={i}><summary className="vraag">{q}<i></i></summary><p className="antwoord"><T t={a} /></p></details>
         ))}
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: veiligeJsonLd(ld) }} />
     </div></section>
   );
 }

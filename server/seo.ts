@@ -30,6 +30,7 @@ import { verwanteItems, verwantFragment } from "@shared/verwanteLinks";
 import { leesUurloon } from "@shared/uurloon";
 import { TtlCache, metCache } from "./paginaCache";
 import type { BlogPost, VacancyPost } from "@shared/schema";
+import { veiligeJsonLd } from "@shared/jsonLd";
 
 interface PageMeta {
   title: string;
@@ -82,7 +83,7 @@ export function injectMeta(shell: string, meta: PageMeta, fragment?: string): st
     html = html.replace(/(<meta\s+property="og:locale"\s+content=")[^"]*(")/, `$1en_US$2`);
   }
   if (meta.jsonLd && meta.jsonLd.length > 0) {
-    const scripts = meta.jsonLd.map((json) => `<script type="application/ld+json">${json}</script>`).join("\n");
+    const scripts = meta.jsonLd.map((json) => `<script type="application/ld+json">${veiligeJsonLd(json)}</script>`).join("\n");
     html = html.replace("</head>", `${scripts}\n</head>`);
   }
   if (meta.hreflang && meta.hreflang.length > 0) {

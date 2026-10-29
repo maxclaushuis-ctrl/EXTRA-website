@@ -24,6 +24,7 @@ import { useAnalytics } from "@/hooks/use-analytics";
 import { herkomstVoorFormulier } from "@/lib/herkomst";
 import { TELEFOON } from "./links";
 import { onthoudVoornaam } from "./basis";
+import { veiligeJsonLd } from "@shared/jsonLd";
 
 export interface FragmentData {
   sector: Sector | string;
@@ -362,7 +363,7 @@ export default function FragmentPagina({ d }: { d: FragmentData }) {
     <Shell sector={d.sector as Sector} css={d.css as CssSet[]} werkzoekende={d.werkzoekende} knopHref={d.knop ?? undefined} functies={d.functies} taal={d.taal ?? "nl"}>
       <div ref={root} className="d3-inhoud" dangerouslySetInnerHTML={{ __html: d.html }} />
       {ld.map((x, i) => (
-        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(x).replace(/</g, "\\u003c") }} />
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: veiligeJsonLd(x) }} />
       ))}
     </Shell>
   );
