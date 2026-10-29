@@ -12,7 +12,7 @@ import { apiRequest, fetchJson, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, Loader2, Plus, X } from 'lucide-react';
 import { D3Kop, D3Tegels, StatusLabel } from '@/pages/dashboard/d3';
-import { kijktijd, leesStatus, type Deck } from '@shared/pitchdecks';
+import { PITCHDECKS, kijktijd, leesStatus, type Deck } from '@shared/pitchdecks';
 
 interface Link { id: number; deck: string; code: string; ontvanger: string; bedrijf: string | null; actief: boolean; aangemaaktOp: string }
 interface Opening { id: number; deck: string; linkId: number | null; apparaat: string; aantalSlides: number; maxSlide: number; kijktijdSec: number; geopendOp: string }
@@ -40,7 +40,8 @@ export default function PitchdecksTab() {
   const [deckFilter, setDeckFilter] = useState<string>('alle');
   const data = useQuery<Overzicht>({ queryKey: SLEUTEL, queryFn: () => fetchJson<Overzicht>('/api/admin/pitchdecks'), refetchInterval: 60_000 });
 
-  const decks = data.data?.decks ?? [];
+  // De lijst met decks staat in de code; zo werkt het formulier ook als het overzicht even niet laadt.
+  const decks = data.data?.decks ?? PITCHDECKS;
   const deckVan = (naam: string) => decks.find((d) => d.naam === naam);
   const links = data.data?.links ?? [];
   const openingen = data.data?.openingen ?? [];

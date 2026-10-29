@@ -483,6 +483,49 @@ const AANVULLINGEN: Aanvulling[] = [
           opgehaald_op  timestamp DEFAULT now()
         )
       `),
+  },  {
+    // Migratie 0029, zie migrations/manual/0029_pitchdeck_tracker/
+    omschrijving: "pitchdeck_links: één link per ontvanger van een pitchdeck",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS pitchdeck_links (
+          id              serial PRIMARY KEY,
+          deck            text NOT NULL,
+          code            text NOT NULL UNIQUE,
+          ontvanger       text NOT NULL,
+          bedrijf         text,
+          actief          boolean NOT NULL DEFAULT true,
+          aangemaakt_door integer,
+          aangemaakt_op   timestamp DEFAULT now()
+        )
+      `),
+  },
+  {
+    // Migratie 0029, zie migrations/manual/0029_pitchdeck_tracker/
+    omschrijving: "pitchdeck_openingen: openingen, kijktijd en verste slide",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS pitchdeck_openingen (
+          id            serial PRIMARY KEY,
+          deck          text NOT NULL,
+          link_id       integer,
+          sleutel       text NOT NULL,
+          apparaat      text NOT NULL DEFAULT 'Onbekend',
+          aantal_slides integer NOT NULL DEFAULT 0,
+          max_slide     integer NOT NULL DEFAULT 0,
+          kijktijd_sec  integer NOT NULL DEFAULT 0,
+          geopend_op    timestamp DEFAULT now(),
+          laatst_gezien timestamp DEFAULT now()
+        )
+      `),
+  },
+  {
+    // Migratie 0029, zie migrations/manual/0029_pitchdeck_tracker/
+    omschrijving: "pitchdeck_openingen: indexen op link en datum",
+    uitvoeren: async () => {
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS pitchdeck_openingen_link_idx ON pitchdeck_openingen (link_id)`);
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS pitchdeck_openingen_geopend_idx ON pitchdeck_openingen (geopend_op)`);
+    },
   },
 ];
 
