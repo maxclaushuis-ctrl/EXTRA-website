@@ -8,6 +8,7 @@ import {
   escapeHtml, alinea, knop, infoBlok, stappen, gegevens, melding, donkerBlok, afsluiting,
   ACCENT, KLEUR, type Branche,
 } from "./mailOpmaak";
+import { AFZENDER, AFZENDER_NAAM } from "./aanvraagMails";
 
 let geslaagd = 0;
 let gefaald = 0;
@@ -108,6 +109,10 @@ console.log("Geen gedachtestreepjes");
   const zichtbaar = html.replace(/<[^>]+>/g, " ");
   test("de opmaak zelf bevat geen — of –", !/[—–]/.test(zichtbaar));
 }
+
+// Afzender: alleen ASCII, anders weigeren mailservers de mail (zie aanvraagMails.ts)
+test("afzendernaam bevat alleen gewone tekens", /^[\x20-\x7e]+$/.test(AFZENDER_NAAM), AFZENDER_NAAM);
+test("afzender bevat alleen gewone tekens", /^[\x20-\x7e]+$/.test(AFZENDER), AFZENDER);
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

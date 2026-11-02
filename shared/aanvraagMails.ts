@@ -29,8 +29,13 @@ export const MAILADRES = "info@doehetextra.nl";
 export const ADRES = "Herengracht 372, 1016 CH Amsterdam";
 export const OPENINGSTIJDEN = "ma t/m vr 9:00 tot 18:00";
 export const INTERNE_ONTVANGERS = ["max@doehetextra.nl", "eveline@doehetextra.nl"];
-/** Vaste afzender van alle mails aan kandidaten, medewerkers en klanten. Interne meldingen gaan als "EXTRA Systeem". */
-export const AFZENDER_NAAM = "EXTRA 🤎";
+/**
+ * Vaste afzender van alle mails aan kandidaten, medewerkers en klanten. Interne meldingen gaan als "EXTRA Systeem".
+ * Alleen gewone tekens (ASCII): met een emoji in de naam weigerden of bleven mailservers hangen
+ * ("553 5.6.7 Non-ASCII addresses not permitted"), waardoor o.a. de aanmeldmails niet aankwamen.
+ * Een emoji mag wel in het onderwerp of de tekst van een mail.
+ */
+export const AFZENDER_NAAM = "Team EXTRA";
 export const AFZENDER = `${AFZENDER_NAAM} <max@doehetextra.nl>`;
 
 import {
