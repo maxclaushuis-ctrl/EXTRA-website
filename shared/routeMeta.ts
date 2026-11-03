@@ -27,6 +27,8 @@
  * de juiste keuze, zie de originele /nieuws-situatie vóór P14).
  */
 
+import { reviewScoreTekst, reviewAantalTekst } from "./reviews";
+
 export interface RouteMeta {
   /** Route-pad exact zoals in client/src/App.tsx */
   path: string;
@@ -64,7 +66,7 @@ export const ROUTE_META: RouteMeta[] = [
     title: "Uitzendbureau Amsterdam: horeca, events en logistiek | EXTRA",
     ogTitle: "EXTRA | Het uitzendbureau dat werkt",
     description:
-      "Personeel voor hotels, horeca, events en logistiek in Amsterdam en omgeving. Iedereen in loondienst, NEN 4400-1 gecertificeerd en dagbetaling mogelijk.",
+      `Uitzendbureau in Amsterdam voor hotels, events en logistiek. ${reviewScoreTekst()} uit ${reviewAantalTekst()}, iedereen in loondienst en dagbetaling. Vraag vandaag personeel aan.`,
     prerender: true,
     priority: "1.0",
     changefreq: "weekly",
