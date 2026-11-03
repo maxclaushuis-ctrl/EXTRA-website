@@ -23,7 +23,7 @@ var DECK = {
   kleur: "#DC0032",
   logo: "",
   branche: "logistiek",
-  slides: ["cover","situatie","uitdagingen","compliance","inspectie","wtta","wtta-eisen","werving","proces","regio","campagnes","job","binden","opkomst","inzicht","budbee","vervolg"]
+  slides: ["cover","situatie","uitdagingen","compliance","inspectie","wtta","wtta-eisen","werving","proces","regio","campagnes","job","binden","opkomst","inzicht","hoofdkantoor","budbee","vervolg"]
 };
 </script>
 <style>/* Budbee-referentie, zoals in de Logistiek-deck */.case2-r .review{margin-bottom:18px}.slide .case2-r .review p{font-size:15px!important;line-height:1.45!important;color:var(--espresso)}</style>
@@ -437,6 +437,41 @@ var DECK = {
 
 
 <!-- ============ budbee ============ -->
+<section class="slide licht" data-slide="hoofdkantoor" data-titel="Grip per locatie">
+  <div class="w portaal2">
+    <div>
+      <span class="eyebrow">Meerdere locaties</span>
+      <h2 class="anim" style="font-size:clamp(44px,5.4vw,88px);line-height:.9;letter-spacing:-.06em;margin:20px 0 0">Grip per locatie. <span class="serif">Eén overzicht.</span></h2>
+      <p class="anim" style="margin-top:22px;max-width:30em;color:var(--tekst-2)">Werk je met meerdere vestigingen, dan richten we het klantportaal in zoals jullie organisatie werkt. Elke locatie regelt zijn eigen diensten en krijgt een eigen factuur. Het hoofdkantoor ziet de uren, kosten en kwaliteit van alle locaties in één rapportage.</p>
+      <ul class="dossier-v anim">
+        <li><svg viewBox="0 0 24 24"><use href="#vink"/></svg>Een eigen factuur per locatie</li>
+        <li><svg viewBox="0 0 24 24"><use href="#vink"/></svg>Een eigen account per locatiemanager, alleen voor zijn locatie</li>
+        <li><svg viewBox="0 0 24 24"><use href="#vink"/></svg>Hoofdkantoor ziet diensten, uren, kosten en beoordelingen per locatie</li>
+        <li><svg viewBox="0 0 24 24"><use href="#vink"/></svg>Elke periode te downloaden als Excel of PDF</li>
+      </ul>
+    </div>
+    <div class="docs anim" aria-label="Voorbeeld van de rapportage per locatie in het klantportaal">
+      <header><div><b>Rapportage · oktober</b><br><span style="color:var(--tekst-2)">Alle locaties</span></div>
+        <span style="display:inline-flex;gap:4px;padding:3px;border-radius:99px;background:var(--vlak,#EDEAE4);font-size:12px;font-weight:700"><span style="padding:5px 10px;border-radius:99px;background:var(--espresso,#37352C);color:#F8F7F4">Hoofdkantoor</span><span style="padding:5px 10px;border-radius:99px;color:var(--tekst-2)">Locatiemanager</span></span></header>
+      <table><thead><tr><th>Locatie</th><th>Diensten</th><th>Uren</th><th>Kosten</th><th>Factuur</th><th>Cijfer</th></tr></thead>
+        <tbody>
+          <tr><td>Centrum</td><td>28</td><td>214 u</td><td>€&nbsp;6.420</td><td><span class="st goed">Eigen factuur</span></td><td><b>9,1</b></td></tr>
+          <tr><td>Zuid</td><td>17</td><td>128 u</td><td>€&nbsp;3.840</td><td><span class="st goed">Eigen factuur</span></td><td><b>9,4</b></td></tr>
+          <tr><td>Noord</td><td>9</td><td>70 u</td><td>€&nbsp;2.100</td><td><span class="st goed">Eigen factuur</span></td><td><b>8,8</b></td></tr>
+          <tr><td>Oost</td><td>6</td><td>45 u</td><td>€&nbsp;1.350</td><td><span class="st goed">Eigen factuur</span></td><td><b>8,6</b></td></tr>
+          <tr style="font-weight:700"><td>Totaal</td><td>60</td><td>457 u</td><td>€&nbsp;13.710</td><td>4 facturen</td><td>9,1</td></tr>
+        </tbody></table>
+      <div class="meldingen">
+        <small>Wie ziet wat</small>
+        <p><span class="st goed">Hoofdkantoor</span><span><b>Alle 4 locaties</b> · uren, kosten, facturen en beoordelingen</span></p>
+        <p><span class="st">Locatiemanager</span><span><b>Alleen de eigen locatie</b> · diensten en uren van de eigen locatie, eigen factuur</span></p>
+      </div>
+      <footer>Fictieve locaties en cijfers. Voorbeeld van het klantportaal.</footer>
+    </div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+
 <section class="slide wit" data-slide="budbee" data-titel="Budbee in cijfers">
   <div class="w">
     <div class="pd-kop"><div><span class="eyebrow">Klantcase</span><h2>Budbee <span class="serif">in cijfers</span></h2></div>
