@@ -1,6 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { isGa4Configured, fetchGa4Overview, fetchGa4Trend, fetchGa4Sources, fetchGa4TopPages, fetchGa4Devices } from "./ga4";
+import { isGscConfigured, gscSite, gscOverzicht } from "./gsc";
+import { leesPeriode } from "@shared/gsc";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
@@ -15778,6 +15780,32 @@ ${contactInfo}`;
       res.json(data);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ── Google Search Console (zie server/gsc.ts) ─────────────────────────────
+  // Status met echte test: het service-account moet de property kunnen zien.
+  // Bij een fout gaat de melding mee naar het tabblad Koppelingen. 5 min gecachet.
+  let gscStatusCache: { t: number; body: any } | null = null;
+  app.get("/api/admin/gsc/status", adminMiddleware, async (_req, res) => {
+    if (!isGscConfigured()) return res.json({ configured: false, werkt: false });
+    if (gscStatusCache && Date.now() - gscStatusCache.t < 5 * 60_000) return res.json(gscStatusCache.body);
+    let body: any;
+    try {
+      body = { configured: true, werkt: true, site: await gscSite() };
+    } catch (e: any) {
+      body = { configured: true, werkt: false, fout: e?.message || "Onbekende fout" };
+    }
+    gscStatusCache = { t: Date.now(), body };
+    res.json(body);
+  });
+
+  app.get("/api/admin/gsc/overzicht", adminMiddleware, async (req, res) => {
+    if (!isGscConfigured()) return res.status(400).json({ error: "not_configured" });
+    try {
+      res.json(await gscOverzicht(leesPeriode(req.query.periode), req.query.taal === "en"));
+    } catch (e: any) {
+      res.status(502).json({ error: e?.message || "Onbekende fout" });
     }
   });
 

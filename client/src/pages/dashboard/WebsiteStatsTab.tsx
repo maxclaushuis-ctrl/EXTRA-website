@@ -9,6 +9,7 @@ import {
   Clock, BarChart3, Target, AlertCircle, Info, ExternalLink,
   ChefHat, Building2, Sparkles, Calendar, Upload
 } from 'lucide-react';
+import GscSectie, { type GscStatus } from './GscSectie';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -127,7 +128,7 @@ function StatusChip({ label, toestand }: { label: string; toestand: 'actief' | '
   );
 }
 
-function StatusStrip({ ga4, onNaarKoppelingen }: { ga4: Ga4Toestand; onNaarKoppelingen: () => void }) {
+function StatusStrip({ ga4, gsc, onNaarKoppelingen }: { ga4: Ga4Toestand; gsc?: GscStatus; onNaarKoppelingen: () => void }) {
   const ga4Label = ga4 === 'actief' ? 'Google Analytics actief'
     : ga4 === 'wacht_op_data' ? 'GA4 gekoppeld — wacht op eerste data'
     : ga4 === 'fout' ? 'GA4-koppeling werkt niet — zie Koppelingen'
@@ -137,7 +138,7 @@ function StatusStrip({ ga4, onNaarKoppelingen }: { ga4: Ga4Toestand; onNaarKoppe
     <div className="flex items-center gap-2 flex-wrap">
       <StatusChip label="Database actief" toestand="actief" />
       <StatusChip label={ga4Label} toestand={ga4Toestand} />
-      <StatusChip label="Search Console niet gekoppeld" toestand="uit" />
+      <StatusChip label={gsc?.werkt ? 'Search Console actief' : gsc?.configured ? 'Search Console werkt niet, zie Koppelingen' : 'Search Console niet gekoppeld'} toestand={gsc?.werkt ? 'actief' : gsc?.configured ? 'wachten' : 'uit'} />
       <button onClick={onNaarKoppelingen} className="text-xs text-purple-600 hover:text-purple-800 hover:underline ml-1">
         Koppelingen beheren →
       </button>
@@ -178,8 +179,8 @@ function groupByMonth(candidates: Candidate[]) {
 
 // ─── Tab 1: Overzicht ──────────────────────────────────────────────────────────
 
-function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4, onNaarKoppelingen }: {
-  candidates: Candidate[]; staffingRequests: StaffingRequest[]; blogs: BlogPost[]; isLoading: boolean; ga4: Ga4Toestand; onNaarKoppelingen: () => void;
+function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4, gsc, onNaarKoppelingen }: {
+  candidates: Candidate[]; staffingRequests: StaffingRequest[]; blogs: BlogPost[]; isLoading: boolean; ga4: Ga4Toestand; gsc?: GscStatus; onNaarKoppelingen: () => void;
 }) {
   const now = new Date();
   const dagen = (n: number) => n * 86400000;
@@ -217,7 +218,7 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4, onN
 
   return (
     <div className="space-y-8">
-      <StatusStrip ga4={ga4} onNaarKoppelingen={onNaarKoppelingen} />
+      <StatusStrip ga4={ga4} gsc={gsc} onNaarKoppelingen={onNaarKoppelingen} />
 
       {/* Vier kerncijfers in één band */}
       <section>
@@ -367,13 +368,15 @@ function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isL
 // Dé ene plek voor koppelingstatus en setup — alle andere tabbladen tonen
 // alleen data. Eén regel per tool; geen herhaalde uitlegblokken.
 
-function TabKoppelingen({ ga4, ga4Fout }: { ga4: Ga4Toestand; ga4Fout?: string }) {
+function TabKoppelingen({ ga4, ga4Fout, gsc }: { ga4: Ga4Toestand; ga4Fout?: string; gsc?: GscStatus }) {
   const tools = [
     { naam: 'Interne database', info: 'Aanmeldingen, CV-uploads, statussen, blogs, personeelsaanvragen', status: 'actief' as const, detail: 'Actief' },
     { naam: 'Google Analytics 4', info: 'Bezoekers, paginaprestaties, verkeersbronnen, apparaten',
       status: ga4 === 'actief' ? 'actief' as const : (ga4 === 'wacht_op_data' || ga4 === 'fout') ? 'wachten' as const : 'uit' as const,
       detail: ga4 === 'actief' ? 'Actief' : ga4 === 'wacht_op_data' ? 'Gekoppeld — wacht op eerste data' : ga4 === 'fout' ? 'Koppeling geeft een fout' : 'Niet gekoppeld' },
-    { naam: 'Google Search Console', info: 'Zoekwoordposities, impressies en klikken vanuit Google', status: 'uit' as const, detail: 'Niet gekoppeld' },
+    { naam: 'Google Search Console', info: 'Zoekwoordposities, impressies en klikken vanuit Google',
+      status: gsc?.werkt ? 'actief' as const : gsc?.configured ? 'wachten' as const : 'uit' as const,
+      detail: gsc?.werkt ? 'Actief' : gsc?.configured ? 'Koppeling geeft een fout' : 'Niet gekoppeld' },
     { naam: 'Hotjar / MS Clarity', info: 'Heatmaps en sessie-opnames', status: 'uit' as const, detail: 'Niet gekoppeld' },
     { naam: 'Meta Pixel', info: 'Social campagne-attributie en retargeting', status: 'uit' as const, detail: 'Niet gekoppeld' },
   ];
@@ -400,6 +403,13 @@ function TabKoppelingen({ ga4, ga4Fout }: { ga4: Ga4Toestand; ga4Fout?: string }
           </table>
         </Card>
       </section>
+
+      {gsc?.configured && gsc.werkt === false && gsc.fout && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <p className="text-sm font-semibold text-red-700 mb-0.5">Search Console: melding van Google</p>
+          <p className="text-xs text-red-600 break-all">{gsc.fout}</p>
+        </div>
+      )}
 
       {ga4 === 'fout' && ga4Fout && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
@@ -440,13 +450,15 @@ function TabKoppelingen({ ga4, ga4Fout }: { ga4: Ga4Toestand; ga4Fout?: string }
 
 // ─── Tab 4: SEO & Content ─────────────────────────────────────────────────────
 
-function TabSeo({ blogs, isLoading }: { blogs: BlogPost[]; isLoading: boolean }) {
+function TabSeo({ blogs, isLoading, gsc, onNaarKoppelingen }: { blogs: BlogPost[]; isLoading: boolean; gsc?: GscStatus; onNaarKoppelingen: () => void }) {
   const published = blogs.filter(b => b.status === 'published');
   const drafts = blogs.filter(b => b.status === 'draft');
   const scheduled = blogs.filter(b => b.status === 'scheduled');
 
   return (
     <div className="space-y-8">
+
+      <GscSectie status={gsc} onNaarKoppelingen={onNaarKoppelingen} />
 
       {/* Blog statistieken */}
       <section>
@@ -506,9 +518,6 @@ function TabSeo({ blogs, isLoading }: { blogs: BlogPost[]; isLoading: boolean })
         )}
       </section>
 
-      <p className="text-xs text-gray-400">
-        Zoekwoordposities en organisch verkeer per artikel verschijnen hier zodra Google Search Console is gekoppeld — zie het tabblad Koppelingen.
-      </p>
     </div>
   );
 }
@@ -728,6 +737,10 @@ export default function WebsiteStatsTab() {
     retry: false,
   });
   const ga4Configured = ga4Status?.configured ?? false;
+  const { data: gscStatus } = useQuery<GscStatus>({
+    queryKey: ['/api/admin/gsc/status'],
+    retry: false,
+  });
 
   const { data: ga4Overview, isLoading: ga4OverviewLoading } = useQuery<any>({
     queryKey: ['/api/admin/ga4/overview'],
@@ -811,11 +824,11 @@ export default function WebsiteStatsTab() {
 
       {/* Tab content */}
       <div className="p-6 flex-1">
-        {zichtbareTab === 'overzicht'        && <TabOverzicht  candidates={candidates} staffingRequests={staffingRequests} blogs={blogs} isLoading={isLoading} ga4={ga4} onNaarKoppelingen={() => setActiveTab('koppelingen')} />}
+        {zichtbareTab === 'overzicht'        && <TabOverzicht  candidates={candidates} staffingRequests={staffingRequests} blogs={blogs} isLoading={isLoading} ga4={ga4} gsc={gscStatus} onNaarKoppelingen={() => setActiveTab('koppelingen')} />}
         {zichtbareTab === 'conversies'       && <TabConversies candidates={candidates} isLoading={isLoading} />}
         {zichtbareTab === 'google-analytics' && <TabGa4 overview={ga4Overview} trend={ga4Trend ?? []} sources={ga4Sources ?? []} pages={ga4Pages ?? []} devices={ga4Devices ?? []} isLoading={ga4Loading} />}
-        {zichtbareTab === 'seo'              && <TabSeo blogs={blogs} isLoading={isLoading} />}
-        {zichtbareTab === 'koppelingen'      && <TabKoppelingen ga4={ga4} ga4Fout={ga4Status?.fout} />}
+        {zichtbareTab === 'seo'              && <TabSeo blogs={blogs} isLoading={isLoading} gsc={gscStatus} onNaarKoppelingen={() => setActiveTab('koppelingen')} />}
+        {zichtbareTab === 'koppelingen'      && <TabKoppelingen ga4={ga4} ga4Fout={ga4Status?.fout} gsc={gscStatus} />}
       </div>
     </div>
   );
