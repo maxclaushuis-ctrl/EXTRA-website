@@ -15,8 +15,6 @@ import GscSectie, { type GscStatus } from './GscSectie';
 
 type Candidate = {
   id: number;
-  firstName: string;
-  lastName: string;
   status: string;
   functionType: string;
   hasCv: boolean;
@@ -722,8 +720,9 @@ type TabId = 'overzicht' | 'conversies' | 'google-analytics' | 'seo' | 'koppelin
 export default function WebsiteStatsTab() {
   const [activeTab, setActiveTab] = useState<TabId>('overzicht');
 
+  // Alle kandidaten (geen limiet), alleen de velden die hier geteld worden.
   const { data: candidatesData, isLoading: candidatesLoading } = useQuery<{ candidates: Candidate[] }>({
-    queryKey: ['/api/admin/candidates'],
+    queryKey: ['/api/admin/candidates/stats'],
   });
   const { data: blogData, isLoading: blogLoading } = useQuery<{ posts: BlogPost[]; total: number }>({
     queryKey: ['/api/admin/blog'],

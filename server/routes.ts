@@ -6968,12 +6968,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: status as string | undefined,
         search: search as string | undefined,
         page: page ? parseInt(page as string) : 1,
-        limit: limit ? parseInt(limit as string) : 500
+        // Zonder limit: alle kandidaten. Vroeger was dit 500, waardoor het overzicht
+        // en de statistieken oudere kandidaten stilletjes misten.
+        limit: limit ? parseInt(limit as string) : 1_000_000
       });
       return res.json(result);
     } catch (error) {
       console.error("Error fetching candidates:", error);
       return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van sollicitanten" });
+    }
+  });
+
+  // Website Statistieken: alle kandidaten, alleen de velden die geteld worden.
+  app.get("/api/admin/candidates/stats", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      return res.json({ candidates: await storage.getCandidateStatsRows() });
+    } catch (error) {
+      console.error("Error fetching candidate stats:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de statistieken" });
     }
   });
 

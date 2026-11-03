@@ -363,6 +363,8 @@ export interface IStorage {
     page?: number;
     limit?: number;
   }): Promise<{ candidates: Candidate[]; total: number }>;
+  /** Alle kandidaten, alleen de velden voor Website Statistieken (geen limiet). */
+  getCandidateStatsRows(): Promise<{ id: number; createdAt: Date | null; status: string | null; hasCv: boolean | null; functionType: string | null; nationality: string | null }[]>;
   getCandidate(id: number): Promise<CandidateWithDetails | undefined>;
   updateCandidate(id: number, candidateData: Partial<InsertCandidate>): Promise<Candidate | undefined>;
   deleteCandidate(id: number): Promise<boolean>;
@@ -3230,6 +3232,22 @@ export class MemStorage implements IStorage {
       .offset(offset);
     
     return { candidates, total };
+  }
+
+  async getCandidateStatsRows() {
+    // Zelfde filter als getCandidates, maar zonder limiet en met alleen wat de statistieken tellen.
+    return await db
+      .select({
+        id: candidatesTable.id,
+        createdAt: candidatesTable.createdAt,
+        status: candidatesTable.status,
+        hasCv: candidatesTable.hasCv,
+        functionType: candidatesTable.functionType,
+        nationality: candidatesTable.nationality,
+      })
+      .from(candidatesTable)
+      .where(or(eq(candidatesTable.isInternalInterview, false), isNull(candidatesTable.isInternalInterview)))
+      .orderBy(desc(candidatesTable.createdAt));
   }
 
   async getTwvCandidates(): Promise<Candidate[]> {
