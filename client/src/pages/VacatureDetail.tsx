@@ -198,7 +198,7 @@ export default function VacatureDetail() {
         <section className="donker vacs vandere"><div className="w">
           <div className="dkop"><div><span className="eyebrow">Meer vacatures</span>
             <h2 className="groot" style={{ marginTop: "22px", fontSize: "clamp(46px,5.6vw,92px)" }}>Andere <span className="serif">vacatures</span></h2></div>
-            <p className="lead"><a href="/dagbetaling" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: "3px" }}>Dagbetaling</a>, EXTRAATJE-punten en vaste opdrachtgevers.</p></div>
+            <p className="lead">Dagbetaling, EXTRAATJE-punten en vaste opdrachtgevers.</p></div>
           <div className="vac-lijst">{verwant.map((r, i) => <VacRegel key={r.slug} v={r} nr={i + 1} />)}</div>
           <div className="vac-voet"><a className="knop vol" href="/vacatures">Bekijk alle vacatures <Pijl /></a><span>{alle.length} openstaande {alle.length === 1 ? "vacature" : "vacatures"}</span></div>
         </div></section>

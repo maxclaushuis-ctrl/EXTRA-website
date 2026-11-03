@@ -22,7 +22,7 @@ export const hotels: PaginaContent = {
       "pos": "50% 36%",
       "chip": "{reviews} · NEN-4400-1 gecertificeerd",
       "h1": [
-        "Hotelpersoneel inhuren?",
+        "Hotelpersoneel nodig?",
         "Wij [[cheffen]] het!"
       ],
       "reageer": "Reageer direct",
@@ -597,8 +597,8 @@ export const events: PaginaContent = {
       "pos": "53% 20%",
       "chip": "{reviews} · NEN-4400-1 gecertificeerd",
       "h1": [
-        "Eventpersoneel inhuren?",
-        "Zeker met [[EXTRA!]]"
+        "Event[[(ueel)]] personeel nodig?",
+        "Zeker met EXTRA!"
       ],
       "reageer": "Reageer direct",
       "knoppen": [
