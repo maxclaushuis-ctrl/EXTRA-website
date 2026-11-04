@@ -3,10 +3,12 @@
  *
  * Waarom: het Promptwatch-browserscript ziet alleen echte bezoekers.
  * AI-crawlers (GPTBot, ClaudeBot, PerplexityBot, …) voeren geen JavaScript
- * uit en zijn dus alleen zichtbaar in de serverlogs. Deze module vangt élk
- * HTTP-request af (de crawler-herkenning gebeurt bewust aan de
- * Promptwatch-kant — voorfilteren op user-agent zou nieuwe crawlers missen)
- * en stuurt ze gebatcht door naar `POST https://logs.promptwatch.com/event`.
+ * uit en zijn dus alleen zichtbaar in de serverlogs. Deze module vangt elk
+ * verzoek naar een openbare pagina af (de crawler-herkenning gebeurt bewust
+ * aan de Promptwatch-kant — voorfilteren op user-agent zou nieuwe crawlers
+ * missen) en stuurt ze gebatcht door naar `POST https://logs.promptwatch.com/event`.
+ * Sinds fase 0, stap 0.2 gaan interne routes, tokens en interne referrers
+ * niet meer mee; zie isOpenbarePagina, schoonQuery en schoonReferrer.
  *
  * Ontwerpkeuzes, in lijn met de eisen uit de bouwopdracht:
  *
@@ -40,6 +42,8 @@ import path from "path";
 import os from "os";
 
 import { clientIp } from "./clientIp";
+import { ROUTE_META_BY_PATH, DYNAMIC_ROUTE_PATTERNS, normalizeMetaPath } from "../shared/routeMeta";
+import { resolveRedirect } from "./redirects";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -89,8 +93,83 @@ function eersteHeader(waarde: string | string[] | undefined): string | undefined
   return Array.isArray(waarde) ? waarde[0] : waarde;
 }
 
+// ── Wat mag naar Promptwatch (fase 0, stap 0.2) ─────────────────────────
+//
+// Promptwatch heeft voor crawler- en AI-vindbaarheidsanalyse alleen
+// openbare paginaverzoeken nodig: pad, status, user-agent en IP (voor de
+// botverificatie), hostname, referrer en de campagnebron. Interne routes
+// (/api, dashboard, cv-upload) bevatten soms geheime tokens of webhook-
+// geheimen en gaan daarom niet meer mee.
+//
+// Bewust een toelatingslijst in plaats van een uitsluitlijst: een nieuwe
+// interne route is zo vanzelf afgeschermd. De lijst volgt uit dezelfde bron
+// als de sitemap (shared/routeMeta.ts), zodat een nieuwe openbare pagina
+// vanzelf meegaat.
+
+/** Bestanden die crawlers ophalen en die Promptwatch moet blijven zien. */
+const CRAWLER_BESTANDEN = new Set(["/robots.txt", "/sitemap.xml", "/llms.txt", "/llms-full.txt"]);
+
+/** Zoekparameters die mee mogen: alleen de campagnebron, bijvoorbeeld
+ *  utm_source=chatgpt.com waarmee ChatGPT zijn links markeert. */
+const TOEGESTANE_PARAMETERS = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]);
+
+/** Bekend openbaar pad: indexeerbare route, blog, vacature of crawlerbestand. */
+function isBekendOpenbaarPad(genormaliseerd: string): boolean {
+  if (CRAWLER_BESTANDEN.has(genormaliseerd)) return true;
+  const meta = ROUTE_META_BY_PATH[genormaliseerd];
+  if (meta) return !meta.noindex;
+  return DYNAMIC_ROUTE_PATTERNS.some((r) => r.pattern.test(genormaliseerd));
+}
+
+/** true als het verzoek een openbare pagina is die naar Promptwatch mag.
+ *  Oude URL's die met een 301 naar een openbare pagina gaan, tellen mee:
+ *  crawlers die nog oude adressen bezoeken zijn juist nuttig om te zien. */
+export function isOpenbarePagina(methode: string, pad: string): boolean {
+  if (methode !== "GET" && methode !== "HEAD") return false;
+  let gedecodeerd: string;
+  try {
+    gedecodeerd = decodeURI(pad || "/");
+  } catch {
+    return false;
+  }
+  const genormaliseerd = normalizeMetaPath(gedecodeerd);
+  if (genormaliseerd === "/api" || genormaliseerd.startsWith("/api/")) return false;
+  if (isBekendOpenbaarPad(genormaliseerd)) return true;
+  const bestemming = resolveRedirect(genormaliseerd);
+  if (!bestemming) return false;
+  const bestemmingPad = bestemming.startsWith("/") ? bestemming.split("?")[0] : (() => {
+    try { return new URL(bestemming).pathname; } catch { return ""; }
+  })();
+  return bestemmingPad !== "" && isBekendOpenbaarPad(normalizeMetaPath(bestemmingPad));
+}
+
+/** Houdt van de query alleen de toegestane campagneparameters over. */
+export function schoonQuery(query: string | null): string | null {
+  if (!query) return null;
+  const uit = new URLSearchParams();
+  new URLSearchParams(query).forEach((waarde, sleutel) => {
+    if (TOEGESTANE_PARAMETERS.has(sleutel.toLowerCase())) uit.append(sleutel, waarde);
+  });
+  const tekst = uit.toString();
+  return tekst === "" ? null : tekst;
+}
+
+/** Referrer zonder query of fragment: alleen herkomst en pad. Zo lekt een
+ *  token uit de vorige pagina nooit via de referrer mee. */
+export function schoonReferrer(referrer: string | null | undefined): string | null {
+  if (!referrer) return null;
+  try {
+    const url = new URL(referrer);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.origin + url.pathname;
+  } catch {
+    return null;
+  }
+}
+
 /** Bouwt één Promptwatch-event uit een request/response-momentopname.
- *  `nu` wordt geïnjecteerd zodat tests deterministisch zijn. */
+ *  `nu` wordt geïnjecteerd zodat tests deterministisch zijn. Query en
+ *  referrer worden altijd geschoond (zie schoonQuery en schoonReferrer). */
 export function eventVanRequest(
   req: RequestSnapshot,
   res: ResponseSnapshot,
@@ -103,7 +182,7 @@ export function eventVanRequest(
     status_code: res.statusCode,
     request_method: req.method,
     request_path: pad,
-    query_string: query,
+    query_string: schoonQuery(query),
     // Alle velden moeten aanwezig zijn; alleen query_string/referrer mogen
     // null zijn. Ontbrekende waarden worden dus een lege string.
     content_type:
@@ -118,7 +197,7 @@ export function eventVanRequest(
     client_ip: clientIp(req.headers["x-forwarded-for"], req.ip, (req as any).socket?.remoteAddress),
     hostname: req.hostname || eersteHeader(req.headers.host)?.split(":")[0] || "",
     user_agent: eersteHeader(req.headers["user-agent"]) || "",
-    referrer: eersteHeader(req.headers.referer) ?? eersteHeader(req.headers.referrer) ?? null,
+    referrer: schoonReferrer(eersteHeader(req.headers.referer) ?? eersteHeader(req.headers.referrer)),
   };
 }
 
@@ -439,6 +518,8 @@ export function maakPromptwatchDoorstuur(): {
   const middleware = (req: any, res: any, next: any) => {
     res.on("finish", () => {
       try {
+        // Alleen openbare pagina's; interne routes en tokens gaan niet mee.
+        if (!isOpenbarePagina(req.method, splitsUrl(req.originalUrl || "/").pad)) return;
         doorstuur.voegToe(
           eventVanRequest(
             {

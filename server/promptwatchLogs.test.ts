@@ -6,13 +6,18 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { EventEmitter } from "events";
 import {
   splitsUrl,
   eventVanRequest,
   verdeelInBatches,
   backoffMs,
   batchMagWeg,
+  isOpenbarePagina,
+  schoonQuery,
+  schoonReferrer,
   PromptwatchDoorstuur,
+  maakPromptwatchDoorstuur,
   type PromptwatchEvent,
   type FlushUitkomst,
 } from "./promptwatchLogs";
@@ -71,7 +76,7 @@ async function main() {
   const e1 = eventVanRequest(basisReq, { statusCode: 200, contentType: "text/html; charset=utf-8" }, nu);
   test("timestamp ISO 8601 UTC met ms", e1.timestamp === "2026-08-24T12:00:00.000Z");
   test("pad zonder querystring", e1.request_path === "/en/jobs");
-  test("query zonder vraagteken", e1.query_string === "lang=en");
+  test("query zonder campagneparameters wordt null", e1.query_string === null);
   test("client_ip uit req.ip", e1.client_ip === "203.0.113.7");
   test("hostname uit req.hostname", e1.hostname === "www.doehetextra.nl");
   test("user_agent ongewijzigd", e1.user_agent === "Mozilla/5.0; compatible; GPTBot/1.3");
@@ -101,6 +106,71 @@ async function main() {
   test("array-header pakt eerste waarde", e3.user_agent === "EersteBot/1.0");
   test("hostname-fallback uit host-header zonder poort", e3.hostname === "doehetextra.nl");
   test("array content-type pakt eerste waarde", e3.content_type === "text/html");
+
+  // Fase 0, stap 0.2: alleen openbare pagina's, zonder tokens.
+  console.log("isOpenbarePagina (toelatingslijst)");
+  test("homepage gaat mee", isOpenbarePagina("GET", "/"));
+  test("openbare pagina gaat mee", isOpenbarePagina("GET", "/vacatures"));
+  test("Engelse pagina gaat mee", isOpenbarePagina("GET", "/en/jobs"));
+  test("trailing slash en hoofdletters gaan mee", isOpenbarePagina("GET", "/Vacatures/"));
+  test("HEAD-verzoek van een crawler gaat mee", isOpenbarePagina("HEAD", "/selectieproces"));
+  test("blogartikel gaat mee", isOpenbarePagina("GET", "/blog/fictief-artikel"));
+  test("vacature gaat mee", isOpenbarePagina("GET", "/vacatures/fictieve-vacature"));
+  test("robots.txt gaat mee", isOpenbarePagina("GET", "/robots.txt"));
+  test("sitemap.xml gaat mee", isOpenbarePagina("GET", "/sitemap.xml"));
+  test("llms.txt en llms-full.txt gaan mee", isOpenbarePagina("GET", "/llms.txt") && isOpenbarePagina("GET", "/llms-full.txt"));
+  test("oude URL met 301 naar openbare pagina gaat mee", isOpenbarePagina("GET", "/over-extra-uitzendbureau"));
+  test("interne API gaat niet mee", !isOpenbarePagina("GET", "/api/admin/candidates"));
+  test("accepteerlink gaat niet mee", !isOpenbarePagina("GET", "/api/candidates/123/accept"));
+  test("cv-uploadroute gaat niet mee", !isOpenbarePagina("GET", "/api/cv-upload-token"));
+  test("WhatsApp-webhook met geheim pad gaat niet mee", !isOpenbarePagina("POST", "/api/whatsapp/webhook/fictief-geheim"));
+  test("ook GET op webhookpad gaat niet mee", !isOpenbarePagina("GET", "/api/whatsapp/webhook/fictief-geheim"));
+  test("cv-uploadpagina (noindex) gaat niet mee", !isOpenbarePagina("GET", "/cv-upload"));
+  test("dashboard gaat niet mee", !isOpenbarePagina("GET", "/dashboard"));
+  test("bedankpagina (noindex) gaat niet mee", !isOpenbarePagina("GET", "/aanvraag-ontvangen"));
+  test("pitchdeck gaat niet mee", !isOpenbarePagina("GET", "/pitchdeck/fictief/"));
+  test("statisch bestand gaat niet mee", !isOpenbarePagina("GET", "/assets/index-abc123.js"));
+  test("onbekend pad gaat niet mee", !isOpenbarePagina("GET", "/wp-login.php"));
+  test("POST op openbare pagina gaat niet mee", !isOpenbarePagina("POST", "/vacatures"));
+  test("kapotte codering gaat niet mee", !isOpenbarePagina("GET", "/%E0%A4%A"));
+  test("api verstopt achter codering gaat niet mee", !isOpenbarePagina("GET", "/%61pi/admin"));
+
+  console.log("schoonQuery");
+  test("utm_source van ChatGPT blijft", schoonQuery("utm_source=chatgpt.com") === "utm_source=chatgpt.com");
+  test("token verdwijnt, utm blijft", schoonQuery("token=fictief123&utm_source=chatgpt.com") === "utm_source=chatgpt.com");
+  test("alleen token wordt null", schoonQuery("token=fictief123") === null);
+  test("ref-code en id verdwijnen", schoonQuery("ref=ABC123&id=42") === null);
+  test("alle vijf utm-parameters blijven",
+    schoonQuery("utm_source=a&utm_medium=b&utm_campaign=c&utm_term=d&utm_content=e") === "utm_source=a&utm_medium=b&utm_campaign=c&utm_term=d&utm_content=e");
+  test("lege query blijft null", schoonQuery(null) === null && schoonQuery("") === null);
+
+  console.log("schoonReferrer");
+  test("externe referrer blijft gelijk", schoonReferrer("https://chatgpt.com/") === "https://chatgpt.com/");
+  test("query met token verdwijnt uit referrer",
+    schoonReferrer("https://www.doehetextra.nl/cv-upload?token=fictief123") === "https://www.doehetextra.nl/cv-upload");
+  test("fragment verdwijnt uit referrer", schoonReferrer("https://www.perplexity.ai/zoek#x") === "https://www.perplexity.ai/zoek");
+  test("geen referrer wordt null", schoonReferrer(undefined) === null && schoonReferrer("") === null);
+  test("vreemde referrer wordt null", schoonReferrer("niet-een-url") === null && schoonReferrer("javascript:alert(1)") === null);
+
+  console.log("eventVanRequest schoont query en referrer");
+  const crawlerReq = {
+    method: "GET",
+    originalUrl: "/vacatures?utm_source=chatgpt.com&token=fictief123",
+    ip: "203.0.113.9",
+    hostname: "www.doehetextra.nl",
+    headers: {
+      "user-agent": "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
+      referer: "https://www.doehetextra.nl/cv-upload?token=fictief456",
+    } as Record<string, string | string[] | undefined>,
+  };
+  const e4 = eventVanRequest(crawlerReq, { statusCode: 200, contentType: "text/html" }, nu);
+  test("crawler-user-agent blijft ongewijzigd", e4.user_agent === "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)");
+  test("IP blijft voor botverificatie", e4.client_ip === "203.0.113.9");
+  test("pad blijft", e4.request_path === "/vacatures");
+  test("token weg, utm blijft", e4.query_string === "utm_source=chatgpt.com");
+  test("referrer zonder token", e4.referrer === "https://www.doehetextra.nl/cv-upload");
+  test("geen token meer in het hele event", !JSON.stringify(e4).includes("fictief"));
+  test("nog steeds exact 10 velden", Object.keys(e4).length === 10);
 
   console.log("verdeelInBatches");
   test("2500 events in batches van 1000 → 3 batches", verdeelInBatches(new Array(2500).fill(0), 1000).length === 3);
@@ -274,6 +344,33 @@ async function main() {
     test("event overleeft JSON-rondgang", JSON.stringify(terug) === JSON.stringify(e));
     const body = JSON.stringify([maakEvent(), maakEvent()]);
     test("body is een JSON-array", body.startsWith("[") && JSON.parse(body).length === 2);
+  }
+
+  // Middleware zoals in server/index.ts, met een fictieve key. De timer wordt
+  // direct gestopt en de drempel van 500 wordt niet gehaald, dus er wordt
+  // niets naar Promptwatch verstuurd.
+  console.log("Middleware (zonder te versturen)");
+  {
+    const vorige = process.env.PROMPTWATCH_LOGS_API_KEY;
+    process.env.PROMPTWATCH_LOGS_API_KEY = "fictieve-testkey";
+    const pw = maakPromptwatchDoorstuur()!;
+    pw.doorstuur.stop();
+    const verzoek = (method: string, originalUrl: string, ua = "Mozilla/5.0 (compatible; GPTBot/1.3)") => {
+      const res = new EventEmitter() as any;
+      res.statusCode = 200;
+      res.getHeader = () => "text/html";
+      const req = { method, originalUrl, ip: "203.0.113.1", hostname: "www.doehetextra.nl", headers: { "user-agent": ua } };
+      pw.middleware(req, res, () => {});
+      res.emit("finish");
+    };
+    verzoek("GET", "/vacatures");
+    verzoek("GET", "/api/candidates/1/accept?token=fictief");
+    verzoek("POST", "/api/whatsapp/webhook/fictief-geheim");
+    verzoek("GET", "/cv-upload?token=fictief");
+    verzoek("GET", "/robots.txt");
+    test("alleen de twee openbare verzoeken staan in de wachtrij", pw.doorstuur.aantalInWachtrij() === 2);
+    if (vorige === undefined) delete process.env.PROMPTWATCH_LOGS_API_KEY;
+    else process.env.PROMPTWATCH_LOGS_API_KEY = vorige;
   }
 
   console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
