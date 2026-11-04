@@ -25,8 +25,9 @@
  *    NB: op Replit-deployments is de disk per deploy; de spool overleeft een
  *    procescrash, niet een redeploy — dat is daar het haalbare maximum.
  * 4. Secrets: de API-key komt uitsluitend uit de omgevingsvariabele
- *    PROMPTWATCH_LOGS_API_KEY (Replit Secret). Zonder key is de hele module
- *    een no-op met één duidelijke opstartregel.
+ *    PROMPTWATCH_LOGS_API_KEY (Replit Secret). Zonder key, of buiten een
+ *    Replit-publicatie (REPLIT_DEPLOYMENT=1), is de hele module een no-op
+ *    met één duidelijke opstartregel. Zie promptwatchModus.
  * 5. Observability: per flush één logregel met verzonden/accepted/dropped/
  *    status. `dropped` is verwacht gedrag (al het niet-crawlerverkeer) en
  *    levert bewust géén error-log op; de relevante indicator is `accepted`.
@@ -506,14 +507,77 @@ export class PromptwatchDoorstuur {
 
 // ── Express-koppeling ────────────────────────────────────────────────────
 
+/** Uitkomst van de omgevingscontrole: wel of niet doorsturen, en waarom. */
+export interface PromptwatchModus {
+  actief: boolean;
+  /** Eén regel voor de opstartlog. */
+  melding: string;
+  /** true → als waarschuwing loggen (productie die niet goed is ingesteld). */
+  waarschuwing: boolean;
+}
+
+/**
+ * Fase 0: Promptwatch verstuurt alleen vanuit een Replit-publicatie. Replit
+ * zet daar REPLIT_DEPLOYMENT op "1"; in de workspace en de preview ontbreekt
+ * die. NODE_ENV is hiervoor niet betrouwbaar (een productiebuild in de
+ * preview draait ook met production). Development verstuurt dus nooit, ook
+ * niet als de sleutel in de Secrets staat. Puur, zodat de tests elke
+ * combinatie kunnen nalopen zonder iets te versturen.
+ */
+export function promptwatchModus(env: Record<string, string | undefined>): PromptwatchModus {
+  const sleutel = env.PROMPTWATCH_LOGS_API_KEY;
+  const deployment = env.REPLIT_DEPLOYMENT;
+  const isProductie = deployment === "1";
+
+  if (!isProductie) {
+    if (deployment !== undefined && deployment !== "") {
+      return {
+        actief: false,
+        waarschuwing: true,
+        melding: `[promptwatch] uit: REPLIT_DEPLOYMENT heeft een onverwachte waarde (verwacht "1" in productie); er wordt niets verstuurd`,
+      };
+    }
+    return {
+      actief: false,
+      waarschuwing: false,
+      melding: sleutel
+        ? "[promptwatch] uit in development: sleutel aanwezig, maar alleen een publicatie verstuurt logs"
+        : "[promptwatch] uit in development (geen sleutel, geen publicatie)",
+    };
+  }
+
+  if (!sleutel || sleutel.trim() === "") {
+    return {
+      actief: false,
+      waarschuwing: true,
+      melding: "[promptwatch] WAARSCHUWING: productie zonder geldige PROMPTWATCH_LOGS_API_KEY; crawlerbezoeken worden niet doorgestuurd",
+    };
+  }
+  if (sleutel !== sleutel.trim()) {
+    return {
+      actief: true,
+      waarschuwing: true,
+      melding: "[promptwatch] actief in productie, maar de sleutel bevat spaties of een regeleinde; controleer de Secret als Promptwatch HTTP 401 geeft",
+    };
+  }
+  return { actief: true, waarschuwing: false, melding: "[promptwatch] actief in productie" };
+}
+
 /** Leest de omgeving en levert middleware + gestarte doorstuur, of null
- *  wanneer PROMPTWATCH_LOGS_API_KEY niet gezet is (dan is alles een no-op). */
-export function maakPromptwatchDoorstuur(): {
+ *  wanneer er niet verstuurd mag worden (development, of productie zonder
+ *  sleutel). Dan is alles een no-op. De reden staat in de opstartlog. */
+export function maakPromptwatchDoorstuur(
+  env: Record<string, string | undefined> = process.env,
+  logger: { log: (r: string) => void; warn: (r: string) => void } = console,
+): {
   doorstuur: PromptwatchDoorstuur;
   middleware: (req: any, res: any, next: any) => void;
 } | null {
-  const apiKey = process.env.PROMPTWATCH_LOGS_API_KEY;
-  if (!apiKey) return null;
+  const modus = promptwatchModus(env);
+  if (modus.waarschuwing) logger.warn(modus.melding);
+  else logger.log(modus.melding);
+  if (!modus.actief) return null;
+  const apiKey = env.PROMPTWATCH_LOGS_API_KEY as string;
   const doorstuur = new PromptwatchDoorstuur({ apiKey });
   const middleware = (req: any, res: any, next: any) => {
     res.on("finish", () => {

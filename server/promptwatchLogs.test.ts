@@ -18,6 +18,7 @@ import {
   schoonReferrer,
   PromptwatchDoorstuur,
   maakPromptwatchDoorstuur,
+  promptwatchModus,
   type PromptwatchEvent,
   type FlushUitkomst,
 } from "./promptwatchLogs";
@@ -346,14 +347,57 @@ async function main() {
     test("body is een JSON-array", body.startsWith("[") && JSON.parse(body).length === 2);
   }
 
-  // Middleware zoals in server/index.ts, met een fictieve key. De timer wordt
+  // Omgevingscontrole: alleen een Replit-publicatie verstuurt. Alles hier is
+  // puur of geeft null terug, dus er wordt niets verstuurd.
+  console.log("promptwatchModus (development en productie)");
+  {
+    const dev = promptwatchModus({});
+    test("development zonder sleutel: uit, geen waarschuwing", !dev.actief && !dev.waarschuwing);
+    const devSleutel = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey" });
+    test("development mét sleutel: uit", !devSleutel.actief && !devSleutel.waarschuwing);
+    test("development met sleutel noemt de reden", devSleutel.melding.includes("development"));
+    const devNodeProd = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey", NODE_ENV: "production" });
+    test("preview met NODE_ENV=production blijft uit", !devNodeProd.actief);
+    const prod = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey", REPLIT_DEPLOYMENT: "1" });
+    test("productie met sleutel: actief, geen waarschuwing", prod.actief && !prod.waarschuwing);
+    const prodGeen = promptwatchModus({ REPLIT_DEPLOYMENT: "1" });
+    test("productie zonder sleutel: uit mét waarschuwing", !prodGeen.actief && prodGeen.waarschuwing);
+    test("waarschuwing noemt de ontbrekende sleutel", prodGeen.melding.includes("PROMPTWATCH_LOGS_API_KEY"));
+    const prodLeeg = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "   ", REPLIT_DEPLOYMENT: "1" });
+    test("productie met lege sleutel: uit mét waarschuwing", !prodLeeg.actief && prodLeeg.waarschuwing);
+    const prodSpatie = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey\n", REPLIT_DEPLOYMENT: "1" });
+    test("sleutel met regeleinde: actief (gedrag ongewijzigd) mét waarschuwing", prodSpatie.actief && prodSpatie.waarschuwing);
+    const raar = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey", REPLIT_DEPLOYMENT: "true" });
+    test("onverwachte waarde van REPLIT_DEPLOYMENT: uit mét waarschuwing", !raar.actief && raar.waarschuwing);
+    const nul = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey", REPLIT_DEPLOYMENT: "0" });
+    test("REPLIT_DEPLOYMENT=0: uit", !nul.actief);
+    const omzeil = promptwatchModus({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey", PROMPTWATCH_IN_ONTWIKKELING: "1" });
+    test("geen omweg om in development toch te versturen", !omzeil.actief);
+  }
+
+  console.log("maakPromptwatchDoorstuur per omgeving");
+  {
+    const regels: string[] = [];
+    const waarschuwingen: string[] = [];
+    const stil = { log: (r: string) => regels.push(r), warn: (r: string) => waarschuwingen.push(r) };
+    test("development met sleutel geeft null (niets wordt gestart)",
+      maakPromptwatchDoorstuur({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey" }, stil) === null);
+    test("development schrijft één gewone opstartregel", regels.length === 1 && waarschuwingen.length === 0);
+    test("productie zonder sleutel geeft null", maakPromptwatchDoorstuur({ REPLIT_DEPLOYMENT: "1" }, stil) === null);
+    test("productie zonder sleutel geeft een waarschuwing", waarschuwingen.length === 1);
+    const prod = maakPromptwatchDoorstuur({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey", REPLIT_DEPLOYMENT: "1" }, stil);
+    test("productie met sleutel start de doorstuur", prod !== null);
+    prod?.doorstuur.stop();
+    test("productie meldt actief", regels.some((r) => r.includes("actief in productie")));
+  }
+
+  // Middleware zoals in productie, met een fictieve key. De timer wordt
   // direct gestopt en de drempel van 500 wordt niet gehaald, dus er wordt
   // niets naar Promptwatch verstuurd.
-  console.log("Middleware (zonder te versturen)");
+  console.log("Middleware in productie (zonder te versturen)");
   {
-    const vorige = process.env.PROMPTWATCH_LOGS_API_KEY;
-    process.env.PROMPTWATCH_LOGS_API_KEY = "fictieve-testkey";
-    const pw = maakPromptwatchDoorstuur()!;
+    const stil = { log: () => {}, warn: () => {} };
+    const pw = maakPromptwatchDoorstuur({ PROMPTWATCH_LOGS_API_KEY: "fictieve-testkey", REPLIT_DEPLOYMENT: "1" }, stil)!;
     pw.doorstuur.stop();
     const verzoek = (method: string, originalUrl: string, ua = "Mozilla/5.0 (compatible; GPTBot/1.3)") => {
       const res = new EventEmitter() as any;
@@ -368,9 +412,8 @@ async function main() {
     verzoek("POST", "/api/whatsapp/webhook/fictief-geheim");
     verzoek("GET", "/cv-upload?token=fictief");
     verzoek("GET", "/robots.txt");
-    test("alleen de twee openbare verzoeken staan in de wachtrij", pw.doorstuur.aantalInWachtrij() === 2);
-    if (vorige === undefined) delete process.env.PROMPTWATCH_LOGS_API_KEY;
-    else process.env.PROMPTWATCH_LOGS_API_KEY = vorige;
+    verzoek("GET", "/vacatures?utm_source=chatgpt.com", "Mozilla/5.0 (compatible; OAI-SearchBot/1.0)");
+    test("alleen de drie openbare verzoeken staan in de wachtrij", pw.doorstuur.aantalInWachtrij() === 3);
   }
 
   console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
