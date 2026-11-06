@@ -43,6 +43,8 @@
     "uurloon:test": "tsx shared/uurloon.test.ts",
     "prerender:test": "tsx scripts/prerenderOpruimen.test.ts",
     "twv:test": "tsx server/twvVerlopen.test.ts",
+    "testdata:test": "tsx scripts/testdataRegels.test.ts",
+    "testdata:vullen": "tsx scripts/testdata-vullen.ts",
     "csv:test": "tsx shared/csv.test.ts",
     "twv:nationaliteit-rapport": "tsx scripts/twv-nationaliteit-rapport.ts",
     "doelgroep:test": "tsx server/campagneDoelgroep.test.ts",

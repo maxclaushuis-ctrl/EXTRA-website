@@ -14,6 +14,20 @@ import {
 let mailService: MailService | null = null;
 let useMockService = false;
 let mockMailLog: any[] = [];
+/** Testomgeving: zoveel mails blijven in het geheugen staan, de oudste valt eraf. */
+const MOCK_MAIL_MAX = 300;
+function bewaarMockMail(mail: any) {
+  mockMailLog.push(mail);
+  if (mockMailLog.length > MOCK_MAIL_MAX) mockMailLog.splice(0, mockMailLog.length - MOCK_MAIL_MAX);
+}
+/** Staat de mail in testmodus (geen SENDGRID_API_KEY)? Dan gaat er niets naar buiten. */
+export function isMailMock(): boolean {
+  return useMockService;
+}
+/** Alle mails die in testmodus 'verstuurd' zijn, nieuwste eerst. Volledige inhoud, voor het mailvenster in de testomgeving. */
+export function getMockMailLog(): any[] {
+  return [...mockMailLog].reverse();
+}
 
 /**
  * De algemene banner (off-white) uit de gedeelde opmaak in shared/mailOpmaak.ts.
@@ -109,12 +123,12 @@ export interface SendEmailResult {
 export async function sendEmailWithResult(params: EmailParams): Promise<SendEmailResult> {
   if (useMockService) {
     const mockId = `mock-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    mockMailLog.push({
+    bewaarMockMail({
       to: params.to,
       from: params.from,
       subject: params.subject,
-      text: params.text?.substring(0, 200),
-      html: params.html?.substring(0, 200),
+      text: params.text,
+      html: params.html,
       attachments: params.attachments?.map(a => a.filename),
       customArgs: params.customArgs,
       timestamp: new Date().toISOString(),
@@ -168,15 +182,14 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       to: params.to,
       from: params.from,
       subject: params.subject,
-      text: params.text?.substring(0, 200) + (params.text && params.text.length > 200 ? '...' : ''),
-      html: params.html?.substring(0, 200) + (params.html && params.html.length > 200 ? '...' : ''),
+      text: params.text,
+      html: params.html,
       attachments: params.attachments?.map(a => a.filename),
       timestamp: new Date().toISOString()
     };
-    
-    mockMailLog.push(mockEmail);
-    console.log('Mock e-mail verzonden:');
-    console.log(JSON.stringify(mockEmail, null, 2));
+
+    bewaarMockMail(mockEmail);
+    console.log(`Mock e-mail verzonden naar ${params.to}: ${params.subject}`);
     return true;
   }
   

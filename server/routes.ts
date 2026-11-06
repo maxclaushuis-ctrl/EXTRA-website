@@ -8970,6 +8970,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     registerPitchdeckTracker(app, adminMiddleware);
   }
 
+  // Testomgeving: gele balk en mailvenster, alleen met TESTOMGEVING=1. Zie server/testomgeving.ts.
+  {
+    const { registerTestomgevingRoutes } = await import("./testomgeving");
+    registerTestomgevingRoutes(app, adminMiddleware);
+  }
+
   /** Contactberichten voor het dashboard, nieuwste eerst. */
   app.get("/api/admin/contact-berichten", adminMiddleware, async (_req: Request, res: Response) => {
     try {

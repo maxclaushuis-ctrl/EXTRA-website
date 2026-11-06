@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { TestomgevingBalk } from '@/pages/dashboard/TestomgevingBalk';
 import AiAssistent from '@/components/AiAssistent';
 import { queryClient, apiRequest, fetchJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -973,6 +974,8 @@ export default function DashboardMockup() {
   const kanExpLabel = (c: Candidate) => c.experienceLevel || c.horecaExperience || '—';
 
   return (
+    <>
+    <TestomgevingBalk />
     <div className="normal-cursor flex min-h-screen bg-gray-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -7466,5 +7469,6 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }
