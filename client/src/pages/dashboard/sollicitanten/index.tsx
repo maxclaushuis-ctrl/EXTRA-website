@@ -21,11 +21,19 @@ type Scherm =
   | { soort: "kaart"; id: number; van: Scherm }
   | { soort: "intake"; id: number; van: Scherm };
 
-export function useSollicitantenV2(): boolean | null {
+/**
+ * Staat Sollicitanten 3.0 aan? Vraagt het pas op als iemand als admin is
+ * ingelogd, en opnieuw na elke (her)login: vóór het inloggen antwoordt de
+ * server met 401 en zou de schakelaar anders op "uit" blijven staan.
+ */
+export function useSollicitantenV2(ingelogdAlsAdmin: boolean): boolean | null {
   const [aan, setAan] = useState<boolean | null>(null);
   useEffect(() => {
-    api<{ aan: boolean }>("/api/sollicitanten/status").then((s) => setAan(!!s.aan)).catch(() => setAan(false));
-  }, []);
+    if (!ingelogdAlsAdmin) { setAan(null); return; }
+    let weg = false;
+    api<{ aan: boolean }>("/api/sollicitanten/status").then((s) => { if (!weg) setAan(!!s.aan); }).catch(() => { if (!weg) setAan(false); });
+    return () => { weg = true; };
+  }, [ingelogdAlsAdmin]);
   return aan;
 }
 

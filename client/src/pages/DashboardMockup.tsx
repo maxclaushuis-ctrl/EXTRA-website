@@ -226,7 +226,7 @@ export default function DashboardMockup() {
   }, [notifications, toast]);
 
   const [activeTab, setActiveTab] = useState('kandidaten');
-  const sollicitantenV2 = useSollicitantenV2();
+  const sollicitantenV2 = useSollicitantenV2(isAuthenticated && user?.role === 'admin');
 
   // Cross-component navigatie: andere dashboard-pagina's kunnen via dit
   // window-event verzoeken om naar een andere tab te schakelen (bv. de
