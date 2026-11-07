@@ -48,6 +48,7 @@ import { Presentation as PresentatieIcoon } from 'lucide-react';
 import WhatsAppInbox from './dashboard/whatsapp';
 import CommunicatieNav from './dashboard/CommunicatieNav';
 import NavGroepKop from './dashboard/NavGroepKop';
+import { SollicitantenV2, useSollicitantenV2, KandidaatAfwijzen } from './dashboard/sollicitanten';
 import TakenPagina from './dashboard/TakenPagina';
 import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
 import WhatsAppContacten from './dashboard/WhatsAppContacten';
@@ -225,6 +226,7 @@ export default function DashboardMockup() {
   }, [notifications, toast]);
 
   const [activeTab, setActiveTab] = useState('kandidaten');
+  const sollicitantenV2 = useSollicitantenV2();
 
   // Cross-component navigatie: andere dashboard-pagina's kunnen via dit
   // window-event verzoeken om naar een andere tab te schakelen (bv. de
@@ -244,7 +246,7 @@ export default function DashboardMockup() {
       // Link uit de pitchdeck-mail (/dashboard?tab=pitchdecks).
       if (new URLSearchParams(window.location.search).get('tab') === 'pitchdecks') setActiveTab('pitchdecks');
       // Melding van Job (/dashboard?tab=job).
-      if (new URLSearchParams(window.location.search).get('tab') === 'job') setActiveTab('job');
+      { const t = new URLSearchParams(window.location.search).get('tab'); if (t === 'job' || t === 'sollicitanten2' || t === 'onboarding2' || t === 'archief2') setActiveTab(t); }
     } catch { /* geen URL beschikbaar */ }
   }, []);
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
@@ -1063,13 +1065,21 @@ export default function DashboardMockup() {
           <NavGroepKop label="Medewerkers" expanded={medewerkerExpanded} onToggle={() => setMedewerkerExpanded(e => !e)} />
           {medewerkerExpanded && (
             <>
-              {[
+              {(sollicitantenV2 ? [
+                // Sollicitanten 3.0 (D1): Medewerkers heet Onboarding, Archief staat eronder.
+                { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
+                { icon: Bot, label: 'Job', tab: 'job' },
+                { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten2' },
+                { icon: CheckCircle2, label: 'Onboarding', tab: 'onboarding2' },
+                { icon: Archive, label: 'Archief', tab: 'archief2' },
+                { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
+              ] : [
                 { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
                 { icon: Bot, label: 'Job', tab: 'job' },
                 { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
                 { icon: CheckCircle2, label: 'Medewerkers', tab: 'medewerkers' },
                 { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
-              ].map(item => (
+              ]).map(item => (
                 <button
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
@@ -1713,6 +1723,10 @@ export default function DashboardMockup() {
                     );
                   })()}
                   {cvPreviewCandidate && <JobGesprekPaneel candidateId={cvPreviewCandidate.id} />}
+                  {cvPreviewCandidate && sollicitantenV2 && (
+                    <KandidaatAfwijzen id={cvPreviewCandidate.id} voornaam={cvPreviewCandidate.firstName} achternaam={cvPreviewCandidate.lastName} status={cvPreviewCandidate.status}
+                      klaar={() => { setCvPreviewCandidate(null); queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] }); }} />
+                  )}
                 </DialogContent>
               </Dialog>
 
@@ -4004,6 +4018,12 @@ export default function DashboardMockup() {
           ) : activeTab === 'medewerkers' ? (
             /* Medewerkers Tab — onboarding stap 1 */
             <MedewerkersTab />
+          ) : activeTab === 'sollicitanten2' ? (
+            <SollicitantenV2 ingang="sollicitanten" oudeWeergave={{ tekst: 'Het oude sollicitatieformulier staat er nog.', doe: () => setActiveTab('sollicitanten') }} />
+          ) : activeTab === 'onboarding2' ? (
+            <SollicitantenV2 ingang="onboarding" oudeWeergave={{ tekst: 'Het oude overzicht Medewerkers staat er nog.', doe: () => setActiveTab('medewerkers') }} />
+          ) : activeTab === 'archief2' ? (
+            <SollicitantenV2 ingang="archief" />
           ) : activeTab === 'job' ? (
             <JobBeheer />
           ) : activeTab === 'twv' ? (

@@ -9002,6 +9002,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   {
     const { registerJobRoutes } = await import("./job/jobRoutes");
     registerJobRoutes(app, adminMiddleware);
+    const { registerSollicitantenRoutes } = await import("./sollicitanten/sollicitantRoutes");
+    registerSollicitantenRoutes(app, adminMiddleware);
   }
 
   /** Contactberichten voor het dashboard, nieuwste eerst. */

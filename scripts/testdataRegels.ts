@@ -186,3 +186,73 @@ export const TESTACCOUNTS = [
   { email: `sanne${TEST_DOMEIN}`, firstName: "Sanne", lastName: "de Wit", role: "admin" as const },
   { email: `tom${TEST_DOMEIN}`, firstName: "Tom", lastName: "Jansen", role: "admin" as const },
 ];
+
+// ─── Dossiers voor Sollicitanten (D1 tot en met D10) ────────────────────────
+// Zodat de tester elke stap meteen ziet: Beoordelen, Ref. en doc. check,
+// EXTRA check, Onboarding en het Archief met Terugzetten. Lisa de Vries en de
+// andere gesprekken van deze week blijven vóór de intake staan.
+
+type Antwoorden = Record<string, unknown>;
+function intakeVoorbeeld(o: { id?: "Gezien" | "Niet gezien"; twv?: boolean; geenReferentie?: boolean; referent?: string; afwas?: boolean }): Antwoorden {
+  const raster: Record<string, Record<string, "ja" | "nee">> = {
+    Ma: { avond: "ja" }, Wo: { avond: "ja" }, Vr: { avond: "ja", nacht: "ja" }, Za: { overdag: "ja", avond: "ja" }, Zo: { avond: "ja" }, Di: { ochtend: "nee" },
+  };
+  return {
+    id_gezien: o.id ?? "Gezien",
+    talen: ["Nederlands", "Engels"],
+    nationaliteit: o.twv ? "TWV nodig" : "Ja, geen TWV nodig",
+    ervaring_soort: ["Festival", "Café/bar"],
+    ervaring_jaren: "1-2 jaar",
+    alleen_dienst: "Ja",
+    drie_borden: "Ja",
+    ...(o.afwas ? {} : { cocktails: 3, barista: 2 }),
+    bijbaan: "Nee, studeert naast het werk",
+    vaardigheden: { bediening: 4, bar: 3, diner: 3 },
+    stellingen: [5, 3, 3, 4, 4, 3, 4, 4, 3, 5, 3, 2],
+    belangrijkst: "Gezellige collega's",
+    woordparen: [1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1],
+    vervoer: ["Fiets"],
+    studenten_ov: "Weekend",
+    rijbewijzen: ["Geen"],
+    kleding: ["Wit hemd", "Zwarte pantalon", "Nette zwarte schoenen"],
+    ehbo: "Nee",
+    uren: 12,
+    raster,
+    referentie: o.geenReferentie ? { geen: true } : { naam: o.referent ?? "Mark, bedrijfsleider Café Voorbeeld", telefoon: "0600000000" },
+    vragen: "Kan ik ook op festivals werken?",
+  };
+}
+
+export interface Testdossier {
+  email: string;
+  stap: "beoordelen" | "ref_doc_check" | "extra_check" | "onboarding" | "archief";
+  /** Dagen geleden in deze stap gekomen. */
+  inStap: number;
+  /** Dagen geleden het gesprek; null = gespreksdatum niet aanpassen. */
+  gesprek: number | null;
+  status?: Status;
+  intake: Antwoorden;
+  beoordeling?: Record<string, number>;
+  controle?: Record<string, unknown>;
+  twijfelVan?: "beoordelen" | "ref_doc_check";
+  archief?: { uit: string; reden: string };
+}
+
+export function testdossiers(): Testdossier[] {
+  const e = (voornaam: string, achternaam: string) => `${voornaam}.${achternaam}`.toLowerCase().normalize("NFD").replace(/[^a-z.]/g, "") + TEST_DOMEIN;
+  const b = { communicatief: 72, representatief: 80, extravert: 64, indruk: 76 };
+  return [
+    { email: e("Mehmet", "Yilmaz"), stap: "beoordelen", inStap: 0, gesprek: 0, status: "gepland", intake: intakeVoorbeeld({}) },
+    { email: e("Fleur", "van Dijk"), stap: "beoordelen", inStap: 1, gesprek: 1, status: "gepland", intake: intakeVoorbeeld({}) },
+    { email: e("Amira", "El Idrissi"), stap: "beoordelen", inStap: 2, gesprek: 2, status: "gepland", intake: intakeVoorbeeld({ id: "Niet gezien" }) },
+    { email: e("Sara", "Willems"), stap: "ref_doc_check", inStap: 1, gesprek: 2, status: "gepland", intake: intakeVoorbeeld({}), beoordeling: b, controle: { idGezien: true, idDoor: "Sanne", referent: "Mark, bedrijfsleider Café Voorbeeld", telefoon: "0600000000" } },
+    { email: e("Daan", "Koning"), stap: "ref_doc_check", inStap: 4, gesprek: 5, status: "gepland", intake: intakeVoorbeeld({ id: "Niet gezien" }), beoordeling: b, controle: { referent: "Mark, bedrijfsleider Café Voorbeeld", telefoon: "0600000000", pogingen: [{ at: "", door: "Tom", uitkomst: "geen_gehoor" }] } },
+    { email: e("Julia", "Dekker"), stap: "ref_doc_check", inStap: 9, gesprek: 10, status: "gepland", intake: intakeVoorbeeld({ twv: true }), beoordeling: b, controle: { idGezien: true, idDoor: "Sanne", referent: "Mark, bedrijfsleider Café Voorbeeld", uitkomst: "positief", pogingen: [{ at: "", door: "Sanne", uitkomst: "gesproken" }], verslag: "Betrouwbaar en vrolijk. Altijd op tijd." } },
+    { email: e("Joris", "Mulder"), stap: "ref_doc_check", inStap: 3, gesprek: 4, status: "gepland", intake: intakeVoorbeeld({ geenReferentie: true }), beoordeling: b, controle: { idGezien: true, idDoor: "Tom", overgeslagen: true, overslaanReden: "eerste baan", overslaanDoor: "Tom" } },
+    { email: e("Noor", "Hendriks"), stap: "extra_check", inStap: 1, gesprek: 3, status: "gepland", intake: intakeVoorbeeld({}), beoordeling: { communicatief: 55, representatief: 60, extravert: 30, indruk: 50 }, controle: { idGezien: true, idDoor: "Sanne" }, twijfelVan: "ref_doc_check" },
+    { email: e("Milan", "Jacobs"), stap: "onboarding", inStap: 3, gesprek: 8, intake: intakeVoorbeeld({}), beoordeling: b, controle: { idGezien: true, idDoor: "Sanne", referent: "Mark, bedrijfsleider Café Voorbeeld", uitkomst: "positief", pogingen: [{ at: "", door: "Sanne", uitkomst: "gesproken" }], verslag: "Zeer goed in gastcontact." } },
+    { email: e("Roos", "Timmermans"), stap: "archief", inStap: 2, gesprek: 6, intake: intakeVoorbeeld({}), beoordeling: b, controle: { idGezien: true, idDoor: "Tom", uitkomst: "negatief", verslag: "Kwam vaak te laat." }, archief: { uit: "ref_doc_check", reden: "referentie_negatief" } },
+    { email: e("Femke", "Smits"), stap: "archief", inStap: 1, gesprek: 5, intake: intakeVoorbeeld({}), beoordeling: { communicatief: 40, representatief: 45, extravert: 20, indruk: 35 }, controle: { idGezien: true, idDoor: "Sanne" }, twijfelVan: "beoordelen", archief: { uit: "extra_check", reden: "beoordeling" } },
+    { email: e("Bas", "Kuipers"), stap: "archief", inStap: 3, gesprek: 3, intake: {}, archief: { uit: "gesprek_gepland", reden: "niet_verschenen" } },
+  ];
+}

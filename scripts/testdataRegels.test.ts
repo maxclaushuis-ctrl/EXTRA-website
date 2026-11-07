@@ -7,7 +7,7 @@
  * TESTOMGEVING=1. Daarnaast: de testset is intern consistent, zodat de
  * mock-ups en de testomgeving dezelfde personen laten zien.
  */
-import { magVullen, maandagVan, isoDatum, testkandidaten, testrijen, TESTACCOUNTS, TEST_DOMEIN } from "./testdataRegels";
+import { testdossiers, magVullen, maandagVan, isoDatum, testkandidaten, testrijen, TESTACCOUNTS, TEST_DOMEIN } from "./testdataRegels";
 
 let geslaagd = 0;
 let gefaald = 0;
@@ -54,6 +54,16 @@ test("geen rij heeft nog hulpvelden", rijen.every((r) => !("gesprekDag" in r) &&
 
 // 6. Accounts
 test("vier testaccounts op het testdomein", TESTACCOUNTS.length === 4 && TESTACCOUNTS.every((a) => a.email.endsWith(TEST_DOMEIN)));
+
+// 7. Dossiers voor Sollicitanten
+{
+  const emails = new Set(testkandidaten().map((k) => k.email));
+  const ds = testdossiers();
+  test("dossiers horen bij bestaande testkandidaten", ds.every((d) => emails.has(d.email)), ds.filter((d) => !emails.has(d.email)).map((d) => d.email).join(", "));
+  test("dossiers: elke stap komt voor", ["beoordelen", "ref_doc_check", "extra_check", "onboarding", "archief"].every((s) => ds.some((d) => d.stap === s)));
+  test("dossiers: geen dubbele kandidaat", new Set(ds.map((d) => d.email)).size === ds.length);
+  test("dossiers: Lisa de Vries blijft vóór de intake", !ds.some((d) => d.email.startsWith("lisa.")));
+}
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

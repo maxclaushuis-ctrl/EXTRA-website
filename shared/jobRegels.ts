@@ -102,7 +102,8 @@ export type Actie =
   | { soort: "nogo"; reden: string }
   | { soort: "cv_mail" }
   | { soort: "profiel"; velden: JobVelden }
-  | { soort: "verzetten" };
+  | { soort: "verzetten" }
+  | { soort: "bevestigd" };
 
 export interface Resultaat {
   state: JobState;
@@ -448,6 +449,7 @@ export function verwerk(
       acties.push({ soort: "verzetten" });
     } else if (commando === "ikkom") {
       berichten.push({ tekst: t().ikKom });
+      acties.push({ soort: "bevestigd" });
     } else {
       // Geen vrije chat na het plannen: kort de stand van zaken.
       const a = ctx.afspraak;

@@ -2642,6 +2642,8 @@ export const jobAfspraken = pgTable("job_afspraken", {
   tijd: text("tijd").notNull(),
   status: text("status").notNull().default("gepland"),
   herinneringVerstuurdAt: timestamp("herinnering_verstuurd_at"),
+  /** De kandidaat tikte "Ik kom" (vinkje in het weekoverzicht). */
+  bevestigdAt: timestamp("bevestigd_at"),
   aangemaaktAt: timestamp("aangemaakt_at").defaultNow().notNull(),
 }, (t) => ({
   vrijIdx: uniqueIndex("job_afspraken_vrij_idx").on(t.interviewer, t.datum, t.tijd).where(sql`status = 'gepland'`),
@@ -2666,3 +2668,65 @@ export type JobGesprek = typeof jobGesprekken.$inferSelect;
 export type JobBericht = typeof jobBerichten.$inferSelect;
 export type JobAfspraak = typeof jobAfspraken.$inferSelect;
 export type JobInterviewer = typeof jobInterviewers.$inferSelect;
+
+// ─── Sollicitanten (Hotels): van gesprek tot Onboarding of Archief ──────────
+// Bron: borden I tot en met J2 en het bouwplan, stappen D1 tot en met D10.
+// Eén dossier per kandidaat; de antwoorden van de intake, de beoordeling en
+// de check staan als JSON, zodat er niets aan de tabel candidates verandert.
+// Regels en berekeningen: shared/sollicitantRegels.ts. Migratie 0031.
+
+export const sollicitantDossiers = pgTable("sollicitant_dossiers", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  stap: text("stap").notNull().default("gesprek_gepland"),
+  stapSinds: timestamp("stap_sinds").defaultNow().notNull(),
+  branche: text("branche"),
+  interviewer: text("interviewer"),
+  intakeStatus: text("intake_status").notNull().default("niet_gestart"),
+  intakeStap: integer("intake_stap").notNull().default(1),
+  intake: jsonb("intake").notNull().default({}),
+  intakeDoor: text("intake_door"),
+  intakeAfgerondAt: timestamp("intake_afgerond_at"),
+  beoordeling: jsonb("beoordeling").notNull().default({}),
+  beoordeeldDoor: text("beoordeeld_door"),
+  beoordeeldAt: timestamp("beoordeeld_at"),
+  controle: jsonb("controle").notNull().default({}),
+  twijfelVan: text("twijfel_van"),
+  twijfelDoor: text("twijfel_door"),
+  twijfelAt: timestamp("twijfel_at"),
+  geaccepteerdDoor: text("geaccepteerd_door"),
+  geaccepteerdAt: timestamp("geaccepteerd_at"),
+  geaccepteerdVia: text("geaccepteerd_via"),
+  gearchiveerdUit: text("gearchiveerd_uit"),
+  archiefReden: text("archief_reden"),
+  archiefRedenTekst: text("archief_reden_tekst"),
+  gearchiveerdDoor: text("gearchiveerd_door"),
+  gearchiveerdAt: timestamp("gearchiveerd_at"),
+  /** De status in candidates vóór archiveren of onboarden, voor Terugzetten. */
+  vorigeStatus: text("vorige_status"),
+  afwijsmailAt: timestamp("afwijsmail_at"),
+  /** Uitgeknipte pasfoto op de branchekleur, als data-URL (jpeg, ongeveer 40 kB). */
+  foto: text("foto"),
+  fotoOvergeslagen: boolean("foto_overgeslagen").notNull().default(false),
+  aangemaaktAt: timestamp("aangemaakt_at").defaultNow().notNull(),
+  bijgewerktAt: timestamp("bijgewerkt_at").defaultNow().notNull(),
+}, (t) => ({
+  kandidaatIdx: uniqueIndex("sollicitant_dossiers_kandidaat_idx").on(t.candidateId),
+  stapIdx: index("sollicitant_dossiers_stap_idx").on(t.stap),
+}));
+
+export const sollicitantGebeurtenissen = pgTable("sollicitant_gebeurtenissen", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  soort: text("soort").notNull(),
+  tekst: text("tekst").notNull(),
+  door: text("door"),
+  doorUserId: integer("door_user_id"),
+  data: jsonb("data"),
+  at: timestamp("at").defaultNow().notNull(),
+}, (t) => ({
+  kandidaatIdx: index("sollicitant_gebeurtenissen_kandidaat_idx").on(t.candidateId),
+}));
+
+export type SollicitantDossier = typeof sollicitantDossiers.$inferSelect;
+export type SollicitantGebeurtenis = typeof sollicitantGebeurtenissen.$inferSelect;

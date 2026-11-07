@@ -274,6 +274,11 @@ async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
         try { await storage.updateCandidate(g.candidateId, velden as any); } catch (e: any) { console.warn("[Job] profiel bijwerken mislukt:", e?.message); }
       }
     }
+    if (a.soort === "bevestigd") {
+      // Vinkje "Kandidaat heeft bevestigd" in het weekoverzicht van Sollicitanten.
+      await db.update(jobAfspraken).set({ bevestigdAt: new Date() })
+        .where(and(eq(jobAfspraken.candidateId, g.candidateId), eq(jobAfspraken.status, "gepland")));
+    }
     if (a.soort === "cv_mail") {
       const c = await kandidaat(g.candidateId);
       // Kreeg de kandidaat al de cv-mail van de aanmeldflow, dan geen tweede.
