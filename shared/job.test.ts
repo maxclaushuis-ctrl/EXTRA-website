@@ -1,0 +1,264 @@
+/**
+ * Huistests voor Job, de AI-recruiter: de regels, het uitlezen zonder AI en
+ * het inplannen. Run met:  npx tsx shared/job.test.ts
+ *
+ * Geen framework, geen database, geen AI. De gesprekken hieronder volgen de
+ * mock-ups C, C2, C3, C4 en D: Lisa (Nederlands, rijk eerste antwoord), Maria
+ * (Engels), Samir (werkautorisatie onbekend), Ahmed (vrij toegestaan) en de
+ * uitzonderingen. De reserve-lezer speelt hier de rol van de AI.
+ */
+import {
+  start, verwerk, volgendeOnderwerp, herinneringNodig, herinnering, herkenCommando, plannerRedenen,
+  samenvatting, profielVelden, UUR, type JobContext, type JobState, type Lezing, type Resultaat,
+} from "./jobRegels";
+import { reserveLezing, valideerLezing, raadTaal } from "./jobLezen";
+import {
+  tijdenVan, vrijeMomenten, momentGeldig, amsterdam, dagTekst, afspraakHerinneringNodig, agendaBestand,
+  STANDAARD_INTERVIEWERS, weekdag, plusDag,
+} from "./jobPlanning";
+
+let geslaagd = 0;
+let gefaald = 0;
+function test(naam: string, ok: boolean, uitleg = "") {
+  if (ok) { geslaagd++; console.log(`✓ ${naam}`); }
+  else { gefaald++; console.log(`✗ ${naam}${uitleg ? ` (${uitleg})` : ""}`); }
+}
+
+const NU = new Date("2026-11-03T09:00:00Z");
+const later = (min: number) => new Date(NU.getTime() + min * 60 * 1000);
+
+/** Speelt een antwoord in, met de reserve-lezer als AI. */
+function antwoord(r: Resultaat, ctx: JobContext, tekst: string, min = 1): Resultaat {
+  const lezing = herkenCommando(tekst, r.state.laatsteOnderwerp) ? null : reserveLezing(tekst, r.state.laatsteOnderwerp);
+  return verwerk(r.state, ctx, { tekst }, lezing, later(min));
+}
+const laatste = (r: Resultaat) => r.berichten[r.berichten.length - 1];
+const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
+
+// ─── 1. Lisa: Nederlands, rijk eerste antwoord, cv later geüpload ───────────
+{
+  const ctx: JobContext = { voornaam: "Lisa", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false };
+  let r = start(ctx, "nl", NU);
+  test("Lisa: welkom noemt naam en functie", r.berichten[0].tekst.includes("Hoi Lisa") && r.berichten[0].tekst.includes("bediening en bar"));
+  test("Lisa: welkom zegt dat Job een AI is en hoe je een mens krijgt", r.berichten[0].tekst.includes("een AI") && r.berichten[0].tekst.includes("MENS"));
+  test("Lisa: eerste vraag gaat over ervaring", r.state.laatsteOnderwerp === "ervaring" && laatste(r).tekst.includes("horeca gewerkt"));
+
+  r = antwoord(r, ctx, "Twee zomers bij een strandtent in Zandvoort, daar deden we ook bruiloften en grote groepen. Nu werk ik op zaterdag in een lunchroom. Ik studeer, dus meestal kan ik twee dagen per week, en ik fiets overal heen");
+  test("Lisa: één antwoord vult ervaring, diensten en vervoer", !!r.state.velden.ervaring && r.state.velden.diensten === "1-2" && r.state.velden.vervoer === "fiets", JSON.stringify(r.state.velden));
+  test("Lisa: bruiloften geven een hint voor evenementen", r.state.velden.specialisatieHint === true);
+  test("Lisa: daarna één functievraag", r.state.laatsteOnderwerp === "functievraag");
+
+  r = antwoord(r, ctx, "Allebei. Ook drie borden tegelijk");
+  test("Lisa: daarna de specialisatie, met keuzes", r.state.laatsteOnderwerp === "specialisatie" && (laatste(r).keuzes || []).length === 2);
+  r = antwoord(r, ctx, "Ja, graag");
+  test("Lisa: specialisatie ja", r.state.velden.specialisatie === "ja");
+  test("Lisa: geen vraag over werkautorisatie (Nederlands) en diensten overgeslagen", r.state.laatsteOnderwerp === "werkgebied", String(r.state.laatsteOnderwerp));
+  r = antwoord(r, ctx, "Tot 25 km. Amsterdam en Haarlem vind ik allebei prima");
+  test("Lisa: werkgebied tot 25 km", r.state.velden.werkgebied === "tot 25 km");
+  test("Lisa: daarna talen", r.state.laatsteOnderwerp === "talen");
+  r = antwoord(r, ctx, "Nederlands, Engels goed en een beetje Spaans");
+  test("Lisa: als laatste het cv", r.state.laatsteOnderwerp === "cv");
+  r = antwoord(r, ctx, "Ja");
+  test("Lisa: cv paraat geeft de uploadknop, nog niet plannen", r.state.status === "wacht_cv" && laatste(r).cvUpload === true && !r.berichten.some((b) => b.planning));
+  test("Lisa: bij cv paraat geen mail", !r.acties.some((a) => a.soort === "cv_mail"));
+  r = verwerk(r.state, ctx, { cvOntvangen: true }, null, later(20));
+  test("Lisa: cv binnen en alles in orde: plannen", r.state.status === "plannen" && r.berichten.some((b) => b.planning));
+  test("Lisa: 'Fantastisch, je cv is binnen!'", alleTekst(r).includes("Fantastisch, je cv is binnen!"));
+  test("Lisa: herinnert aan het ID-bewijs", alleTekst(r).includes("paspoort of ID-kaart"));
+  test("Lisa: samenvatting voor de mail", samenvatting(r.state.velden, ctx) === "bediening en bar, ook evenementen en banqueting · 1 tot 2 diensten per week · tot 25 km", samenvatting(r.state.velden, ctx));
+  test("Lisa: profielvelden alleen bestaande kolommen", JSON.stringify(Object.keys(profielVelden(r.state.velden)).sort()) === JSON.stringify(["availability", "language", "previousExperience"]));
+}
+
+// ─── 2. Maria: antwoordt in het Engels, Job gaat mee ─────────────────────────
+{
+  const ctx: JobContext = { voornaam: "Maria", functie: "housekeeping", nationalityZone: "EU", hasCv: true };
+  let r = start(ctx, "nl", NU);
+  r = antwoord(r, ctx, "Hi, sorry, I don't speak Dutch. I have 2 years in a hotel in Lisbon");
+  test("Maria: Job schakelt naar Engels", r.state.taal === "en");
+  test("Maria: volgende vraag in het Engels", /rooms/i.test(laatste(r).tekst), laatste(r).tekst);
+  r = antwoord(r, ctx, "Around 14 to 16");
+  r = antwoord(r, ctx, "3 or 4 shifts");
+  test("Maria: geen werkautorisatievraag (EU)", r.state.laatsteOnderwerp === "werkgebied");
+  r = antwoord(r, ctx, "Up to 35 km");
+  r = antwoord(r, ctx, "Portuguese, Spanish and good English");
+  test("Maria: cv al binnen, dus meteen plannen", r.state.status === "plannen" && r.berichten.some((b) => b.planning));
+  test("Maria: afsluiting in het Engels", alleTekst(r).includes("first screening is done"));
+  const nog = antwoord(r, ctx, "Ok thanks");
+  test("Maria: een bericht tijdens het plannen herhaalt de screening niet", nog.state.status === "plannen" && nog.berichten.length === 1 && nog.berichten[0].planning === true && !alleTekst(nog).includes("screening"));
+}
+
+// ─── 3. Samir: buiten de EU, werkautorisatie onbekend ────────────────────────
+{
+  const ctx: JobContext = { voornaam: "Samir", functie: "chef", nationalityZone: "NON_EU", hasCv: true };
+  let r = start(ctx, "nl", NU);
+  r = antwoord(r, ctx, "3 jaar hulpkok in een hotelkeuken, soms alleen op de ontbijtpost");
+  r = antwoord(r, ctx, "Vooral als hulp");
+  test("Samir: na ervaring de vraag over het verblijfsdocument", r.state.laatsteOnderwerp === "werkautorisatie" && (laatste(r).keuzes || []).includes("Weet ik niet"));
+  r = antwoord(r, ctx, "Ik heb een vergunning maar weet niet precies wat erop staat");
+  test("Samir: onbekend", r.state.velden.werkautorisatie === "onbekend");
+  test("Samir: 'Geen zorgen. Een collega kijkt met je mee'", alleTekst(r).includes("Een collega van EXTRA kijkt met je mee"));
+  test("Samir: Job vraagt gewoon verder", r.state.laatsteOnderwerp === "diensten" && r.state.status === "bezig");
+  r = antwoord(r, ctx, "3 of 4");
+  r = antwoord(r, ctx, "35 km");
+  r = antwoord(r, ctx, "Arabisch, Engels goed, Nederlands een beetje");
+  test("Samir: aan het eind naar de planner, niet afgewezen", r.state.status === "planner" && r.acties.some((a) => a.soort === "planner" && a.reden.includes("Werkautorisatie")));
+  test("Samir: nooit gevraagd om een foto of nummer van een document", !alleTekst(r).match(/foto van|nummer van je|documentnummer/i));
+}
+
+// ─── 4. Ahmed: buiten de EU, arbeid vrij toegestaan ──────────────────────────
+{
+  const ctx: JobContext = { voornaam: "Ahmed", functie: "chef", nationalityZone: "NON_EU", hasCv: true };
+  let r = start(ctx, "nl", NU);
+  r = antwoord(r, ctx, "4 jaar in een restaurant in Rotterdam, het laatste jaar als zelfstandig kok");
+  r = antwoord(r, ctx, "Alles, ook inkoop en de koelcel bijhouden");
+  r = antwoord(r, ctx, "Arbeid vrij toegestaan, TWV niet vereist");
+  test("Ahmed: 'TWV niet vereist' telt als vrij", r.state.velden.werkautorisatie === "vrij", String(r.state.velden.werkautorisatie));
+  test("Ahmed: dan de vraag tot wanneer", r.state.laatsteOnderwerp === "geldigheid");
+  r = antwoord(r, ctx, "Tot 2029");
+  test("Ahmed: document meenemen naar het gesprek", alleTekst(r).includes("Neem het document mee"));
+  r = antwoord(r, ctx, "3 of 4. Ik heb een auto, tot 50 km is prima");
+  test("Ahmed: werkgebied uit hetzelfde antwoord", r.state.velden.werkgebied === "tot 50 km" && r.state.laatsteOnderwerp === "talen");
+  r = antwoord(r, ctx, "Nederlands, Arabisch en Frans");
+  test("Ahmed: alles in orde, plannen", r.state.status === "plannen");
+}
+
+// ─── 5. Uitzonderingen ───────────────────────────────────────────────────────
+{
+  const ctx: JobContext = { voornaam: "Mark", functie: "horecamedewerker", nationalityZone: "NL", hasCv: true };
+  let r = start(ctx, "nl", NU);
+  r = antwoord(r, ctx, "Nee, nog nooit");
+  test("Mark: geen ervaring is geen probleem", alleTekst(r).includes("veel collega's zijn zo begonnen"));
+  test("Mark: geen functievraag zonder ervaring", r.state.laatsteOnderwerp === "diensten");
+  r = antwoord(r, ctx, "2"); r = antwoord(r, ctx, "25 km"); r = antwoord(r, ctx, "Nederlands");
+  test("Mark: starter in de bediening mag gewoon plannen", r.state.status === "plannen");
+
+  const chef: JobContext = { voornaam: "Tim", functie: "chef", nationalityZone: "NL", hasCv: true };
+  test("Chef zonder ervaring: planner beslist", plannerRedenen({ ervaringNiveau: "geen" }, chef, []).length === 1);
+
+  let m = start(ctx, "nl", NU);
+  m = antwoord(m, ctx, "MENS");
+  test("MENS: naar de planner, met reden", m.state.status === "planner" && m.acties.some((a) => a.soort === "planner"));
+  m = antwoord(m, ctx, "Hallo?");
+  test("Na MENS: Job zegt dat een collega meekijkt", alleTekst(m).includes("Een collega van EXTRA kijkt"));
+
+  let e = start(ctx, "nl", NU);
+  e = antwoord(e, ctx, "ENGLISH");
+  test("ENGLISH: taal wisselt en de vraag komt opnieuw, in het Engels", e.state.taal === "en" && /hospitality/i.test(laatste(e).tekst));
+  e = antwoord(e, ctx, "nederlands");
+  test("NEDERLANDS: terug naar Nederlands", e.state.taal === "nl");
+
+  // Harde no-go: geen Nederlands en geen Engels (alleen via de AI vast te stellen)
+  const nogoLezing: Lezing = { velden: { talen: "Alleen Pools", nlOfEn: false }, taal: "anders", twijfel: null, ack: "" };
+  let n = start(ctx, "nl", NU);
+  n = verwerk(n.state, ctx, { tekst: "tylko polski" }, nogoLezing, later(1));
+  test("No-go taal: naar de planner, Job wijst zelf niet af", n.state.status === "planner" && n.acties.some((a) => a.soort === "nogo"));
+  test("No-go taal: vriendelijk bericht in het Engels", alleTekst(n).includes("Dutch or English"));
+
+  // Geen cv bij de hand
+  const zonderCv: JobContext = { ...ctx, hasCv: false };
+  let c = start(zonderCv, "nl", NU);
+  c = antwoord(c, zonderCv, "Twee jaar bediening"); c = antwoord(c, zonderCv, "Allebei"); c = antwoord(c, zonderCv, "3 of 4");
+  c = antwoord(c, zonderCv, "Tot 35 km"); c = antwoord(c, zonderCv, "Nederlands en Engels");
+  c = antwoord(c, zonderCv, "Nee");
+  test("Geen cv: mail met uploadknop, wachten", c.state.status === "wacht_cv" && c.acties.some((a) => a.soort === "cv_mail"));
+  c = antwoord(c, zonderCv, "Ok, komt eraan");
+  test("Geen cv: de mail gaat maar één keer", !c.acties.some((a) => a.soort === "cv_mail"));
+}
+
+// ─── 6. Herinneringen ────────────────────────────────────────────────────────
+{
+  const ctx: JobContext = { voornaam: "Noor", functie: "housekeeping", nationalityZone: "NL", hasCv: false };
+  const r = start(ctx, "nl", NU);
+  const s: JobState = r.state;
+  test("Herinnering: niet na 21 uur", herinneringNodig(s, new Date(NU.getTime() + 21 * UUR)) === null);
+  test("Herinnering: eerste na 22 uur", herinneringNodig(s, new Date(NU.getTime() + 22 * UUR)) === "eerste");
+  const h1 = herinnering(s, ctx, "eerste", new Date(NU.getTime() + 22 * UUR));
+  test("Herinnering 1: tekst en knoppen Verder / Liever bellen", h1.berichten[0].tekst.includes("je was bijna klaar") && (h1.berichten[0].keuzes || []).includes("Liever bellen"));
+  test("Herinnering: tweede pas 48 uur na de eerste", herinneringNodig(h1.state, new Date(NU.getTime() + 69 * UUR)) === null && herinneringNodig(h1.state, new Date(NU.getTime() + 70 * UUR)) === "tweede");
+  const h2 = herinnering(h1.state, ctx, "tweede", new Date(NU.getTime() + 70 * UUR));
+  test("Herinnering: daarna rood voor de planner", herinneringNodig(h2.state, new Date(NU.getTime() + 118 * UUR)) === "rood");
+  const rood = herinnering(h2.state, ctx, "rood", new Date(NU.getTime() + 118 * UUR));
+  test("Rood: status geen reactie, planner krijgt een melding, geen bericht", rood.state.status === "geen_reactie" && rood.berichten.length === 0 && rood.acties.some((a) => a.soort === "planner"));
+  const terug = antwoord({ state: rood.state, berichten: [], acties: [] }, ctx, "Sorry, druk gehad. Ik heb 3 jaar housekeeping gedaan", 200 * 60);
+  test("Rood: wie toch reageert, gaat verder waar hij was", terug.state.status === "bezig" && terug.state.herinneringen === 0);
+  const verder = antwoord({ state: h1.state, berichten: [], acties: [] }, ctx, "Verder");
+  test("Verder: Job stelt de openstaande vraag opnieuw", verder.state.status === "bezig" && verder.berichten.length === 1 && verder.berichten[0].tekst.includes("housekeeping"));
+  test("Liever bellen: naar de planner", antwoord({ state: h1.state, berichten: [], acties: [] }, ctx, "Liever bellen").state.status === "planner");
+  test("Geen herinneringen als het gesprek bij de planner ligt", herinneringNodig({ ...s, status: "planner" }, new Date(NU.getTime() + 100 * UUR)) === null);
+}
+
+// ─── 7. Na het plannen ───────────────────────────────────────────────────────
+{
+  const ctx: JobContext = { voornaam: "Lisa", functie: "horecamedewerker", nationalityZone: "NL", hasCv: true, afspraak: { dag: "Dinsdag 10 november", tijd: "14:00", wie: "Charlotte" } };
+  const s: JobState = { ...start(ctx, "nl", NU).state, status: "gepland" };
+  const v = antwoord({ state: s, berichten: [], acties: [] }, ctx, "VERZETTEN");
+  test("Verzetten: terug naar plannen met de momentenkiezer", v.state.status === "plannen" && v.berichten.some((b) => b.planning) && v.acties.some((a) => a.soort === "verzetten"));
+  const vraagErna = antwoord({ state: s, berichten: [], acties: [] }, ctx, "Waar is het ook alweer?");
+  test("Na het plannen: Job noemt de afspraak", alleTekst(vraagErna).includes("Dinsdag 10 november om 14:00"));
+  test("Ik kom: 'Fijn, tot morgen!'", alleTekst(antwoord({ state: s, berichten: [], acties: [] }, ctx, "Ik kom")) === "Fijn, tot morgen!");
+}
+
+// ─── 8. Volgorde en commando's ───────────────────────────────────────────────
+{
+  const ctx: JobContext = { voornaam: "X", functie: "logistiek", nationalityZone: null, hasCv: false };
+  test("Onbekende nationaliteit: geen werkautorisatievraag", volgendeOnderwerp({ ervaring: "x", functievraag: "y" }, ctx) === "diensten");
+  test("Alles bekend en cv paraat: geen vraag meer", volgendeOnderwerp({ ervaring: "x", functievraag: "y", diensten: "1-2", werkgebied: "a", talen: "nl", cvParaat: "ja" }, ctx) === null);
+  test("Bij de vraag naar talen is 'Nederlands' een antwoord", herkenCommando("Nederlands", "talen") === null && herkenCommando("Nederlands", "diensten") === "nederlands");
+  test("Commando's herkend", herkenCommando("Mens") === "mens" && herkenCommando("HUMAN.") === "mens" && herkenCommando("reschedule") === "verzetten" && herkenCommando("Ik kom") === "ikkom" && herkenCommando("ik kom morgen om 2 uur") === null);
+}
+
+// ─── 9. Uitlezen ─────────────────────────────────────────────────────────────
+{
+  const v = valideerLezing({ velden: { diensten: "7", werkautorisatie: "ja", nlOfEn: "nee", cvParaat: "ja", talen: " Engels " }, taal: "fr", ack: "Mooi! Hoeveel dagen?" });
+  test("AI-antwoord: ongeldige waarden vallen weg", v.velden.diensten === undefined && v.velden.werkautorisatie === undefined && v.velden.nlOfEn === undefined);
+  test("AI-antwoord: geldige waarden blijven", v.velden.cvParaat === "ja" && v.velden.talen === "Engels");
+  test("AI-antwoord: onbekende taal wordt null", v.taal === null);
+  test("AI-antwoord: een bevestiging met een vraag wordt weggegooid", v.ack === "");
+  test("AI-antwoord: rommel geeft een lege lezing", JSON.stringify(valideerLezing("kapot").velden) === "{}");
+  test("Reserve: diensten '5 dagen' is 5+", reserveLezing("5 dagen", "diensten").velden.diensten === "5+");
+  test("Reserve: 'weekend' is 1-2", reserveLezing("alleen in het weekend", "diensten").velden.diensten === "1-2");
+  test("Reserve: vage diensten blijft leeg, Job vraagt opnieuw", reserveLezing("maakt niet uit", "diensten").velden.diensten === undefined);
+  test("Reserve: zegt nooit dat iemand geen NL/EN spreekt", reserveLezing("Pools en Russisch", "talen").velden.nlOfEn === undefined);
+  test("Reserve: taal raden", raadTaal("I have worked in a hotel for two years") === "en" && raadTaal("Ik heb twee jaar in een hotel gewerkt") === "nl");
+}
+
+// ─── 10. Inplannen ───────────────────────────────────────────────────────────
+{
+  const [charlotte, lea] = STANDAARD_INTERVIEWERS;
+  test("Charlotte: 8 momenten, niet tijdens de pauze", JSON.stringify(tijdenVan(charlotte)) === JSON.stringify(["10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00"]), tijdenVan(charlotte).join(","));
+  test("Lea: 13:00 tot en met 16:30", JSON.stringify(tijdenVan(lea)) === JSON.stringify(["13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"]));
+  test("Charlotte werkt maandag tot en met vrijdag", JSON.stringify(charlotte.dagen) === "[1,2,3,4,5]");
+  test("Weekdag van 10 november 2026 is dinsdag", weekdag("2026-11-10") === 2);
+  test("Amsterdam: 9:00 UTC in november is 10:00", amsterdam(new Date("2026-11-09T09:00:00Z")).tijd === "10:00");
+  test("Amsterdam: 9:00 UTC in juli is 11:00", amsterdam(new Date("2026-07-09T09:00:00Z")).tijd === "11:00");
+
+  const vrijdagAvond = new Date("2026-11-06T18:00:00Z");
+  const m = vrijeMomenten(STANDAARD_INTERVIEWERS, [], vrijdagAvond);
+  test("Geen momenten in het weekend", m.every((x) => weekdag(x.datum) <= 5));
+  test("Eerste moment: maandag 10:30 bij Charlotte", m[0]?.datum === "2026-11-09" && m[0]?.tijd === "10:30" && m[0]?.interviewer === "Charlotte", JSON.stringify(m[0]));
+  test("Per tijd één moment, ook als twee interviewers vrij zijn", m.filter((x) => x.datum === "2026-11-09" && x.tijd === "13:00").length === 1);
+  test("Maandag: 10:30 tot en met 16:30 zonder 12:00 en 12:30", m.filter((x) => x.datum === "2026-11-09").map((x) => x.tijd).join(",") === "10:30,11:00,11:30,13:00,13:30,14:00,14:30,15:00,15:30,16:00,16:30");
+  const bezet = [{ interviewer: "Charlotte", datum: "2026-11-09", tijd: "13:00" }];
+  const m2 = vrijeMomenten(STANDAARD_INTERVIEWERS, bezet, vrijdagAvond);
+  test("Bezet bij Charlotte: Lea neemt het moment", m2.find((x) => x.datum === "2026-11-09" && x.tijd === "13:00")?.interviewer === "Lea");
+  const beidenBezet = [...bezet, { interviewer: "Lea", datum: "2026-11-09", tijd: "13:00" }];
+  test("Allebei bezet: het moment verdwijnt", !vrijeMomenten(STANDAARD_INTERVIEWERS, beidenBezet, vrijdagAvond).some((x) => x.datum === "2026-11-09" && x.tijd === "13:00"));
+  test("Moment controleren vlak voor boeken", momentGeldig(STANDAARD_INTERVIEWERS, beidenBezet, vrijdagAvond, { datum: "2026-11-09", tijd: "13:00" }) === null && momentGeldig(STANDAARD_INTERVIEWERS, [], vrijdagAvond, { datum: "2026-11-09", tijd: "13:00" }) !== null);
+  const maandagOchtend = new Date("2026-11-09T08:00:00Z");
+  test("Niet vandaag en niet binnen 12 uur", vrijeMomenten(STANDAARD_INTERVIEWERS, [], maandagOchtend).every((x) => x.datum > "2026-11-09"));
+  test("Twee weken vooruit, 10 werkdagen", new Set(m.map((x) => x.datum)).size === 10);
+  test("Een uitgezette interviewer krijgt geen gesprekken", vrijeMomenten([{ ...charlotte, actief: false }, lea], [], vrijdagAvond).every((x) => x.interviewer === "Lea"));
+  test("Dagtekst Nederlands", dagTekst("2026-11-10", "nl") === "Dinsdag 10 november");
+  test("Dagtekst Engels", dagTekst("2026-11-10", "en") === "Tuesday 10 November");
+  test("plusDag over de maand heen", plusDag("2026-11-30", 1) === "2026-12-01");
+  const a = { datum: "2026-11-10", tijd: "14:00", herinneringVerstuurd: false };
+  test("Afspraakherinnering: niet om 17:00 de dag ervoor", !afspraakHerinneringNodig(a, new Date("2026-11-09T16:00:00Z")));
+  test("Afspraakherinnering: wel om 18:00 de dag ervoor", afspraakHerinneringNodig(a, new Date("2026-11-09T17:00:00Z")));
+  test("Afspraakherinnering: niet na het gesprek", !afspraakHerinneringNodig(a, new Date("2026-11-10T14:00:00Z")));
+  test("Afspraakherinnering: maar één keer", !afspraakHerinneringNodig({ ...a, herinneringVerstuurd: true }, new Date("2026-11-09T17:00:00Z")));
+  const ics = agendaBestand({ datum: "2026-11-10", tijd: "14:00", interviewer: "Charlotte", uid: "job-1" });
+  test("Agenda: start en eind in Nederlandse tijd", ics.includes("DTSTART;TZID=Europe/Amsterdam:20261110T140000") && ics.includes("DTEND;TZID=Europe/Amsterdam:20261110T143000"));
+}
+
+console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
+process.exit(gefaald > 0 ? 1 : 0);

@@ -1,0 +1,589 @@
+/**
+ * Job, de AI-recruiter: de dienst die de regels uitvoert.
+ *
+ * De regels zelf staan in shared/jobRegels.ts (wat Job vraagt en wanneer) en
+ * shared/jobPlanning.ts (welke momenten vrij zijn). Dit bestand doet de rest:
+ * opslaan, berichten versturen (WhatsApp of het webgesprek), mails, meldingen
+ * voor de planner en het boeken van de kennismaking.
+ *
+ * Schakelaars (Secrets in Replit):
+ *  - JOB_ENABLED=1        Job start na elke voltooide aanmelding en de
+ *                         herinneringen lopen. Zonder deze schakelaar doet Job
+ *                         in productie niets uit zichzelf.
+ *  - TESTOMGEVING=1       In de testomgeving mag een planner Job ook met de
+ *                         hand starten (de simulator), ook zonder JOB_ENABLED.
+ *  - JOB_WA_SJABLOON_START, JOB_WA_SJABLOON_HERINNERING, JOB_WA_SJABLOON_AFSPRAAK
+ *                         Namen van de door Meta goedgekeurde sjablonen. Zonder
+ *                         sjabloon voor de start praat Job via het webgesprek
+ *                         en krijgt de kandidaat de link per mail.
+ *
+ * Er wordt nooit iets verwijderd. Een verzette afspraak krijgt status 'verzet'.
+ */
+import { randomBytes } from "crypto";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { db } from "../db";
+import { storage } from "../storage";
+import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
+import {
+  functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
+  type Actie, type JobContext, type JobState, type JobStatus, type JobTaal, type Uitgaand,
+} from "@shared/jobRegels";
+import {
+  afspraakHerinneringNodig, amsterdam, dagTekst, momentGeldig, STANDAARD_INTERVIEWERS, vrijeMomenten,
+  type Bezet, type Interviewer, type Moment,
+} from "@shared/jobPlanning";
+import { lees } from "./jobAi";
+import { stuurBevestigingsmail, stuurHerinneringsmail, stuurStartmail, stuurCvMail } from "./jobMails";
+
+export function jobAan(): boolean {
+  return process.env.JOB_ENABLED === "1";
+}
+export function testomgeving(): boolean {
+  return process.env.TESTOMGEVING === "1";
+}
+export function magHandmatigStarten(): boolean {
+  return jobAan() || testomgeving();
+}
+
+export function basisUrl(): string {
+  return (process.env.BASE_URL || "https://www.doehetextra.nl").replace(/\/$/, "");
+}
+export function gesprekLink(token: string, extra = ""): string {
+  return `${basisUrl()}/job-gesprek?token=${encodeURIComponent(token)}${extra}`;
+}
+
+const SJABLONEN = () => ({
+  start: process.env.JOB_WA_SJABLOON_START || "",
+  herinnering: process.env.JOB_WA_SJABLOON_HERINNERING || "",
+  afspraak: process.env.JOB_WA_SJABLOON_AFSPRAAK || "",
+});
+
+async function whatsappKlaar(): Promise<boolean> {
+  try {
+    const p = await import("../whatsapp/provider");
+    return p.isSendConfigured();
+  } catch {
+    return false;
+  }
+}
+
+export async function jobStatus() {
+  const s = SJABLONEN();
+  const { aiBeschikbaar } = await import("./jobAi");
+  return {
+    aan: jobAan(),
+    testomgeving: testomgeving(),
+    handmatigStarten: magHandmatigStarten(),
+    ai: aiBeschikbaar(),
+    whatsapp: await whatsappKlaar(),
+    sjablonen: { start: !!s.start, herinnering: !!s.herinnering, afspraak: !!s.afspraak },
+  };
+}
+
+// ─── State ↔ database ────────────────────────────────────────────────────────
+
+function naarState(g: JobGesprek): JobState {
+  return {
+    taal: (g.taal === "en" ? "en" : "nl") as JobTaal,
+    status: g.status as JobStatus,
+    velden: (g.velden || {}) as any,
+    laatsteOnderwerp: (g.laatsteOnderwerp || null) as any,
+    twijfels: Array.isArray(g.twijfels) ? g.twijfels : [],
+    herinneringen: g.herinneringen || 0,
+    herinneringAt: g.herinneringAt ? new Date(g.herinneringAt).toISOString() : null,
+    laatsteInkomendAt: g.laatsteInkomendAt ? new Date(g.laatsteInkomendAt).toISOString() : null,
+    laatsteActiviteitAt: new Date(g.laatsteActiviteitAt || g.gestartAt).toISOString(),
+  };
+}
+
+async function bewaarState(id: number, s: JobState, extra: Partial<typeof jobGesprekken.$inferInsert> = {}) {
+  await db.update(jobGesprekken).set({
+    taal: s.taal,
+    status: s.status,
+    velden: s.velden as any,
+    laatsteOnderwerp: s.laatsteOnderwerp,
+    twijfels: s.twijfels,
+    herinneringen: s.herinneringen,
+    herinneringAt: s.herinneringAt ? new Date(s.herinneringAt) : null,
+    laatsteInkomendAt: s.laatsteInkomendAt ? new Date(s.laatsteInkomendAt) : null,
+    laatsteActiviteitAt: new Date(s.laatsteActiviteitAt),
+    bijgewerktAt: new Date(),
+    ...extra,
+  }).where(eq(jobGesprekken.id, id));
+}
+
+export async function gesprekVanToken(token: string): Promise<JobGesprek | null> {
+  if (!token || token.length < 16) return null;
+  const [g] = await db.select().from(jobGesprekken).where(eq(jobGesprekken.token, token)).limit(1);
+  return g || null;
+}
+
+export async function gesprekVanKandidaat(candidateId: number): Promise<JobGesprek | null> {
+  const [g] = await db.select().from(jobGesprekken).where(eq(jobGesprekken.candidateId, candidateId)).limit(1);
+  return g || null;
+}
+
+export async function berichtenVan(gesprekId: number) {
+  return db.select().from(jobBerichten).where(eq(jobBerichten.gesprekId, gesprekId)).orderBy(jobBerichten.id);
+}
+
+export async function actieveAfspraak(candidateId: number) {
+  const [a] = await db.select().from(jobAfspraken)
+    .where(and(eq(jobAfspraken.candidateId, candidateId), eq(jobAfspraken.status, "gepland")))
+    .orderBy(desc(jobAfspraken.id)).limit(1);
+  return a || null;
+}
+
+async function kandidaat(candidateId: number) {
+  const [c] = await db.select().from(candidates).where(eq(candidates.id, candidateId)).limit(1);
+  return c || null;
+}
+
+async function context(candidateId: number, taal: JobTaal): Promise<JobContext | null> {
+  const c = await kandidaat(candidateId);
+  if (!c) return null;
+  const a = await actieveAfspraak(candidateId);
+  return {
+    voornaam: c.firstName,
+    functie: c.functionType,
+    nationalityZone: (c.nationalityZone as any) || null,
+    hasCv: !!c.hasCv,
+    afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,
+  };
+}
+
+// ─── Berichten opslaan en versturen ──────────────────────────────────────────
+
+async function bewaarInkomend(g: JobGesprek, tekst: string, bijlage?: string | null, kanaal?: string) {
+  await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "in", tekst, bijlage: bijlage || null, kanaal: kanaal || g.kanaal });
+}
+
+/** Tekst voor WhatsApp: keuzes genummerd, links voor cv en planning erbij. */
+export function whatsappTekst(b: Uitgaand, token: string, taal: JobTaal): string {
+  const t = teksten(taal);
+  let tekst = b.tekst;
+  if (b.cvUpload) tekst = b.tekst === t.cvUpload ? t.cvUploadWa(gesprekLink(token, "&cv=1")) : `${b.tekst}\n${gesprekLink(token, "&cv=1")}`;
+  if (b.planning) {
+    if (b.tekst === t.plannen) tekst = t.plannenWa(gesprekLink(token, "&plannen=1"));
+    else if (b.tekst === t.verzetten) tekst = t.verzettenWa(gesprekLink(token, "&plannen=1"));
+    else tekst = `${b.tekst}\n${gesprekLink(token, "&plannen=1")}`;
+  }
+  if (b.keuzes && b.keuzes.length) tekst += "\n\n" + b.keuzes.map((k, i) => `${i + 1}. ${k}`).join("\n");
+  return tekst;
+}
+
+/** Een genummerd antwoord ("2") wordt de tekst van die keuze. */
+export function keuzeUitNummer(tekst: string, keuzes: string[] | null | undefined): string {
+  const m = (tekst || "").trim().match(/^(\d)\.?$/);
+  if (!m || !keuzes || !keuzes.length) return tekst;
+  const k = keuzes[Number(m[1]) - 1];
+  return k || tekst;
+}
+
+async function verstuurWhatsappTekst(candidateId: number, telefoon: string, tekst: string): Promise<boolean> {
+  try {
+    const waProvider = await import("../whatsapp/provider");
+    const waStorage = await import("../whatsapp/storage");
+    if (!waProvider.isSendConfigured()) return false;
+    const match = await waStorage.resolveAndUpsertConversation({ phoneNumber: telefoon, inbound: false, bodyPreview: tekst, at: new Date() });
+    const dbId = await waStorage.insertOutboundQueued({
+      direction: "outbound", fromNumber: "extra", toNumber: telefoon, messageType: "text", body: tekst,
+      candidateId: match.candidateId ?? candidateId, prospectContactId: match.prospectContactId, matchCategory: match.category,
+      sentByUserId: null, rawPayload: { type: "text", text: { body: tekst }, to: telefoon, job: true },
+    } as any);
+    const r = await waProvider.sendText(telefoon, tekst);
+    await waStorage.updateOutboundResult(dbId, r.ok ? { waMessageId: r.waMessageId ?? null, status: "sent" } : { status: "failed", errorCode: r.errorCode ?? null, errorMessage: r.errorMessage ?? null });
+    if (!r.ok) console.warn(`[Job] WhatsApp naar kandidaat ${candidateId} mislukt: ${r.errorMessage}`);
+    return r.ok;
+  } catch (e: any) {
+    console.warn("[Job] WhatsApp versturen mislukt:", e?.message || e);
+    return false;
+  }
+}
+
+async function verstuurSjabloon(candidateId: number, telefoon: string, naam: string, taal: JobTaal, parameters: string[], tekstVoorInbox: string): Promise<boolean> {
+  if (!naam) return false;
+  try {
+    const waProvider = await import("../whatsapp/provider");
+    const waStorage = await import("../whatsapp/storage");
+    if (!waProvider.isSendConfigured()) return false;
+    const match = await waStorage.resolveAndUpsertConversation({ phoneNumber: telefoon, inbound: false, bodyPreview: tekstVoorInbox, at: new Date() });
+    // Meta weigert variabelen met regeleinden, tabs of meer dan vier spaties op rij.
+    const components = [{ type: "body", parameters: parameters.map((p) => ({ type: "text", text: String(p || "").replace(/\s+/g, " ").trim().slice(0, 900) })) }];
+    const dbId = await waStorage.insertOutboundQueued({
+      direction: "outbound", fromNumber: "extra", toNumber: telefoon, messageType: "template", body: tekstVoorInbox,
+      candidateId: match.candidateId ?? candidateId, prospectContactId: match.prospectContactId, matchCategory: match.category,
+      sentByUserId: null, rawPayload: { type: "template", template: { name: naam, language: taal, components }, job: true },
+    } as any);
+    const r = await waProvider.sendTemplate(telefoon, naam, taal, components);
+    await waStorage.updateOutboundResult(dbId, r.ok ? { waMessageId: r.waMessageId ?? null, status: "sent" } : { status: "failed", errorCode: r.errorCode ?? null, errorMessage: r.errorMessage ?? null });
+    return r.ok;
+  } catch (e: any) {
+    console.warn("[Job] sjabloon versturen mislukt:", e?.message || e);
+    return false;
+  }
+}
+
+/** Binnen 24 uur na het laatste bericht van de kandidaat mag Job vrij antwoorden (regel van Meta). */
+function binnenVenster(s: JobState, nu: Date): boolean {
+  return !!s.laatsteInkomendAt && nu.getTime() - new Date(s.laatsteInkomendAt).getTime() < 23.5 * 60 * 60 * 1000;
+}
+
+async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[], nu: Date) {
+  const c = g.kanaal === "whatsapp" ? await kandidaat(g.candidateId) : null;
+  for (const b of berichten) {
+    if (!b.tekst) continue;
+    await db.insert(jobBerichten).values({
+      gesprekId: g.id, richting: "uit", tekst: b.tekst, keuzes: b.keuzes || null,
+      extra: b.planning ? "planning" : b.cvUpload ? "cv_upload" : null, kanaal: g.kanaal,
+    });
+    if (c?.phone && c.whatsappOptInStatus === "actief" && binnenVenster(s, nu)) {
+      await verstuurWhatsappTekst(g.candidateId, c.phone, whatsappTekst(b, g.token, s.taal));
+    }
+  }
+}
+
+// ─── Acties: planner, cv-mail, profiel ───────────────────────────────────────
+
+async function meldPlanner(candidateId: number, reden: string) {
+  const c = await kandidaat(candidateId);
+  const naam = c ? `${c.firstName} ${c.lastName}` : `kandidaat ${candidateId}`;
+  try {
+    await storage.createAdminNotification({
+      type: "job_planner",
+      title: "Job: een collega moet kijken",
+      message: `${naam}: ${reden}`,
+      link: "/dashboard?tab=job",
+      candidateId,
+    } as any);
+    await storage.createCandidateAuditLog({
+      candidateId, action: "updated", changedByUserId: null,
+      changeData: { description: `Job: naar de planner. ${reden}` }, ipAddress: null,
+    } as any);
+  } catch (e: any) {
+    console.warn("[Job] melding voor de planner mislukt:", e?.message || e);
+  }
+}
+
+async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
+  for (const a of acties) {
+    if (a.soort === "planner" || a.soort === "nogo") await meldPlanner(g.candidateId, a.reden);
+    if (a.soort === "profiel") {
+      const velden = profielVelden(a.velden);
+      if (Object.keys(velden).length) {
+        try { await storage.updateCandidate(g.candidateId, velden as any); } catch (e: any) { console.warn("[Job] profiel bijwerken mislukt:", e?.message); }
+      }
+    }
+    if (a.soort === "cv_mail") {
+      const c = await kandidaat(g.candidateId);
+      // Kreeg de kandidaat al de cv-mail van de aanmeldflow, dan geen tweede.
+      if (c?.email && !c.cvReminderSentAt) {
+        stuurCvMail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, gesprekToken: g.token }).catch(() => {});
+      }
+    }
+  }
+}
+
+// ─── Starten ─────────────────────────────────────────────────────────────────
+
+function nieuwToken(): string {
+  return randomBytes(24).toString("base64url");
+}
+
+/**
+ * Start een gesprek met Job voor een kandidaat. Bestaat er al een gesprek,
+ * dan komt dat terug (nooit twee gesprekken per kandidaat).
+ * `voorkeur` 'whatsapp' werkt alleen als WhatsApp en het startsjabloon klaarstaan.
+ */
+export async function startGesprek(candidateId: number, opties: { voorkeur?: "whatsapp" | "web"; taal?: JobTaal; mail?: boolean } = {}): Promise<JobGesprek | null> {
+  const bestaand = await gesprekVanKandidaat(candidateId);
+  if (bestaand) return bestaand;
+  const c = await kandidaat(candidateId);
+  if (!c) return null;
+  const taal: JobTaal = opties.taal || (/english|engels/i.test(c.language || "") && !/nederlands|dutch/i.test(c.language || "") ? "en" : "nl");
+  const ctx = (await context(candidateId, taal))!;
+  const nu = new Date();
+  const r = start(ctx, taal, nu);
+
+  const sjabloon = SJABLONEN().start;
+  const viaWhatsapp = opties.voorkeur !== "web" && !!c.phone && c.whatsappOptInStatus === "actief" && !!sjabloon && (await whatsappKlaar());
+
+  let g: JobGesprek;
+  try {
+    [g] = await db.insert(jobGesprekken).values({
+      candidateId, token: nieuwToken(), kanaal: viaWhatsapp ? "whatsapp" : "web", taal,
+      status: r.state.status, velden: {}, laatsteOnderwerp: r.state.laatsteOnderwerp, twijfels: [],
+      laatsteActiviteitAt: nu,
+    }).returning();
+  } catch {
+    // Tegelijk gestart (unieke kandidaat): neem het bestaande gesprek.
+    return gesprekVanKandidaat(candidateId);
+  }
+
+  for (const b of r.berichten) {
+    await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, keuzes: b.keuzes || null, kanaal: g.kanaal });
+  }
+
+  if (viaWhatsapp) {
+    const eersteVraag = r.berichten[r.berichten.length - 1].tekst;
+    const ok = await verstuurSjabloon(candidateId, c.phone!, sjabloon, taal,
+      [c.firstName, functieLabel(c.functionType, taal), eersteVraag],
+      `${r.berichten[0].tekst}\n\n${eersteVraag}`);
+    if (!ok) {
+      await db.update(jobGesprekken).set({ kanaal: "web" }).where(eq(jobGesprekken.id, g.id));
+      g = { ...g, kanaal: "web" };
+    }
+  }
+  if (g.kanaal === "web" && opties.mail !== false && c.email) {
+    stuurStartmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal, link: gesprekLink(g.token) }).catch(() => {});
+  }
+  try {
+    await storage.createCandidateAuditLog({ candidateId, action: "updated", changedByUserId: null, changeData: { description: `Job gestart via ${g.kanaal}` }, ipAddress: null } as any);
+  } catch { /* geen ramp */ }
+  return g;
+}
+
+// ─── Een bericht verwerken ───────────────────────────────────────────────────
+
+export interface VerwerkResultaat {
+  ok: boolean;
+  status: JobStatus;
+  berichten: { tekst: string; keuzes?: string[] | null; extra?: string | null }[];
+}
+
+/** Verwerkt een bericht van de kandidaat (web of WhatsApp) en geeft de antwoorden van Job terug. */
+export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cvOntvangen?: boolean; bijlage?: string | null; kanaal?: "web" | "whatsapp" }): Promise<VerwerkResultaat> {
+  const nu = new Date();
+  let s = naarState(g);
+  // Een genummerd antwoord op WhatsApp ("2") wordt de tekst van die keuze.
+  let tekst = (invoer.tekst || "").slice(0, 2000);
+  if (tekst) {
+    const [vorig] = await db.select().from(jobBerichten)
+      .where(and(eq(jobBerichten.gesprekId, g.id), eq(jobBerichten.richting, "uit")))
+      .orderBy(desc(jobBerichten.id)).limit(1);
+    tekst = keuzeUitNummer(tekst, vorig?.keuzes as string[] | null);
+  }
+  if (tekst || invoer.bijlage) await bewaarInkomend(g, tekst || (invoer.cvOntvangen ? "[cv]" : ""), invoer.bijlage, invoer.kanaal);
+  if (invoer.kanaal === "whatsapp" && g.kanaal !== "whatsapp") {
+    await db.update(jobGesprekken).set({ kanaal: "whatsapp" }).where(eq(jobGesprekken.id, g.id));
+    g = { ...g, kanaal: "whatsapp" };
+  }
+
+  let ctx = await context(g.candidateId, s.taal);
+  if (!ctx) return { ok: false, status: s.status, berichten: [] };
+  if (invoer.cvOntvangen) ctx = { ...ctx, hasCv: true };
+
+  const wachtOpKandidaat = ["bezig", "wacht_cv", "geen_reactie", "gestopt"].includes(s.status);
+  const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
+  const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal) : null;
+  const r = verwerk(s, ctx, { tekst, cvOntvangen: invoer.cvOntvangen }, lezing, nu);
+  s = r.state;
+
+  const klaar = ["plannen", "planner", "gepland"].includes(s.status) && !g.afgerondAt;
+  await bewaarState(g.id, s, klaar ? { afgerondAt: nu } : {});
+  await voerUit(g, s, r.acties);
+  await bewaarEnVerstuur(g, s, r.berichten, nu);
+
+  // Twijfel of geen planner nodig: de bevestigingsmail met "een collega bekijkt je aanmelding" volgt alleen bij planner.
+  return {
+    ok: true,
+    status: s.status,
+    berichten: r.berichten.filter((b) => b.tekst).map((b) => ({ tekst: b.tekst, keuzes: b.keuzes || null, extra: b.planning ? "planning" : b.cvUpload ? "cv_upload" : null })),
+  };
+}
+
+/** Het cv is binnen (site, link of WhatsApp). Loopt het gesprek nog, dan gaat Job verder. */
+export async function cvOntvangen(candidateId: number, bijlage?: string | null, kanaal?: "web" | "whatsapp"): Promise<VerwerkResultaat | null> {
+  const g = await gesprekVanKandidaat(candidateId);
+  if (!g) return null;
+  if (!["bezig", "wacht_cv", "geen_reactie"].includes(g.status)) return null;
+  return verwerkBericht(g, { cvOntvangen: true, bijlage, kanaal });
+}
+
+/** STOP via WhatsApp of de afmeldlink in de mail: geen berichten meer van Job. */
+export async function stopGesprek(candidateId: number) {
+  const g = await gesprekVanKandidaat(candidateId);
+  if (!g || g.status === "gepland") return;
+  const s = { ...naarState(g), status: "gestopt" as JobStatus };
+  await bewaarState(g.id, s);
+}
+
+// ─── Inplannen ───────────────────────────────────────────────────────────────
+
+export async function interviewers(): Promise<Interviewer[]> {
+  const rijen = await db.select().from(jobInterviewers).orderBy(jobInterviewers.naam);
+  if (rijen.length === 0) return STANDAARD_INTERVIEWERS;
+  return rijen.map((r) => ({
+    naam: r.naam,
+    dagen: r.dagen.split(",").map((d) => Number(d.trim())).filter((d) => d >= 1 && d <= 7),
+    van: r.van, tot: r.tot, pauzeVan: r.pauzeVan, pauzeTot: r.pauzeTot, actief: r.actief,
+  }));
+}
+
+async function bezet(): Promise<Bezet[]> {
+  const vandaag = amsterdam(new Date()).datum;
+  const rijen = await db.select({ interviewer: jobAfspraken.interviewer, datum: jobAfspraken.datum, tijd: jobAfspraken.tijd })
+    .from(jobAfspraken).where(and(eq(jobAfspraken.status, "gepland"), sql`${jobAfspraken.datum} >= ${vandaag}`));
+  return rijen.map((r) => ({ interviewer: r.interviewer, datum: String(r.datum), tijd: r.tijd }));
+}
+
+export async function momenten(): Promise<Moment[]> {
+  return vrijeMomenten(await interviewers(), await bezet(), new Date());
+}
+
+export type BoekUitkomst =
+  | { ok: true; datum: string; tijd: string; interviewer: string; dagTekst: string; berichten: VerwerkResultaat["berichten"] }
+  | { ok: false; reden: "status" | "bezet" | "ongeldig" };
+
+export async function boek(g: JobGesprek, m: { datum: string; tijd: string }): Promise<BoekUitkomst> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(m.datum || "") || !/^\d{2}:\d{2}$/.test(m.tijd || "")) return { ok: false, reden: "ongeldig" };
+  if (g.status !== "plannen" && g.status !== "gepland") return { ok: false, reden: "status" };
+  const oud = await actieveAfspraak(g.candidateId);
+  // Twee kandidaten kunnen tegelijk hetzelfde moment kiezen. De unieke index
+  // laat er één winnen; de ander krijgt, als er nog een interviewer vrij is,
+  // die interviewer. Pas als niemand meer vrij is, is het moment bezet.
+  let vrij: Moment | null = null;
+  for (let poging = 0; poging < 3; poging++) {
+    vrij = momentGeldig(await interviewers(), await bezet(), new Date(), m);
+    if (!vrij) return { ok: false, reden: "bezet" };
+    try {
+      const gekozen = vrij;
+      await db.transaction(async (tx) => {
+        if (oud) await tx.update(jobAfspraken).set({ status: "verzet" }).where(eq(jobAfspraken.id, oud.id));
+        await tx.insert(jobAfspraken).values({ candidateId: g.candidateId, gesprekId: g.id, interviewer: gekozen.interviewer, datum: gekozen.datum, tijd: gekozen.tijd, status: "gepland" });
+      });
+      break;
+    } catch {
+      vrij = null;
+    }
+  }
+  if (!vrij) return { ok: false, reden: "bezet" };
+
+  const nu = new Date();
+  const s: JobState = { ...naarState(g), status: "gepland", laatsteActiviteitAt: nu.toISOString() };
+  await bewaarState(g.id, s, { afgerondAt: g.afgerondAt || nu });
+  await storage.updateCandidate(g.candidateId, {
+    status: "gepland", interviewDate: vrij.datum, interviewTime: vrij.tijd, interviewLocation: "Herengracht 372",
+  } as any);
+  try {
+    await storage.createCandidateAuditLog({
+      candidateId: g.candidateId, action: "updated", changedByUserId: null,
+      changeData: { description: `Job: kennismaking ${oud ? "verzet naar" : "gepland op"} ${vrij.datum} ${vrij.tijd} met ${vrij.interviewer}` }, ipAddress: null,
+    } as any);
+  } catch { /* geen ramp */ }
+
+  const dag = dagTekst(vrij.datum, s.taal);
+  const tekst = teksten(s.taal).gepland(dag, vrij.tijd, vrij.interviewer);
+  await bewaarEnVerstuur(g, s, [{ tekst }], nu);
+
+  const c = await kandidaat(g.candidateId);
+  if (c?.email) {
+    stuurBevestigingsmail({
+      voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal,
+      dag, datum: vrij.datum, tijd: vrij.tijd, interviewer: vrij.interviewer,
+      samenvatting: samenvatting(s.velden, { voornaam: c.firstName, functie: c.functionType, nationalityZone: null, hasCv: true }, s.taal),
+      agendaLink: `${basisUrl()}/api/job/${encodeURIComponent(g.token)}/agenda.ics`,
+      verzettenLink: gesprekLink(g.token, "&plannen=1"),
+      gesprekLink: gesprekLink(g.token),
+    }).catch(() => {});
+  }
+  return { ok: true, datum: vrij.datum, tijd: vrij.tijd, interviewer: vrij.interviewer, dagTekst: dag, berichten: [{ tekst }] };
+}
+
+// ─── Herinneringen ───────────────────────────────────────────────────────────
+
+/**
+ * Loopt elk uur (als JOB_ENABLED=1). In de testomgeving kan een planner de
+ * klok vooruitzetten met `nu`, om de herinneringen te testen.
+ */
+export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinneringen: number; rood: number; afspraken: number }> {
+  let aantal = 0, rood = 0, afspraken = 0;
+  const open = await db.select().from(jobGesprekken).where(inArray(jobGesprekken.status, ["bezig", "wacht_cv"]));
+  for (const g of open) {
+    const s = naarState(g);
+    const soort = herinneringNodig(s, nu);
+    if (!soort) continue;
+    const ctx = await context(g.candidateId, s.taal);
+    if (!ctx) continue;
+    const r = herinnering(s, ctx, soort, nu);
+    await bewaarState(g.id, r.state);
+    await voerUit(g, r.state, r.acties);
+    if (soort === "rood") { rood++; continue; }
+    aantal++;
+    for (const b of r.berichten) {
+      await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, keuzes: b.keuzes || null, kanaal: g.kanaal });
+    }
+    const c = await kandidaat(g.candidateId);
+    if (!c) continue;
+    if (g.kanaal === "whatsapp" && c.phone && c.whatsappOptInStatus === "actief") {
+      const tekst = r.berichten[0].tekst;
+      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, c.phone, whatsappTekst(r.berichten[0], g.token, s.taal));
+      else await verstuurSjabloon(c.id, c.phone, SJABLONEN().herinnering, s.taal, [c.firstName], tekst);
+    }
+    if (c.email && soort === "eerste") {
+      stuurHerinneringsmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, link: gesprekLink(g.token), stopLink: gesprekLink(g.token, "&stop=1") }).catch(() => {});
+    }
+  }
+
+  const gepland = await db.select().from(jobAfspraken).where(eq(jobAfspraken.status, "gepland"));
+  for (const a of gepland) {
+    if (!afspraakHerinneringNodig({ datum: String(a.datum), tijd: a.tijd, herinneringVerstuurd: !!a.herinneringVerstuurdAt }, nu)) continue;
+    await db.update(jobAfspraken).set({ herinneringVerstuurdAt: nu }).where(eq(jobAfspraken.id, a.id));
+    afspraken++;
+    const g = await gesprekVanKandidaat(a.candidateId);
+    const c = await kandidaat(a.candidateId);
+    if (!g || !c) continue;
+    const s = naarState(g);
+    const t = teksten(s.taal);
+    const tekst = t.afspraakHerinnering(c.firstName, a.tijd, a.interviewer);
+    await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst, keuzes: t.afspraakKeuzes, kanaal: g.kanaal });
+    if (c.phone && c.whatsappOptInStatus === "actief" && g.kanaal === "whatsapp") {
+      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, c.phone, whatsappTekst({ tekst, keuzes: t.afspraakKeuzes }, g.token, s.taal));
+      else await verstuurSjabloon(c.id, c.phone, SJABLONEN().afspraak, s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
+    }
+  }
+  return { herinneringen: aantal, rood, afspraken };
+}
+
+// ─── Overzicht voor het dashboard ────────────────────────────────────────────
+
+export async function overzicht() {
+  const rijen = await db.select({
+    id: jobGesprekken.id, candidateId: jobGesprekken.candidateId, token: jobGesprekken.token, kanaal: jobGesprekken.kanaal,
+    taal: jobGesprekken.taal, status: jobGesprekken.status, twijfels: jobGesprekken.twijfels,
+    laatsteActiviteitAt: jobGesprekken.laatsteActiviteitAt, gestartAt: jobGesprekken.gestartAt,
+    voornaam: candidates.firstName, achternaam: candidates.lastName, functie: candidates.functionType,
+  }).from(jobGesprekken).innerJoin(candidates, eq(candidates.id, jobGesprekken.candidateId))
+    .orderBy(desc(jobGesprekken.laatsteActiviteitAt)).limit(300);
+  const tellers: Record<string, number> = {};
+  for (const r of rijen) tellers[r.status] = (tellers[r.status] || 0) + 1;
+  return { tellers, gesprekken: rijen.map((r) => ({ ...r, link: gesprekLink(r.token) })) };
+}
+
+export async function afsprakenVanaf(vanaf: string) {
+  return db.select({
+    id: jobAfspraken.id, candidateId: jobAfspraken.candidateId, interviewer: jobAfspraken.interviewer,
+    datum: jobAfspraken.datum, tijd: jobAfspraken.tijd, status: jobAfspraken.status,
+    voornaam: candidates.firstName, achternaam: candidates.lastName, functie: candidates.functionType,
+  }).from(jobAfspraken).innerJoin(candidates, eq(candidates.id, jobAfspraken.candidateId))
+    .where(and(eq(jobAfspraken.status, "gepland"), sql`${jobAfspraken.datum} >= ${vanaf}`))
+    .orderBy(jobAfspraken.datum, jobAfspraken.tijd);
+}
+
+export async function bewaarInterviewers(lijst: Interviewer[]) {
+  for (const i of lijst) {
+    const waarden = {
+      naam: i.naam.trim().slice(0, 60), dagen: i.dagen.join(","), van: i.van, tot: i.tot,
+      pauzeVan: i.pauzeVan || null, pauzeTot: i.pauzeTot || null, actief: i.actief !== false, bijgewerktAt: new Date(),
+    };
+    await db.insert(jobInterviewers).values(waarden).onConflictDoUpdate({ target: jobInterviewers.naam, set: waarden });
+  }
+}
+
+/** Kandidaten zonder gesprek met Job, nieuwste eerst: voor de simulator en het handmatig starten. */
+export async function kandidatenZonderGesprek() {
+  return db.select({ id: candidates.id, firstName: candidates.firstName, lastName: candidates.lastName, functionType: candidates.functionType, email: candidates.email })
+    .from(candidates)
+    .where(and(eq(candidates.status, "in_behandeling"), sql`NOT EXISTS (SELECT 1 FROM job_gesprekken jg WHERE jg.candidate_id = ${candidates.id})`))
+    .orderBy(desc(candidates.createdAt)).limit(50);
+}

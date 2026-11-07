@@ -2048,6 +2048,7 @@ export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
   "staffing_request",    // Nieuwe aanvraag van een bedrijf
   "interview_reminder",  // Gesprek vandaag
   "contact_bericht",     // Bericht via het contactformulier
+  "job_planner",         // Job, de AI-recruiter: een collega moet kijken
 ]);
 
 export const adminNotifications = pgTable("admin_notifications", {
@@ -2577,3 +2578,91 @@ export type OnboardingTemplateBijlage = typeof onboardingTemplateBijlagen.$infer
 export type OnboardingTemplateMetBijlagen = OnboardingTemplate & {
   bijlagen?: (OnboardingBijlage & { koppelingId: number; volgorde: number })[];
 };
+
+// ─── Job, de AI-recruiter (bouwplan Job en testomgeving, november 2026) ─────
+//
+// Vier nieuwe tabellen, puur additief. Ze worden aangemaakt door
+// server/ensureSchema.ts (migratie 0030, migrations/manual/0030_job/).
+// Bestaande tabellen worden niet aangeraakt; Job schrijft alleen in bestaande
+// tekstvelden van candidates die de planner al leest (zie shared/jobRegels.ts,
+// profielVelden) en zet bij een geboekt gesprek interview_date en interview_time.
+
+/** Eén gesprek met Job per kandidaat. */
+export const jobGesprekken = pgTable("job_gesprekken", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull().unique(),
+  /** Willekeurige sleutel voor de persoonlijke link naar het webgesprek. */
+  token: text("token").notNull().unique(),
+  /** 'whatsapp' of 'web' (ook de simulator in de testomgeving). */
+  kanaal: text("kanaal").notNull().default("web"),
+  taal: text("taal").notNull().default("nl"),
+  status: text("status").notNull().default("bezig"),
+  velden: jsonb("velden").$type<Record<string, unknown>>().notNull().default({}),
+  laatsteOnderwerp: text("laatste_onderwerp"),
+  twijfels: jsonb("twijfels").$type<string[]>().notNull().default([]),
+  herinneringen: integer("herinneringen").notNull().default(0),
+  herinneringAt: timestamp("herinnering_at"),
+  laatsteInkomendAt: timestamp("laatste_inkomend_at"),
+  laatsteActiviteitAt: timestamp("laatste_activiteit_at").defaultNow().notNull(),
+  gestartAt: timestamp("gestart_at").defaultNow().notNull(),
+  afgerondAt: timestamp("afgerond_at"),
+  bijgewerktAt: timestamp("bijgewerkt_at").defaultNow().notNull(),
+}, (t) => ({
+  statusIdx: index("job_gesprekken_status_idx").on(t.status),
+}));
+
+/** Alle berichten van en naar Job, voor het webgesprek en de kandidaatkaart. */
+export const jobBerichten = pgTable("job_berichten", {
+  id: serial("id").primaryKey(),
+  gesprekId: integer("gesprek_id").notNull(),
+  /** 'in' = van de kandidaat, 'uit' = van Job. */
+  richting: text("richting").notNull(),
+  tekst: text("tekst").notNull().default(""),
+  keuzes: jsonb("keuzes").$type<string[]>(),
+  /** 'cv_upload' of 'planning': wat het webgesprek onder het bericht toont. */
+  extra: text("extra"),
+  bijlage: text("bijlage"),
+  kanaal: text("kanaal").notNull().default("web"),
+  aangemaaktAt: timestamp("aangemaakt_at").defaultNow().notNull(),
+}, (t) => ({
+  gesprekIdx: index("job_berichten_gesprek_idx").on(t.gesprekId),
+}));
+
+/**
+ * Kennismakingen die Job inplant. De unieke index op interviewer, datum en
+ * tijd (alleen voor status 'gepland') maakt dubbel boeken onmogelijk: als twee
+ * kandidaten tegelijk hetzelfde moment kiezen, krijgt één het.
+ */
+export const jobAfspraken = pgTable("job_afspraken", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  gesprekId: integer("gesprek_id"),
+  interviewer: text("interviewer").notNull(),
+  datum: date("datum").notNull(),
+  tijd: text("tijd").notNull(),
+  status: text("status").notNull().default("gepland"),
+  herinneringVerstuurdAt: timestamp("herinnering_verstuurd_at"),
+  aangemaaktAt: timestamp("aangemaakt_at").defaultNow().notNull(),
+}, (t) => ({
+  vrijIdx: uniqueIndex("job_afspraken_vrij_idx").on(t.interviewer, t.datum, t.tijd).where(sql`status = 'gepland'`),
+  kandidaatIdx: index("job_afspraken_kandidaat_idx").on(t.candidateId),
+}));
+
+/** Werktijden per interviewer. Leeg = de standaard uit shared/jobPlanning.ts. */
+export const jobInterviewers = pgTable("job_interviewers", {
+  id: serial("id").primaryKey(),
+  naam: text("naam").notNull().unique(),
+  /** Werkdagen, 1 = maandag … 7 = zondag, komma-gescheiden: "1,2,3,4,5". */
+  dagen: text("dagen").notNull().default("1,2,3,4,5"),
+  van: text("van").notNull(),
+  tot: text("tot").notNull(),
+  pauzeVan: text("pauze_van"),
+  pauzeTot: text("pauze_tot"),
+  actief: boolean("actief").notNull().default(true),
+  bijgewerktAt: timestamp("bijgewerkt_at").defaultNow().notNull(),
+});
+
+export type JobGesprek = typeof jobGesprekken.$inferSelect;
+export type JobBericht = typeof jobBerichten.$inferSelect;
+export type JobAfspraak = typeof jobAfspraken.$inferSelect;
+export type JobInterviewer = typeof jobInterviewers.$inferSelect;

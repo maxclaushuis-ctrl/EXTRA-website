@@ -182,7 +182,7 @@ export function testrijen(vandaag: Date) {
 /** De vier testaccounts. Wachtwoorden maakt het script zelf aan en toont het één keer in de shell. */
 export const TESTACCOUNTS = [
   { email: `max.test${TEST_DOMEIN}`, firstName: "Max", lastName: "Test", role: "admin" as const },
-  { email: `tester${TEST_DOMEIN}`, firstName: "Tester", lastName: "EXTRA", role: "admin" as const },
+  { email: `tester${TEST_DOMEIN}`, firstName: "Max", lastName: "Tester", role: "admin" as const },
   { email: `sanne${TEST_DOMEIN}`, firstName: "Sanne", lastName: "de Wit", role: "admin" as const },
   { email: `tom${TEST_DOMEIN}`, firstName: "Tom", lastName: "Jansen", role: "admin" as const },
 ];

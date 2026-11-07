@@ -527,6 +527,101 @@ const AANVULLINGEN: Aanvulling[] = [
       await db.execute(sql`CREATE INDEX IF NOT EXISTS pitchdeck_openingen_geopend_idx ON pitchdeck_openingen (geopend_op)`);
     },
   },
+  {
+    // Migratie 0030: een extra meldingstype voor Job. ADD VALUE is additief.
+    omschrijving: "admin_notification_type: waarde job_planner",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TYPE admin_notification_type ADD VALUE IF NOT EXISTS 'job_planner'
+      `),
+  },
+  {
+    // Migratie 0030, zie migrations/manual/0030_job/
+    // Job, de AI-recruiter. Vier nieuwe tabellen, geen bestaande gewijzigd.
+    omschrijving: "job_gesprekken: gesprekken met Job",
+    uitvoeren: async () => {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS job_gesprekken (
+          id                    serial PRIMARY KEY,
+          candidate_id          integer NOT NULL UNIQUE,
+          token                 text NOT NULL UNIQUE,
+          kanaal                text NOT NULL DEFAULT 'web',
+          taal                  text NOT NULL DEFAULT 'nl',
+          status                text NOT NULL DEFAULT 'bezig',
+          velden                jsonb NOT NULL DEFAULT '{}'::jsonb,
+          laatste_onderwerp     text,
+          twijfels              jsonb NOT NULL DEFAULT '[]'::jsonb,
+          herinneringen         integer NOT NULL DEFAULT 0,
+          herinnering_at        timestamp,
+          laatste_inkomend_at   timestamp,
+          laatste_activiteit_at timestamp NOT NULL DEFAULT now(),
+          gestart_at            timestamp NOT NULL DEFAULT now(),
+          afgerond_at           timestamp,
+          bijgewerkt_at         timestamp NOT NULL DEFAULT now()
+        )
+      `);
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS job_gesprekken_status_idx ON job_gesprekken (status)`);
+    },
+  },
+  {
+    // Migratie 0030
+    omschrijving: "job_berichten: berichten van en naar Job",
+    uitvoeren: async () => {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS job_berichten (
+          id            serial PRIMARY KEY,
+          gesprek_id    integer NOT NULL,
+          richting      text NOT NULL,
+          tekst         text NOT NULL DEFAULT '',
+          keuzes        jsonb,
+          extra         text,
+          bijlage       text,
+          kanaal        text NOT NULL DEFAULT 'web',
+          aangemaakt_at timestamp NOT NULL DEFAULT now()
+        )
+      `);
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS job_berichten_gesprek_idx ON job_berichten (gesprek_id)`);
+    },
+  },
+  {
+    // Migratie 0030. De unieke index maakt dubbel boeken onmogelijk.
+    omschrijving: "job_afspraken: kennismakingen die Job inplant",
+    uitvoeren: async () => {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS job_afspraken (
+          id                       serial PRIMARY KEY,
+          candidate_id             integer NOT NULL,
+          gesprek_id               integer,
+          interviewer              text NOT NULL,
+          datum                    date NOT NULL,
+          tijd                     text NOT NULL,
+          status                   text NOT NULL DEFAULT 'gepland',
+          herinnering_verstuurd_at timestamp,
+          aangemaakt_at            timestamp NOT NULL DEFAULT now()
+        )
+      `);
+      await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS job_afspraken_vrij_idx ON job_afspraken (interviewer, datum, tijd) WHERE status = 'gepland'`);
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS job_afspraken_kandidaat_idx ON job_afspraken (candidate_id)`);
+    },
+  },
+  {
+    // Migratie 0030
+    omschrijving: "job_interviewers: werktijden per interviewer",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS job_interviewers (
+          id            serial PRIMARY KEY,
+          naam          text NOT NULL UNIQUE,
+          dagen         text NOT NULL DEFAULT '1,2,3,4,5',
+          van           text NOT NULL,
+          tot           text NOT NULL,
+          pauze_van     text,
+          pauze_tot     text,
+          actief        boolean NOT NULL DEFAULT true,
+          bijgewerkt_at timestamp NOT NULL DEFAULT now()
+        )
+      `),
+  },
 ];
 
 /**

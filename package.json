@@ -44,6 +44,7 @@
     "prerender:test": "tsx scripts/prerenderOpruimen.test.ts",
     "twv:test": "tsx server/twvVerlopen.test.ts",
     "testdata:test": "tsx scripts/testdataRegels.test.ts",
+    "job:test": "tsx shared/job.test.ts && tsx server/whatsapp/__tests__/jobInbound.test.ts",
     "testdata:vullen": "tsx scripts/testdata-vullen.ts",
     "csv:test": "tsx shared/csv.test.ts",
     "twv:nationaliteit-rapport": "tsx scripts/twv-nationaliteit-rapport.ts",

@@ -107,6 +107,7 @@ const LogistiekPersoneelInhuren = lazy(() => import("@/pages/d3/Bedrijven").then
 const InHolland = lazy(() => import("@/pages/InHolland"));
 const Aanmelden = lazy(() => import("@/pages/d3/Aanmelden"));
 const CvUpload = lazy(() => import("@/pages/CvUpload"));
+const JobGesprek = lazy(() => import("@/pages/JobGesprek"));
 const NieuwsPage = lazy(() => import("@/pages/d3/Blog").then((m) => ({ default: m.BlogOverzicht })));
 const NieuwsArtikel = lazy(() => import("@/pages/d3/Blog").then((m) => ({ default: m.BlogArtikel })));
 const Vacatures = lazy(() => import("@/pages/Vacatures"));
@@ -192,7 +193,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 }
 
 const PUBLIC_PATHS = [
-  '/landing', '/personeel-gezocht', '/horeca-personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
+  '/landing', '/personeel-gezocht', '/horeca-personeel-gezocht', '/personeelsaanvraag', '/aanmelden', '/job-gesprek',
   '/hotel-personeel-gezocht', '/hotelpersoneel-inhuren', '/event-personeel-gezocht', '/eventpersoneel-inhuren', '/cateringpersoneel-gezocht', '/cateringpersoneel-inhuren', '/horecapersoneel-gezocht', '/horecapersoneel-restaurants', '/restaurant-personeel-gezocht',
   '/brochure', '/brochures', '/events', '/lofi', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
@@ -407,6 +408,7 @@ function Router() {
           <Route path="/aanvraag-ontvangen" component={AanvraagOntvangen} />
           <Route path="/aanmelden" component={Aanmelden} />
           <Route path="/cv-upload" component={CvUpload} />
+          <Route path="/job-gesprek" component={JobGesprek} />
           <Route path="/horeca-werk" component={D3_horeca_werk} />
           <Route path="/housekeeping-werk" component={D3_housekeeping_werk} />
           <Route path="/housekeeping-personeel-inhuren" component={D3_housekeeping_personeel_inhuren} />

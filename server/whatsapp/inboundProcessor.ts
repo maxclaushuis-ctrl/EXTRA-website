@@ -38,6 +38,15 @@ export interface AutoReplyArgs {
   inboundMessageId?: number | null;
 }
 
+export interface JobInboundArgs {
+  phoneNumber: string;
+  candidateId: number | null;
+  /** 'text', 'document', 'image', … of 'stop'. */
+  type: string;
+  body: string;
+  media?: { objectPath: string; mimeType?: string | null; filename?: string | null } | null;
+}
+
 export interface InboundProcessorDeps {
   storage: {
     applyStatusEvent(waMessageId: string, status: string, errorCode?: string, errorMessage?: string): Promise<boolean>;
@@ -61,6 +70,13 @@ export interface InboundProcessorDeps {
   normalizePhone(raw: string): string | null;
   /** Auto-reply-trigger; optioneel (bv. uit in tests). */
   tryAutoReply?: (opts: AutoReplyArgs) => Promise<void>;
+  /**
+   * Job, de AI-recruiter. Krijgt elk bericht van een kandidaat (tekst, een
+   * bijlage of een STOP). Geeft true terug als Job het bericht heeft
+   * afgehandeld; dan volgt er geen gewone auto-reply. Optioneel: zonder deze
+   * dep verandert er niets aan de verwerking.
+   */
+  jobInbound?: (args: JobInboundArgs) => Promise<boolean>;
   /**
    * Groepsgesprekken (whatsapp_group_chats) — optioneel zodat bestaande
    * tests die geen groepen injecteren gewoon blijven werken; zonder deze
@@ -101,6 +117,18 @@ async function defaultDeps(): Promise<InboundProcessorDeps> {
   return { storage, optInService, normalizePhone, haalMediaOpEnBewaar, groupChats };
 }
 
+/**
+ * De tekst die Job leest: een gewoon tekstbericht, of de knop die de
+ * kandidaat aantikte (een snelle-antwoordknop van een sjabloon komt binnen als
+ * type 'button', een interactieve knop als 'interactive').
+ */
+export function antwoordVoorJob(type: string, body: string | null | undefined, msg: any): string | null {
+  if (type === 'text') return body || null;
+  if (type === 'button') return msg?.button?.text || msg?.button?.payload || null;
+  if (type === 'interactive') return msg?.interactive?.button_reply?.title || msg?.interactive?.list_reply?.title || null;
+  return null;
+}
+
 /** Types waarvan Meta een media-id meestuurt dat wij kunnen ophalen. */
 const MEDIA_TYPES = ['image', 'audio', 'document', 'video', 'sticker'];
 
@@ -135,7 +163,7 @@ export async function processIncomingPayload(
   const base = (deps?.storage && deps?.optInService && deps?.normalizePhone)
     ? (deps as InboundProcessorDeps)
     : { ...(await defaultDeps()), ...deps };
-  const { storage, optInService, normalizePhone, tryAutoReply, haalMediaOpEnBewaar, groupChats } = base;
+  const { storage, optInService, normalizePhone, tryAutoReply, jobInbound, haalMediaOpEnBewaar, groupChats } = base;
   const logPrefix = base.logPrefix || '[WA webhook]';
 
   /**
@@ -151,8 +179,8 @@ export async function processIncomingPayload(
     mimeTypeUitPayload?: string | null;
     filenameUitPayload?: string | null;
     waMessageId?: string | null;
-  }): Promise<void> {
-    if (!haalMediaOpEnBewaar) return;
+  }): Promise<{ objectPath: string; mimeType?: string | null; filename?: string | null } | null> {
+    if (!haalMediaOpEnBewaar) return null;
     try {
       const res = await haalMediaOpEnBewaar({
         mediaId: args.mediaId,
@@ -163,7 +191,7 @@ export async function processIncomingPayload(
       });
       if (!res.ok || !res.objectPath) {
         console.warn(`${logPrefix} media ${args.type} (media_id=${args.mediaId}) niet opgehaald: ${res.fout || 'onbekende fout'}`);
-        return;
+        return null;
       }
       await storage.updateMessageMedia(args.messageId, {
         objectPath: res.objectPath,
@@ -171,8 +199,10 @@ export async function processIncomingPayload(
         filename: res.filename,
       });
       console.log(`${logPrefix} media ${args.type} opgeslagen → ${res.objectPath}`);
+      return { objectPath: res.objectPath, mimeType: res.mimeType, filename: res.filename };
     } catch (err: any) {
       console.warn(`${logPrefix} media ${args.type} (media_id=${args.mediaId}) mislukt: ${err?.message || err}`);
+      return null;
     }
   }
 
@@ -334,8 +364,9 @@ export async function processIncomingPayload(
               // Bijlage meteen binnenhalen: de CDN-url achter het media-id is
               // maar een paar minuten geldig, dus wachten tot iemand het
               // gesprek opent is geen optie.
+              let opgeslagenMedia: { objectPath: string; mimeType?: string | null; filename?: string | null } | null = null;
               if (mediaUrl && MEDIA_TYPES.includes(type)) {
-                await bewaarMedia({
+                opgeslagenMedia = await bewaarMedia({
                   messageId: inserted,
                   mediaId: mediaUrl,
                   type,
@@ -343,6 +374,12 @@ export async function processIncomingPayload(
                   filenameUitPayload: msg?.[type]?.filename || null,
                   waMessageId: msg.id || null,
                 });
+              }
+
+              // Job: een document of foto kan het cv zijn.
+              if (opgeslagenMedia && jobInbound && match.candidateId && (type === 'document' || type === 'image')) {
+                await jobInbound({ phoneNumber: normalizedFrom, candidateId: match.candidateId, type, body: body_, media: opgeslagenMedia })
+                  .catch((e: any) => { console.error(`${logPrefix} Job (bijlage) error:`, e?.message); return false; });
               }
 
               // Fase 1: STOP-detectie. Bij een opt-out keyword:
@@ -359,6 +396,14 @@ export async function processIncomingPayload(
                   contactName: contactProfile || null,
                   rawBody: body_,
                 }).catch((e: any) => console.error(`${logPrefix} STOP-handler error:`, e?.message));
+                if (jobInbound && match.candidateId) {
+                  jobInbound({ phoneNumber: normalizedFrom, candidateId: match.candidateId, type: 'stop', body: body_ })
+                    .catch((e: any) => console.error(`${logPrefix} Job (STOP) error:`, e?.message));
+                }
+              } else if (jobInbound && match.candidateId && antwoordVoorJob(type, body_, msg)
+                && await jobInbound({ phoneNumber: normalizedFrom, candidateId: match.candidateId, type: 'text', body: antwoordVoorJob(type, body_, msg)! })
+                  .catch((e: any) => { console.error(`${logPrefix} Job error:`, e?.message); return false; })) {
+                // Job heeft het bericht afgehandeld: geen gewone auto-reply.
               } else if (type === 'text' && body_ && tryAutoReply) {
                 // Auto-reply alleen voor tekstberichten (geen audio/image/etc.) en
                 // alleen als het géén STOP-bericht is.

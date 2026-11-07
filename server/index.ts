@@ -556,6 +556,7 @@ const OPSTART_DB_MAX_MS = 10_000;
     scheduleSalesflowDailyJob();
     scheduleCrmMailSync();
     scheduleGoogleReviewsSync();
+    scheduleJobHerinneringen();
     // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
     backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
     // WhatsApp Fase 1: 360dialog Cloud API met DB-persistentie. Zie server/whatsapp/README.md.
@@ -725,6 +726,30 @@ function scheduleDailyCvReminders() {
     runDailyCvReminders();
     setInterval(runDailyCvReminders, MS_PER_DAY);
   }, msUntilFirst);
+}
+
+/**
+ * Job, de AI-recruiter: herinneringen (22 uur, 48 uur later, daarna rood) en
+ * de herinnering de dag voor de kennismaking. Elk uur, alleen met JOB_ENABLED=1.
+ */
+function scheduleJobHerinneringen() {
+  if (process.env.JOB_ENABLED !== "1") {
+    log("[Job] herinneringen uit (JOB_ENABLED staat niet op 1)");
+    return;
+  }
+  const MS_PER_HOUR = 60 * 60 * 1000;
+  async function run() {
+    try {
+      const { herinneringenRun } = await import("./job/jobService");
+      const r = await herinneringenRun();
+      if (r.herinneringen || r.rood || r.afspraken) log(`[Job] herinneringen: ${r.herinneringen}, rood: ${r.rood}, afspraken: ${r.afspraken}`);
+    } catch (err) {
+      console.error("[Job] herinneringen mislukt:", err);
+    }
+  }
+  setTimeout(run, 2 * 60 * 1000);
+  setInterval(run, MS_PER_HOUR);
+  log("[Job] herinneringen actief (elk uur)");
 }
 
 function scheduleBlogAutoPublish() {

@@ -23,6 +23,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TestomgevingBalk } from '@/pages/dashboard/TestomgevingBalk';
+import { JobBeheer, JobGesprekPaneel } from '@/pages/dashboard/JobBeheer';
 import AiAssistent from '@/components/AiAssistent';
 import { queryClient, apiRequest, fetchJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -32,7 +33,7 @@ import {
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, BellRing, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
-  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, CalendarClock, MailCheck, Target
+  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, CalendarClock, MailCheck, Target, Bot
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import SalesFlowTab from '@/pages/dashboard/SalesFlowTab';
@@ -242,6 +243,8 @@ export default function DashboardMockup() {
       if (new URLSearchParams(window.location.search).has('google')) setActiveTab('google-reviews');
       // Link uit de pitchdeck-mail (/dashboard?tab=pitchdecks).
       if (new URLSearchParams(window.location.search).get('tab') === 'pitchdecks') setActiveTab('pitchdecks');
+      // Melding van Job (/dashboard?tab=job).
+      if (new URLSearchParams(window.location.search).get('tab') === 'job') setActiveTab('job');
     } catch { /* geen URL beschikbaar */ }
   }, []);
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
@@ -1062,6 +1065,7 @@ export default function DashboardMockup() {
             <>
               {[
                 { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
+                { icon: Bot, label: 'Job', tab: 'job' },
                 { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
                 { icon: CheckCircle2, label: 'Medewerkers', tab: 'medewerkers' },
                 { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
@@ -1522,6 +1526,7 @@ export default function DashboardMockup() {
                           </div>
                         ) : null)}
                       </div>
+                      <JobGesprekPaneel candidateId={selectedKandidate.id} />
                     </>
                   )}
                 </DialogContent>
@@ -1707,6 +1712,7 @@ export default function DashboardMockup() {
                       </div>
                     );
                   })()}
+                  {cvPreviewCandidate && <JobGesprekPaneel candidateId={cvPreviewCandidate.id} />}
                 </DialogContent>
               </Dialog>
 
@@ -3998,6 +4004,8 @@ export default function DashboardMockup() {
           ) : activeTab === 'medewerkers' ? (
             /* Medewerkers Tab — onboarding stap 1 */
             <MedewerkersTab />
+          ) : activeTab === 'job' ? (
+            <JobBeheer />
           ) : activeTab === 'twv' ? (
             /* TWV Tab — Tewerkstellingsvergunning Kanban */
             <div>

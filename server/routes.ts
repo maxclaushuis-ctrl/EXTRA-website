@@ -4368,6 +4368,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: z.string().optional().nullable(),
         rejectionReason: z.string().optional().nullable(),
         partial: z.boolean().optional().default(false),
+        // Taal van de aanmeldpagina: Job begint in deze taal (bord C4).
+        jobTaal: z.enum(["nl", "en"]).optional(),
         canIndependentShift: z.boolean().optional(),
         canCarryThreePlates: z.boolean().optional(),
         isBarista: z.boolean().optional(),
@@ -4425,8 +4427,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
 
         if (updated.hasCv) {
-          // Met CV: stuur bevestigingsmail naar kandidaat + volledige admin-mail met accept/afwijs knoppen
-          sendCandidateConfirmationEmail({
+          // Met CV: stuur bevestigingsmail naar kandidaat + volledige admin-mail met accept/afwijs knoppen.
+          // Staat Job aan (JOB_ENABLED=1), dan stuurt Job de bevestiging na het gesprek (bord B2);
+          // anders krijgt de kandidaat twee bevestigingen. De admin-mail blijft ongewijzigd.
+          if (process.env.JOB_ENABLED !== '1') sendCandidateConfirmationEmail({
             firstName: updated.firstName,
             lastName: updated.lastName,
             email: updated.email,
@@ -4519,7 +4523,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      return res.status(200).json({ id, message: "Kandidaat bijgewerkt" });
+      // Job, de AI-recruiter: start na een voltooide aanmelding als JOB_ENABLED=1.
+      // Via WhatsApp als het startsjabloon klaarstaat, anders via het webgesprek.
+      let jobLink: string | null = null;
+      if (!validated.partial && validated.status !== 'afgewezen') {
+        try {
+          const job = await import('./job/jobService');
+          if (job.jobAan()) {
+            const g = await job.startGesprek(id, { taal: validated.jobTaal });
+            if (g) jobLink = job.gesprekLink(g.token);
+          }
+        } catch (jobErr: any) {
+          console.error('[Job] starten na aanmelding mislukt:', jobErr?.message || jobErr);
+        }
+      }
+
+      return res.status(200).json({ id, message: "Kandidaat bijgewerkt", jobLink });
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: "Validatiefout", details: error.errors });
@@ -4880,6 +4899,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (candidateId && !isNaN(candidateId)) {
         try {
           await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: publicUrl });
+          // Job: loopt er een gesprek dat op het cv wacht, dan gaat Job verder.
+          import('./job/jobService').then((job) => job.cvOntvangen(candidateId, publicUrl, 'web')).catch(() => {});
           // Admin notificatie
           const cand = await storage.getCandidate(candidateId);
           if (cand) {
@@ -4931,6 +4952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cvFilename: publicUrl,
         cvUploadToken: null,
       } as any);
+      import('./job/jobService').then((job) => job.cvOntvangen(candidate.id, publicUrl, 'web')).catch(() => {});
 
       await storage.createCandidateAuditLog({
         candidateId: candidate.id,
@@ -8976,6 +8998,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     registerTestomgevingRoutes(app, adminMiddleware);
   }
 
+  // Job, de AI-recruiter: webgesprek, inplannen en dashboard. Zie server/job/.
+  {
+    const { registerJobRoutes } = await import("./job/jobRoutes");
+    registerJobRoutes(app, adminMiddleware);
+  }
+
   /** Contactberichten voor het dashboard, nieuwste eerst. */
   app.get("/api/admin/contact-berichten", adminMiddleware, async (_req: Request, res: Response) => {
     try {
@@ -12907,9 +12935,38 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   // Die module unwrapt álle entry[]/changes[]-elementen, niet alleen het
   // eerste, en kijkt niet naar `field` — een smb_message_echoes-change loopt er
   // dus net zo goed doorheen als een messages-change.
+  // Job, de AI-recruiter: een kandidaat met een lopend gesprek met Job krijgt
+  // antwoord van Job, niet van de gewone auto-reply. Een document of foto kan
+  // het cv zijn; STOP zet Job stil. Zonder gesprek met Job verandert er niets.
+  async function jobInbound(args: { phoneNumber: string; candidateId: number | null; type: string; body: string; media?: { objectPath: string; mimeType?: string | null; filename?: string | null } | null }): Promise<boolean> {
+    if (!args.candidateId) return false;
+    try {
+      const job = await import('./job/jobService');
+      const g = await job.gesprekVanKandidaat(args.candidateId);
+      if (!g) return false;
+      if (args.type === 'stop') {
+        await job.stopGesprek(args.candidateId);
+        return true;
+      }
+      if (args.media) {
+        if (!['bezig', 'wacht_cv', 'geen_reactie'].includes(g.status)) return false;
+        await storage.updateCandidate(args.candidateId, { hasCv: true, cvFilename: args.media.objectPath } as any);
+        await job.cvOntvangen(args.candidateId, args.media.objectPath, 'whatsapp');
+        return true;
+      }
+      if (args.type !== 'text' || !args.body) return false;
+      await job.verwerkBericht(g, { tekst: args.body, kanaal: 'whatsapp' });
+      return true;
+    } catch (e: any) {
+      console.error('[Job] WhatsApp-bericht verwerken mislukt:', e?.message || e);
+      return false;
+    }
+  }
+
   async function verwerkInkomendeWebhookBody(req: Request, res: Response, logPrefix = '[WA webhook]') {
     await processIncomingPayload(req.body || {}, {
       tryAutoReply,
+      jobInbound,
       logPrefix,
     });
 

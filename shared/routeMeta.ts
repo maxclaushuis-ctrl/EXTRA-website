@@ -473,6 +473,17 @@ export const ROUTE_META: RouteMeta[] = [
     changefreq: "monthly",
   },
   {
+    path: "/job-gesprek",
+    title: "Gesprek met Job | EXTRA",
+    description:
+      "Je persoonlijke gesprek met Job, de AI-recruiter van EXTRA. Beantwoord een paar korte vragen en plan zelf je kennismaking op ons kantoor in Amsterdam.",
+    // Noindex en nofollow: deze pagina werkt alleen met een persoonlijke link
+    // uit een mail of WhatsApp-bericht van Job. Geen prerender: zonder link
+    // valt er niets te tonen.
+    noindex: true,
+    prerender: false,
+  },
+  {
     path: "/sollicitatieformulier",
     title: "Intakeformulier | EXTRA",
     description:

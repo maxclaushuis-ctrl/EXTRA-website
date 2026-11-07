@@ -306,6 +306,7 @@ export default function Aanmelden() {
   const [bezig, setBezig] = useState(false);
   const [algemeneFout, setAlgemeneFout] = useState<string | null>(null);
   const [cv, setCv] = useState<File | null>(null);
+  const [jobLink, setJobLink] = useState<string | null>(null);
   const [cvFout, setCvFout] = useState<string | null>(null);
   const [kandidaatId, setKandidaatId] = useState<number | null>(null);
   const [fouten, setFouten] = useState<Record<string, string>>({});
@@ -578,10 +579,12 @@ export default function Aanmelden() {
 
       // Afronden: dit stuurt de mail naar kantoor.
       if (id) {
-        await apiRequest(`/api/aanmelden/${id}`, {
+        const klaar: any = await apiRequest(`/api/aanmelden/${id}`, {
           method: "PATCH",
-          body: JSON.stringify({ email: g.email, language, horecaExperience, needsTwv, notes, partial: false, referralCode: g.referralCode || null, ...labels }),
+          body: JSON.stringify({ email: g.email, language, horecaExperience, needsTwv, notes, partial: false, referralCode: g.referralCode || null, jobTaal: taal === "EN" ? "en" : "nl", ...labels }),
         });
+        // Job, de AI-recruiter: staat hij aan, dan gaat de kandidaat daar verder.
+        if (klaar && typeof klaar.jobLink === "string") setJobLink(klaar.jobLink);
       }
       referralOpruimen();
       // Alleen hier is een aanmelding echt af; niet bij de eerste opslag en niet bij een afwijzing.
@@ -801,8 +804,13 @@ export default function Aanmelden() {
                   <li className="ja"><Ic n="vink" />{t.aanmeldingOntvangen}</li>
                   <li className={cv ? "ja" : undefined}><Ic n="vink" />{cv ? t.cvOntvangen : t.cvVolgt}</li>
                 </ul>
-                <ol className="am-volgende">{t.gesprek.map((s) => <li key={s}>{s}</li>)}</ol>
-                <a className="knop vol" href={homeHref}>{t.home} <Pijl /></a>
+                {jobLink ? (<>
+                  <p>{taal === "NL" ? "Job, onze AI-recruiter, heeft nog een paar korte vragen. Daarna plan je zelf je kennismaking." : "Job, our AI recruiter, has a few quick questions. After that you book your own meeting."}</p>
+                  <a className="knop vol" href={jobLink}>{taal === "NL" ? "Praat met Job" : "Talk to Job"} <Pijl /></a>
+                </>) : (<>
+                  <ol className="am-volgende">{t.gesprek.map((s) => <li key={s}>{s}</li>)}</ol>
+                  <a className="knop vol" href={homeHref}>{t.home} <Pijl /></a>
+                </>)}
               </div>
             )}
 
