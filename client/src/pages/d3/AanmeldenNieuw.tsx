@@ -212,7 +212,7 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
           for (const [k, w] of Object.entries(d.velden)) nieuw[vertaal[k] || k] = Array.isArray(w) ? String(w[0]) : String(w);
           setFouten(nieuw);
         }
-        setAlgemeen(d?.message && r.status !== 500 ? d.message : t.fout);
+        setAlgemeen((d?.message && r.status !== 500 ? d.message : t.fout) + (d?.oorzaak ? ` (testomgeving: ${d.oorzaak})` : ""));
         setBezig("");
         return;
       }

@@ -214,7 +214,8 @@ export function registerAanmeldingRoutes(app: Express) {
       res.json(await antwoord(c.id));
     } catch (e: any) {
       console.error("[Aanmelding] mislukt:", e?.message || e);
-      res.status(500).json({ message: "Er ging iets mis. Probeer het opnieuw." });
+      // Alleen in de testomgeving: de technische oorzaak meesturen, zodat een test direct laat zien wat er mis is.
+      res.status(500).json({ message: "Er ging iets mis. Probeer het opnieuw.", ...(process.env.TESTOMGEVING === "1" ? { oorzaak: String(e?.message || e).slice(0, 300) } : {}) });
     }
   });
 }
