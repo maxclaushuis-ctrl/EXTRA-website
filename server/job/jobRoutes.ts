@@ -69,7 +69,29 @@ async function gesprekVoorKandidaat(req: Request, res: Response) {
   return g;
 }
 
-export function registerJobRoutes(app: Express, adminMiddleware: Middleware) {
+/**
+ * Elke async route krijgt een vangnet: een fout geeft een nette 500 in plaats
+ * van een onafgehandelde fout die de hele server kan laten stoppen. In de
+ * testomgeving gaat de technische oorzaak mee in het antwoord.
+ */
+function veilig(fn: any) {
+  if (typeof fn !== "function" || fn.length > 3) return fn;
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch((e: any) => {
+      console.error(`[Job] ${req.method} ${req.path} mislukt:`, e?.message || e);
+      if (res.headersSent) return;
+      res.status(500).json({ message: "Er ging iets mis. Probeer het opnieuw.", ...(process.env.TESTOMGEVING === "1" ? { oorzaak: String(e?.message || e).slice(0, 300) } : {}) });
+    });
+  };
+}
+
+export function registerJobRoutes(express: Express, adminMiddleware: Middleware) {
+  const app = {
+    get: (pad: string, ...h: any[]) => express.get(pad, ...h.map(veilig)),
+    post: (pad: string, ...h: any[]) => express.post(pad, ...h.map(veilig)),
+    put: (pad: string, ...h: any[]) => express.put(pad, ...h.map(veilig)),
+    delete: (pad: string, ...h: any[]) => express.delete(pad, ...h.map(veilig)),
+  };
   // ─── Openbaar, met token ──────────────────────────────────────────────────
 
   app.get("/api/job/:token", chatLimiter, async (req: Request, res: Response) => {
