@@ -261,5 +261,23 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Agenda: start en eind in Nederlandse tijd", ics.includes("DTSTART;TZID=Europe/Amsterdam:20261110T140000") && ics.includes("DTEND;TZID=Europe/Amsterdam:20261110T143000"));
 }
 
+
+// ─── Vloeiend gesprek: reactie en vraag in één bericht, vervolgvraag past bij de plek ──
+{
+  const ctx: JobContext = { voornaam: "Luuk", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false };
+  const s0 = start(ctx, "nl", NU).state;
+  const lez = (ervaring: string, ack: string, extra: Partial<Lezing> = {}): Lezing => ({ velden: { ervaring, ervaringNiveau: "ervaren" }, taal: "nl", twijfel: null, ack, ...extra });
+  const r1 = verwerk(s0, ctx, { tekst: "Heb gewerkt op festivals" }, lez("festivals", "Festivals, gezellig druk werk."), NU);
+  test("Vloeiend: reactie en vraag in één bericht", r1.berichten.length === 1 && r1.berichten[0].tekst.startsWith("Festivals, gezellig druk werk. "), JSON.stringify(r1.berichten));
+  test("Vloeiend: geen interne vlag in de berichten", !("reactie" in r1.berichten[0]));
+  test("Festival: vervolgvraag zonder diners", /bar/.test(r1.berichten[0].tekst) && !/diner/i.test(r1.berichten[0].tekst), r1.berichten[0].tekst);
+  const r2 = verwerk(s0, ctx, { tekst: "Twee jaar in een restaurant" }, lez("twee jaar restaurant", ""), NU);
+  test("Restaurant: gewone vervolgvraag over bediening en diners", /diners/.test(r2.berichten[0].tekst) && r2.berichten.length === 1);
+  const r3 = verwerk(s0, ctx, { tekst: "Op een cruiseschip" }, lez("cruiseschip", "", { vervolgvraag: "Stond je aan boord vooral achter de bar of in het restaurant?" }), NU);
+  test("AI-vervolgvraag gaat voor", r3.berichten[0].tekst === "Stond je aan boord vooral achter de bar of in het restaurant?");
+  test("Lezer: standaardzin 'Mooi, dank je!' valt weg", valideerLezing({ velden: {}, ack: "Mooi, dank je!" }).ack === "");
+  test("Lezer: vervolgvraag zonder vraagteken valt weg", valideerLezing({ velden: {}, vervolgvraag: "Vertel meer" }).vervolgvraag === undefined);
+}
+
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

@@ -43,9 +43,12 @@ export function valideerLezing(ruw: any): Lezing {
   const taal = ruw?.taal === "nl" || ruw?.taal === "en" || ruw?.taal === "anders" ? ruw.taal : null;
   const twijfel = tekstOf(ruw?.twijfel, 300) || null;
   // Een bevestiging is hooguit één korte zin, zonder vraag (de vraag stelt Job zelf).
-  let ack = tekstOf(ruw?.ack, 160) || "";
-  if (ack.includes("?")) ack = "";
-  return { velden, taal, twijfel, ack };
+  let ack = tekstOf(ruw?.ack, 120) || "";
+  // Geen vraag in de reactie en geen standaardzinnetje dat elke keer terugkomt.
+  if (ack.includes("?") || /^(mooi|top|super|fijn|oké|ok|bedankt)[,!. ]*(dank je|bedankt|dankjewel)?[!. ]*$/i.test(ack.trim())) ack = "";
+  const vv = tekstOf(ruw?.vervolgvraag, 200) || "";
+  const vervolgvraag = vv.trim().endsWith("?") ? vv.trim() : undefined;
+  return { velden, taal, twijfel, ack, ...(vervolgvraag ? { vervolgvraag } : {}) };
 }
 
 // ─── Reserve: regels zonder AI ───────────────────────────────────────────────

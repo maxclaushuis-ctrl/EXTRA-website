@@ -97,6 +97,8 @@ export interface Uitgaand {
   cvUpload?: boolean;
   /** Web: toon de momentenkiezer. */
   planning?: boolean;
+  /** Korte reactie van Job; wordt samengevoegd met het bericht erna (zie verwerk). */
+  reactie?: boolean;
 }
 
 export type Actie =
@@ -130,6 +132,13 @@ export function functieLabel(functie: string, taal: JobTaal): string {
 
 /** Functies waarvoor ervaring nodig is; zonder ervaring beslist de planner (C2). */
 export const FUNCTIES_MET_ERVARING = ["chef", "frontoffice"];
+
+/** Vervolgvraag voor bediening en bar als de ervaring bij festivals of evenementen lag. */
+const FUNCTIEVRAAG_FESTIVAL = {
+  nl: "Wat deed je daar vooral: achter de bar, drankjes uitgeven of iets anders? En werkte je ook met een kassa of pin?",
+  en: "What did you mostly do there: working the bar, serving drinks or something else? And did you also handle a till or card payments?",
+};
+const FESTIVAL = /festival|evenement|event|concert|stadion|poppodium|beurs/i;
 
 const FUNCTIEVRAAG: Record<string, { nl: string; en: string }> = {
   horecamedewerker: {
@@ -291,11 +300,13 @@ export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | nu
   return null;
 }
 
-export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext): Uitgaand {
+export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, velden?: JobVelden): Uitgaand {
   const t = T[taal];
   switch (onderwerp) {
     case "ervaring": return { tekst: t.ervaring(ctx.functie) };
-    case "functievraag": return { tekst: FUNCTIEVRAAG[ctx.functie]?.[taal] ?? t.ervaring(ctx.functie) };
+    case "functievraag":
+      if (ctx.functie === "horecamedewerker" && FESTIVAL.test(velden?.ervaring || "")) return { tekst: FUNCTIEVRAAG_FESTIVAL[taal] };
+      return { tekst: FUNCTIEVRAAG[ctx.functie]?.[taal] ?? t.ervaring(ctx.functie) };
     case "specialisatie": return { tekst: t.specialisatie, keuzes: t.specialisatieKeuzes };
     case "werkautorisatie": return { tekst: t.werkautorisatie, keuzes: t.werkautorisatieKeuzes };
     case "geldigheid": return { tekst: t.geldigheid };
@@ -407,6 +418,8 @@ export interface Lezing {
   twijfel: string | null;
   /** Korte bevestiging in de taal van het gesprek, hooguit één zin. Mag leeg. */
   ack: string;
+  /** Alleen na de ervaringsvraag: een vervolgvraag die past bij waar de kandidaat werkte. */
+  vervolgvraag?: string;
 }
 
 function samenvoegen(oud: JobVelden, nieuw: JobVelden): JobVelden {
@@ -424,7 +437,34 @@ function samenvoegen(oud: JobVelden, nieuw: JobVelden): JobVelden {
  * Verwerkt één bericht van de kandidaat. `lezing` is null als het bericht een
  * commando was of er geen tekst is (bijvoorbeeld alleen een bijlage).
  */
+/**
+ * Verwerkt één antwoord. Een korte reactie van Job ("Twee jaar achter de bar,
+ * top.") komt in hetzelfde bericht als de vraag erna, zodat het gesprek niet
+ * uit losse bevestigingen bestaat.
+ */
 export function verwerk(
+  vorige: JobState,
+  ctx: JobContext,
+  invoer: { tekst?: string | null; cvOntvangen?: boolean },
+  lezing: Lezing | null,
+  nu: Date,
+): Resultaat {
+  const r = verwerkLos(vorige, ctx, invoer, lezing, nu);
+  const uit: Uitgaand[] = [];
+  for (let i = 0; i < r.berichten.length; i++) {
+    const b = r.berichten[i];
+    const volgende = r.berichten[i + 1];
+    if (b.reactie && volgende) {
+      r.berichten[i + 1] = { ...volgende, tekst: `${b.tekst} ${volgende.tekst}` };
+      continue;
+    }
+    const { reactie: _r, ...rest } = b;
+    uit.push(rest);
+  }
+  return { ...r, berichten: uit };
+}
+
+function verwerkLos(
   vorige: JobState,
   ctx: JobContext,
   invoer: { tekst?: string | null; cvOntvangen?: boolean },
@@ -539,15 +579,15 @@ export function verwerk(
     }
 
     // Korte reacties die het ontwerp voorschrijft
-    if (lezing.ack) berichten.push({ tekst: lezing.ack });
+    if (lezing.ack) berichten.push({ tekst: lezing.ack, reactie: true });
     if (!oudeAutorisatie && state.velden.werkautorisatie && state.velden.werkautorisatie !== "vrij") {
-      berichten.push({ tekst: t().werkautorisatieCollega });
+      berichten.push({ tekst: t().werkautorisatieCollega, reactie: true });
     }
     if (vorigOnderwerp === "geldigheid" && state.velden.geldigTot !== undefined) {
-      berichten.push({ tekst: t().documentMee });
+      berichten.push({ tekst: t().documentMee, reactie: true });
     }
     if (vorigOnderwerp === "ervaring" && state.velden.ervaringNiveau === "geen" && !lezing.ack) {
-      berichten.push({ tekst: t().geenErvaringOk });
+      berichten.push({ tekst: t().geenErvaringOk, reactie: true });
     }
     // Een vraag die niet beantwoord kon worden, stelt Job niet eindeloos opnieuw.
     if (vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
@@ -564,7 +604,9 @@ export function verwerk(
   if (onderwerp) {
     state.status = "bezig";
     state.laatsteOnderwerp = onderwerp;
-    berichten.push(vraag(onderwerp, state.taal, ctx));
+    const v = vraag(onderwerp, state.taal, ctx, state.velden);
+    if (onderwerp === "functievraag" && lezing?.vervolgvraag) v.tekst = lezing.vervolgvraag;
+    berichten.push(v);
     return { state, berichten, acties };
   }
   state.laatsteOnderwerp = null;

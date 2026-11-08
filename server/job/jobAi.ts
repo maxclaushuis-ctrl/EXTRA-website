@@ -48,9 +48,10 @@ Velden:${UITLEG_VELDEN}
 Geef ook:
 - taal: "nl" als de kandidaat Nederlands schrijft, "en" bij Engels, "anders" bij een andere taal
 - twijfel: alleen als het antwoord iets bevat waar een collega naar moet kijken (bijvoorbeeld een vergunning die verlopen is, of iets wat niet klopt). Kort, in het Nederlands. Anders null.
-- ack: één korte, vriendelijke zin in het ${taal === "en" ? "Engels" : "Nederlands"} die laat merken dat je het antwoord gelezen hebt, zonder vraag en zonder beloftes, bijvoorbeeld "Mooi, dank je!". Mag leeg.
+- ack: een korte reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt, door iets concreets uit het antwoord te noemen, bijvoorbeeld "Twee jaar achter de bar, dat is mooi." of "Festivals, gezellig druk werk.". Geen vraag, geen beloftes, geen standaardzinnen zoals "Mooi, dank je!" of "Top, bedankt!". Bij een kort of keuze-antwoord (zoals "1 tot 2", "Ja", "Tot 35 km" of een lijstje talen) laat je ack leeg. Laat ack ook leeg als er niets bijzonders in het antwoord staat.
+- vervolgvraag: alleen als de laatste vraag over ervaring ging en de kandidaat werkervaring noemt: één korte vervolgvraag in het ${taal === "en" ? "Engels" : "Nederlands"} over wat de kandidaat daar precies deed, passend bij die plek en bij de functie ${functieLabel(ctx.functie, "nl")}. Vraag niet naar iets wat daar niet voorkomt (bij festivals bijvoorbeeld niet naar diners of tafelbediening, wel naar bar, drankuitgifte of kassa). Eindigt met een vraagteken. Anders weglaten.
 
-Antwoord uitsluitend met JSON: {"velden": {...}, "taal": "...", "twijfel": null, "ack": "..."}`;
+Antwoord uitsluitend met JSON: {"velden": {...}, "taal": "...", "twijfel": null, "ack": "", "vervolgvraag": null}`;
 }
 
 export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx: JobContext, bekend: JobVelden, taal: JobTaal): Promise<Lezing | null> {
@@ -99,5 +100,6 @@ export async function lees(tekst: string, onderwerp: Onderwerp | null, ctx: JobC
     taal: ai.taal ?? reserve.taal,
     twijfel: ai.twijfel,
     ack: ai.ack,
+    ...(ai.vervolgvraag && onderwerp === "ervaring" ? { vervolgvraag: ai.vervolgvraag } : {}),
   };
 }
