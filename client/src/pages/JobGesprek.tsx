@@ -130,7 +130,7 @@ async function json<R>(url: string, init?: RequestInit): Promise<R> {
   const r = await fetch(url, init);
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
-    const e: any = new Error(data?.message || `HTTP ${r.status}`);
+    const e: any = new Error((data?.message || `HTTP ${r.status}`) + (data?.oorzaak ? ` (testomgeving: ${data.oorzaak})` : ""));
     e.status = r.status;
     throw e;
   }

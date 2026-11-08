@@ -127,7 +127,7 @@ export function registerJobRoutes(app: Express, adminMiddleware: Middleware) {
       res.json(r || { ok: true, status: g.status, berichten: [] });
     } catch (e: any) {
       console.error("[Job] cv opslaan mislukt:", e?.message || e);
-      res.status(500).json({ message: "Opslaan mislukt. Probeer het opnieuw." });
+      res.status(500).json({ message: "Opslaan mislukt. Probeer het opnieuw.", ...(process.env.TESTOMGEVING === "1" ? { oorzaak: String(e?.message || e).slice(0, 300) } : {}) });
     }
   });
 
