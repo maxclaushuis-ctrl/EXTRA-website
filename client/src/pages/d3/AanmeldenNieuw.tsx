@@ -138,6 +138,7 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
   const [bezig, setBezig] = useState<"" | "whatsapp" | "web">("");
   const [algemeen, setAlgemeen] = useState("");
   const formulier = useRef<HTMLFormElement>(null);
+  useEffect(() => { setFouten({}); setAlgemeen(""); }, [taal]);
 
   const zet = <K extends keyof Velden>(k: K, w: Velden[K]) => {
     setV((o) => ({ ...o, [k]: w }));
@@ -230,11 +231,6 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
     }
   }
 
-  const wisselTaal = (naarTaal: Taal) => {
-    if (naarTaal === taal) return;
-    const q = typeof window !== "undefined" ? window.location.search : "";
-    naar(`${naarTaal === "en" ? "/en/apply" : "/aanmelden"}${q}`);
-  };
 
   return (
     <Shell css={["events", "hotels", "werk", "bedrijf", "aanvraag", "pagina"]} bodyKlasse="aanvraagpag" telKnop>
@@ -251,13 +247,7 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
           </div>
 
           <form ref={formulier} className="af3-kaart" id="aanmelden" noValidate aria-label={t.links.eyebrow} onSubmit={(e) => { e.preventDefault(); verstuur("whatsapp"); }}>
-            <div className="af3-kop">
-              {test && <span className="af3-test">Testversie</span>}
-              <div className="af3-taal" role="group" aria-label="Taal / language">
-                <button type="button" aria-pressed={taal === "nl"} onClick={() => wisselTaal("nl")}>NL</button>
-                <button type="button" aria-pressed={taal === "en"} onClick={() => wisselTaal("en")}>EN</button>
-              </div>
-            </div>
+            {test && <div className="af3-kop"><span className="af3-test">Testversie</span></div>}
 
             <fieldset className="af3-blok" data-veld="functie">
               <legend><b>{t.functieVraag}</b><span>{t.functieSub}</span></legend>
@@ -403,61 +393,61 @@ function Fout({ tekst }: { tekst?: string }) {
 }
 
 const CSS = `
-.af3 .af3-kaart{background:#fff;border:1px solid #E4E0D8;border-radius:20px;padding:22px 20px 24px;color:#37352C;max-width:520px;width:100%;justify-self:center;display:flex;flex-direction:column;box-sizing:border-box}
-.af3 .af3-kaart *{box-sizing:border-box}
-.af3 .af3-kop{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:6px}
-.af3 .af3-test{font-size:12px;font-weight:700;background:#FFF3C4;color:#5C4A00;border-radius:99px;padding:3px 10px;margin-right:auto}
-.af3 .af3-taal{display:inline-flex;background:#EDEAE4;border-radius:10px;padding:3px}
-.af3 .af3-taal button{border:0;background:none;font:inherit;font-weight:700;font-size:13px;padding:6px 12px;border-radius:8px;cursor:pointer;color:#5C594F}
-.af3 .af3-taal button[aria-pressed=true]{background:#fff;color:#37352C;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.af3 .af3-h1{font-weight:800;font-size:clamp(30px,4vw,44px);line-height:1.1;letter-spacing:-.01em;margin:8px 0 18px;color:inherit}
-.af3 .af3-h1 em{font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:400}
-.af3 .af3-stappen{list-style:none;margin:0 0 18px;padding:14px 16px;border:1px solid #E4E0D8;border-radius:16px;background:#fff;display:grid;gap:12px}
-.af3 .af3-stappen li{display:flex;gap:12px;align-items:flex-start}
-.af3 .af3-stappen b{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid #37352C;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
-.af3 .af3-stappen b.vol{background:#37352C;color:#F8F7F4}
-.af3 .af3-stappen span{display:flex;flex-direction:column;font-size:13.5px;color:#6B665C}
-.af3 .af3-stappen strong{color:#37352C;font-size:15px}
-.af3 .af3-blok{border:0;margin:0 0 18px;padding:0;min-width:0}
-.af3 .af3-blok legend{display:flex;flex-direction:column;margin-bottom:12px;padding:0}
-.af3 .af3-blok legend b{font-size:20px;font-weight:800}
-.af3 .af3-blok legend span{color:#6B665C;font-size:14px}
-.af3 .af3-blok h2{font-size:18px;font-weight:800;margin:0 0 12px}
-.af3 .af3-blok h3{font-size:16px;font-weight:800;margin:0 0 10px}
-.af3 .af3-tegels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.af3 .af3-tegels button{height:56px;border-radius:14px;border:1.5px solid #DDD8CE;background:#fff;font:inherit;font-weight:700;font-size:15px;color:#37352C;cursor:pointer;padding:0 10px}
-.af3 .af3-tegels button.aan{background:#37352C;border-color:#37352C;color:#F8F7F4}
-.af3 .af3-lijn{border:0;border-top:1px solid #E4E0D8;margin:6px 0 20px}
-.af3 .af3-twee{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.af3 .af3-veld{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;min-width:0}
-.af3 .af3-veld{font-size:15px}
-.af3 .af3-veld>span{font-size:15px;font-weight:600;color:#37352C;line-height:1.3}
-.af3 input[type=text],.af3 input[type=tel],.af3 input[type=email],.af3 select{height:50px;font:inherit;font-size:16px;color:#37352C;border:1.5px solid #DDD8CE;border-radius:12px;padding:0 14px;background:#fff;width:100%;min-width:0}
-.af3 input[aria-invalid=true],.af3 select[aria-invalid=true]{border-color:#C2412D}
-.af3 input:focus-visible,.af3 select:focus-visible,.af3 button:focus-visible{outline:2px solid #37352C;outline-offset:2px}
-.af3 .af3-datum{display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:8px}
-.af3 .af3-pc{position:relative}
-.af3 .af3-plaats{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13.5px;font-weight:700;color:#3F6A2A;pointer-events:none}
-.af3 .af3-link{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;text-decoration:underline;color:#37352C;cursor:pointer;margin:-4px 0 6px}
-.af3 .af3-buitenland{border:1.5px solid #37352C;border-radius:14px;padding:14px;margin-bottom:12px}
-.af3 .af3-hulp{font-size:13px;color:#5C594F;margin:4px 0 10px}
-.af3 .af3-tel{display:grid;grid-template-columns:96px 1fr;gap:8px}
-.af3 .af3-vink{display:flex;align-items:center;gap:10px;font-size:14px;margin:-2px 0 12px;cursor:pointer}
-.af3 .af3-vink input{width:20px;height:20px;accent-color:#37352C}
-.af3 .af3-chips{display:flex;flex-wrap:wrap;gap:8px}
-.af3 .af3-chips button{height:40px;padding:0 14px;border-radius:99px;border:1.5px solid #DDD8CE;background:#fff;font:inherit;font-size:14px;font-weight:600;color:#37352C;cursor:pointer}
-.af3 .af3-chips button.aan{background:#37352C;border-color:#37352C;color:#F8F7F4}
-.af3 .af3-anders{margin-top:10px;height:44px!important}
-.af3 .af3-veldfout{color:#C2412D;font-size:13px;font-weight:600}
-.af3 .af3-honing{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.af3 .af3-knoppen{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-top:6px}
-.af3 .af3-wa{height:58px;border:0;border-radius:14px;background:#25A25A;color:#fff;font:inherit;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 6px 16px rgba(37,162,90,.35)}
-.af3 .af3-web{height:46px;border-radius:14px;border:1.5px solid #37352C;background:transparent;font:inherit;font-weight:700;font-size:15px;color:#37352C;cursor:pointer}
-.af3 .af3-wa:disabled,.af3 .af3-web:disabled{opacity:.6;cursor:default}
-.af3 .af3-toestemming{font-size:11px;color:#5C594F;margin:0;line-height:1.5}
-.af3 .af3-toestemming a{color:#37352C;text-decoration:underline}
-.af3 .af3-fout{background:#FBE3DE;color:#A2321F;border-radius:10px;padding:10px 12px;font-weight:600;margin:0}
-.af3 .af3-lead{margin-top:6px}
-@media (min-width:1024px){.af3 .af3-tegels{grid-template-columns:repeat(3,1fr)}}
-@media (max-width:1023px){.af3 .af3-links{max-width:560px;margin:0 auto;width:100%}.af3 .af3-links>*:not(.af3-h1):not(.af3-stappen){display:none}.af3 .af3-kaart{max-width:560px;margin:0 auto;padding:18px 16px 22px}.af3 .af3-h1{font-size:30px}}
+.d3.d3 .af3 .af3-kaart{background:#fff;border:1px solid #E4E0D8;border-radius:20px;padding:22px 20px 24px;color:#37352C;max-width:520px;width:100%;justify-self:center;display:flex;flex-direction:column;box-sizing:border-box}
+.d3.d3 .af3 .af3-kaart *{box-sizing:border-box}
+.d3.d3 .af3 .af3-kop{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:6px}
+.d3.d3 .af3 .af3-test{font-size:12px;font-weight:700;background:#FFF3C4;color:#5C4A00;border-radius:99px;padding:3px 10px;margin-right:auto}
+.d3.d3 .af3 .af3-taal{display:inline-flex;background:#EDEAE4;border-radius:10px;padding:3px}
+.d3.d3 .af3 .af3-taal button{border:0;background:none;font:inherit;font-weight:700;font-size:13px;padding:6px 12px;border-radius:8px;cursor:pointer;color:#5C594F}
+.d3.d3 .af3 .af3-taal button[aria-pressed=true]{background:#fff;color:#37352C;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.d3.d3 .af3 .af3-h1{font-weight:800;font-size:clamp(30px,4vw,44px);line-height:1.1;letter-spacing:-.01em;margin:8px 0 18px;color:inherit}
+.d3.d3 .af3 .af3-h1 em{font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:400}
+.d3.d3 .af3 .af3-stappen{list-style:none;margin:0 0 18px;padding:14px 16px;border:1px solid #E4E0D8;border-radius:16px;background:#fff;display:grid;gap:12px}
+.d3.d3 .af3 .af3-stappen li{display:flex;gap:12px;align-items:flex-start}
+.d3.d3 .af3 .af3-stappen b{color:#37352C;background:#fff;flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid #37352C;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.d3.d3 .af3 .af3-stappen b.vol{background:#37352C;color:#F8F7F4}
+.d3.d3 .af3 .af3-stappen span{display:flex;flex-direction:column;font-size:13.5px;color:#6B665C}
+.d3.d3 .af3 .af3-stappen strong{color:#37352C;font-size:15px}
+.d3.d3 .af3 .af3-blok{border:0;margin:0 0 18px;padding:0;min-width:0}
+.d3.d3 .af3 .af3-blok legend{display:flex;flex-direction:column;margin-bottom:12px;padding:0}
+.d3.d3 .af3 .af3-blok legend b{font-size:20px;font-weight:800}
+.d3.d3 .af3 .af3-blok legend span{color:#6B665C;font-size:14px}
+.d3.d3 .af3 .af3-blok h2{font-size:18px;font-weight:800;margin:0 0 12px}
+.d3.d3 .af3 .af3-blok h3{font-size:16px;font-weight:800;margin:0 0 10px}
+.d3.d3 .af3 .af3-tegels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.d3.d3 .af3 .af3-tegels button{height:56px;border-radius:14px;border:1.5px solid #DDD8CE;background:#fff;font:inherit;font-weight:700;font-size:15px;color:#37352C;cursor:pointer;padding:0 16px;text-align:left}
+.d3.d3 .af3 .af3-tegels button.aan{background:#37352C;border-color:#37352C;color:#F8F7F4}
+.d3.d3 .af3 .af3-lijn{border:0;border-top:1px solid #E4E0D8;margin:6px 0 20px}
+.d3.d3 .af3 .af3-twee{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.d3.d3 .af3 .af3-veld{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;min-width:0}
+.d3.d3 .af3 .af3-veld{font-size:15px;font-weight:400}
+.d3.d3 .af3 .af3-veld>span{font-size:13.5px;font-weight:600;color:#37352C;line-height:1.3;margin:0}
+.d3.d3 .af3 input[type=text],.d3.d3 .af3 input[type=tel],.d3.d3 .af3 input[type=email],.d3.d3 .af3 select{height:50px;font:inherit;font-size:16px;color:#37352C;border:1.5px solid #DDD8CE;border-radius:12px;padding:0 14px;background:#fff;width:100%;min-width:0}
+.d3.d3 .af3 input[aria-invalid=true],.d3.d3 .af3 select[aria-invalid=true]{border-color:#C2412D}
+.d3.d3 .af3 input:focus-visible,.d3.d3 .af3 select:focus-visible,.d3.d3 .af3 button:focus-visible{outline:2px solid #37352C;outline-offset:2px}
+.d3.d3 .af3 .af3-datum{display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:8px}
+.d3.d3 .af3 .af3-pc{position:relative}
+.d3.d3 .af3 .af3-plaats{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13.5px;font-weight:700;color:#3F6A2A;pointer-events:none}
+.d3.d3 .af3 .af3-link{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;text-decoration:underline;color:#37352C;cursor:pointer;margin:-4px 0 6px}
+.d3.d3 .af3 .af3-buitenland{border:1.5px solid #37352C;border-radius:14px;padding:14px;margin-bottom:12px}
+.d3.d3 .af3 .af3-hulp{font-size:13px;color:#5C594F;margin:4px 0 10px}
+.d3.d3 .af3 .af3-tel{display:grid;grid-template-columns:96px 1fr;gap:8px}
+.d3.d3 .af3 .af3-vink{font-weight:400;display:flex;align-items:center;gap:10px;font-size:14px;margin:-2px 0 12px;cursor:pointer}
+.d3.d3 .af3 .af3-vink input{width:20px;height:20px;accent-color:#37352C}
+.d3.d3 .af3 .af3-chips{display:flex;flex-wrap:wrap;gap:8px}
+.d3.d3 .af3 .af3-chips button{height:40px;padding:0 14px;border-radius:99px;border:1.5px solid #DDD8CE;background:#fff;font:inherit;font-size:14px;font-weight:600;color:#37352C;cursor:pointer}
+.d3.d3 .af3 .af3-chips button.aan{background:#37352C;border-color:#37352C;color:#F8F7F4}
+.d3.d3 .af3 .af3-anders{margin-top:10px;height:44px!important}
+.d3.d3 .af3 .af3-veldfout{color:#C2412D;font-size:13px;font-weight:600}
+.d3.d3 .af3 .af3-honing{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.d3.d3 .af3 .af3-knoppen{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.d3.d3 .af3 .af3-wa{height:58px;border:0;border-radius:14px;background:#25A25A;color:#fff;font:inherit;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 6px 16px rgba(37,162,90,.35)}
+.d3.d3 .af3 .af3-web{height:46px;border-radius:14px;border:1.5px solid #37352C;background:transparent;font:inherit;font-weight:700;font-size:15px;color:#37352C;cursor:pointer}
+.d3.d3 .af3 .af3-wa:disabled,.d3.d3 .af3 .af3-web:disabled{opacity:.6;cursor:default}
+.d3.d3 .af3 .af3-toestemming{font-size:11px;color:#5C594F;margin:0;line-height:1.5;font-weight:400}
+.d3.d3 .af3 .af3-toestemming a{color:#37352C;text-decoration:underline}
+.d3.d3 .af3 .af3-fout{background:#FBE3DE;color:#A2321F;border-radius:10px;padding:10px 12px;font-weight:600;margin:0}
+.d3.d3 .af3 .af3-lead{margin-top:6px}
+@media (min-width:1024px){.d3.d3 .af3 .af3-tegels{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:1023px){.d3.d3 .af3 .af3-links{max-width:560px;margin:0 auto;width:100%}.af3 .af3-links>*:not(.af3-h1):not(.af3-stappen){display:none}.af3 .af3-kaart{max-width:560px;margin:0 auto;padding:18px 16px 22px}.af3 .af3-h1{font-size:30px}}
 `;

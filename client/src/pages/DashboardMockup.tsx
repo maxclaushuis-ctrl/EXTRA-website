@@ -230,6 +230,8 @@ export default function DashboardMockup() {
   const sollicitantenV2 = useSollicitantenV2(isAuthenticated && user?.role === 'admin');
   const kandidatenV2 = useKandidatenV2(isAuthenticated && user?.role === 'admin');
   const [oudeKandidaten, setOudeKandidaten] = useState(false);
+  // Elke klik op een menu-item opent de lijst opnieuw, ook als er een kaart open stond.
+  const [navKlik, setNavKlik] = useState(0);
 
   // Cross-component navigatie: andere dashboard-pagina's kunnen via dit
   // window-event verzoeken om naar een andere tab te schakelen (bv. de
@@ -1085,7 +1087,7 @@ export default function DashboardMockup() {
               ]).map(item => (
                 <button
                   key={item.tab}
-                  onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+                  onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); setNavKlik((n) => n + 1); }}
                   title={item.label}
                   className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                   style={{
@@ -1504,7 +1506,7 @@ export default function DashboardMockup() {
 
         <div className={(activeTab === 'prospect-campagnes' || activeTab === 'prospect-contacten') ? '' : 'p-3 sm:p-6'}>
           {activeTab === 'kandidaten' && kandidatenV2 && !oudeKandidaten ? (
-            <KandidatenV2 naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setOudeKandidaten(true)} />
+            <KandidatenV2 key={`k${navKlik}`} naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setOudeKandidaten(true)} />
           ) : activeTab === 'kandidaten' ? (
             <div>
               {/* Kandidaat detail dialog */}
@@ -4024,11 +4026,11 @@ export default function DashboardMockup() {
             /* Medewerkers Tab — onboarding stap 1 */
             <MedewerkersTab />
           ) : activeTab === 'sollicitanten2' ? (
-            <SollicitantenV2 ingang="sollicitanten" oudeWeergave={{ tekst: 'Het oude sollicitatieformulier staat er nog.', doe: () => setActiveTab('sollicitanten') }} />
+            <SollicitantenV2 key={`s${navKlik}`} ingang="sollicitanten" oudeWeergave={{ tekst: 'Het oude sollicitatieformulier staat er nog.', doe: () => setActiveTab('sollicitanten') }} />
           ) : activeTab === 'onboarding2' ? (
-            <SollicitantenV2 ingang="onboarding" oudeWeergave={{ tekst: 'Het oude overzicht Medewerkers staat er nog.', doe: () => setActiveTab('medewerkers') }} />
+            <SollicitantenV2 key={`o${navKlik}`} ingang="onboarding" oudeWeergave={{ tekst: 'Het oude overzicht Medewerkers staat er nog.', doe: () => setActiveTab('medewerkers') }} />
           ) : activeTab === 'archief2' ? (
-            <SollicitantenV2 ingang="archief" />
+            <SollicitantenV2 key={`a${navKlik}`} ingang="archief" />
           ) : activeTab === 'job' ? (
             <JobBeheer />
           ) : activeTab === 'twv' ? (

@@ -33,7 +33,7 @@ interface Week { van: string; tot: string; gesprekken: Gesprek[]; tellers: Telle
 function plus(isoDatum: string, n: number) {
   const d = new Date(`${isoDatum}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10);
 }
-const DAGKORT = ["Ma", "Di", "Wo", "Do", "Vr"];
+const DAGKORT = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 const BLOK_PX = 52;
 
 /** Gesprekken die elkaar overlappen (twee interviewers tegelijk) komen naast elkaar. */
@@ -69,21 +69,23 @@ export function Gesprekken({ open, kies, van, zetVan }: { open: (id: number) => 
   const [weergave, setWeergave] = useState<"week" | "dag">("week");
   const [dag, setDag] = useState(0);
   const w = data;
-  const dagen = w ? (weergave === "week" ? [0, 1, 2, 3, 4] : [dag]) : [];
+  const weekend = w ? [5, 6].filter((i) => w.gesprekken.some((g) => g.datum === plus(w.van, i))) : [];
+  const dagen = w ? (weergave === "week" ? [0, 1, 2, 3, 4, ...weekend] : [dag]) : [];
+  const dezeWeek = (() => { const n = new Date(); const d = n.getDay(); const m = new Date(n); m.setDate(n.getDate() - (d === 0 ? 6 : d - 1)); return m.toISOString().slice(0, 10); })();
   const laatste = Math.max(16, ...(w?.gesprekken || []).map((g) => parseInt(g.tijd, 10) + 1 || 0));
   const uren = Array.from({ length: Math.min(laatste, 20) - EERSTE_UUR + 1 }, (_, i) => EERSTE_UUR + i);
   const vanaf = (g: Gesprek) => {
     const [u, m] = g.tijd.split(":").map(Number);
     return Math.max(0, ((u - EERSTE_UUR) * 60 + (m || 0)) * UUR_PX / 60 + 2);
   };
-  const kolommen = `60px repeat(${dagen.length}, minmax(${weergave === "week" ? 120 : 300}px, 1fr))`;
+  const kolommen = `60px repeat(${dagen.length}, minmax(${weergave === "week" ? (dagen.length > 5 ? 128 : 150) : 300}px, 1fr))`;
   return (
     <div className="sv-lijst">
       <Subtabs lijst="gesprekken" tellers={w?.tellers} kies={kies} />
       <div className="sv-tussen" style={{ marginTop: 22 }}>
         <div>
           <h1>Gesprekken</h1>
-          <p className="sv-sub">{w ? `${w.gesprekken.length} gesprekken op kantoor deze week · Herengracht 372` : "Laden..."}</p>
+          <p className="sv-sub">{w ? `${w.gesprekken.length} ${w.gesprekken.length === 1 ? "gesprek" : "gesprekken"} op kantoor ${w.van === dezeWeek ? "deze week" : `in de week van ${weekLabel(w.van)}`} · Herengracht 372` : "Laden..."}</p>
         </div>
         <div className="sv-rij">
           <div className="sv-segment">
@@ -91,7 +93,7 @@ export function Gesprekken({ open, kies, van, zetVan }: { open: (id: number) => 
             <button className={weergave === "week" ? "aan" : ""} onClick={() => setWeergave("week")}>Week</button>
           </div>
           {weergave === "dag" && w && (
-            <div className="sv-segment">{DAGKORT.map((d, i) => <button key={d} className={dag === i ? "aan" : ""} onClick={() => setDag(i)}>{d} {new Date(`${plus(w.van, i)}T12:00:00Z`).getUTCDate()}</button>)}</div>
+            <div className="sv-segment">{DAGKORT.slice(0, 5 + (weekend.length ? 2 : 0)).map((d, i) => <button key={d} className={dag === i ? "aan" : ""} onClick={() => setDag(i)}>{d} {new Date(`${plus(w.van, i)}T12:00:00Z`).getUTCDate()}</button>)}</div>
           )}
           <button className="sv-knop" onClick={() => w && zetVan(plus(w.van, -7))}>‹ Vorige</button>
           <b style={{ minWidth: 150, textAlign: "center" }}>{w ? weekLabel(w.van) : ""}</b>
@@ -121,9 +123,14 @@ export function Gesprekken({ open, kies, van, zetVan }: { open: (id: number) => 
                 <div key={i} className="sv-week-dag">
                   {uren.map((u) => <div key={u} className="sv-week-uur" />)}
                   {banen(w.gesprekken.filter((g) => g.datum === d), vanaf).map(({ g, baan, aantal }) => (
-                    <button key={g.id} className="sv-blok" style={{ top: vanaf(g), background: BRANCHE[g.branche].vlak, left: `calc(6px + (100% - 12px) * ${baan} / ${aantal})`, width: `calc((100% - 12px) / ${aantal} - ${aantal > 1 ? 4 : 0}px)`, right: "auto" }} onClick={() => open(g.id)} title={`${g.naam}, ${g.tijd}`}>
-                      <b>{g.naam}</b>
-                      <span>{g.tijd} · {g.functie}{g.interviewer ? ` · ${g.interviewer}` : ""}</span>
+                    <button key={g.id} className="sv-blok" style={{ top: vanaf(g), background: BRANCHE[g.branche].vlak, left: `calc(6px + (100% - 12px) * ${baan} / ${aantal})`, width: `calc((100% - 12px) / ${aantal} - ${aantal > 1 ? 4 : 0}px)`, right: "auto" }} onClick={() => open(g.id)} title={`${g.naam}, ${g.tijd} · ${g.functie}${g.interviewer ? ` · ${g.interviewer}` : ""}`} aria-label={`${g.naam}, ${g.tijd}, ${g.functie}`}>
+                      {aantal >= 3 || (aantal === 2 && dagen.length > 5) ? <>
+                        <b style={{ fontSize: 12 }}>{g.naam.split(" ")[0]}</b>
+                        <span>{g.tijd}</span>
+                      </> : <>
+                        <b>{g.naam}</b>
+                        <span>{g.tijd} · {g.functie}{g.interviewer ? ` · ${g.interviewer}` : ""}</span>
+                      </>}
                       {g.bevestigd && <i aria-label="bevestigd">✓</i>}
                     </button>
                   ))}
@@ -166,7 +173,7 @@ export function Stappenlijst({ lijst, open, kies }: { lijst: "beoordelen" | "ref
   const uitleg = lijst === "beoordelen"
     ? "Iedereen bij wie de intake is afgerond en de beoordeling nog moet gebeuren."
     : lijst === "refdoc"
-      ? "Iedereen die nog een referentie of ID-check nodig heeft, en hoe lang al. Is beides in orde, dan verdwijnt de sollicitant uit deze lijst."
+      ? "Iedereen die nog een referentie of ID-check nodig heeft, en hoe lang al. Is beides in orde, dan kun je de sollicitant accepteren."
       : "De twijfelgevallen. Open de kaart en kies Afwijzen of Onboarden.";
   return (
     <div className="sv-lijst">
@@ -188,7 +195,7 @@ export function Stappenlijst({ lijst, open, kies }: { lijst: "beoordelen" | "ref
       )}
       <div className="sv-tabs" style={{ marginTop: lijst === "beoordelen" ? 18 : 0 }}>
         {(["alle", ...BRANCHES] as const).map((b) => (
-          <button key={b} className={`tab ${branche === b ? "aan" : ""}`} onClick={() => { setBranche(b); setPagina(0); }}>
+          <button key={b} className={`tab ${branche === b && lijst !== "extra" ? "aan" : ""}`} onClick={() => { setBranche(b); setPagina(0); if (lijst === "extra") kies("refdoc"); }}>
             {b === "alle" ? "Alle" : BRANCHE[b].label} {aantal(b)}
           </button>
         ))}

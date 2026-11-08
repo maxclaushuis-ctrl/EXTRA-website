@@ -91,12 +91,12 @@ export function Kaartje({ titel, rechts, children, className }: { titel?: ReactN
   );
 }
 
-export function Voortgang({ huidig, alles = false }: { huidig: number; alles?: boolean }) {
+export function Voortgang({ huidig, alles = false, onder }: { huidig: number; alles?: boolean; onder?: (string | null)[] }) {
   return (
     <div className="sv-voortgang">
       {VOORTGANG.map((s, i) => (
         <div key={s} className={`sv-vg ${i < huidig || alles ? "klaar" : i === huidig ? "nu" : ""}`}>
-          <span /><b>{s}</b>
+          <span /><b>{s}</b>{onder?.[i] ? <small>{onder[i]}</small> : null}
         </div>
       ))}
     </div>
@@ -161,6 +161,7 @@ export const CSS = `
 .sv-voortgang{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:18px}
 .sv-vg span{display:block;height:4px;border-radius:2px;background:#E7E2DA}
 .sv-vg b{display:block;font-size:12px;font-weight:500;color:#A39E94;margin-top:6px}
+.sv-vg small{display:block;font-size:11.5px;color:#8A8478;margin-top:2px;line-height:1.3}
 .sv-vg.klaar span{background:#4F7A3A}.sv-vg.klaar b{color:#5C594F}
 .sv-vg.nu span{background:#37352C}.sv-vg.nu b{color:#37352C;font-weight:800}
 .sv-foto{border-radius:50%;overflow:hidden;flex:none;display:flex;align-items:flex-end;justify-content:center}
@@ -170,13 +171,14 @@ export const CSS = `
 .sv-scrim{position:fixed;inset:0;background:rgba(30,29,25,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:150}
 .sv-dialoog{background:#fff;border-radius:20px;padding:24px;width:100%;max-height:calc(100vh - 32px);overflow:auto;color:#37352C}
 .sv-veld{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.sv input[type=checkbox],.sv input[type=radio]{accent-color:#37352C}
 .sv-veld>span{font-size:12px;font-weight:700;color:#6B665C;text-transform:uppercase;letter-spacing:.04em}
 .sv input[type=text],.sv input[type=tel],.sv input[type=email],.sv input[type=number],.sv input[type=date],.sv input[type=month],.sv input[type=time],.sv input[type=search],.sv textarea,.sv select{font:inherit;color:#37352C;border:1px solid #DDD8CE;border-radius:10px;padding:9px 12px;background:#fff;width:100%}
 .sv textarea{min-height:90px;resize:vertical}
 .sv ::placeholder{color:#A9A49A}
 .sv-fout{background:#FBE3DE;color:#A2321F;border-radius:10px;padding:10px 12px;margin:10px 0;font-weight:600}
 /* lijsten */
-.sv-lijst{background:#F8F7F4;padding:28px 40px;min-height:100%}
+.sv-lijst{background:#F8F7F4;padding:28px 40px;min-height:100%;border-radius:18px}
 .sv-segment{display:inline-flex;background:#EDEAE4;border-radius:12px;padding:3px;gap:2px}
 .sv-segment button{border:0;background:none;font:inherit;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;color:#5C594F}
 .sv-segment button.aan{background:#fff;color:#37352C;box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -184,6 +186,8 @@ export const CSS = `
 .sv-tabel{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #E9E5DD}
 .sv-tabel th{text-align:left;font-size:12px;color:#8A8478;font-weight:700;padding:12px 14px;border-bottom:1px solid #EEEAE3;white-space:nowrap}
 .sv-tabel td{padding:0 14px;height:54px;border-bottom:1px solid #F1EEE8;white-space:nowrap}
+.sv-tabel td.breek{white-space:normal;line-height:1.3;padding-top:8px;padding-bottom:8px}
+.sv-archief td,.sv-archief th{padding-left:10px;padding-right:10px}
 .sv-tabel tr.klik{cursor:pointer}.sv-tabel tr.klik:hover td{background:#FAF8F4}
 .sv-tabel tr:last-child td{border-bottom:0}
 .sv-kpis{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
@@ -214,7 +218,7 @@ export const CSS = `
 .sv-legenda span{display:inline-flex;align-items:center;gap:6px}
 .sv-legenda i{width:14px;height:14px;border-radius:4px;display:inline-block}
 /* kaart */
-.sv-dossier{background:#F4F2EE;padding:24px 40px;min-height:100%}
+.sv-dossier{background:#F4F2EE;padding:24px 40px;min-height:100%;border-radius:18px}
 .sv-terug{border:0;background:none;font:inherit;font-weight:600;font-size:13px;color:#5C594F;cursor:pointer;padding:0;margin-bottom:14px}
 .sv-kop{display:flex;gap:18px;align-items:center}
 .sv-kpirij{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}

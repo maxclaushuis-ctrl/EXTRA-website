@@ -56,7 +56,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
   if (open) {
     const ids = lijst.map((r) => r.id);
     return (
-      <div className="sv" style={{ borderRadius: 18, overflow: "hidden" }}>
+      <div className="sv" style={{ borderRadius: 18 }}>
         <style>{CSS}{KCSS}</style>
         <Dossier id={open} ids={ids.includes(open) ? ids : [open, ...ids]} context={`${branche === "alle" ? "Alle" : BRANCHE[branche].label}${filter.kleuren.length ? ` · ${filter.kleuren.map((k) => KLEUREN[k].label.toLowerCase()).join(", ")}` : ""}`}
           naar={(id) => setOpen(id)} terug={() => { setOpen(null); opnieuw(); }} naarWhatsapp={naarWhatsapp} />
@@ -68,7 +68,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
   const telBranche = (b: Branche | "alle") => (data ? (b === "alle" ? data.tellers.perBranche.alle : data.tellers.perBranche[b]) : 0);
   const conceptN = concept && data ? pas(concept, data.rijen).length : 0;
   return (
-    <div className="sv" style={{ borderRadius: 18, overflow: "hidden" }}>
+    <div className="sv" style={{ borderRadius: 18 }}>
       <style>{CSS}{KCSS}</style>
       <div className="sv-lijst">
         <div className="sv-tussen">
@@ -193,7 +193,7 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; 
   const besluit = (
     <div className="sv-rij">
       <Knop onClick={() => setAfwijzen(true)} disabled={bezig} style={{ height: 44 }}>Afwijzen</Knop>
-      <Knop soort="groen" onClick={() => accepteer()} disabled={bezig || d.matches.length > 0 || d.status !== "in_behandeling"} style={{ height: 44 }} title={d.matches.length ? "Beoordeel eerst het mogelijke dubbele dossier" : ""}>{d.status === "in_behandeling" ? "Accepteren" : "Uitgenodigd"}</Knop>
+      <Knop soort="groen" onClick={() => accepteer()} disabled={bezig || d.matches.length > 0 || d.status !== "in_behandeling" || d.job?.status === "gestopt"} style={{ height: 44 }} title={d.matches.length ? "Beoordeel eerst het mogelijke dubbele dossier" : ""}>{d.status === "in_behandeling" ? "Accepteren" : "Uitgenodigd"}</Knop>
     </div>
   );
   const webLink = d.job ? `/job-gesprek?token=${encodeURIComponent(d.job.token)}` : null;
@@ -223,38 +223,37 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; 
         </div>
       </div>
 
-      {geel && eerste && (
-        <div className={`k-aandacht ${d.bolletje.kleur === "rood" ? "rood" : ""}`}>
-          <p className="k-boven">{d.bolletje.kleur === "rood" ? "Geen reactie" : "Twijfel"} · wacht {d.bolletje.sindsTekst}</p>
-          <h2 style={{ fontSize: 20, margin: "2px 0 6px" }}>{eerste.titel || eerste.tekst}</h2>
-          <p style={{ fontSize: 14.5 }}>{uitleg(d, eerste.reden)}</p>
-          {d.bolletje.gele.length > 1 && <p className="sv-klein" style={{ marginTop: 6 }}>Ook: {d.bolletje.gele.slice(1).map((g) => g.tekst.replace(/^Twijfel: /, "")).join(" · ")}</p>}
-          <p style={{ marginTop: 8 }}><b>Volgende actie:</b> {eerste.actie}</p>
-          {d.matches.map((m) => (
-            <div key={m.id} className="k-match">
-              <p>Zelfde {m.redenen.join(" en ")} als {m.soort === "medewerker" ? "medewerker" : "een aanmelding van"} {m.naam}{m.wanneer ? ` (${MAANDEN[new Date(m.wanneer).getMonth()]} ${new Date(m.wanneer).getFullYear()})` : ""}. {m.stand}</p>
-              <div className="sv-rij" style={{ marginTop: 8 }}>
-                <Knop onClick={() => post(`match/${m.id}`, { status: "zelfde_persoon" }).then(opnieuw).catch((e) => melding(e.message))}>Zelfde persoon</Knop>
-                <Knop onClick={() => post(`match/${m.id}`, { status: "iemand_anders" }).then(opnieuw).catch((e) => melding(e.message))}>Iemand anders</Knop>
-                {m.soort === "kandidaat" && <a className="sv-knop sv-knop-link" href={`/dashboard?tab=kandidaten&kandidaat=${m.matchId}`} target="_blank" rel="noreferrer">Vergelijken</a>}
-              </div>
-            </div>
-          ))}
-          <div className="sv-tussen" style={{ alignItems: "center", marginTop: 14 }}>
-            <div className="sv-rij">
-              {d.contact.telefoon && <a className="sv-knop" href={`tel:${d.contact.telefoon}`}>Bel {d.voornaam}</a>}
-              {d.job && (d.job.kanaal === "whatsapp" ? <Knop onClick={naarWhatsapp}>Bericht via Job</Knop> : webLink && <a className="sv-knop" href={webLink} target="_blank" rel="noreferrer">Open webgesprek</a>)}
-            </div>
-            {besluit}
-          </div>
-        </div>
-      )}
-      {d.status === "in_behandeling" || d.status === "gepland" ? (
-        <p className="sv-klein" style={{ margin: "10px 0 0", textAlign: "right" }}><button className="sv-knop sv-knop-link" onClick={() => setInplannen(true)}>Of plan zelf een moment</button></p>
-      ) : null}
-
       <div className="k-twee">
         <div className="sv-kolom">
+        {geel && eerste && (
+          <div className={`k-aandacht ${d.bolletje.kleur === "rood" ? "rood" : ""}`}>
+            <p className="k-boven">{d.bolletje.kleur === "rood" ? "Geen reactie" : "Twijfel"} · wacht {d.bolletje.sindsTekst}</p>
+            <h2 style={{ fontSize: 20, margin: "2px 0 6px" }}>{eerste.titel || eerste.tekst}</h2>
+            <p style={{ fontSize: 14.5 }}>{uitleg(d, eerste.reden)}</p>
+            {d.bolletje.gele.length > 1 && <p className="sv-klein" style={{ marginTop: 6 }}>Ook: {d.bolletje.gele.slice(1).map((g) => g.tekst.replace(/^Twijfel: /, "")).join(" · ")}</p>}
+            <p style={{ marginTop: 8 }}><b>Volgende actie:</b> {eerste.actie}</p>
+            {d.matches.map((m) => (
+              <div key={m.id} className="k-match">
+                <p>Zelfde {m.redenen.join(" en ")} als {m.soort === "medewerker" ? "medewerker" : "een aanmelding van"} {m.naam}{m.wanneer ? ` (${MAANDEN[new Date(m.wanneer).getMonth()]} ${new Date(m.wanneer).getFullYear()})` : ""}. {m.stand}</p>
+                <div className="sv-rij" style={{ marginTop: 8 }}>
+                  <Knop onClick={() => post(`match/${m.id}`, { status: "zelfde_persoon" }).then(opnieuw).catch((e) => melding(e.message))}>Zelfde persoon</Knop>
+                  <Knop onClick={() => post(`match/${m.id}`, { status: "iemand_anders" }).then(opnieuw).catch((e) => melding(e.message))}>Iemand anders</Knop>
+                  {m.soort === "kandidaat" && <a className="sv-knop sv-knop-link" href={`/dashboard?tab=kandidaten&kandidaat=${m.matchId}`} target="_blank" rel="noreferrer">Vergelijken</a>}
+                </div>
+              </div>
+            ))}
+            <div className="sv-tussen" style={{ alignItems: "center", marginTop: 14 }}>
+              <div className="sv-rij">
+                {d.contact.telefoon && <a className="sv-knop" href={`tel:${d.contact.telefoon}`}>Bel {d.voornaam}</a>}
+                {d.job && (d.job.kanaal === "whatsapp" ? <Knop onClick={naarWhatsapp}>Bericht via Job</Knop> : webLink && <a className="sv-knop" href={webLink} target="_blank" rel="noreferrer">Open webgesprek</a>)}
+              </div>
+              {besluit}
+            </div>
+          </div>
+        )}
+        {d.status === "in_behandeling" || d.status === "gepland" ? (
+          <p className="sv-klein" style={{ margin: "10px 0 0", textAlign: "right" }}><button className="sv-knop sv-knop-link" onClick={() => setInplannen(true)}>Of plan zelf een moment</button></p>
+        ) : null}
           <div className="sv-kaart">
             <h2 style={{ fontSize: 17 }}>Profiel</h2>
             <div className="k-profiel">
@@ -285,7 +284,7 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; 
               <dt>Taal van het gesprek</dt><dd>{d.contact.gesprekstaal === "en" ? "Engels" : d.contact.gesprekstaal === "nl" ? "Nederlands" : "Onbekend"}</dd>
             </dl>
           </Uitklap>
-          <Uitklap titel="Tijdlijn en notities" samenvatting={`${d.tijdlijn.length} gebeurtenissen`} open={!!uit.tijdlijn} wissel={() => setUit({ ...uit, tijdlijn: !uit.tijdlijn })}>
+          <Uitklap titel="Tijdlijn en notities" samenvatting={`${d.tijdlijn.length} ${d.tijdlijn.length === 1 ? "gebeurtenis" : "gebeurtenissen"}`} open={!!uit.tijdlijn} wissel={() => setUit({ ...uit, tijdlijn: !uit.tijdlijn })}>
             <div className="sv-tijdlijn">{d.tijdlijn.map((t, n) => <div key={n}><b>{kortDatum(t.at)}</b><span style={t.notitie ? { fontStyle: "italic" } : undefined}>{t.tekst}</span></div>)}</div>
             <label className="sv-veld" style={{ marginTop: 14 }}><span>Notitie</span><textarea value={notitie} onChange={(e) => setNotitie(e.target.value)} placeholder="Gaat mee naar Sollicitanten" /></label>
             <Knop disabled={!notitie.trim() || bezig} onClick={() => post(`${id}/notitie`, { tekst: notitie }).then(() => { setNotitie(""); melding("Notitie opgeslagen."); opnieuw(); }).catch((e) => melding(e.message))}>Notitie opslaan</Knop>
@@ -397,7 +396,7 @@ function Inplannen({ id, voornaam, sluit, klaar }: { id: number; voornaam: strin
 const KCSS = `
 .sv .k-filter{position:absolute;right:0;top:46px;width:300px;background:#fff;border:1px solid #E4E0D8;border-radius:14px;padding:16px;z-index:20;box-shadow:0 12px 30px -12px rgba(55,53,44,.35)}
 .sv .k-filterrij{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13.5px;cursor:pointer}
-.sv .k-aandacht{background:#FFFBEA;border:1px solid #EFDC8C;border-radius:16px;padding:18px 20px;margin-top:16px}
+.sv .k-aandacht{background:#FFFBEA;border:1px solid #EFDC8C;border-radius:16px;padding:18px 20px}
 .sv .k-aandacht.rood{background:#FBE3DE;border-color:#F0B8AC}
 .sv .k-boven{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7A6200}
 .sv .k-aandacht.rood .k-boven{color:#A2321F}

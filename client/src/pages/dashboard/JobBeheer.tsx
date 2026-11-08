@@ -282,15 +282,15 @@ const VELD_LABEL: Record<string, string> = {
 };
 
 /** Het gesprek met Job op de kandidaatkaart. */
-export function JobGesprekPaneel({ candidateId }: { candidateId: number }) {
+export function JobGesprekPaneel({ candidateId, kolom = false }: { candidateId: number; kolom?: boolean }) {
   const [data, setData] = useState<PaneelData | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(kolom);
   const [fout, setFout] = useState("");
 
   async function laad() {
     try { setData(await haal<PaneelData>(`/api/admin/job/kandidaat/${candidateId}`)); } catch (e: any) { setFout(e?.message || "Laden mislukt"); }
   }
-  useEffect(() => { setData(null); setOpen(false); void laad(); }, [candidateId]);
+  useEffect(() => { setData(null); setOpen(kolom); void laad(); }, [candidateId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function start() {
     try {
@@ -303,9 +303,9 @@ export function JobGesprekPaneel({ candidateId }: { candidateId: number }) {
   if (!data) return null;
   const g = data.gesprek;
   return (
-    <section style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #E4E0D8" }} aria-label="Gesprek met Job">
+    <section style={kolom ? {} : { marginTop: 18, paddingTop: 14, borderTop: "1px solid #E4E0D8" }} aria-label="Gesprek met Job">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-        <b style={{ fontSize: 14.5 }}>Gesprek met Job</b>
+        <b style={{ fontSize: kolom ? 15 : 14.5, fontWeight: 800 }}>Gesprek met Job</b>
         {g ? <StatusChip status={g.status} /> : null}
       </div>
       {fout && <p style={{ color: "#A2321F", fontSize: 13 }}>{fout}</p>}
@@ -321,21 +321,21 @@ export function JobGesprekPaneel({ candidateId }: { candidateId: number }) {
             <p style={{ margin: "0 0 8px", background: "#FFF6D6", color: "#7A6200", padding: "8px 10px", borderRadius: 10 }}><b>Waarom een collega moet kijken:</b> {g.twijfels.join(" ")}</p>
           )}
           {data.afspraak && <p style={{ margin: "0 0 8px" }}><b>Kennismaking:</b> {new Date(`${data.afspraak.datum}T12:00:00`).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" })} om {data.afspraak.tijd} met {data.afspraak.interviewer}</p>}
-          {Object.keys(VELD_LABEL).filter((k) => g.velden?.[k] !== undefined && g.velden?.[k] !== "").map((k) => [k, g.velden[k]] as const).map(([k, v]) => (
+          {!kolom && Object.keys(VELD_LABEL).filter((k) => g.velden?.[k] !== undefined && g.velden?.[k] !== "").map((k) => [k, g.velden[k]] as const).map(([k, v]) => (
             <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "5px 0", borderBottom: "1px solid #F7F4EF" }}>
               <span style={{ color: "#8A8478" }}>{VELD_LABEL[k]}</span>
               <span style={{ textAlign: "right", fontWeight: 500 }}>{String(v)}</span>
             </div>
           ))}
-          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#8A8478" }}>Zelf opgegeven aan Job; een collega bevestigt het bij de kennismaking.</p>
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button type="button" style={knop()} onClick={() => setOpen(!open)}>{open ? "Verberg gesprek" : `Toon gesprek (${data.berichten?.length || 0})`}</button>
+          {!kolom && <p style={{ margin: "8px 0 0", fontSize: 12, color: "#8A8478" }}>Zelf opgegeven aan Job; een collega bevestigt het bij de kennismaking.</p>}
+          <div style={{ display: "flex", gap: 8, marginTop: 10, order: kolom ? 2 : 0 }}>
+            {!kolom && <button type="button" style={knop()} onClick={() => setOpen(!open)}>{open ? "Verberg gesprek" : `Toon gesprek (${data.berichten?.length || 0})`}</button>}
             <a href={g.link} target="_blank" rel="noopener noreferrer" style={{ ...knop(), display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Open webgesprek</a>
           </div>
           {open && (
-            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6, maxHeight: 320, overflowY: "auto", background: "#F2EEE7", borderRadius: 12, padding: 10 }}>
+            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6, maxHeight: kolom ? 680 : 320, overflowY: "auto", background: kolom ? "transparent" : "#F2EEE7", borderRadius: 12, padding: kolom ? 0 : 10 }}>
               {(data.berichten || []).map((b) => (
-                <div key={b.id} style={{ alignSelf: b.richting === "in" ? "flex-end" : "flex-start", maxWidth: "88%", background: b.richting === "in" ? "#E3F0E5" : "#fff", borderRadius: 12, padding: "7px 10px", fontSize: 12.5, whiteSpace: "pre-wrap" }}>{b.tekst}</div>
+                <div key={b.id} style={{ alignSelf: b.richting === "in" ? "flex-end" : "flex-start", maxWidth: "88%", background: b.richting === "in" ? "#E3F0E5" : "#fff", border: b.richting === "in" ? 0 : "1px solid #ECE7DF", borderRadius: b.richting === "in" ? "14px 4px 14px 14px" : "4px 14px 14px 14px", padding: "7px 10px", fontSize: 12.5, whiteSpace: "pre-wrap" }}>{b.tekst}{b.aangemaaktAt ? <small style={{ display: "block", fontSize: 10, color: "#8A8478", marginTop: 2 }}>{new Date(b.aangemaaktAt).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Amsterdam" })}</small> : null}</div>
               ))}
             </div>
           )}

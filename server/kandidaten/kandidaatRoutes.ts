@@ -28,7 +28,7 @@ class Fout extends Error { constructor(public status: number, msg: string, publi
 
 async function wie(req: Request) {
   const id = (req as any).session?.userId as number | undefined;
-  const u = id ? await storage.getUser(id) : undefined;
+  const [u] = id ? await db.select({ firstName: users.firstName, lastName: users.lastName }).from(users).where(eq(users.id, id)) : [];
   return { id: id ?? null, voornaam: u?.firstName || "Onbekend", naam: u ? `${u.firstName} ${u.lastName}`.trim() : "Onbekend" };
 }
 
@@ -90,7 +90,7 @@ async function dossier(id: number) {
   const [uitgenodigd] = await db.select({ at: sollicitantGebeurtenissen.at }).from(sollicitantGebeurtenissen)
     .where(and(eq(sollicitantGebeurtenissen.candidateId, id), eq(sollicitantGebeurtenissen.soort, "uitgenodigd"))).orderBy(desc(sollicitantGebeurtenissen.at)).limit(1);
   const b = bolletje(invoer(c, g, matches[0], uitgenodigd?.at), nu);
-  const planner = c.plannerUserId ? (await storage.getUser(c.plannerUserId)) : null;
+  const [planner] = c.plannerUserId ? await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName }).from(users).where(eq(users.id, c.plannerUserId)) : [];
   const matchDetails = await Promise.all(matches.map(async (m) => {
     if (m.soort === "medewerker") {
       const [e] = await db.select({ firstName: employees.firstName, lastName: employees.lastName, createdAt: employees.createdAt }).from(employees).where(eq(employees.id, m.matchId));
@@ -109,7 +109,8 @@ async function dossier(id: number) {
     ...(g ? [{ at: g.gestartAt, tekst: "Gesprek met Job gestart", notitie: false }] : []),
   ].sort((p, q) => new Date(q.at).getTime() - new Date(p.at).getTime());
   const v = (g?.velden || {}) as JobVelden & Record<string, unknown>;
-  const bron = (c.bronDetails as any)?.chip || (c.sourceChannel || "").replace(/^website - /i, "") || null;
+  const ruwe = (c.bronDetails as any)?.chip || (c.sourceChannel || "").replace(/^website - /i, "") || "";
+  const bron = !ruwe ? null : /^(aanmeldflow|aanmeldformulier|website)$/i.test(ruwe.trim()) ? "de website" : ruwe;
   return {
     id: c.id, voornaam: c.firstName, naam: `${c.firstName} ${c.lastName}`.trim(), status: c.status,
     functie: functieNaam(c.functionType, isAfwas(c)), branche: brancheVan(c.functionType, null, isAfwas(c), ingangBranche(c.bronDetails)),

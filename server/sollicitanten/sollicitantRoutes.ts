@@ -17,7 +17,7 @@ import { and, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "../db";
 import { storage } from "../storage";
 import {
-  candidates, jobAfspraken, jobGesprekken, sollicitantDossiers, sollicitantGebeurtenissen,
+  candidates, jobAfspraken, jobGesprekken, sollicitantDossiers, sollicitantGebeurtenissen, users,
   type Candidate, type SollicitantDossier,
 } from "@shared/schema";
 import {
@@ -38,7 +38,8 @@ interface Wie { id: number | null; naam: string; voornaam: string }
 async function wie(req: Request): Promise<Wie> {
   const id = (req as any).session?.userId as number | undefined;
   if (!id) return { id: null, naam: "Onbekend", voornaam: "Onbekend" };
-  const u = await storage.getUser(id);
+  // Uit de database: storage.getUser leest een geheugenlijst die niet gelijkloopt met de echte accounts.
+  const [u] = await db.select({ firstName: users.firstName, lastName: users.lastName }).from(users).where(eq(users.id, id));
   return { id, naam: u ? `${u.firstName} ${u.lastName}`.trim() : "Onbekend", voornaam: u?.firstName || "Onbekend" };
 }
 
@@ -224,7 +225,7 @@ async function kaart(id: number) {
       zone: c.nationalityZone, woonplaats: c.city, functie: c.functionType, functieNaam: functieNaam(c.functionType, isAfwas(c)),
       afwas: !!c.canDoWashing, twvNodig: twvNodig(c, d), heeftCv: !!c.hasCv, status: c.status, gespreksdatum: c.interviewDate,
       gesprekstijd: c.interviewTime ? String(c.interviewTime).slice(0, 5) : null, talen: c.language, ervaring: c.horecaExperience,
-      beschikbaarheid: c.availability, aangemeld: c.createdAt, whatsapp: c.whatsappOptInStatus, bewaardTot: c.retentionUntil,
+      beschikbaarheid: c.availability, aangemeld: c.createdAt, whatsapp: c.whatsappOptInStatus, bewaardTot: c.retentionUntil, postcode: c.postcode, woonland: c.woonland,
     },
     stap: (d?.stap || stapZonderDossier(c)) as Stap,
     branche: brancheVan(c.functionType, d?.branche, isAfwas(c), ingangBranche(c.bronDetails)),

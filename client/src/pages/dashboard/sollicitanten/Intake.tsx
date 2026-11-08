@@ -12,14 +12,19 @@ import type { KaartData } from "./Kaart";
 import { Dialoog, Knop, api, melding, useData } from "./gedeeld";
 
 const DIENSTEN: Record<string, string> = { "1-2": "1 tot 2 diensten per week", "3-4": "3 tot 4 diensten per week", "5+": "5 of meer diensten per week" };
-function jobWistAl(job: KaartData["job"], sleutel?: Vraag["job"]): string {
-  const v = (job?.velden || {}) as Record<string, unknown>;
-  if (!sleutel) return "";
-  if (sleutel === "talen") return String(v.talen || "");
-  if (sleutel === "ervaring") return String(v.ervaring || "");
-  if (sleutel === "werkgebied") return [v.vervoer, v.werkgebied].filter(Boolean).map(String).join(", ");
-  if (sleutel === "diensten") return v.diensten ? DIENSTEN[String(v.diensten)] || String(v.diensten) : "";
-  return "";
+/** Wat Job al wist, of anders wat de kandidaat bij de aanmelding opgaf. */
+function jobWistAl(data: KaartData, sleutel?: Vraag["job"]): { tekst: string; bron: "job" | "aanmelding" } | null {
+  if (!sleutel) return null;
+  const v = (data.job?.velden || {}) as Record<string, unknown>;
+  const k = data.kandidaat;
+  const job = sleutel === "talen" ? String(v.talen || "")
+    : sleutel === "ervaring" ? String(v.ervaring || "")
+    : sleutel === "werkgebied" ? [v.vervoer, v.werkgebied].filter(Boolean).map(String).join(", ")
+    : sleutel === "diensten" ? (v.diensten ? DIENSTEN[String(v.diensten)] || String(v.diensten) : "")
+    : "";
+  if (job) return { tekst: job, bron: "job" };
+  const aanmelding = sleutel === "talen" ? k.talen : sleutel === "ervaring" ? k.ervaring : sleutel === "diensten" ? k.beschikbaarheid : null;
+  return aanmelding ? { tekst: aanmelding, bron: "aanmelding" } : null;
 }
 const TAALWOORDEN: [RegExp, string][] = [[/nederlands|dutch/i, "Nederlands"], [/engels|english/i, "Engels"], [/arabisch|arabic/i, "Arabisch"], [/duits|german/i, "Duits"], [/frans|french/i, "Frans"], [/spaans|spanish/i, "Spaans"]];
 
@@ -39,8 +44,8 @@ export function IntakeScherm({ id, sluit, klaar }: { id: number; sluit: () => vo
   useEffect(() => {
     if (!data || intake) return;
     const i: Intake = { ...((data.dossier?.intake || {}) as Intake) };
-    if (!i.talen && data.job?.velden?.talen) {
-      const t = String(data.job.velden.talen);
+    if (!i.talen && (data.job?.velden?.talen || data.kandidaat.talen)) {
+      const t = String(data.job?.velden?.talen || data.kandidaat.talen);
       i.talen = TAALWOORDEN.filter(([r]) => r.test(t)).map(([, n]) => n);
     }
     setIntake(i);
@@ -65,7 +70,7 @@ export function IntakeScherm({ id, sluit, klaar }: { id: number; sluit: () => vo
   }
   function gaNaar(n: number) {
     clearTimeout(timer.current);
-    if (intake) bewaar(intake, n);
+    if (intake && laatste.current) { laatste.current = { intake, nr: n }; bewaar(intake, n); }
     setNr(n); setUitleg(false);
     inhoud.current?.scrollTo({ top: 0 });
   }
@@ -86,6 +91,8 @@ export function IntakeScherm({ id, sluit, klaar }: { id: number; sluit: () => vo
   const afnemer = data.dossier?.intakeDoor || data.ik || "";
   const w = { voornaam: k.voornaam, interviewer: afnemer.split(" ")[0] || undefined, nationaliteit: k.nationaliteit || undefined };
   const volgende = ONDERDELEN[nr];
+  const open = openVragen(intake, data.script, fotoKlaar);
+  const isKlaar = (o: (typeof ONDERDELEN)[number]) => o.nr !== nr && !open.some((x) => x.startsWith(`${o.nr}.`) || x === `${o.nr} ${o.titel}`);
 
   async function rondAf(toch = false) {
     const open = openVragen(intake!, data!.script, fotoKlaar);
@@ -104,21 +111,21 @@ export function IntakeScherm({ id, sluit, klaar }: { id: number; sluit: () => vo
     <div className="iv">
       <style>{IV_CSS}</style>
       <header className="iv-balk">
-        <b className="iv-logo">EXTRA</b><span className="iv-streep" />
+        <img className="iv-logo" src="/d3/logo-w.svg" alt="EXTRA" /><span className="iv-streep" />
         <span>Intake · {k.naam}</span>
         <span className="iv-rechts">{SCRIPT_NAAM[data.script]} · {afnemer || "jij"}</span>
         <button className="iv-sluit" onClick={() => { if (intake) bewaar(intake, nr); sluit(); }} aria-label="Intake sluiten, het concept blijft bewaard">Sluiten</button>
       </header>
-      <div className="iv-strook">{ONDERDELEN.map((x) => <i key={x.nr} className={x.nr < nr ? "klaar" : x.nr === nr ? "nu" : ""} />)}</div>
+      <div className="iv-strook">{ONDERDELEN.map((x) => <i key={x.nr} className={x.nr === nr ? "nu" : isKlaar(x) ? "klaar" : ""} />)}</div>
       <div className="iv-lijf">
         <nav className="iv-lijst" aria-label="Onderdelen">
           <p>ONDERDELEN</p>
           {ONDERDELEN.map((x) => (
-            <button key={x.nr} className={x.nr === nr ? "nu" : x.nr < nr ? "klaar" : ""} onClick={() => gaNaar(x.nr)}>
-              <span>{x.nr < nr ? "✓" : x.nr}</span>{x.titel}
+            <button key={x.nr} className={x.nr === nr ? "nu" : isKlaar(x) ? "klaar" : ""} onClick={() => gaNaar(x.nr)}>
+              <span>{x.nr !== nr && isKlaar(x) ? "✓" : x.nr}</span>{x.titel}
             </button>
           ))}
-          <p className="iv-opslag">{opslag === "bezig" ? "Opslaan..." : opslag === "fout" ? "Opslaan mislukt, probeer het zo nog eens" : "Concept bewaard"}</p>
+          <p className="iv-opslag">{opslag === "bezig" ? "Opslaan..." : opslag === "fout" ? "Opslaan mislukt, probeer het zo nog eens" : laatste.current || data.dossier?.intakeStatus === "concept" ? "Concept bewaard" : ""}</p>
         </nav>
         <main className="iv-inhoud" ref={inhoud}>
           <div className="iv-kolom">
@@ -131,7 +138,7 @@ export function IntakeScherm({ id, sluit, klaar }: { id: number; sluit: () => vo
             {vragen.map((v) => {
               if (v.als && intake[v.als.vraag] !== v.als.is) return null;
               return (
-                <VraagBlok key={v.id} v={v} tekst={vulIn(v.tekst, w)} wistAl={jobWistAl(data.job, v.job)} intake={intake} zet={zet} script={data.script} voornaam={k.voornaam}
+                <VraagBlok key={v.id} v={v} tekst={vulIn(v.tekst, w)} wistAl={jobWistAl(data, v.job)} intake={intake} zet={zet} script={data.script} voornaam={k.voornaam}
                   autoVolgende={() => gaNaar(nr + 1)} brancheKleur={BRANCHE[data.branche].foto} brancheNaam={BRANCHE[data.branche].label} id={id}
                   fotoKlaar={fotoKlaar} zetFotoKlaar={setFotoKlaar} bestaandeFoto={data.dossier?.foto || null} />
               );
@@ -167,7 +174,7 @@ function JeZegt({ tekst }: { tekst: string }) {
 }
 
 function VraagBlok(p: {
-  v: Vraag; tekst: string; wistAl: string; intake: Intake; zet: (x: Partial<Intake>) => void; script: string; voornaam: string;
+  v: Vraag; tekst: string; wistAl: { tekst: string; bron: "job" | "aanmelding" } | null; intake: Intake; zet: (x: Partial<Intake>) => void; script: string; voornaam: string;
   autoVolgende: () => void; brancheKleur: string; brancheNaam: string; id: number; fotoKlaar: boolean; zetFotoKlaar: (b: boolean) => void; bestaandeFoto: string | null;
 }) {
   const { v, intake, zet } = p;
@@ -184,7 +191,7 @@ function VraagBlok(p: {
       {v.hint && <p className="iv-hint">{v.hint}</p>}
       {p.wistAl && (
         <div className="iv-wistal">
-          <span><b>Job wist al:</b> {p.wistAl}</span>
+          <span><b>{p.wistAl.bron === "job" ? "Job wist al:" : "Uit de aanmelding:"}</b> {p.wistAl.tekst}</span>
           <span className="iv-mini">
             <button className={jobStand === "klopt" ? "aan" : ""} onClick={() => zetJob("klopt")}>Klopt</button>
             <button className={jobStand === "aanpassen" ? "aan" : ""} onClick={() => zetJob("aanpassen")}>Aanpassen</button>
@@ -487,11 +494,11 @@ function FotoMaker({ id, kleur, branche, klaar, zetKlaar, bestaand }: { id: numb
 }
 
 const IV_CSS = `
-.iv{position:fixed;inset:0;z-index:120;background:#F8F7F4;display:flex;flex-direction:column;color:#37352C;font-size:16px}
+.iv{position:fixed;inset:0;z-index:2000;background:#F8F7F4;display:flex;flex-direction:column;color:#37352C;font-size:16px}
 .iv *{box-sizing:border-box}
 .iv-laden{margin:auto;color:#8A8478}
 .iv-balk{height:56px;background:#37352C;color:#F8F7F4;display:flex;align-items:center;gap:14px;padding:0 20px;flex:none}
-.iv-logo{font-weight:900;letter-spacing:.08em}.iv-streep{width:1px;height:22px;background:rgba(255,255,255,.3)}
+.iv-logo{height:22px;width:auto;display:block}.iv-streep{width:1px;height:22px;background:rgba(255,255,255,.3)}
 .iv-rechts{margin-left:auto;opacity:.75;font-size:14px}
 .iv-sluit{background:none;border:1px solid rgba(255,255,255,.35);color:#F8F7F4;border-radius:9px;height:34px;padding:0 12px;font:inherit;font-size:14px;cursor:pointer}
 .iv-strook{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;background:#37352C;padding:0 20px 8px;flex:none}
@@ -513,7 +520,7 @@ const IV_CSS = `
 .iv h1{font-size:32px;font-weight:800;margin:4px 0 6px}
 .iv-doel{color:#6B665C;margin:0 0 18px}
 .iv-zegt{background:#F4F1EC;border-radius:14px;padding:14px 18px;margin:0 0 20px}
-.iv-zegt span{font-size:11px;font-weight:800;letter-spacing:.08em;color:#8A8478}.iv-zegt p{font-size:18px;margin:4px 0 0}
+.iv-zegt span{font-size:11px;font-weight:800;letter-spacing:.08em;color:#8A8478}.iv-zegt p{font-size:18px;font-weight:700;margin:4px 0 0}
 .iv-vraag{background:#fff;border-radius:18px;padding:20px 22px;margin-bottom:14px;box-shadow:0 1px 2px rgba(55,53,44,.05)}
 .iv-vtekst{font-size:22px;font-weight:700;margin:0 0 6px;line-height:1.3}
 .iv-nr{color:#A39E94;font-weight:700;margin-right:6px}

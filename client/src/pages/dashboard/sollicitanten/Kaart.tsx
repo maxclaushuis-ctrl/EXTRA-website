@@ -19,7 +19,7 @@ export interface KaartData {
     id: number; voornaam: string; achternaam: string; naam: string; email: string | null; telefoon: string | null; geboren: string | null;
     leeftijd: number | null; nationaliteit: string | null; zone: string | null; woonplaats: string | null; functie: string; functieNaam: string;
     afwas: boolean; twvNodig: boolean; heeftCv: boolean; status: string; gespreksdatum: string | null; gesprekstijd: string | null;
-    talen: string | null; ervaring: string | null; beschikbaarheid: string | null; aangemeld: string; whatsapp: string; bewaardTot: string | null;
+    talen: string | null; ervaring: string | null; beschikbaarheid: string | null; aangemeld: string; whatsapp: string; bewaardTot: string | null; postcode?: string | null; woonland?: string | null;
   };
   stap: Stap; branche: Branche; script: Script; interviewer: string | null; bevestigd: boolean;
   dossier: null | {
@@ -91,7 +91,7 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
   const chip = stap === "extra_check" && d?.twijfelDoor
     ? <Chip soort="twijfel">EXTRA check · twijfel van {d.twijfelDoor.split(" ")[0]}, {kortDatum(d.twijfelAt)}</Chip>
     : stap === "onboarding"
-      ? <Chip soort="ok">✓ Geaccepteerd{d?.geaccepteerdDoor ? ` door ${d.geaccepteerdDoor.split(" ")[0]}` : ""}{d?.geaccepteerdAt ? `, ${kortDatum(d.geaccepteerdAt)}` : ""} · ref. en doc. check in orde</Chip>
+      ? <Chip soort="ok">✓ Geaccepteerd{d?.geaccepteerdDoor ? ` door ${d.geaccepteerdDoor.split(" ")[0]}` : ""}{d?.geaccepteerdAt ? `, ${kortDatum(d.geaccepteerdAt)}` : ""} · {magAccepteren(ctl, k.twvNodig) ? "ref. en doc. check in orde" : d?.twijfelDoor ? "via EXTRA check" : "ref. en doc. check"}</Chip>
       : stap === "archief"
         ? <Chip soort="fout">In het archief · {d?.archiefReden}{d?.gearchiveerdAt ? `, ${kortDatum(d.gearchiveerdAt)}` : ""}</Chip>
         : null;
@@ -131,27 +131,8 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
         </Kaartje>
       )}
 
-      <KpiRij intake={intake} script={data.script} />
-
-      <div className="sv-twee">
-        <div className="sv-kolom">
-          {stap === "beoordelen" ? (
-            <BeoordelingInvoer data={data} bezig={bezig}
-              afwijzen={() => setAfwijzen({})}
-              twijfel={() => actie("twijfel", {}, () => { melding("Op EXTRA check gezet. Klik op EXTRA check om de twijfelgevallen te zien."); naarLijst("refdoc"); })}
-              naarCheck={() => actie("naar_check", {}, () => { melding("Door naar de ref. en doc. check."); opnieuw(); })} />
-          ) : <BeoordelingLezen data={data} />}
-          <UitDeIntake intake={intake} script={data.script} metReferentie={stap === "beoordelen"} />
-          {(stap === "onboarding" || stap === "archief") && <>
-            <ReferentieLezen ctl={ctl} />
-            <DocumentLezen data={data} ctl={ctl} />
-          </>}
-        </div>
-        {rechts}
-      </div>
-
-      {(stap === "ref_doc_check" || stap === "extra_check") && <>
-        {stap === "ref_doc_check" && (
+      {stap === "ref_doc_check" && <>
+        {(
           <Kaartje className="sv-besluitkaart">
             <div className="sv-besluit">
               <div>
@@ -170,11 +151,32 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
             <p className="sv-klein" style={{ marginTop: 10 }}>Accepteren kan pas als het ID en de referentie allebei in orde zijn. Dan gaat {k.voornaam} door naar Onboarding. Twijfel zet de sollicitant onder EXTRA check. Afwijzen of een negatieve referentie stuurt de sollicitant naar het archief.</p>
           </Kaartje>
         )}
-        <div className="sv-onder">
+        <div className="sv-onder" style={{ marginBottom: 16 }}>
           <DocumentInvoer data={data} ctl={ctl} bijgewerkt={opnieuw} />
           <ReferentieInvoer data={data} ctl={ctl} bijgewerkt={opnieuw} negatief={() => setAfwijzen({ aanleiding: "negatief" })} />
         </div>
       </>}
+
+      <KpiRij intake={intake} script={data.script} />
+
+      <div className="sv-twee">
+        <div className="sv-kolom">
+          {stap === "beoordelen" ? (
+            <BeoordelingInvoer data={data} bezig={bezig}
+              afwijzen={() => setAfwijzen({})}
+              twijfel={() => actie("twijfel", {}, () => { melding("Op EXTRA check gezet. Klik op EXTRA check om de twijfelgevallen te zien."); naarLijst("refdoc"); })}
+              naarCheck={() => actie("naar_check", {}, () => { melding("Door naar de ref. en doc. check."); opnieuw(); })} />
+          ) : <BeoordelingLezen data={data} />}
+          <UitDeIntake intake={intake} script={data.script} metReferentie={stap === "beoordelen"} />
+          {(stap === "onboarding" || stap === "archief" || stap === "extra_check") && <>
+            <ReferentieLezen ctl={ctl} />
+            {stap === "extra_check" && !magOnboarden(ctl, k.twvNodig)
+              ? <DocumentInvoer data={data} ctl={ctl} bijgewerkt={opnieuw} />
+              : <DocumentLezen data={data} ctl={ctl} />}
+          </>}
+        </div>
+        {rechts}
+      </div>
 
       {afwijsDialoog}
       {persoon && <PersoonDialoog data={data} sluit={() => setPersoon(false)} klaar={() => { setPersoon(false); opnieuw(); }} />}
@@ -578,7 +580,7 @@ function VoorIntake({ data, bezig, startIntake, nietVerschenen, afwijzen, verzet
       <span className="sv-grijs">{data.interviewer ? `met ${data.interviewer} · ` : ""}Herengracht 372</span>
       {data.bevestigd && <b style={{ color: "#3E8E5A" }}>✓ bevestigd door {k.voornaam}</b>}
     </div>
-    <Voortgang huidig={2} />
+    <Voortgang huidig={2} onder={[kortDatum(k.aangemeld), data.job ? `gesprek met Job${data.job.status === "gepland" ? " · gepland" : ""}` : null, k.gespreksdatum ? `${dagDatum(k.gespreksdatum).split(" ").slice(0, 3).join(" ")}${k.gesprekstijd ? `, ${k.gesprekstijd}` : ""}` : null]} />
     <div className="sv-twee" style={{ gridTemplateColumns: data.job ? "minmax(0,1fr) 380px" : "1fr", gap: 32, marginTop: 22 }}>
       <div className="sv-kolom">
         <div className="sv-rij" style={{ flexWrap: "nowrap" }}>
@@ -592,6 +594,7 @@ function VoorIntake({ data, bezig, startIntake, nietVerschenen, afwijzen, verzet
           <p className="sv-grijs" style={{ marginBottom: 12 }}>Twijfel en Referentie checken worden actief zodra het intakeformulier is afgerond.</p>
           <div className="sv-rij"><Knop onClick={afwijzen} disabled={bezig}>Afwijzen</Knop><Knop soort="geel" disabled>Twijfel</Knop><Knop disabled>Referentie checken →</Knop></div>
         </Kaartje>
+        <div className="sv-onder" style={{ marginTop: 0 }}>
         <Kaartje titel="Persoonsgegevens" rechts={<button className="sv-knop sv-knop-link" onClick={persoon}>✎ Aanpassen</button>}>
           <dl className="sv-gegevens">
             <dt>Telefoon</dt><dd>{k.telefoon || "Onbekend"}</dd>
@@ -599,7 +602,7 @@ function VoorIntake({ data, bezig, startIntake, nietVerschenen, afwijzen, verzet
             <dt>Geboortedatum</dt><dd>{k.geboren ? `${langDatum(k.geboren)}${k.leeftijd !== null ? ` · ${k.leeftijd} jaar` : ""}` : "Onbekend"}</dd>
             <dt>Nationaliteit</dt><dd>{k.nationaliteit || "Onbekend"}</dd>
             <dt>Werkvergunning (TWV)</dt><dd>{k.twvNodig ? "Nodig" : "Niet nodig"} <i className="sv-grijs" style={{ fontWeight: 400 }}>{k.zone === "NL" ? "Nederlandse nationaliteit" : k.zone === "EU" ? "EU-nationaliteit" : k.zone === "NON_EU" ? "buiten de EU" : ""}</i></dd>
-            <dt>Woonplaats</dt><dd>{k.woonplaats || "Onbekend"}</dd>
+            <dt>Adres</dt><dd>{k.woonland ? `Woont nog in ${k.woonland}` : [k.postcode, k.woonplaats].filter(Boolean).join(" ") || "Onbekend"} <i className="sv-grijs" style={{ fontWeight: 400 }}>straat en huisnummer volgen in de intake</i></dd>
             <dt>Toestemming</dt><dd>{k.whatsapp === "actief" ? "WhatsApp en e-mail" : "E-mail"}, {kortDatum(k.aangemeld)}</dd>
             <dt>ID</dt><dd>Nog te controleren in de intake</dd>
           </dl>
@@ -610,20 +613,21 @@ function VoorIntake({ data, bezig, startIntake, nietVerschenen, afwijzen, verzet
             <dt>Functie</dt><dd>{k.functieNaam}</dd>
             <dt>Ervaring</dt><dd>{k.ervaring || "Onbekend"} <i className="sv-grijs" style={{ fontWeight: 400 }}>zelf opgegeven</i></dd>
             <dt>Diensten</dt><dd>{k.beschikbaarheid || "Onbekend"} <i className="sv-grijs" style={{ fontWeight: 400 }}>zelf opgegeven</i></dd>
-            {data.job?.velden?.werkgebied ? <><dt>Werkgebied</dt><dd>{String(data.job.velden.werkgebied)} <i className="sv-grijs" style={{ fontWeight: 400 }}>volgens Job</i></dd></> : null}
+            <dt>Werkgebied</dt><dd>{data.job?.velden?.werkgebied ? <>{String(data.job.velden.werkgebied)} <i className="sv-grijs" style={{ fontWeight: 400 }}>zelf opgegeven</i></> : "Nog te vragen in de intake"}</dd>
           </dl>
           <p className="sv-lbl">PERSOON</p>
           <dl className="sv-gegevens">
             <dt>Talen</dt><dd>{k.talen || "Onbekend"}{data.job?.velden?.talen ? <i className="sv-grijs" style={{ fontWeight: 400 }}> inschatting Job</i> : null}</dd>
-            <dt>Cv</dt><dd>{k.heeftCv ? "Ontvangen" : "Nog niet ontvangen"}</dd>
+            <dt>Cv</dt><dd>{k.heeftCv ? <>Ontvangen · <a href={`/api/admin/candidates/${k.id}/cv?preview=1`} target="_blank" rel="noreferrer" style={{ color: "inherit" }}>bekijken</a></> : "Nog niet ontvangen"}</dd>
             <dt>Referenties</dt><dd>Nog op te vragen in de intake</dd>
           </dl>
         </Kaartje>
-        <details className="sv-kaart"><summary style={{ cursor: "pointer", fontWeight: 800 }}>Tijdlijn en notities <span className="sv-grijs" style={{ fontWeight: 500 }}>· {data.tijdlijn.length} gebeurtenissen</span></summary>
+        </div>
+        <details className="sv-kaart"><summary style={{ cursor: "pointer", fontWeight: 800 }}>Tijdlijn en notities <span className="sv-grijs" style={{ fontWeight: 500 }}>· {data.tijdlijn.length} {data.tijdlijn.length === 1 ? "gebeurtenis" : "gebeurtenissen"}</span></summary>
           <div className="sv-tijdlijn" style={{ marginTop: 12 }}>{data.tijdlijn.map((t, i) => <div key={i}><b>{kortDatum(t.at)}</b><span>{t.tekst}</span></div>)}</div>
         </details>
       </div>
-      {data.job && <aside style={{ background: "#F2EEE7", borderRadius: 16, padding: 18, maxHeight: 820, overflow: "auto" }}><h3 style={{ marginBottom: 10 }}>Gesprek met Job</h3><JobGesprekPaneel candidateId={k.id} /></aside>}
+      {data.job && <aside style={{ background: "#F2EEE7", borderRadius: 16, padding: 18, maxHeight: 820, overflow: "auto", alignSelf: "start" }}><JobGesprekPaneel candidateId={k.id} kolom /></aside>}
     </div>
   </>;
 }

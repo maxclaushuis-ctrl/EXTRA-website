@@ -82,12 +82,15 @@ const T = {
 /* De site zet met .d3.d3 * alle marges en padding op nul; daarom staat .d3.d3 voor elke regel. */
 const CSS = `
 .d3.d3 .jg{max-width:760px;margin:0 auto;padding:132px 16px 64px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#37352C}
+.d3.d3 .jg{box-shadow:0 0 0 100vmax #37352C;clip-path:inset(0 -100vmax);background:#37352C}
+.d3.d3 .jg-zacht{color:rgba(248,247,244,.78)}
+.d3.d3 .jg-zacht a{color:#F8F7F4}
 .d3.d3 .jg-kaart{background:#fff;border-radius:22px;box-shadow:0 1px 2px rgba(55,53,44,.06),0 18px 40px -28px rgba(55,53,44,.45);overflow:hidden;display:flex;flex-direction:column;min-height:560px}
 .d3.d3 .jg-kop{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#37352C;color:#F8F7F4}
-.d3.d3 .jg-av{width:40px;height:40px;border-radius:50%;background:#F2B866;color:#37352C;display:grid;place-items:center;font-weight:800;font-size:17px;flex:none}
+.d3.d3 .jg-av{width:40px;height:40px;border-radius:50%;background:#EBD0E4;color:#37352C;display:grid;place-items:center;font-weight:800;font-size:17px;flex:none}
 .d3.d3 .jg-kop b{display:block;font-size:15px}
 .d3.d3 .jg-kop span{font-size:12.5px;color:rgba(248,247,244,.7)}
-.d3.d3 .jg-uitleg{margin:0;padding:9px 18px;background:#F4F2EE;font-size:12.5px;color:#6B665C;border-bottom:1px solid #ECE7DF}
+.d3.d3 .jg-uitleg{align-self:flex-start;margin:12px 18px 0;padding:4px 12px;background:#FFF3C4;font-size:12px;font-weight:600;color:#5C4A00;border-radius:99px}
 .d3.d3 .jg-lijst{flex:1;padding:18px;display:flex;flex-direction:column;gap:8px;background:#FBFAF8;overflow-y:auto;max-height:62vh}
 .d3.d3 .jg-b{max-width:84%;padding:10px 13px;font-size:14.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .d3.d3 .jg-b.uit{align-self:flex-start;background:#fff;border:1px solid #ECE7DF;border-radius:4px 16px 16px 16px}

@@ -59,7 +59,7 @@ export function AfwijzenDialoog({ id, naam, voornaam, stap, aanleiding, sluit, k
       <div role="radiogroup" aria-label="Reden" style={{ display: "grid", gap: 6 }}>
         {redenen.map((r) => (
           <label key={r.code} style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 44, padding: "0 12px", borderRadius: 10, cursor: "pointer", border: reden === r.code ? "2px solid #37352C" : "1px solid #E4E0D8", background: reden === r.code ? "#F6F3EE" : "#fff" }}>
-            <input type="radio" name="reden" checked={reden === r.code} onChange={() => { setReden(r.code); setAanpassen(false); }} />
+            <input type="radio" name="reden" style={{ accentColor: "#37352C", width: 18, height: 18 }} checked={reden === r.code} onChange={() => { setReden(r.code); setAanpassen(false); }} />
             <span style={{ fontWeight: 600 }}>{r.label}</span>
           </label>
         ))}
@@ -82,7 +82,7 @@ export function AfwijzenDialoog({ id, naam, voornaam, stap, aanleiding, sluit, k
                 <div style={{ whiteSpace: "pre-wrap", fontSize: 13.5 }}>{voorbeeld.tekst}</div>
               )}
               <label className="sv-rij" style={{ marginTop: 10, fontWeight: 600 }}>
-                <input type="checkbox" checked={mailSturen} onChange={(e) => setMailSturen(e.target.checked)} /> Mail versturen
+                <input type="checkbox" style={{ accentColor: "#37352C", width: 18, height: 18 }} checked={mailSturen} onChange={(e) => setMailSturen(e.target.checked)} /> Mail versturen
               </label>
             </>
           ) : (
@@ -91,7 +91,7 @@ export function AfwijzenDialoog({ id, naam, voornaam, stap, aanleiding, sluit, k
         </div>
       )}
       {fout && <div className="sv-fout">{fout}</div>}
-      <div className="sv-rij" style={{ justifyContent: "flex-end", marginTop: 18 }}>
+      <div className="sv-rij" style={{ justifyContent: "flex-end", marginTop: 18, position: "sticky", bottom: -24, background: "#fff", padding: "12px 0 4px", borderTop: "1px solid #EEEAE3" }}>
         <Knop onClick={sluit}>Annuleren</Knop>
         <Knop soort="donker" onClick={bevestig} disabled={bezig || !reden}>{mailSturen && voorbeeld?.aan ? "Afwijzen en mail versturen" : "Afwijzen"}</Knop>
       </div>

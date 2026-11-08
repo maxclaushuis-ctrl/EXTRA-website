@@ -41,7 +41,7 @@ function terugLabel(s: Scherm, van: string): string {
   if (s.soort === "onboarding") return "Onboarding";
   if (s.soort === "archief") return "Archief";
   if (s.soort === "lijst") {
-    if (s.lijst === "gesprekken") return `Sollicitanten · week ${van ? weekLabel(van) : "deze week"}`;
+    if (s.lijst === "gesprekken") return van ? `Sollicitanten · week ${weekLabel(van)}` : "Sollicitanten · deze week";
     if (s.lijst === "beoordelen") return "Beoordelen";
     if (s.lijst === "extra") return "Sollicitanten · Ref. en doc. check · EXTRA check";
     return "Ref. en doc. check";
@@ -80,7 +80,7 @@ export function SollicitantenV2({ ingang, oudeWeergave }: { ingang: Ingang; oude
     inhoud = <IntakeScherm id={s.id} sluit={() => setScherm({ soort: "kaart", id: s.id, van: s.van })} klaar={() => setScherm({ soort: "kaart", id: s.id, van: s.van })} />;
   }
   return (
-    <div className="sv" style={{ borderRadius: 18, overflow: "hidden", minHeight: "calc(100vh - 120px)" }}>
+    <div className="sv" style={{ borderRadius: 18, minHeight: "calc(100vh - 120px)" }}>
       <style>{CSS}</style>
       {inhoud}
       {oudeWeergave && ((scherm.soort === "lijst" && scherm.lijst === "gesprekken") || scherm.soort === "onboarding") && (
@@ -174,15 +174,15 @@ function ArchiefLijst({ open }: { open: (id: number) => void }) {
       <Kop titel="Archief" uitleg="Iedereen die is afgevallen of afgewezen, met de stap en de reden. Verkeerd gegaan? Zet iemand terug naar de stap waar die stond. Gegevens blijven 6 maanden bewaard." z={z} />
       {fout && <div className="sv-fout">{fout}</div>}
       <div style={{ overflowX: "auto" }}>
-        <table className="sv-tabel">
+        <table className="sv-tabel sv-archief">
           <thead><tr><th>Naam</th><th>Functie</th><th>Branche</th><th>Gestopt in</th><th>Reden</th><th>Datum</th><th>Door</th><th>Bewaard tot</th><th aria-label="Terugzetten" /></tr></thead>
           <tbody>{z.zichtbaar.map((r) => (
             <Fragment key={r.id}>
               <tr className="klik" onClick={() => open(r.id)}>
-                <td><b>{r.naam}</b></td><td>{r.functie}</td><td>{BRANCHE[r.branche].label}</td><td>{r.gestoptIn}</td><td>{r.reden}</td>
+                <td className="breek"><b>{r.naam}</b></td><td className="breek">{r.functie}</td><td>{BRANCHE[r.branche].label}</td><td className="breek">{r.gestoptIn}</td><td className="breek">{r.reden}</td>
                 <td className="sv-grijs">{kortDatum(r.datum)}</td><td className="sv-grijs">{r.door.split(" ")[0]}</td><td className="sv-grijs">{kortDatum(r.bewaardTot)}</td>
                 <td onClick={(e) => e.stopPropagation()}>
-                  <Knop soort={vraag === r.id ? "donker" : "wit"} style={{ height: 32 }} onClick={() => setVraag(vraag === r.id ? null : r.id)}>↺ Terugzetten</Knop>
+                  <Knop soort={vraag === r.id ? "donker" : "wit"} style={{ height: 32, padding: "0 12px" }} onClick={() => setVraag(vraag === r.id ? null : r.id)}>↺ Terugzetten</Knop>
                 </td>
               </tr>
               {vraag === r.id && (

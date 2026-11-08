@@ -114,7 +114,7 @@ async function main() {
     if (controle.idGezien) controle.idAt = intakeAt.toISOString();
     if (controle.overgeslagen) controle.overslaanAt = sinds.toISOString();
     await db.insert(sollicitantDossiers).values({
-      candidateId: c.id, stap: t.stap, stapSinds: sinds, branche: c.functionType === "logistiek" ? "logistiek" : "hotels", interviewer: "Sanne",
+      candidateId: c.id, stap: t.stap, stapSinds: sinds, interviewer: "Sanne",
       intakeStatus: Object.keys(t.intake).length ? "afgerond" : "niet_gestart", intakeStap: 9, intake: t.intake,
       intakeDoor: Object.keys(t.intake).length ? "Sanne de Wit" : null, intakeAfgerondAt: Object.keys(t.intake).length ? intakeAt : null,
       beoordeling: t.beoordeling || {}, beoordeeldDoor: t.beoordeling ? "Sanne de Wit" : null, beoordeeldAt: t.beoordeling ? intakeAt : null,

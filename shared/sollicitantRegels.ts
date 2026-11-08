@@ -283,7 +283,7 @@ export const ONDERDELEN: Onderdeel[] = [
     uitleg: "De vier dagdelen zijn dezelfde als in de EXTRAATJE-app. Groen is beschikbaar, rood is niet beschikbaar, leeg is niet opgegeven. Het doorsturen naar de app volgt later, na apart akkoord.",
     vragen: [
       { id: "uren", nr: "7.1", soort: "getal", tekst: "Hoeveel uur per week kun je werken?", placeholder: "Aantal uren", job: "diensten" },
-      { id: "raster", nr: "7.2", soort: "raster", tekst: "Wanneer ben je beschikbaar?", hint: "Loop de week door. Tik één keer voor beschikbaar, twee keer voor niet beschikbaar, nog een keer voor leeg. Events zijn vaak op vrijdag en zaterdag, en lopen tot laat." },
+      { id: "raster", nr: "7.2", soort: "raster", tekst: "Wanneer ben je beschikbaar?", hint: "Loop de week door. Tik één keer voor beschikbaar, twee keer voor niet beschikbaar, nog een keer voor leeg. In de horeca en bij events wordt vaak op vrijdag en zaterdag tot laat gewerkt." },
     ],
   },
   {
