@@ -46,8 +46,18 @@ export function magHandmatigStarten(): boolean {
 }
 
 export function basisUrl(): string {
+  // In de testomgeving op Replit wijzen links naar de testomgeving zelf, niet naar de live site.
+  if (process.env.TESTOMGEVING === "1") {
+    const replit = (process.env.REPLIT_DEV_DOMAIN || (process.env.REPLIT_DOMAINS || "").split(",")[0] || "").trim();
+    if (replit) return `https://${replit}`;
+  }
   return (process.env.BASE_URL || "https://www.doehetextra.nl").replace(/\/$/, "");
 }
+/** Link voor de browser van de kandidaat zelf: relatief, zodat hij altijd op de omgeving blijft waar hij zich aanmeldde. */
+export function gesprekPad(token: string): string {
+  return `/job-gesprek?token=${encodeURIComponent(token)}`;
+}
+
 export function gesprekLink(token: string, extra = ""): string {
   return `${basisUrl()}/job-gesprek?token=${encodeURIComponent(token)}${extra}`;
 }

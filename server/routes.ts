@@ -4531,7 +4531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const job = await import('./job/jobService');
           if (job.jobAan()) {
             const g = await job.startGesprek(id, { taal: validated.jobTaal });
-            if (g) jobLink = job.gesprekLink(g.token);
+            if (g) jobLink = job.gesprekPad(g.token);
           }
         } catch (jobErr: any) {
           console.error('[Job] starten na aanmelding mislukt:', jobErr?.message || jobErr);
