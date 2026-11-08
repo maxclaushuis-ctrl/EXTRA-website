@@ -392,7 +392,7 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
       .orderBy(desc(jobBerichten.id)).limit(1);
     tekst = keuzeUitNummer(tekst, vorig?.keuzes as string[] | null);
   }
-  if (tekst || invoer.bijlage) await bewaarInkomend(g, tekst || (invoer.cvOntvangen ? "[cv]" : ""), invoer.bijlage, invoer.kanaal);
+  if (tekst || invoer.bijlage) await bewaarInkomend(g, tekst || (invoer.cvOntvangen ? (g.taal === "en" ? "CV sent" : "Cv gestuurd") : ""), invoer.bijlage, invoer.kanaal);
   if (invoer.kanaal === "whatsapp" && g.kanaal !== "whatsapp") {
     await db.update(jobGesprekken).set({ kanaal: "whatsapp" }).where(eq(jobGesprekken.id, g.id));
     g = { ...g, kanaal: "whatsapp" };
