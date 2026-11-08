@@ -47,7 +47,7 @@ WhatsApp-sjablonen goedgekeurd zijn.
 12. **Bericht via Job** opent het gesprek in de WhatsApp-inbox (of het webgesprek). Een bericht namens Job sturen vanuit het dossier komt later.
 13. **Subtekst** "Kies je ideale (bij)baan" in plaats van "Kies je de ideale (bij)baan".
 14. **AI-melding** onder de knoppen: "Job is onze AI-recruiter. Een collega van EXTRA neemt altijd de beslissing."
-15. **Cv bekijken** vanuit het nieuwe dossier kan nog niet; dat staat in de oude weergave.
+15. **Cv bekijken** opent het cv in een nieuw tabblad, via dezelfde route als de oude weergave.
 
 ## SEO
 

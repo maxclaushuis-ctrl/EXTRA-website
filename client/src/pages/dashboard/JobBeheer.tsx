@@ -156,6 +156,8 @@ export function JobBeheer() {
           ) : <p>Laden…</p>}
         </section>
 
+        <MetaSjablonen kaart={kaart} />
+
         <section style={kaart}>
           <h2 style={{ margin: "0 0 10px", fontSize: 15, fontWeight: 800 }}>Stand</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -337,6 +339,63 @@ export function JobGesprekPaneel({ candidateId }: { candidateId: number }) {
               ))}
             </div>
           )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── WhatsApp-sjablonen bij Meta ────────────────────────────────────────────
+
+interface SjabloonRij { naam: string; taal: string; tekst: string; knoppen: string[]; status: string | null; reden: string | null }
+interface SjabloonData { metaActief: boolean; fout: string | null; rijen: SjabloonRij[]; nummer: string | null; webhook: string; verifyToken: boolean; appSecret: boolean }
+const SJ_STATUS: Record<string, [string, string, string]> = {
+  APPROVED: ["Goedgekeurd", "#E6F0E2", "#2F6B3E"], PENDING: ["Wacht op Meta", "#FCEBD7", "#9A5414"], IN_APPEAL: ["Bezwaar loopt", "#FCEBD7", "#9A5414"],
+  REJECTED: ["Afgekeurd", "#FBE3DE", "#A2321F"], PAUSED: ["Gepauzeerd", "#FBE3DE", "#A2321F"], DISABLED: ["Uitgeschakeld", "#FBE3DE", "#A2321F"],
+};
+
+function MetaSjablonen({ kaart }: { kaart: React.CSSProperties }) {
+  const [d, setD] = useState<SjabloonData | null>(null);
+  const [bezig, setBezig] = useState(false);
+  const [uitkomst, setUitkomst] = useState("");
+  const laad = (vers = false) => haal<SjabloonData>(`/api/admin/job/sjablonen${vers ? "?vers=1" : ""}`).then(setD).catch(() => {});
+  useEffect(() => { laad(); }, []);
+  async function dienIn() {
+    setBezig(true); setUitkomst("");
+    try {
+      const r = await haal<{ ingediend: string[]; bestond: string[]; fouten: string[] }>("/api/admin/job/sjablonen/indienen", { method: "POST" });
+      setUitkomst([r.ingediend.length ? `Ingediend: ${r.ingediend.join(", ")}.` : "", r.bestond.length ? `Stond al bij Meta: ${r.bestond.length}.` : "", r.fouten.length ? `Fout: ${r.fouten.join("; ")}` : ""].filter(Boolean).join(" "));
+      await laad(true);
+    } catch (e: any) { setUitkomst(e.message); }
+    finally { setBezig(false); }
+  }
+  const alles = d?.rijen.every((r) => r.status === "APPROVED");
+  return (
+    <section style={kaart}>
+      <h2 style={{ margin: "0 0 10px", fontSize: 15, fontWeight: 800 }}>WhatsApp-sjablonen bij Meta</h2>
+      {!d ? <p>Laden...</p> : (
+        <div style={{ display: "grid", gap: 8, fontSize: 13.5 }}>
+          {!d.metaActief && <p style={{ margin: 0, color: "#5C594F" }}>Meta is nog niet gekoppeld. Zet in de Secrets WHATSAPP_PROVIDER=meta en de META_WA_BOT-gegevens; daarna kun je hier de sjablonen indienen.</p>}
+          {d.fout && d.metaActief && <p role="alert" style={{ margin: 0, color: "#A2321F" }}>{d.fout}</p>}
+          <div style={{ display: "grid", gap: 4 }}>
+            {d.rijen.map((r) => {
+              const st = r.status ? SJ_STATUS[r.status] || [r.status, "#F4F1EC", "#5C594F"] : ["Nog niet ingediend", "#F4F1EC", "#5C594F"];
+              return (
+                <div key={r.naam + r.taal} style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }} title={r.tekst}>
+                  <span><b>{r.naam}</b> <span style={{ color: "#8A8478" }}>{r.taal.toUpperCase()}</span></span>
+                  <span style={{ background: st[1], color: st[2], borderRadius: 99, padding: "2px 10px", fontSize: 12, fontWeight: 700 }}>{st[0]}{r.reden ? `: ${r.reden}` : ""}</span>
+                </div>
+              );
+            })}
+          </div>
+          {d.metaActief && !alles && <button type="button" onClick={dienIn} disabled={bezig} style={{ height: 38, borderRadius: 10, border: 0, background: "#37352C", color: "#F8F7F4", fontWeight: 700, cursor: "pointer" }}>{bezig ? "Bezig..." : "Indienen bij Meta"}</button>}
+          {alles && <p style={{ margin: 0, color: "#2F6B3E" }}>Alles goedgekeurd: Job gebruikt de sjablonen vanzelf.</p>}
+          {uitkomst && <p role="status" style={{ margin: 0 }}>{uitkomst}</p>}
+          <div style={{ borderTop: "1px solid #EEEAE3", paddingTop: 8, color: "#5C594F", fontSize: 12.5, display: "grid", gap: 2 }}>
+            <span>Nummer van Job: {d.nummer || "nog onbekend"}</span>
+            <span>Webhook voor Meta: <code style={{ wordBreak: "break-all" }}>{d.webhook}</code></span>
+            <span>Verify token {d.verifyToken ? "ingesteld" : "nog niet ingesteld"} · app secret {d.appSecret ? "ingesteld" : "nog niet ingesteld"}</span>
+          </div>
         </div>
       )}
     </section>

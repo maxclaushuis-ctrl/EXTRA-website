@@ -269,7 +269,7 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; 
                 <p className="sv-lbl">PERSOON</p>
                 <Waarde label="Nationaliteit" w={d.profiel.nationaliteit} />
                 <Waarde label="Talen" w={d.profiel.talen} zelf={d.profiel.uitJob} />
-                <Waarde label="Cv" w={d.profiel.cv !== null ? `Ontvangen${d.profiel.cv ? ` · ${d.profiel.cv}` : ""}` : "Nog niet ontvangen"} />
+                <div className="k-waarde"><span>Cv</span><div>{d.profiel.cv !== null ? <b>Ontvangen · <a href={`/api/admin/candidates/${d.id}/cv?preview=1`} target="_blank" rel="noreferrer" style={{ color: "inherit" }}>bekijken</a></b> : <b>Nog niet ontvangen</b>}</div></div>
                 <Waarde label="Documenten" w="Identiteit en werkautorisatie nog niet gecontroleerd" />
               </div>
             </div>

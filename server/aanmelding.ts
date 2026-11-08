@@ -223,5 +223,5 @@ export function registerAanmeldingRoutes(app: Express) {
 async function antwoord(id: number) {
   const job = await import("./job/jobService");
   const g = await job.gesprekVanKandidaat(id);
-  return { ok: true, kanaal: g?.kanaal ?? null, jobLink: g ? job.gesprekLink(g.token) : null, waNummer: process.env.JOB_WA_NUMMER || null };
+  return { ok: true, kanaal: g?.kanaal ?? null, jobLink: g ? job.gesprekLink(g.token) : null, waNummer: await (await import("./job/jobSjablonen")).jobNummer() };
 }

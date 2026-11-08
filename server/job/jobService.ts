@@ -24,7 +24,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
-import {
+import { planHerinneringNodig, planHerinnering,
   functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
@@ -52,11 +52,12 @@ export function gesprekLink(token: string, extra = ""): string {
   return `${basisUrl()}/job-gesprek?token=${encodeURIComponent(token)}${extra}`;
 }
 
-const SJABLONEN = () => ({
-  start: process.env.JOB_WA_SJABLOON_START || "",
-  herinnering: process.env.JOB_WA_SJABLOON_HERINNERING || "",
-  afspraak: process.env.JOB_WA_SJABLOON_AFSPRAAK || "",
-});
+/** De sjablonen die Job mag gebruiken: een Secret, of het eigen sjabloon zodra Meta het goedkeurde (jobSjablonen.ts). */
+async function SJABLONEN() {
+  const { sjabloonNaam } = await import("./jobSjablonen");
+  const [start, herinnering, afspraak] = await Promise.all([sjabloonNaam("start"), sjabloonNaam("herinnering"), sjabloonNaam("afspraak")]);
+  return { start, herinnering, afspraak };
+}
 
 async function whatsappKlaar(): Promise<boolean> {
   try {
@@ -68,7 +69,7 @@ async function whatsappKlaar(): Promise<boolean> {
 }
 
 export async function jobStatus() {
-  const s = SJABLONEN();
+  const s = await SJABLONEN();
   const { aiBeschikbaar } = await import("./jobAi");
   return {
     aan: jobAan(),
@@ -315,7 +316,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
   const nu = new Date();
   const r = start(ctx, taal, nu);
 
-  const sjabloon = SJABLONEN().start;
+  const sjabloon = (await SJABLONEN()).start;
   const viaWhatsapp = opties.voorkeur !== "web" && !!waNummer(c) && c.whatsappOptInStatus === "actief" && !!sjabloon && (await whatsappKlaar());
 
   let g: JobGesprek;
@@ -423,7 +424,7 @@ export async function naarPlannen(candidateId: number): Promise<JobGesprek> {
     [g] = await db.insert(jobGesprekken).values({ candidateId, token: nieuwToken(), kanaal: "web", taal }).onConflictDoNothing().returning();
     if (!g) g = (await gesprekVanKandidaat(candidateId))!;
   }
-  const s = { ...naarState(g), status: "plannen" as JobStatus };
+  const s = { ...naarState(g), status: "plannen" as JobStatus, herinneringen: 0, herinneringAt: null, laatsteActiviteitAt: new Date().toISOString() };
   await bewaarState(g.id, s);
   return (await gesprekVanKandidaat(candidateId))!;
 }
@@ -546,10 +547,34 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     if (g.kanaal === "whatsapp" && c.phone && c.whatsappOptInStatus === "actief") {
       const tekst = r.berichten[0].tekst;
       if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst(r.berichten[0], g.token, s.taal));
-      else await verstuurSjabloon(c.id, waNummer(c), SJABLONEN().herinnering, s.taal, [c.firstName], tekst);
+      else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], tekst);
     }
     if (c.email && soort === "eerste") {
-      stuurHerinneringsmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, link: gesprekLink(g.token), stopLink: gesprekLink(g.token, "&stop=1"), waLink: g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && process.env.JOB_WA_NUMMER ? `https://wa.me/${process.env.JOB_WA_NUMMER.replace(/\D/g, "")}` : null }).catch(() => {});
+      const waNr = await (await import("./jobSjablonen")).jobNummer();
+      stuurHerinneringsmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, link: gesprekLink(g.token), stopLink: gesprekLink(g.token, "&stop=1"), waLink: g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNr ? `https://wa.me/${waNr.replace(/\D/g, "")}` : null }).catch(() => {});
+    }
+  }
+
+  // Uitgenodigd maar nog geen moment gekozen: herinneren met de planlink.
+  const teKiezen = await db.select().from(jobGesprekken).where(eq(jobGesprekken.status, "plannen"));
+  for (const g of teKiezen) {
+    const s = naarState(g);
+    if (!planHerinneringNodig(s, nu)) continue;
+    const c = await kandidaat(g.candidateId);
+    const ctx = await context(g.candidateId, s.taal);
+    if (!c || !ctx || c.status === "afgewezen" || c.interviewDate) continue;
+    const r = planHerinnering(s, ctx, nu);
+    await bewaarState(g.id, r.state);
+    aantal++;
+    const b = r.berichten[0];
+    await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
+    if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
+      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst(b, g.token, s.taal));
+      else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], b.tekst);
+    }
+    if (c.email) {
+      const { stuurUitnodigingsmail } = await import("./jobMails");
+      stuurUitnodigingsmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, link: gesprekLink(g.token, "&plannen=1"), nonEu: c.nationalityZone === "NON_EU", viaWhatsapp: g.kanaal === "whatsapp" }).catch(() => {});
     }
   }
 
@@ -567,7 +592,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst, keuzes: t.afspraakKeuzes, kanaal: g.kanaal });
     if (c.phone && c.whatsappOptInStatus === "actief" && g.kanaal === "whatsapp") {
       if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst({ tekst, keuzes: t.afspraakKeuzes }, g.token, s.taal));
-      else await verstuurSjabloon(c.id, waNummer(c), SJABLONEN().afspraak, s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
+      else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).afspraak, s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
     }
   }
   return { herinneringen: aantal, rood, afspraken };

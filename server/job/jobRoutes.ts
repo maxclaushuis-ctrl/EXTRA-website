@@ -182,6 +182,25 @@ export function registerJobRoutes(app: Express, adminMiddleware: Middleware) {
     res.json(await job.jobStatus());
   });
 
+  // WhatsApp-sjablonen van Job bij Meta: status en indienen (jobSjablonen.ts)
+  app.get("/api/admin/job/sjablonen", adminMiddleware, async (req: Request, res: Response) => {
+    const sj = await import("./jobSjablonen");
+    const stand = await sj.standBijMeta(req.query.vers === "1");
+    const rijen = sj.SJABLOON_DEFS.map((d) => {
+      const t = stand.lijst.find((x) => x.naam === sj.NAMEN[d.soort] && x.taal === d.taal);
+      return { naam: sj.NAMEN[d.soort], taal: d.taal, tekst: d.tekst, knoppen: d.knoppen || [], status: t?.status || null, reden: t?.reden || null };
+    });
+    const basis = (process.env.BASE_URL || "https://www.doehetextra.nl").replace(/\/$/, "");
+    res.json({
+      metaActief: sj.metaActief(), fout: stand.ok ? null : stand.fout, rijen, nummer: await sj.jobNummer(),
+      webhook: `${basis}/api/whatsapp/meta-webhook`, verifyToken: !!process.env.META_WA_BOT_VERIFY_TOKEN, appSecret: !!process.env.META_WA_BOT_APP_SECRET,
+    });
+  });
+  app.post("/api/admin/job/sjablonen/indienen", adminMiddleware, async (_req: Request, res: Response) => {
+    const sj = await import("./jobSjablonen");
+    res.json(await sj.dienIn());
+  });
+
   app.get("/api/admin/job/overzicht", adminMiddleware, async (_req: Request, res: Response) => {
     res.json(await job.overzicht());
   });

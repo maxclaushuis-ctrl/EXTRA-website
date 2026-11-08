@@ -188,6 +188,7 @@ const T = {
     plannenWa: (link: string) => `Kies zelf een moment voor je kennismaking op ons kantoor aan de Herengracht 372: ${link}`,
     idMee: "Neem je paspoort of ID-kaart mee, dan regelen we alles in één keer.",
     plannenNogmaals: "Kies hieronder een moment dat je uitkomt. Komt er geen moment uit? Typ MENS, dan helpt een collega.",
+    planHerinnering: (v: string) => `Hoi ${v}, je kunt nu zelf een moment kiezen voor je kennismaking op kantoor. Kies hieronder een moment dat je uitkomt.`,
     planner: (v: string) => `Dankjewel, ${v}! Een collega van EXTRA bekijkt je aanmelding en laat je zo snel mogelijk weten hoe het verder gaat.`,
     werkautorisatieCollega: "Geen zorgen. Een collega van EXTRA kijkt met je mee en laat het je weten.",
     geenErvaringOk: "Geen probleem, veel collega's zijn zo begonnen.",
@@ -238,6 +239,7 @@ const T = {
     plannenWa: (link: string) => `Choose a moment for a short meeting at our office at Herengracht 372: ${link}`,
     idMee: "Bring your passport or ID card, then we can arrange everything in one go.",
     plannenNogmaals: "Choose a moment below that suits you. None works? Type HUMAN and a colleague will help.",
+    planHerinnering: (v: string) => `Hi ${v}, you can now choose a time for your meeting at our office. Pick a moment below that suits you.`,
     planner: (v: string) => `Thank you, ${v}! A colleague from EXTRA will look at your application and let you know as soon as possible.`,
     werkautorisatieCollega: "No worries. A colleague from EXTRA will check it with you and let you know.",
     geenErvaringOk: "No problem, many colleagues started that way.",
@@ -472,6 +474,8 @@ export function verwerk(
   if (state.status === "gepland") {
     if (commando === "verzetten") {
       state.status = "plannen";
+      state.herinneringen = 0;
+      state.herinneringAt = null;
       berichten.push({ tekst: t().verzetten, planning: true });
       acties.push({ soort: "verzetten" });
     } else if (commando === "ikkom") {
@@ -577,6 +581,8 @@ export function verwerk(
   }
 
   state.status = "plannen";
+  state.herinneringen = 0;
+  state.herinneringAt = null;
   berichten.push({ tekst: `${cvNet ? t().cvOntvangen + " " : ""}${t().screeningKlaar}` });
   berichten.push({ tekst: t().plannen, planning: true });
   berichten.push({ tekst: t().idMee });
@@ -600,6 +606,22 @@ export function herinneringNodig(s: JobState, nu: Date): Herinnering | null {
   if (s.herinneringen === 1 && sinds(s.herinneringAt) >= TWEEDE_HERINNERING_NA) return "tweede";
   if (s.herinneringen === 2 && sinds(s.herinneringAt) >= ROOD_NA) return "rood";
   return null;
+}
+
+/**
+ * Uitgenodigd, maar nog geen moment gekozen: een herinnering na 24 uur en een
+ * tweede na nog eens 48 uur. Daarna niets meer; Kandidaten kleurt het geel.
+ */
+export function planHerinneringNodig(s: JobState, nu: Date): boolean {
+  if (s.status !== "plannen" || s.herinneringen >= 2) return false;
+  const vanaf = s.herinneringen === 0 ? s.laatsteActiviteitAt : s.herinneringAt;
+  const wacht = s.herinneringen === 0 ? EERSTE_HERINNERING_NA + 2 * 3600 * 1000 : TWEEDE_HERINNERING_NA;
+  return !!vanaf && nu.getTime() - new Date(vanaf).getTime() >= wacht;
+}
+
+export function planHerinnering(s: JobState, ctx: JobContext, nu: Date): Resultaat {
+  const state: JobState = { ...s, herinneringen: s.herinneringen + 1, herinneringAt: nu.toISOString() };
+  return { state, berichten: [{ tekst: T[s.taal].planHerinnering(ctx.voornaam), planning: true }], acties: [] };
 }
 
 export function herinnering(s: JobState, ctx: JobContext, soort: Herinnering, nu: Date): Resultaat {
