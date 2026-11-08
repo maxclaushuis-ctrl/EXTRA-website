@@ -124,10 +124,25 @@ function weekVan(datum: Date): { van: string; tot: string } {
   return { van: iso(d), tot: iso(tot) };
 }
 
+/**
+ * In het weekend opent het overzicht op de komende week, als daar al
+ * gesprekken in staan. Anders blijft het op de week die nu loopt.
+ */
+async function standaardWeek(): Promise<{ van: string; tot: string }> {
+  const nu = NU();
+  const dag = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Amsterdam", weekday: "short" }).format(nu);
+  const deze = weekVan(nu);
+  if (dag !== "Sat" && dag !== "Sun") return deze;
+  const volgende = weekVan(new Date(nu.getTime() + 2 * 86400000));
+  const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(candidates)
+    .where(and(gte(candidates.interviewDate, volgende.van), lte(candidates.interviewDate, volgende.tot), ne(candidates.status, "afgewezen")));
+  return (r?.n || 0) > 0 ? volgende : deze;
+}
+
 // ─── Overzichten ────────────────────────────────────────────────────────────
 
 async function week(vanParam?: string) {
-  const w = weekVan(vanParam && /^\d{4}-\d{2}-\d{2}$/.test(vanParam) ? new Date(`${vanParam}T12:00:00Z`) : NU());
+  const w = vanParam && /^\d{4}-\d{2}-\d{2}$/.test(vanParam) ? weekVan(new Date(`${vanParam}T12:00:00Z`)) : await standaardWeek();
   const rijen = await db.select().from(candidates)
     .where(and(gte(candidates.interviewDate, w.van), lte(candidates.interviewDate, w.tot), ne(candidates.status, "afgewezen")));
   const ids = rijen.map((c) => c.id);

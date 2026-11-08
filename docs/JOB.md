@@ -31,9 +31,12 @@ testomgeving" (6 november 2026).
 | --- | --- |
 | `JOB_ENABLED=1` | Job start na elke voltooide aanmelding en de herinneringen lopen elk uur. Zonder deze schakelaar doet Job niets uit zichzelf. |
 | `TESTOMGEVING=1` | Alleen in de testomgeving: Job mag met de hand gestart worden (simulator) en de klok mag vooruit. |
-| `JOB_WA_SJABLOON_START` | Naam van het goedgekeurde startsjabloon. Zonder dit sjabloon praat Job via het webgesprek en krijgt de kandidaat de link per mail. |
-| `JOB_WA_SJABLOON_HERINNERING` | Naam van het herinneringssjabloon. Zonder: herinnering alleen per mail. |
-| `JOB_WA_SJABLOON_AFSPRAAK` | Naam van het sjabloon voor de herinnering de dag voor de kennismaking. |
+| `JOB_WA_NUMMER` | Optioneel. Het nummer voor de wa.me-links in de mails. Zonder deze Secret haalt Job het nummer zelf op bij Meta. |
+| `JOB_WA_SJABLOON_START`, `_HERINNERING`, `_AFSPRAAK` | Optioneel. Alleen nodig als een sjabloon een andere naam heeft dan `job_start`, `job_herinnering` of `job_afspraak`. Zonder deze Secrets gebruikt Job vanzelf het sjabloon zodra Meta het heeft goedgekeurd. |
+
+Zonder goedgekeurd startsjabloon praat Job via het webgesprek en krijgt de
+kandidaat de link per mail. Zonder herinneringssjabloon gaat de herinnering
+alleen per mail.
 
 De AI gebruikt `AI_INTEGRATIONS_OPENAI_BASE_URL` en `AI_INTEGRATIONS_OPENAI_API_KEY`,
 dezelfde als de bestaande WhatsApp-AI. Zonder AI leest Job de antwoorden met
@@ -85,8 +88,14 @@ Engels, knoppen **I'll be there** en **Reschedule**:
 
 Voorbeeldwaarden: `Lisa`, `14:00`, `Charlotte`
 
-Na goedkeuring: zet de namen in de Secrets (`JOB_WA_SJABLOON_START=job_start`
-enzovoort) en publiceer opnieuw.
+Indienen hoeft niet met de hand: in het dashboard, tabblad Job, staat de kaart
+**WhatsApp-sjablonen bij Meta** met per sjabloon de stand (niet ingediend, in
+behandeling, goedgekeurd, afgewezen) en de knop **Indienen bij Meta**. Die
+dient alle zes in (drie sjablonen, Nederlands en Engels) met precies de tekst
+hierboven. Meta keurt meestal binnen een paar minuten tot een dag goed; daarna
+gebruikt Job ze vanzelf. De kaart laat ook het nummer van Job, de webhook-URL
+en of de verify token en app secret gezet zijn zien. Stappen voor de koppeling:
+`docs/META-KOPPELING.md`.
 
 Binnen een gesprek heeft Job geen sjabloon nodig: zolang de kandidaat binnen 24
 uur iets stuurde, antwoordt Job met gewone berichten.
@@ -98,6 +107,7 @@ uur iets stuurde, antwoordt Job met gewone berichten.
 - Aan te passen in het dashboard, tabblad Job, Werktijden. Uitzetten kan; verwijderen niet.
 - De kandidaat ziet tijden, niet wie er vrij is. Kiezen twee kandidaten tegelijk hetzelfde moment, dan krijgt de tweede de andere interviewer als die vrij is, en anders de melding dat het moment net weg is.
 - Bij het boeken: status `gepland`, `interview_date` en `interview_time` op de kandidaat, bevestigingsmail met agenda-bestand en verzetlink.
+- Nog geen moment gekozen na de uitnodiging: Job stuurt na een dag een herinnering (mail plus WhatsApp) en na nog twee dagen een tweede. Daarna kleurt de kandidaat geel in Kandidaten.
 - Verzetten: de oude afspraak krijgt status `verzet`, er wordt niets verwijderd.
 
 ## Wanneer een collega moet kijken
