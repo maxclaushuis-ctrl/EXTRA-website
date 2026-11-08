@@ -19,6 +19,7 @@
  *
  * Er wordt nooit iets verwijderd. Een verzette afspraak krijgt status 'verzet'.
  */
+import { functieVan, isLabel, type AanmeldLabel } from "@shared/aanmeldLabels";
 import { randomBytes } from "crypto";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
@@ -150,6 +151,20 @@ async function kandidaat(candidateId: number) {
   return c || null;
 }
 
+/** De functie zoals gekozen op het formulier per label, in kleine letters voor in een zin. */
+function functieNaamVan(c: { functieEersteKeus?: string | null; bronDetails?: unknown }): { nl: string; en: string } | undefined {
+  const label = ingangLabel(c.bronDetails);
+  if (!c.functieEersteKeus || !label) return undefined;
+  const f = functieVan(c.functieEersteKeus, label);
+  if (!f) return undefined;
+  const klein = (x: string) => (/^[A-Z]{2}|^F&B/.test(x) ? x : x.charAt(0).toLowerCase() + x.slice(1));
+  return { nl: klein(f.nl), en: klein(f.en) };
+}
+function ingangLabel(bron: unknown): AanmeldLabel | null {
+  const b = bron && typeof bron === "object" ? (bron as Record<string, unknown>).branche : null;
+  return isLabel(b) ? b : null;
+}
+
 async function context(candidateId: number, taal: JobTaal): Promise<JobContext | null> {
   const c = await kandidaat(candidateId);
   if (!c) return null;
@@ -157,6 +172,7 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
   return {
     voornaam: c.firstName,
     functie: c.functieEersteKeus === "afwas" ? "afwas" : c.functionType,
+    functieNaam: functieNaamVan(c),
     nationalityZone: (c.nationalityZone as any) || null,
     hasCv: !!c.hasCv,
     afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,

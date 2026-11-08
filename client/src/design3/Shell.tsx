@@ -3,6 +3,7 @@
  * iconen. Alle styling zit onder de klasse .d3, zodat het dashboard en de
  * medewerkersapp er niets van merken.
  */
+import { labelVanPad } from "@shared/aanmeldLabels";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type MouseEvent } from "react";
 import { useLocation } from "wouter";
 import { HREFLANG_PARTNER, normalizeMetaPath } from "@shared/routeMeta";
@@ -81,6 +82,16 @@ export default function Shell({ sector = "algemeen", css = [], werkzoekende = fa
       document.body.style.backgroundColor = body;
     };
   }, []);
+
+  // Aanmelden per label: op een werkpagina van Hotels, Events of Logistiek
+  // onthouden we het label, zodat het formulier de juiste functies en kleur toont.
+  useEffect(() => {
+    if (!werkzoekende) return;
+    try {
+      const label = labelVanPad(pad);
+      if (label) sessionStorage.setItem("extra-label", label); else sessionStorage.removeItem("extra-label");
+    } catch { /* geen opslag */ }
+  }, [pad, werkzoekende]);
 
   // Interne links via de router, en altijd bovenaan beginnen op een nieuwe pagina.
   const klik = (e: MouseEvent<HTMLDivElement>) => {

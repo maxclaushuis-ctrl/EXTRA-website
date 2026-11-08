@@ -73,6 +73,8 @@ export interface JobContext {
   functie: string;
   nationalityZone: "NL" | "EU" | "NON_EU" | null;
   hasCv: boolean;
+  /** De functie zoals de kandidaat hem koos op het formulier per label (bijv. "front office"). */
+  functieNaam?: { nl: string; en: string };
   /** Alleen als er een kennismaking gepland staat, in de taal van het gesprek. */
   afspraak?: { dag: string; tijd: string; wie: string };
 }
@@ -402,7 +404,7 @@ export function start(ctx: JobContext, taal: JobTaal, nu: Date): Resultaat {
   return {
     state,
     berichten: [
-      { tekst: t.welkom(ctx.voornaam, functieLabel(ctx.functie, taal)) },
+      { tekst: t.welkom(ctx.voornaam, ctx.functieNaam?.[taal] ?? functieLabel(ctx.functie, taal)) },
       vraag(onderwerp, taal, ctx),
     ],
     acties: [],

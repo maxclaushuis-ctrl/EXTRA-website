@@ -19,6 +19,7 @@ import { candidates, employees, kandidaatMogelijkeMatch } from "@shared/schema";
 import { landvelden, ALLE_LANDNAMEN } from "@shared/landen";
 import { matchRedenen } from "@shared/kandidaatRegels";
 import { plaatsBijPostcode } from "./geocode";
+import { functieVan, zoneVanPaspoort } from "@shared/aanmeldLabels";
 
 export type FormulierVersie = "huidig" | "test" | "nieuw";
 export function formulierVersie(): FormulierVersie {
@@ -62,11 +63,13 @@ function geldigeDatum(s: string): boolean {
 const tekst = (max: number) => z.string().trim().max(max);
 export const aanmeldSchema = z.object({
   sleutel: z.string().uuid(),
-  functie: z.enum(["bediening", "keuken", "afwas", "housekeeping", "frontoffice", "logistiek"]),
+  functie: z.string().trim().min(1).max(30),
+  label: z.enum(["hotels", "events", "logistiek"]).optional().nullable(),
+  paspoort: z.enum(["nl", "eu", "buiten"]).optional().nullable(),
   voornaam: tekst(60).min(1),
   achternaam: tekst(80).min(1),
   geboortedatum: z.string().refine(geldigeDatum, "Ongeldige geboortedatum"),
-  nationaliteit: z.string().refine((n) => ALLE_LANDNAMEN.includes(n) && !/^-+$/.test(n), "Kies een nationaliteit"),
+  nationaliteit: z.string().optional().nullable(),
   postcode: tekst(10).optional().nullable(),
   woonland: z.string().optional().nullable(),
   landcode: tekst(8),
@@ -88,6 +91,8 @@ export const aanmeldSchema = z.object({
 /** Controle op het formulier, ook los te testen. Geeft per veld een foutcode. */
 export function controleer(b: z.infer<typeof aanmeldSchema>): Record<string, string> {
   const f: Record<string, string> = {};
+  if (!functieVan(b.functie, b.label ?? null)) f.functie = "Kies een functie";
+  if (!b.paspoort && !(b.nationaliteit && ALLE_LANDNAMEN.includes(b.nationaliteit) && !/^-+$/.test(b.nationaliteit))) f.paspoort = "Kies wat voor paspoort of ID-kaart je hebt";
   if (b.woonland) {
     if (!ALLE_LANDNAMEN.includes(b.woonland)) f.woonland = "Kies het land waar je nu woont";
   } else if (!normaalPostcode(b.postcode || "")) f.postcode = "Vul een geldige postcode in, bijvoorbeeld 1055 AB";
@@ -172,12 +177,12 @@ export function registerAanmeldingRoutes(app: Express) {
         .where(and(eq(candidates.aanmeldSleutel, b.sleutel), gte(candidates.createdAt, new Date(Date.now() - 24 * 3600 * 1000))));
       if (al) return res.json(await antwoord(al.id));
 
-      const f = FUNCTIES[b.functie];
+      const f = functieVan(b.functie, b.label ?? null)!;
       const phone = naarE164(b.landcode, b.mobiel);
       const wa = b.whatsappAnders ? naarE164(b.whatsappLandcode || b.landcode, b.whatsappNummer || "") : null;
       const postcode = b.woonland ? null : normaalPostcode(b.postcode || "");
       const plaats = postcode ? await plaatsBijPostcode(postcode) : null;
-      const land = landvelden(b.nationaliteit);
+      const land = b.paspoort ? zoneVanPaspoort(b.paspoort) : landvelden(b.nationaliteit);
       const link = b.bronUitLink || {};
       const linkKanaal = link.utm_source ? link.utm_source.charAt(0).toUpperCase() + link.utm_source.slice(1).toLowerCase() : link.jid ? "Jobster" : "";
       const bron = linkKanaal || (b.bronChip ? (b.bronChip.startsWith("Anders") ? "Anders" : b.bronChip) : "");
@@ -198,7 +203,7 @@ export function registerAanmeldingRoutes(app: Express) {
         bronDetails: {
           ingang: link.vacature ? "vacature" : linkKanaal ? "link" : "formulier", chip: b.bronChip || null, anders: b.bronAnders || null,
           utm_source: link.utm_source || null, utm_medium: link.utm_medium || null, utm_campaign: link.utm_campaign || null,
-          jid: link.jid || null, vacature: link.vacature || null, branche: link.branche || null, herkomst: b.herkomst || null,
+          jid: link.jid || null, vacature: link.vacature || null, branche: b.label || link.branche || f.label || null, herkomst: b.herkomst || null,
         },
         whatsappToestemmingOp: metWhatsapp ? nu : null, whatsappToestemmingVersie: metWhatsapp ? TOESTEMMING_VERSIE : null,
       } as any).returning();
