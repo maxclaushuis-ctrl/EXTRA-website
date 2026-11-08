@@ -186,11 +186,18 @@ export function keuzeUitNummer(tekst: string, keuzes: string[] | null | undefine
   return k || tekst;
 }
 
+/** Fictieve testkandidaten (e-mail op @voorbeeld.nl) krijgen nooit een echt WhatsApp-bericht. */
+async function isTestkandidaat(candidateId: number): Promise<boolean> {
+  const c = await kandidaat(candidateId);
+  return !!c?.email && c.email.toLowerCase().endsWith("@voorbeeld.nl");
+}
+
 async function verstuurWhatsappTekst(candidateId: number, telefoon: string, tekst: string): Promise<boolean> {
   try {
     const waProvider = await import("../whatsapp/provider");
     const waStorage = await import("../whatsapp/storage");
     if (!waProvider.isSendConfigured()) return false;
+    if (await isTestkandidaat(candidateId)) { console.log(`[Job] kandidaat ${candidateId} is fictief (testdata), geen WhatsApp`); return false; }
     const match = await waStorage.resolveAndUpsertConversation({ phoneNumber: telefoon, inbound: false, bodyPreview: tekst, at: new Date() });
     const dbId = await waStorage.insertOutboundQueued({
       direction: "outbound", fromNumber: "extra", toNumber: telefoon, messageType: "text", body: tekst,
@@ -213,6 +220,7 @@ async function verstuurSjabloon(candidateId: number, telefoon: string, naam: str
     const waProvider = await import("../whatsapp/provider");
     const waStorage = await import("../whatsapp/storage");
     if (!waProvider.isSendConfigured()) return false;
+    if (await isTestkandidaat(candidateId)) { console.log(`[Job] kandidaat ${candidateId} is fictief (testdata), geen WhatsApp`); return false; }
     const match = await waStorage.resolveAndUpsertConversation({ phoneNumber: telefoon, inbound: false, bodyPreview: tekstVoorInbox, at: new Date() });
     // Meta weigert variabelen met regeleinden, tabs of meer dan vier spaties op rij.
     const components = [{ type: "body", parameters: parameters.map((p) => ({ type: "text", text: String(p || "").replace(/\s+/g, " ").trim().slice(0, 900) })) }];
