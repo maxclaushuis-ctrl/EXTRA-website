@@ -12,11 +12,12 @@
 import { useEffect, useState } from "react";
 import { D3Kop } from "./d3";
 
-type Status = "bezig" | "wacht_cv" | "plannen" | "gepland" | "planner" | "geen_reactie" | "gestopt";
+type Status = "bezig" | "wacht_cv" | "cv_controle" | "plannen" | "gepland" | "planner" | "geen_reactie" | "gestopt";
 
 const STATUS: Record<string, { label: string; kleur: string; tekst: string }> = {
   bezig: { label: "Bezig met vragen", kleur: "#EAF3FB", tekst: "#1D4566" },
   wacht_cv: { label: "Wacht op cv", kleur: "#FCEBD7", tekst: "#9A5414" },
+  cv_controle: { label: "Cv controleren", kleur: "#FFF6D6", tekst: "#7A6200" },
   plannen: { label: "Mag plannen", kleur: "#E6F0E2", tekst: "#2F6B3E" },
   gepland: { label: "Gepland", kleur: "#E6F0E2", tekst: "#2F6B3E" },
   planner: { label: "Collega moet kijken", kleur: "#FFF6D6", tekst: "#7A6200" },
@@ -161,7 +162,7 @@ export function JobBeheer() {
         <section style={kaart}>
           <h2 style={{ margin: "0 0 10px", fontSize: 15, fontWeight: 800 }}>Stand</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {(["planner", "geen_reactie", "bezig", "wacht_cv", "plannen", "gepland", "gestopt"] as const).map((s) => (
+            {(["cv_controle", "planner", "geen_reactie", "bezig", "wacht_cv", "plannen", "gepland", "gestopt"] as const).map((s) => (
               <button key={s} type="button" onClick={() => setFilter(filter === s ? "alle" : s)}
                 style={{ ...knop(filter === s), display: "inline-flex", gap: 8, alignItems: "center" }}>
                 {STATUS[s].label} <b>{tellers[s] || 0}</b>

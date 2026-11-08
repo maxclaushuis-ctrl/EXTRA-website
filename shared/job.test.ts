@@ -40,7 +40,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   const ctx: JobContext = { voornaam: "Lisa", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false };
   let r = start(ctx, "nl", NU);
   test("Lisa: welkom noemt naam en functie", r.berichten[0].tekst.includes("Hoi Lisa") && r.berichten[0].tekst.includes("bediening en bar"));
-  test("Lisa: welkom zegt dat Job een AI is en hoe je een mens krijgt", r.berichten[0].tekst.includes("een AI") && r.berichten[0].tekst.includes("MENS"));
+  test("Lisa: welkom zegt dat Job een AI-recruiter is", r.berichten[0].tekst.includes("AI-recruiter"));
   test("Lisa: eerste vraag gaat over ervaring", r.state.laatsteOnderwerp === "ervaring" && laatste(r).tekst.includes("horeca gewerkt"));
 
   r = antwoord(r, ctx, "Twee zomers bij een strandtent in Zandvoort, daar deden we ook bruiloften en grote groepen. Nu werk ik op zaterdag in een lunchroom. Ik studeer, dus meestal kan ik twee dagen per week, en ik fiets overal heen");
@@ -62,9 +62,10 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Lisa: cv paraat geeft de uploadknop, nog niet plannen", r.state.status === "wacht_cv" && laatste(r).cvUpload === true && !r.berichten.some((b) => b.planning));
   test("Lisa: bij cv paraat geen mail", !r.acties.some((a) => a.soort === "cv_mail"));
   r = verwerk(r.state, ctx, { cvOntvangen: true }, null, later(20));
-  test("Lisa: cv binnen en alles in orde: plannen", r.state.status === "plannen" && r.berichten.some((b) => b.planning));
+  test("Lisa: cv binnen en alles in orde: eerst cv-controle, nog niet plannen", r.state.status === "cv_controle" && !r.berichten.some((b) => b.planning));
+  test("Lisa: collega krijgt een melding om het cv te controleren", r.acties.some((a) => a.soort === "planner" && a.reden.startsWith("Cv controleren")));
+  test("Lisa: Job zegt dat een collega het cv bekijkt", alleTekst(r).includes("Een collega bekijkt nu je cv"));
   test("Lisa: 'Fantastisch, je cv is binnen!'", alleTekst(r).includes("Fantastisch, je cv is binnen!"));
-  test("Lisa: herinnert aan het ID-bewijs", alleTekst(r).includes("paspoort of ID-kaart"));
   test("Lisa: samenvatting voor de mail", samenvatting(r.state.velden, ctx) === "bediening en bar, ook evenementen en banqueting · 1 tot 2 diensten per week · tot 25 km", samenvatting(r.state.velden, ctx));
   test("Lisa: profielvelden alleen bestaande kolommen", JSON.stringify(Object.keys(profielVelden(r.state.velden)).sort()) === JSON.stringify(["availability", "language", "previousExperience"]));
 }
@@ -81,10 +82,10 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Maria: geen werkautorisatievraag (EU)", r.state.laatsteOnderwerp === "werkgebied");
   r = antwoord(r, ctx, "Up to 35 km");
   r = antwoord(r, ctx, "Portuguese, Spanish and good English");
-  test("Maria: cv al binnen, dus meteen plannen", r.state.status === "plannen" && r.berichten.some((b) => b.planning));
-  test("Maria: afsluiting in het Engels", alleTekst(r).includes("first screening is done"));
+  test("Maria: cv al binnen, dus cv-controle", r.state.status === "cv_controle" && !r.berichten.some((b) => b.planning));
+  test("Maria: afsluiting in het Engels", alleTekst(r).includes("A colleague is now looking at your CV"));
   const nog = antwoord(r, ctx, "Ok thanks");
-  test("Maria: een bericht tijdens het plannen herhaalt de screening niet", nog.state.status === "plannen" && nog.berichten.length === 1 && nog.berichten[0].planning === true && !alleTekst(nog).includes("screening"));
+  test("Maria: een bericht tijdens de cv-controle geeft alleen de stand", nog.state.status === "cv_controle" && nog.berichten.length === 1 && !nog.berichten[0].planning && alleTekst(nog).includes("you'll hear from us soon"));
 }
 
 // ─── 3. Samir: buiten de EU, werkautorisatie onbekend ────────────────────────
@@ -119,7 +120,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   r = antwoord(r, ctx, "3 of 4. Ik heb een auto, tot 50 km is prima");
   test("Ahmed: werkgebied uit hetzelfde antwoord", r.state.velden.werkgebied === "tot 50 km" && r.state.laatsteOnderwerp === "talen");
   r = antwoord(r, ctx, "Nederlands, Arabisch en Frans");
-  test("Ahmed: alles in orde, plannen", r.state.status === "plannen");
+  test("Ahmed: alles in orde, cv-controle", r.state.status === "cv_controle");
 }
 
 // ─── 5. Uitzonderingen ───────────────────────────────────────────────────────
@@ -130,7 +131,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Mark: geen ervaring is geen probleem", alleTekst(r).includes("veel collega's zijn zo begonnen"));
   test("Mark: geen functievraag zonder ervaring", r.state.laatsteOnderwerp === "diensten");
   r = antwoord(r, ctx, "2"); r = antwoord(r, ctx, "25 km"); r = antwoord(r, ctx, "Nederlands");
-  test("Mark: starter in de bediening mag gewoon plannen", r.state.status === "plannen");
+  test("Mark: starter in de bediening gaat gewoon door naar de cv-controle", r.state.status === "cv_controle");
 
   const chef: JobContext = { voornaam: "Tim", functie: "chef", nationalityZone: "NL", hasCv: true };
   test("Chef zonder ervaring: planner beslist", plannerRedenen({ ervaringNiveau: "geen" }, chef, []).length === 1);

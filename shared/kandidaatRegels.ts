@@ -93,6 +93,7 @@ export function bolletje(c: KandidaatInvoer, nu: Date): Bolletje {
   const jobSinds = j ? d(j.laatsteActiviteitAt, aangemeld) : aangemeld;
 
   if (c.matchOpen) gele.push({ reden: "match", tekst: "Twijfel: mogelijk dubbel dossier", sinds: d(c.matchOpen.aangemaaktOp, aangemeld) });
+  if (j && j.status === "cv_controle") gele.push({ reden: "cv", tekst: "Cv controleren", sinds: jobSinds });
   if (j && j.status === "planner") {
     const v = j.velden || {};
     const twijfels = j.twijfels || [];
@@ -105,7 +106,7 @@ export function bolletje(c: KandidaatInvoer, nu: Date): Bolletje {
     } else if (twijfels.some((t) => /geen Nederlands en geen Engels|no-go/i.test(t))) {
       gele.push({ reden: "twijfel", tekst: "Twijfel: spreekt geen Nederlands of Engels", sinds: jobSinds });
     } else if (c.hasCv && twijfels.length === 0) {
-      gele.push({ reden: "cv", tekst: "Twijfel: cv beoordelen", sinds: jobSinds });
+      gele.push({ reden: "cv", tekst: "Cv controleren", sinds: jobSinds });
     } else {
       const eerste = (twijfels[0] || "Job twijfelt").replace(/\s+/g, " ");
       gele.push({ reden: "twijfel", tekst: `Twijfel: ${eerste.length > 60 ? `${eerste.slice(0, 57)}...` : eerste}`, sinds: jobSinds });
@@ -142,7 +143,7 @@ export const VOLGENDE_ACTIE: Record<RedenCode, { titel: string; actie: string }>
   werkautorisatie: { titel: "Werkautorisatie onduidelijk", actie: "Werkautorisatie nagaan, daarna accepteren of afwijzen; bij TWV naar het TWV-onderdeel" },
   ervaring: { titel: "Geen ervaring voor deze functie", actie: "Cv beoordelen, dan uitnodigen of afwijzen" },
   mens: { titel: "Wil een collega spreken", actie: "Terugbellen" },
-  cv: { titel: "Cv beoordelen", actie: "Cv beoordelen, dan uitnodigen of afwijzen" },
+  cv: { titel: "Cv controleren", actie: "Bekijk het cv. In orde? Accepteren, dan kiest de kandidaat zelf een moment. Anders afwijzen." },
   twijfel: { titel: "Job twijfelt", actie: "Navragen via Job of bellen" },
   jong: { titel: "Jonger dan 17", actie: "Beoordelen volgens beleid" },
   buitenland: { titel: "Woont nog niet in Nederland", actie: "Beoordelen op de verhuisdatum" },

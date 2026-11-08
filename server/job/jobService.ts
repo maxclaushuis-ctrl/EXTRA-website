@@ -425,7 +425,7 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
 export async function cvOntvangen(candidateId: number, bijlage?: string | null, kanaal?: "web" | "whatsapp"): Promise<VerwerkResultaat | null> {
   const g = await gesprekVanKandidaat(candidateId);
   if (!g) return null;
-  if (!["bezig", "wacht_cv", "geen_reactie"].includes(g.status)) return null;
+  if (!["bezig", "wacht_cv", "geen_reactie", "cv_controle"].includes(g.status)) return null;
   return verwerkBericht(g, { cvOntvangen: true, bijlage, kanaal });
 }
 
@@ -445,6 +445,26 @@ export async function naarPlannen(candidateId: number): Promise<JobGesprek> {
   const s = { ...naarState(g), status: "plannen" as JobStatus, herinneringen: 0, herinneringAt: null, laatsteActiviteitAt: new Date().toISOString() };
   await bewaarState(g.id, s);
   return (await gesprekVanKandidaat(candidateId))!;
+}
+
+/**
+ * Na Accepteren in Kandidaten: Job laat de kandidaat weten dat het cv is
+ * bekeken en dat hij zelf een moment kan kiezen. In het webgesprek staat dan
+ * de momentenkiezer; via WhatsApp gaat een bericht met de planlink (binnen 24
+ * uur na het laatste bericht van de kandidaat een gewoon bericht, anders het
+ * herinneringssjabloon). De mail met de afspraakknop stuurt de route zelf.
+ */
+export async function uitnodigingNaCheck(candidateId: number): Promise<void> {
+  const g = await gesprekVanKandidaat(candidateId);
+  const c = await kandidaat(candidateId);
+  if (!g || !c) return;
+  const s = naarState(g);
+  const b: Uitgaand = { tekst: teksten(s.taal).uitgenodigd(c.firstName), planning: true };
+  await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
+  if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
+    if (binnenVenster(s, new Date())) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst(b, g.token, s.taal));
+    else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], b.tekst);
+  }
 }
 
 /** STOP via WhatsApp of de afmeldlink in de mail: geen berichten meer van Job. */

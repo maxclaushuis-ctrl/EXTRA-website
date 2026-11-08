@@ -178,6 +178,7 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
     const job = await import("../job/jobService");
     const g = await job.naarPlannen(c.id);
     await db.update(candidates).set({ status: "gepland", updatedAt: new Date() }).where(eq(candidates.id, c.id));
+    await job.uitnodigingNaCheck(c.id).catch((e: any) => console.warn("[Kandidaten] bericht van Job na accepteren mislukt:", e?.message || e));
     let mail = false;
     if (c.email) {
       const { stuurUitnodigingsmail } = await import("../job/jobMails");

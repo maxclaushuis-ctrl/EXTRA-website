@@ -17,8 +17,9 @@
  *  - Job vraagt alleen wat nog ontbreekt.
  *  - Alleen Nederlands en Engels. Spreekt iemand geen van beide, dan stopt Job
  *    vriendelijk en wijst de planner af met die reden.
- *  - Job plant alleen direct in als functie, ervaring, werkvergunning,
- *    diensten per week, werkgebied en cv in orde zijn.
+ *  - Job plant nooit direct in: is alles in orde en het cv binnen, dan
+ *    controleert eerst een collega het cv. Na Accepteren in Kandidaten
+ *    kiest de kandidaat zelf een moment.
  */
 
 export type JobTaal = "nl" | "en";
@@ -26,7 +27,8 @@ export type JobTaal = "nl" | "en";
 export type JobStatus =
   | "bezig"        // Job stelt vragen
   | "wacht_cv"     // alles gevraagd, cv ontbreekt nog
-  | "plannen"      // klaar, kandidaat mag een moment kiezen
+  | "cv_controle"  // alles binnen, een collega controleert eerst het cv
+  | "plannen"      // cv goedgekeurd, kandidaat mag een moment kiezen
   | "gepland"      // kennismaking staat in de agenda
   | "planner"      // een collega moet kijken (twijfel, harde eis, MENS)
   | "geen_reactie" // twee herinneringen zonder antwoord
@@ -160,7 +162,7 @@ const FUNCTIEVRAAG: Record<string, { nl: string; en: string }> = {
 
 const T = {
   nl: {
-    welkom: (v: string, f: string) => `Hoi ${v}, ik ben Job van EXTRA! Leuk dat je je hebt aangemeld voor ${f}. Een paar korte vragen, dan kunnen we je goed voorstellen.`,
+    welkom: (v: string, f: string) => `Hoi ${v}, ik ben Job, de AI-recruiter van EXTRA! Leuk dat je je hebt aangemeld voor ${f}. Een paar korte vragen, dan kunnen we je goed voorstellen.`,
     disclaimer: "Je praat met Job, een AI. Typ MENS voor een collega of ENGLISH om te wisselen.",
     ervaring: (functie: string) =>
       functie === "chef" ? "Vertel eens: waar heb je tot nu toe gekookt?"
@@ -184,6 +186,9 @@ const T = {
     cvLater: "Geen probleem! Ik heb je een mail gestuurd met een knop om je cv te uploaden. Zodra het binnen is, kun je meteen een kennismaking plannen.",
     cvOntvangen: "Fantastisch, je cv is binnen!",
     screeningKlaar: "De eerste screening is klaar.",
+    cvControle: (v: string) => `Dank je, ${v}! Een collega bekijkt nu je cv. Is alles in orde, dan krijg je van mij een bericht om zelf een moment te kiezen voor je kennismaking op kantoor.`,
+    cvControleWacht: "Een collega bekijkt je cv, je hoort snel van ons. Liever iemand spreken? Typ MENS.",
+    uitgenodigd: (v: string) => `Goed nieuws, ${v}! Je cv is bekeken. Kies zelf een moment voor je kennismaking op ons kantoor aan de Herengracht 372 in Amsterdam. Neem je paspoort of ID-kaart mee.`,
     plannen: "Kies zelf een moment voor je kennismaking op ons kantoor aan de Herengracht 372 in Amsterdam.",
     plannenWa: (link: string) => `Kies zelf een moment voor je kennismaking op ons kantoor aan de Herengracht 372: ${link}`,
     idMee: "Neem je paspoort of ID-kaart mee, dan regelen we alles in één keer.",
@@ -211,7 +216,7 @@ const T = {
     bellen: "Prima, een collega van EXTRA belt je zo snel mogelijk.",
   },
   en: {
-    welkom: (v: string, f: string) => `Hi ${v}, I'm Job from EXTRA! Thanks for signing up for ${f}. A few quick questions so we can introduce you well.`,
+    welkom: (v: string, f: string) => `Hi ${v}, I'm Job, the AI recruiter at EXTRA! Thanks for signing up for ${f}. A few quick questions so we can introduce you well.`,
     disclaimer: "You're chatting with Job, an AI. Type HUMAN for a colleague or NEDERLANDS to switch.",
     ervaring: (functie: string) =>
       functie === "chef" ? "Tell me: where have you cooked so far?"
@@ -235,6 +240,9 @@ const T = {
     cvLater: "No problem! I've sent you an email with a button to upload your CV. As soon as it's in, you can book a short meeting at our office.",
     cvOntvangen: "Fantastic, your CV is in!",
     screeningKlaar: "The first screening is done.",
+    cvControle: (v: string) => `Thanks, ${v}! A colleague is now looking at your CV. If everything is fine, I'll send you a message to choose a moment for a short meeting at our office.`,
+    cvControleWacht: "A colleague is looking at your CV, you'll hear from us soon. Rather talk to someone? Type HUMAN.",
+    uitgenodigd: (v: string) => `Good news, ${v}! We've looked at your CV. Choose a moment for a short meeting at our office at Herengracht 372 in Amsterdam. Please bring your passport or ID card.`,
     plannen: "Choose a moment for a short meeting at our office at Herengracht 372 in Amsterdam.",
     plannenWa: (link: string) => `Choose a moment for a short meeting at our office at Herengracht 372: ${link}`,
     idMee: "Bring your passport or ID card, then we can arrange everything in one go.",
@@ -383,7 +391,7 @@ export function start(ctx: JobContext, taal: JobTaal, nu: Date): Resultaat {
   return {
     state,
     berichten: [
-      { tekst: `${t.welkom(ctx.voornaam, functieLabel(ctx.functie, taal))}\n\n${t.disclaimer}` },
+      { tekst: t.welkom(ctx.voornaam, functieLabel(ctx.functie, taal)) },
       vraag(onderwerp, taal, ctx),
     ],
     acties: [],
@@ -493,6 +501,10 @@ export function verwerk(
     berichten.push({ tekst: t().wachtPlanner });
     return { state, berichten, acties };
   }
+  if (state.status === "cv_controle" && !invoer.cvOntvangen) {
+    berichten.push({ tekst: t().cvControleWacht });
+    return { state, berichten, acties };
+  }
   if (state.status === "plannen" && !invoer.cvOntvangen) {
     berichten.push({ tekst: t().plannenNogmaals, planning: true });
     return { state, berichten, acties };
@@ -580,12 +592,14 @@ export function verwerk(
     return { state, berichten, acties };
   }
 
-  state.status = "plannen";
+  // Alles in orde, maar eerst controleert een collega het cv (Kandidaten).
+  // Na Accepteren nodigt Job uit om zelf een moment te kiezen.
+  state.status = "cv_controle";
   state.herinneringen = 0;
   state.herinneringAt = null;
-  berichten.push({ tekst: `${cvNet ? t().cvOntvangen + " " : ""}${t().screeningKlaar}` });
-  berichten.push({ tekst: t().plannen, planning: true });
-  berichten.push({ tekst: t().idMee });
+  if (cvNet) berichten.push({ tekst: t().cvOntvangen });
+  berichten.push({ tekst: t().cvControle(ctx.voornaam) });
+  acties.push({ soort: "planner", reden: "Cv controleren, daarna uitnodigen." });
   return { state, berichten, acties };
 }
 

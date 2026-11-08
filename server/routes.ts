@@ -12955,7 +12955,7 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
         return true;
       }
       if (args.media) {
-        if (!['bezig', 'wacht_cv', 'geen_reactie'].includes(g.status)) return false;
+        if (!['bezig', 'wacht_cv', 'geen_reactie', 'cv_controle'].includes(g.status)) return false;
         await storage.updateCandidate(args.candidateId, { hasCv: true, cvFilename: args.media.objectPath } as any);
         await job.cvOntvangen(args.candidateId, args.media.objectPath, 'whatsapp');
         return true;

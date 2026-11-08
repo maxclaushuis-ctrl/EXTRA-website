@@ -302,7 +302,6 @@ export default function JobGesprek() {
             <span className="jg-av" aria-hidden="true">J</span>
             <div><b>Job · EXTRA</b><span>{t.ai}</span></div>
           </div>
-          <p className="jg-uitleg">{t.uitleg}</p>
           {melding === "stop" && <p className="jg-uitleg" role="status">{t.gestopt}</p>}
 
           <div className="jg-lijst" ref={lijst} aria-live="polite">
