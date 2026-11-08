@@ -50,9 +50,9 @@ const T = {
     postcode: "Postcode", buitenland: "Woon je nog niet in Nederland?", kiesLand: "Kies je land", woonland: "In welk land woon je nu?",
     woonlandHulp: "Geen postcode nodig. Job vraagt straks wanneer je naar Nederland komt.", tochPostcode: "Toch een Nederlandse postcode invullen",
     paspoort: "Paspoort of ID-kaart", paspoortOpties: { nl: "Nederlands", eu: "Ander EU-land", buiten: "Buiten de EU" } as Record<Paspoort, string>,
-    reviews: "uit", reviewsNa: "Google reviews · iedereen in loondienst",
+    reviews: "uit", reviewsNa: "Google reviews",
     verderWa: "Verder via WhatsApp", onderWa: "Job, onze AI-recruiter, stuurt je meteen een bericht", geenWa: "Ik heb geen WhatsApp", geduld: "Even geduld",
-    toestemming: "Met deze knop mag EXTRA je via WhatsApp en e-mail benaderen over je aanmelding. Stoppen kan altijd met STOP. ",
+    toestemming: "Job, onze AI-recruiter, stuurt je meteen een bericht. Met deze knop mag EXTRA je via WhatsApp en e-mail benaderen; stoppen kan altijd. ",
     privacy: "Privacy", privacyLink: "/privacybeleid",
     fout: "Er ging iets mis. Probeer het opnieuw.",
     f: {
@@ -90,9 +90,9 @@ const T = {
     postcode: "Postcode", buitenland: "Not living in the Netherlands yet?", kiesLand: "Choose your country", woonland: "Which country do you live in now?",
     woonlandHulp: "No postcode needed. Job will ask when you're coming to the Netherlands.", tochPostcode: "Enter a Dutch postcode after all",
     paspoort: "Passport or ID card", paspoortOpties: { nl: "Dutch", eu: "Other EU country", buiten: "Outside the EU" } as Record<Paspoort, string>,
-    reviews: "from", reviewsNa: "Google reviews · everyone on the payroll",
+    reviews: "from", reviewsNa: "Google reviews",
     verderWa: "Continue on WhatsApp", onderWa: "Job, our AI recruiter, will message you right away", geenWa: "I don't have WhatsApp", geduld: "Please wait",
-    toestemming: "With this button you allow EXTRA to contact you about your application on WhatsApp and by email. You can always stop with STOP. ",
+    toestemming: "Job, our AI recruiter, will message you right away. With this button EXTRA may contact you on WhatsApp and by email; you can stop at any time. ",
     privacy: "Privacy", privacyLink: "/en/privacy-policy",
     fout: "Something went wrong. Please try again.",
     f: {
@@ -267,13 +267,19 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
+        let onbekend: string[] = [];
         if (d?.velden && typeof d.velden === "object") {
-          const vertaal: Record<string, string> = { whatsappNummer: "waNummer", geboortedatum: "geboren" };
+          const vertaal: Record<string, string> = { whatsappNummer: "waNummer", geboortedatum: "geboren", nationaliteit: "paspoort" };
           const nieuw: Record<string, string> = {};
           for (const [k, w] of Object.entries(d.velden)) nieuw[vertaal[k] || k] = Array.isArray(w) ? String(w[0]) : String(w);
           setFouten(nieuw);
+          // Een veld dat niet op het formulier staat, noemen we in de melding zelf.
+          onbekend = Object.keys(nieuw).filter((k) => !formulier.current?.querySelector(`[data-veld="${k}"]`));
+          const eerste = Object.keys(nieuw).find((k) => !onbekend.includes(k));
+          if (eerste) formulier.current?.querySelector<HTMLElement>(`[data-veld="${eerste}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" });
         }
-        setAlgemeen((d?.message && r.status !== 500 ? d.message : t.fout) + (d?.oorzaak ? ` (testomgeving: ${d.oorzaak})` : ""));
+        const basis = d?.message && r.status !== 500 ? d.message : t.fout;
+        setAlgemeen(basis + (onbekend.length ? ` (${onbekend.join(", ")})` : "") + (d?.oorzaak ? ` (testomgeving: ${d.oorzaak})` : ""));
         setBezig("");
         return;
       }
@@ -414,7 +420,6 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
                   <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.4-.3Z" /></svg>
                   {bezig === "whatsapp" ? t.geduld : t.verderWa}
                 </button>
-                <div className="af4-onder">{t.onderWa}</div>
                 <button type="button" className="af4-geenwa" disabled={!!bezig} onClick={() => verstuur("web")}>{bezig === "web" ? t.geduld : t.geenWa}</button>
                 <div className="af4-toestemming">{t.toestemming}<a href={t.privacyLink}>{t.privacy}</a></div>
               </div>
@@ -500,7 +505,7 @@ const CSS = `
 .d3.d3.d3 .af4 .af4-datum{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:6px}
 .d3.d3.d3 .af4 .af4-datum input{padding:0 8px;text-align:center}
 .d3.d3.d3 .af4 .af4-pc{position:relative}
-.d3.d3.d3 .af4 .af4-plaats{font-size:13px!important;font-weight:700!important;line-height:1!important;position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#3E7A4C;pointer-events:none;background:#fff;padding-left:4px}
+.d3.d3.d3 .af4 .af4-plaats{font-size:13px!important;font-weight:700!important;line-height:1!important;position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#3E7A4C;pointer-events:none}
 .d3.d3.d3 .af4 .af4-pillen{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .d3.d3.d3 .af4 .af4-pillen button{min-height:46px;border-radius:12px;border:1px solid #DAD5CC;background:#fff;font:inherit;font-weight:700;font-size:13.5px;color:var(--espresso);cursor:pointer;padding:6px}
 .d3.d3.d3 .af4 .af4-pillen button.aan{background:var(--espresso);color:#fff;border-color:var(--espresso)}
