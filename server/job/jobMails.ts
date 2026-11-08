@@ -47,7 +47,7 @@ export async function stuurStartmail(o: { voornaam: string; email: string; funct
   });
 }
 
-export async function stuurHerinneringsmail(o: { voornaam: string; email: string; functie: string; taal: JobTaal; link: string; stopLink: string }) {
+export async function stuurHerinneringsmail(o: { voornaam: string; email: string; functie: string; taal: JobTaal; link: string; stopLink: string; waLink?: string | null }) {
   const en = o.taal === "en";
   const html = mailOpmaak({
     branche: brancheVanFunctie(o.functie),
@@ -60,7 +60,12 @@ export async function stuurHerinneringsmail(o: { voornaam: string; email: string
       alinea(en
         ? `Great that you signed up for ${escapeHtml(functieLabel(o.functie, "en"))}! Your conversation with Job isn't finished yet. A few more quick questions, then you can book a meeting right away.`
         : `Leuk dat je je hebt aangemeld voor ${escapeHtml(functieLabel(o.functie, "nl"))}! Je gesprek met Job is nog niet af. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen.`),
-      knoppen(knop(en ? "Continue" : "Verder", o.link, "vol")),
+      stappen(brancheVanFunctie(o.functie), en
+        ? ["Apply: done", "Questions from Job: almost done", "Meet us at the office"]
+        : ["Aanmelden: klaar", "Vragen van Job: bijna klaar", "Kennismaken op kantoor"]),
+      o.waLink
+        ? knoppen(knop(en ? "Continue on WhatsApp →" : "Verder via WhatsApp →", o.waLink, "vol"), knop(en ? "Continue on the website →" : "Verder op de website →", o.link, "rand"))
+        : knoppen(knop(en ? "Continue on the website →" : "Verder op de website →", o.link, "vol")),
       alinea(en ? "You'll pick up where you left off. What you already told us has been saved." : "Je gaat verder waar je gebleven was. Wat je al vertelde, hebben we bewaard."),
       afsluiting(o.taal, { groet: en ? "Best," : "Groet," }),
     ].join(""),
@@ -143,5 +148,40 @@ export async function stuurCvMail(o: { voornaam: string; email: string; functie:
     subject: en ? "Upload your CV to book a meeting" : "Upload je cv om een kennismaking te plannen",
     html,
     text: en ? `Hi ${o.voornaam},\n\nUpload your CV here: ${uploadUrl}\n\nTeam EXTRA` : `Hoi ${o.voornaam},\n\nUpload je cv hier: ${uploadUrl}\n\nTeam EXTRA`,
+  });
+}
+
+/** Kandidaten (bord H3, mail 1): na Accepteren kiest de kandidaat zelf een moment. */
+export async function stuurUitnodigingsmail(o: { voornaam: string; email: string; functie: string; taal: JobTaal; link: string; nonEu: boolean; viaWhatsapp: boolean }) {
+  const en = o.taal === "en";
+  const meenemen = en
+    ? (o.nonEu ? "Passport or ID card and your residence document" : "Passport or ID card")
+    : (o.nonEu ? "Paspoort of ID-kaart en je verblijfsdocument" : "Paspoort of ID-kaart");
+  const html = mailOpmaak({
+    branche: brancheVanFunctie(o.functie),
+    taal: o.taal,
+    titel: en ? "You're invited to meet us" : "Je bent uitgenodigd voor een kennismaking",
+    voorkop: en ? "Invitation" : "Uitnodiging kennismaking",
+    kop: en ? `Hi ${escapeHtml(o.voornaam)}, you're invited` : `Hoi ${escapeHtml(o.voornaam)}, je bent uitgenodigd`,
+    preheader: en ? "Choose a time that suits you." : "Kies zelf een moment dat je uitkomt.",
+    inhoud: [
+      alinea(en
+        ? "Good news: we'd like to meet you at our office. Choose a time that suits you."
+        : "Goed nieuws: we maken graag kennis met je op ons kantoor. Kies zelf een moment dat je uitkomt."),
+      gegevens([[en ? "Where" : "Waar", "Herengracht 372, Amsterdam"], [en ? "Bring" : "Meenemen", meenemen]]),
+      knoppen(knop(en ? "Choose a time →" : "Kies een moment →", o.link, "vol")),
+      alinea(o.viaWhatsapp
+        ? (en ? "Questions? Send Job a message on WhatsApp." : "Vragen? Stuur Job een bericht via WhatsApp.")
+        : (en ? "Questions? Send Job a message via the link above." : "Vragen? Stuur Job een bericht via de link hierboven."), { klein: true }),
+      afsluiting(o.taal),
+    ].join(""),
+  });
+  return sendEmail({
+    to: o.email, from: AFZENDER,
+    subject: en ? "You're invited to meet us" : "Je bent uitgenodigd voor een kennismaking",
+    html,
+    text: en
+      ? `Hi ${o.voornaam},\n\nGood news: we'd like to meet you at our office. Choose a time: ${o.link}\n\nWhere: Herengracht 372, Amsterdam\nBring: ${meenemen}\n\nSee you soon!\nTeam EXTRA`
+      : `Hoi ${o.voornaam},\n\nGoed nieuws: we maken graag kennis met je op ons kantoor. Kies een moment: ${o.link}\n\nWaar: Herengracht 372, Amsterdam\nMeenemen: ${meenemen}\n\nTot snel!\nTeam EXTRA`,
   });
 }

@@ -663,6 +663,37 @@ const AANVULLINGEN: Aanvulling[] = [
     },
   },
   {
+    // Migratie 0032. Aanmeldformulier 3 en Kandidaten 3.0: alleen nieuwe kolommen en een nieuwe tabel.
+    omschrijving: "candidates: kolommen voor aanmeldformulier 3; kandidaat_mogelijke_match",
+    uitvoeren: async () => {
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS aanmeld_versie text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS functie_eerste_keus text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS postcode text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS woonland text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS whatsapp_nummer text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS gesprekstaal text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS bron_details jsonb`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS whatsapp_toestemming_op timestamp`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS whatsapp_toestemming_versie text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS aanmeld_sleutel text`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS planner_user_id integer`);
+      await db.execute(sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS planner_sinds timestamp`);
+      await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS candidates_aanmeld_sleutel_idx ON candidates (aanmeld_sleutel) WHERE aanmeld_sleutel IS NOT NULL`);
+      await db.execute(sql`CREATE TABLE IF NOT EXISTS kandidaat_mogelijke_match (
+  id              serial PRIMARY KEY,
+  candidate_id    integer NOT NULL,
+  soort           text NOT NULL,
+  match_id        integer NOT NULL,
+  redenen         jsonb NOT NULL DEFAULT '[]'::jsonb,
+  status          text NOT NULL DEFAULT 'open',
+  beoordeeld_door integer,
+  beoordeeld_op   timestamp,
+  aangemaakt_op   timestamp NOT NULL DEFAULT now()
+)`);
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS kandidaat_mogelijke_match_kandidaat_idx ON kandidaat_mogelijke_match (candidate_id)`);
+    },
+  },
+  {
     // Migratie 0030
     omschrijving: "job_interviewers: werktijden per interviewer",
     uitvoeren: () =>

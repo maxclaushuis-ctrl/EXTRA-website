@@ -674,6 +674,8 @@ function scheduleDailyCvReminders() {
       const now = new Date();
       for (const candidate of result.candidates) {
         if (candidate.hasCv || !candidate.email) continue;
+        // Aanmeldformulier 3: Job vraagt het cv en stuurt zelf de herinneringen.
+        if ((candidate as any).aanmeldVersie === '3') continue;
 
         const reminderCount = candidate.cvReminderCount ?? 0;
         if (reminderCount >= 3) continue;

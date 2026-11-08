@@ -11,7 +11,7 @@ import {
 import type { KaartData } from "./Kaart";
 import { Dialoog, Knop, api, melding, useData } from "./gedeeld";
 
-const DIENSTEN: Record<string, string> = { "1": "1 dienst per week", "2": "meestal 2 diensten per week", "3": "3 of meer diensten per week", weekend: "vooral in het weekend", flexibel: "flexibel" };
+const DIENSTEN: Record<string, string> = { "1-2": "1 tot 2 diensten per week", "3-4": "3 tot 4 diensten per week", "5+": "5 of meer diensten per week" };
 function jobWistAl(job: KaartData["job"], sleutel?: Vraag["job"]): string {
   const v = (job?.velden || {}) as Record<string, unknown>;
   if (!sleutel) return "";

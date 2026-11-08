@@ -144,6 +144,14 @@ export function testkandidaten(): Testkandidaat[] {
     k("Daan", "Koning", "logistiek", "in_behandeling", { dagenGeleden: 1 }),
     k("Julia", "Dekker", "frontoffice", "in_behandeling", { dagenGeleden: 8, language: "Engels", nationality: "Verenigd Koninkrijk", needsTwv: true }),
 
+    // Kandidaten 3.0: elke toestand van het overzicht (bord G), zie testJobGesprekken()
+    k("Jesse", "van Dam", "horecamedewerker", "in_behandeling", { dagenGeleden: 4, hasCv: false }),
+    k("Mila", "Vos", "housekeeping", "in_behandeling", { dagenGeleden: 2, hasCv: false }),
+    k("Ravi", "Sharma", "logistiek", "in_behandeling", { dagenGeleden: 1, nationality: "India", language: "Engels" }),
+    k("Zoë", "Peeters", "horecamedewerker", "in_behandeling", { dagenGeleden: 1, nationality: "België", city: "Antwerpen" }),
+    k("Lina", "Haddad", "chef", "in_behandeling", { dagenGeleden: 0 }),
+    k("Bo", "Hermans", "horecamedewerker", "in_behandeling", { dagenGeleden: 0, hasCv: false }),
+
     // Aangenomen (Onboarding J)
     k("Milan", "Jacobs", "horecamedewerker", "aangenomen", { dagenGeleden: 20 }),
     k("Sofia", "Rossi", "housekeeping", "aangenomen", { dagenGeleden: 18, nationality: "Italië", language: "Italiaans, Engels" }),
@@ -254,5 +262,33 @@ export function testdossiers(): Testdossier[] {
     { email: e("Roos", "Timmermans"), stap: "archief", inStap: 2, gesprek: 6, intake: intakeVoorbeeld({}), beoordeling: b, controle: { idGezien: true, idDoor: "Tom", uitkomst: "negatief", verslag: "Kwam vaak te laat." }, archief: { uit: "ref_doc_check", reden: "referentie_negatief" } },
     { email: e("Femke", "Smits"), stap: "archief", inStap: 1, gesprek: 5, intake: intakeVoorbeeld({}), beoordeling: { communicatief: 40, representatief: 45, extravert: 20, indruk: 35 }, controle: { idGezien: true, idDoor: "Sanne" }, twijfelVan: "beoordelen", archief: { uit: "extra_check", reden: "beoordeling" } },
     { email: e("Bas", "Kuipers"), stap: "archief", inStap: 3, gesprek: 3, intake: {}, archief: { uit: "gesprek_gepland", reden: "niet_verschenen" } },
+  ];
+}
+
+// ─── Gesprekken met Job voor Kandidaten 3.0 ─────────────────────────────────
+export interface TestJob {
+  email: string;
+  status: "bezig" | "wacht_cv" | "planner" | "geen_reactie" | "plannen";
+  herinneringen: number;
+  /** Uren geleden de laatste activiteit. */
+  uur: number;
+  velden: Record<string, unknown>;
+  twijfels?: string[];
+  woonland?: string;
+  functieEersteKeus?: string;
+  /** Een mogelijk dubbel dossier met deze testkandidaat. */
+  matchMet?: string;
+}
+
+export function testJobGesprekken(): TestJob[] {
+  const e = (v: string, a: string) => `${v}.${a}`.toLowerCase().normalize("NFD").replace(/[^a-z.]/g, "") + TEST_DOMEIN;
+  return [
+    { email: e("Jesse", "van Dam"), status: "geen_reactie", herinneringen: 2, uur: 30, velden: { ervaring: "Twee jaar bediening", ervaringNiveau: "ervaren" } },
+    { email: e("Mila", "Vos"), status: "bezig", herinneringen: 1, uur: 20, velden: { ervaring: "Hotel in Utrecht", ervaringNiveau: "ervaren", functievraag: "Zestien kamers" } },
+    { email: e("Ravi", "Sharma"), status: "planner", herinneringen: 0, uur: 5, velden: { ervaring: "Magazijn", ervaringNiveau: "ervaren", werkautorisatie: "onbekend" }, twijfels: ["Werkautorisatie: weet het niet. Controleren vóór het uitnodigen."] },
+    { email: e("Zoë", "Peeters"), status: "bezig", herinneringen: 0, uur: 0.1, velden: {}, woonland: "België" },
+    { email: e("Lina", "Haddad"), status: "bezig", herinneringen: 0, uur: 2, velden: { ervaring: "Keuken van een brasserie", ervaringNiveau: "ervaren" }, matchMet: e("Lotte", "Smits") },
+    { email: e("Tess", "Kramer"), status: "wacht_cv", herinneringen: 2, uur: 50, velden: { ervaring: "Geen", ervaringNiveau: "geen", functievraag: "x", diensten: "1-2", werkgebied: "Tot 10 km", talen: "Nederlands", cvParaat: "nee" }, functieEersteKeus: "afwas" },
+    { email: e("Ruben", "de Boer"), status: "planner", herinneringen: 0, uur: 3, velden: { ervaring: "Nog nooit in een keuken gewerkt", ervaringNiveau: "geen" }, twijfels: ["Functie chef vraagt ervaring en die ontbreekt."] },
   ];
 }

@@ -145,11 +145,16 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
   const a = await actieveAfspraak(candidateId);
   return {
     voornaam: c.firstName,
-    functie: c.functionType,
+    functie: c.functieEersteKeus === "afwas" ? "afwas" : c.functionType,
     nationalityZone: (c.nationalityZone as any) || null,
     hasCv: !!c.hasCv,
     afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,
   };
+}
+
+/** Het nummer waar Job naartoe stuurt: een apart WhatsApp-nummer gaat voor. */
+function waNummer(c: { phone: string | null; whatsappNummer?: string | null }): string {
+  return c.whatsappNummer || c.phone || "";
 }
 
 // ─── Berichten opslaan en versturen ──────────────────────────────────────────
@@ -238,7 +243,7 @@ async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[
       extra: b.planning ? "planning" : b.cvUpload ? "cv_upload" : null, kanaal: g.kanaal,
     });
     if (c?.phone && c.whatsappOptInStatus === "actief" && binnenVenster(s, nu)) {
-      await verstuurWhatsappTekst(g.candidateId, c.phone, whatsappTekst(b, g.token, s.taal));
+      await verstuurWhatsappTekst(g.candidateId, waNummer(c), whatsappTekst(b, g.token, s.taal));
     }
   }
 }
@@ -311,7 +316,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
   const r = start(ctx, taal, nu);
 
   const sjabloon = SJABLONEN().start;
-  const viaWhatsapp = opties.voorkeur !== "web" && !!c.phone && c.whatsappOptInStatus === "actief" && !!sjabloon && (await whatsappKlaar());
+  const viaWhatsapp = opties.voorkeur !== "web" && !!waNummer(c) && c.whatsappOptInStatus === "actief" && !!sjabloon && (await whatsappKlaar());
 
   let g: JobGesprek;
   try {
@@ -331,7 +336,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
 
   if (viaWhatsapp) {
     const eersteVraag = r.berichten[r.berichten.length - 1].tekst;
-    const ok = await verstuurSjabloon(candidateId, c.phone!, sjabloon, taal,
+    const ok = await verstuurSjabloon(candidateId, waNummer(c), sjabloon, taal,
       [c.firstName, functieLabel(c.functionType, taal), eersteVraag],
       `${r.berichten[0].tekst}\n\n${eersteVraag}`);
     if (!ok) {
@@ -403,6 +408,24 @@ export async function cvOntvangen(candidateId: number, bijlage?: string | null, 
   if (!g) return null;
   if (!["bezig", "wacht_cv", "geen_reactie"].includes(g.status)) return null;
   return verwerkBericht(g, { cvOntvangen: true, bijlage, kanaal });
+}
+
+/**
+ * Kandidaten (H): de planner accepteert. Is er nog geen gesprek met Job, dan
+ * komt er een zonder startberichten; daarna staat het gesprek op "plannen",
+ * zodat de kandidaat via de link zelf een moment kiest.
+ */
+export async function naarPlannen(candidateId: number): Promise<JobGesprek> {
+  let g = await gesprekVanKandidaat(candidateId);
+  if (!g) {
+    const c = await kandidaat(candidateId);
+    const taal: JobTaal = c?.gesprekstaal === "en" ? "en" : "nl";
+    [g] = await db.insert(jobGesprekken).values({ candidateId, token: nieuwToken(), kanaal: "web", taal }).onConflictDoNothing().returning();
+    if (!g) g = (await gesprekVanKandidaat(candidateId))!;
+  }
+  const s = { ...naarState(g), status: "plannen" as JobStatus };
+  await bewaarState(g.id, s);
+  return (await gesprekVanKandidaat(candidateId))!;
 }
 
 /** STOP via WhatsApp of de afmeldlink in de mail: geen berichten meer van Job. */
@@ -522,11 +545,11 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     if (!c) continue;
     if (g.kanaal === "whatsapp" && c.phone && c.whatsappOptInStatus === "actief") {
       const tekst = r.berichten[0].tekst;
-      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, c.phone, whatsappTekst(r.berichten[0], g.token, s.taal));
-      else await verstuurSjabloon(c.id, c.phone, SJABLONEN().herinnering, s.taal, [c.firstName], tekst);
+      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst(r.berichten[0], g.token, s.taal));
+      else await verstuurSjabloon(c.id, waNummer(c), SJABLONEN().herinnering, s.taal, [c.firstName], tekst);
     }
     if (c.email && soort === "eerste") {
-      stuurHerinneringsmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, link: gesprekLink(g.token), stopLink: gesprekLink(g.token, "&stop=1") }).catch(() => {});
+      stuurHerinneringsmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, link: gesprekLink(g.token), stopLink: gesprekLink(g.token, "&stop=1"), waLink: g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && process.env.JOB_WA_NUMMER ? `https://wa.me/${process.env.JOB_WA_NUMMER.replace(/\D/g, "")}` : null }).catch(() => {});
     }
   }
 
@@ -543,8 +566,8 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     const tekst = t.afspraakHerinnering(c.firstName, a.tijd, a.interviewer);
     await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst, keuzes: t.afspraakKeuzes, kanaal: g.kanaal });
     if (c.phone && c.whatsappOptInStatus === "actief" && g.kanaal === "whatsapp") {
-      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, c.phone, whatsappTekst({ tekst, keuzes: t.afspraakKeuzes }, g.token, s.taal));
-      else await verstuurSjabloon(c.id, c.phone, SJABLONEN().afspraak, s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
+      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst({ tekst, keuzes: t.afspraakKeuzes }, g.token, s.taal));
+      else await verstuurSjabloon(c.id, waNummer(c), SJABLONEN().afspraak, s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
     }
   }
   return { herinneringen: aantal, rood, afspraken };

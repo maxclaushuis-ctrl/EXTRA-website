@@ -49,6 +49,7 @@ import WhatsAppInbox from './dashboard/whatsapp';
 import CommunicatieNav from './dashboard/CommunicatieNav';
 import NavGroepKop from './dashboard/NavGroepKop';
 import { SollicitantenV2, useSollicitantenV2, KandidaatAfwijzen } from './dashboard/sollicitanten';
+import { KandidatenV2, useKandidatenV2 } from './dashboard/kandidaten';
 import TakenPagina from './dashboard/TakenPagina';
 import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
 import WhatsAppContacten from './dashboard/WhatsAppContacten';
@@ -227,6 +228,8 @@ export default function DashboardMockup() {
 
   const [activeTab, setActiveTab] = useState('kandidaten');
   const sollicitantenV2 = useSollicitantenV2(isAuthenticated && user?.role === 'admin');
+  const kandidatenV2 = useKandidatenV2(isAuthenticated && user?.role === 'admin');
+  const [oudeKandidaten, setOudeKandidaten] = useState(false);
 
   // Cross-component navigatie: andere dashboard-pagina's kunnen via dit
   // window-event verzoeken om naar een andere tab te schakelen (bv. de
@@ -1500,7 +1503,9 @@ export default function DashboardMockup() {
         </header>
 
         <div className={(activeTab === 'prospect-campagnes' || activeTab === 'prospect-contacten') ? '' : 'p-3 sm:p-6'}>
-          {activeTab === 'kandidaten' ? (
+          {activeTab === 'kandidaten' && kandidatenV2 && !oudeKandidaten ? (
+            <KandidatenV2 naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setOudeKandidaten(true)} />
+          ) : activeTab === 'kandidaten' ? (
             <div>
               {/* Kandidaat detail dialog */}
               <Dialog open={kanDetailOpen} onOpenChange={setKanDetailOpen}>

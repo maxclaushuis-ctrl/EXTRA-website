@@ -989,6 +989,20 @@ export const candidates = pgTable("candidates", {
   whatsappOptInChangedAt: timestamp("whatsapp_opt_in_changed_at"),
   whatsappOptInReason: text("whatsapp_opt_in_reason"),
 
+  // Aanmeldformulier 3 en Kandidaten 3.0 (migratie 0032, alleen nieuwe kolommen).
+  aanmeldVersie: text("aanmeld_versie"),               // '3' bij het nieuwe formulier
+  functieEersteKeus: text("functie_eerste_keus"),      // bediening | keuken | afwas | housekeeping | frontoffice | logistiek
+  postcode: text("postcode"),                          // "1055 AB"
+  woonland: text("woonland"),                          // alleen bij "Ik woon nog niet in Nederland"
+  whatsappNummer: text("whatsapp_nummer"),             // E.164, alleen als anders dan phone
+  gesprekstaal: text("gesprekstaal"),                  // nl | en
+  bronDetails: jsonb("bron_details"),                  // ingang, chip, utm, vacature, branche, herkomst
+  whatsappToestemmingOp: timestamp("whatsapp_toestemming_op"),
+  whatsappToestemmingVersie: text("whatsapp_toestemming_versie"),
+  aanmeldSleutel: text("aanmeld_sleutel"),             // tegen dubbel versturen
+  plannerUserId: integer("planner_user_id"),
+  plannerSinds: timestamp("planner_sinds"),
+
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -2730,3 +2744,20 @@ export const sollicitantGebeurtenissen = pgTable("sollicitant_gebeurtenissen", {
 
 export type SollicitantDossier = typeof sollicitantDossiers.$inferSelect;
 export type SollicitantGebeurtenis = typeof sollicitantGebeurtenissen.$inferSelect;
+
+// Mogelijke dubbele personen bij een aanmelding (bouwplan fase 1a, sectie 5).
+// Het systeem voegt nooit zelf samen; de planner kiest "Zelfde persoon" of "Iemand anders".
+export const kandidaatMogelijkeMatch = pgTable("kandidaat_mogelijke_match", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  soort: text("soort").notNull(),                       // kandidaat | medewerker
+  matchId: integer("match_id").notNull(),
+  redenen: jsonb("redenen").$type<string[]>().notNull().default([]),
+  status: text("status").notNull().default("open"),     // open | zelfde_persoon | iemand_anders
+  beoordeeldDoor: integer("beoordeeld_door"),
+  beoordeeldOp: timestamp("beoordeeld_op"),
+  aangemaaktOp: timestamp("aangemaakt_op").defaultNow().notNull(),
+}, (t) => ({
+  kandidaatIdx: index("kandidaat_mogelijke_match_kandidaat_idx").on(t.candidateId),
+}));
+export type KandidaatMogelijkeMatch = typeof kandidaatMogelijkeMatch.$inferSelect;

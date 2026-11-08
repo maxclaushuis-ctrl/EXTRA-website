@@ -24,7 +24,7 @@
  * krijgen na stap 1 de Engelse teksten. Op de Engelse pagina gaan de links
  * (homepage, privacybeleid) naar de Engelse tegenhangers.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { useLocation } from "wouter";
 import Shell from "@/design3/Shell";
 import { Ic, Pijl } from "@/design3/basis";
@@ -113,7 +113,7 @@ function binnen50km(stad: string): boolean {
   return ["amsterdam", "utrecht", "den haag", "rotterdam", "haarlem", "leiden"].some((p) => c.includes(p));
 }
 
-const LANDCODES = [
+export const LANDCODES = [
   { code: "+31", naam: "Nederland", en: "Netherlands" }, { code: "+32", naam: "België", en: "Belgium" }, { code: "+49", naam: "Duitsland", en: "Germany" },
   { code: "+44", naam: "Verenigd Koninkrijk", en: "United Kingdom" }, { code: "+33", naam: "Frankrijk", en: "France" }, { code: "+48", naam: "Polen", en: "Poland" },
   { code: "+40", naam: "Roemenië", en: "Romania" }, { code: "+90", naam: "Turkije", en: "Turkey" }, { code: "+212", naam: "Marokko", en: "Morocco" },
@@ -140,7 +140,7 @@ export function isValidE164(e164: string): boolean {
  * dish = afwas, logistics = logistiek, waiting = bediening), uit het
  * inschrijfblok op de Engelse pagina's.
  */
-function functieUitKort(f: string): string {
+export function functieUitKort(f: string): string {
   const s = f.toLowerCase();
   if (s.includes("housekeeping")) return "housekeeping";
   if (s.includes("keuken") || s.includes("afwas") || s.includes("kitchen") || s.includes("dish")) return "chef";
@@ -298,7 +298,7 @@ function Blok({ nr, kop, children }: { nr: number; kop: ReactNode; children: Rea
   );
 }
 
-export default function Aanmelden() {
+function AanmeldenHuidig() {
   const [pad] = useLocation();
   const [stap, setStap] = useState<Stap>("basics");
   const [flow, setFlow] = useState<Flow>("NL");
@@ -828,7 +828,7 @@ export default function Aanmelden() {
   );
 }
 
-function Bewijs({ taal, uit, derde, vierde }: { taal: Taal; uit: string; derde: [string, string]; vierde: [string, string] }) {
+export function Bewijs({ taal, uit, derde, vierde }: { taal: Taal; uit: string; derde: [string, string]; vierde: [string, string] }) {
   const rv = useLiveReviews(taal === "EN" ? "en" : "nl");
   return (
     <ul className="av-bewijs">
@@ -837,4 +837,29 @@ function Bewijs({ taal, uit, derde, vierde }: { taal: Taal; uit: string; derde: 
       <li><b>{vierde[0]}</b><span>{vierde[1]}</span></li>
     </ul>
   );
+}
+
+// ─── Aanmeldformulier 3 (bord A) ────────────────────────────────────────────
+// De schakelaar AANMELDFORMULIER op de server bepaalt welk formulier iemand
+// ziet: huidig (standaard), test (alleen met ?formulier=nieuw) of nieuw.
+// Tot het antwoord binnen is, staat het huidige formulier er; dat is ook wat
+// het prerender-fragment toont.
+const AanmeldenNieuw = lazy(() => import("./AanmeldenNieuw"));
+
+export default function Aanmelden() {
+  const [versie, setVersie] = useState<"huidig" | "test" | "nieuw" | null>(null);
+  useEffect(() => {
+    let weg = false;
+    fetch("/api/aanmeldformulier/versie", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : { versie: "huidig" }))
+      .then((d) => { if (!weg) setVersie(d?.versie === "nieuw" || d?.versie === "test" ? d.versie : "huidig"); })
+      .catch(() => { if (!weg) setVersie("huidig"); });
+    return () => { weg = true; };
+  }, []);
+  let nieuw = versie === "nieuw";
+  if (versie === "test") {
+    try { nieuw = new URLSearchParams(window.location.search).get("formulier") === "nieuw"; } catch { nieuw = false; }
+  }
+  if (nieuw) return <Suspense fallback={null}><AanmeldenNieuw test={versie === "test"} /></Suspense>;
+  return <AanmeldenHuidig />;
 }

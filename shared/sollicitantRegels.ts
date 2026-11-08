@@ -58,9 +58,28 @@ export const BRANCHE: Record<Branche, { label: string; vlak: string; tekst: stri
   events: { label: "Events", vlak: "#EAF3FB", tekst: "#1D4566", rand: "#C9DDF0", foto: "#C7DFF4" },
   logistiek: { label: "Logistiek", vlak: "#EEF3E7", tekst: "#3E5A2A", rand: "#D3E0C2", foto: "#CEDBBC" },
 };
-export function brancheVan(functie: string | null | undefined, opgeslagen?: string | null): Branche {
-  if (opgeslagen === "hotels" || opgeslagen === "events" || opgeslagen === "logistiek") return opgeslagen;
-  return functie === "logistiek" ? "logistiek" : "hotels";
+/**
+ * Branche (ontwerp sectie 19): een opgeslagen keuze gaat voor, dan de ingang
+ * (vacature of branchepagina), dan de functie. Bediening en bar is Events;
+ * keuken, afwas, housekeeping en front office zijn Hotels.
+ */
+export function brancheVan(functie: string | null | undefined, opgeslagen?: string | null, afwas?: boolean | null, ingang?: string | null): Branche {
+  for (const b of [opgeslagen, ingang]) if (b === "hotels" || b === "events" || b === "logistiek") return b;
+  if (functie === "logistiek") return "logistiek";
+  if (functie === "horecamedewerker" && !afwas) return "events";
+  return "hotels";
+}
+
+/** Afwas: het nieuwe formulier slaat het op als eerste keus; oudere dossiers als horecamedewerker met afwas. */
+export function isAfwas(c: { functionType?: string | null; canDoWashing?: boolean | null; functieEersteKeus?: string | null }): boolean {
+  if (c.functieEersteKeus) return c.functieEersteKeus === "afwas";
+  return c.functionType === "horecamedewerker" && !!c.canDoWashing;
+}
+
+/** De ingang uit bron_details, als de kandidaat via een vacature of branchepagina kwam. */
+export function ingangBranche(bron: unknown): string | null {
+  const b = (bron && typeof bron === "object" ? (bron as Record<string, unknown>).branche : null);
+  return typeof b === "string" ? b : null;
 }
 
 export const FUNCTIE_LABEL: Record<string, string> = {
@@ -71,7 +90,7 @@ export const FUNCTIE_LABEL: Record<string, string> = {
   logistiek: "Logistiek",
 };
 export function functieNaam(functie: string, afwas?: boolean | null): string {
-  if (functie === "horecamedewerker" && afwas) return "Afwas";
+  if (afwas) return "Afwas";
   return FUNCTIE_LABEL[functie] || functie;
 }
 
@@ -85,7 +104,8 @@ export function functieNaam(functie: string, afwas?: boolean | null): string {
  */
 export type Script = "horeca" | "afwas" | "algemeen";
 export function scriptVoor(functie: string, afwas?: boolean | null): Script {
-  if (functie === "horecamedewerker") return afwas ? "afwas" : "horeca";
+  if (afwas) return "afwas";
+  if (functie === "horecamedewerker") return "horeca";
   return "algemeen";
 }
 export const SCRIPT_NAAM: Record<Script, string> = { horeca: "Horecamedewerker", afwas: "Afwas", algemeen: "Algemeen" };
@@ -560,8 +580,10 @@ export interface Afwijsreden {
   geenMail?: boolean;
 }
 
+const NA_GESPREK: ArchiefHerkomst[] = ["gesprek_gepland", "beoordelen", "ref_doc_check", "extra_check"];
+
 export const AFWIJSREDENEN: Afwijsreden[] = [
-  { code: "beoordeling", label: "Past nu niet bij de functie",
+  { code: "beoordeling", label: "Past nu niet bij de functie", stappen: NA_GESPREK,
     mail: "We hebben goed naar je gesprek gekeken. Voor de functies die we nu hebben, kiezen we helaas voor andere kandidaten. Dat zegt niets over wie je bent; het gaat om wat er op dit moment nodig is." },
   { code: "te_weinig_diensten", label: "Te weinig diensten beschikbaar",
     mail: "Onze opdrachtgevers vragen meer diensten per week dan je nu kunt werken. Daarom kunnen we je op dit moment helaas niet inzetten. Heb je later meer tijd, dan horen we graag weer van je." },
@@ -577,7 +599,7 @@ export const AFWIJSREDENEN: Afwijsreden[] = [
     mail: "Op dit moment kunnen we je helaas niet inzetten, omdat je daarvoor een werkvergunning nodig hebt. Verandert dat, dan horen we graag weer van je." },
   { code: "taal", label: "Taal onvoldoende voor deze functie",
     mail: "Voor deze functie is goed Nederlands of Engels nodig, omdat je veel met gasten en collega's praat. Daarom kunnen we je op dit moment helaas niet inzetten." },
-  { code: "id_niet_getoond", label: "ID niet getoond",
+  { code: "id_niet_getoond", label: "ID niet getoond", stappen: NA_GESPREK,
     mail: "Om bij EXTRA te kunnen werken, moeten we je ID-kaart of paspoort gezien hebben. Dat is helaas niet gelukt, dus we stoppen je aanmelding. Kun je je ID wel laten zien, neem dan contact met ons op." },
   { code: "referentie_negatief", label: "Referentie negatief", stappen: ["ref_doc_check", "extra_check"],
     mail: "We hebben je referentie gesproken en alles naast elkaar gelegd. We kiezen er helaas voor om niet met je verder te gaan." },
@@ -603,15 +625,17 @@ export function redenenVoor(stap: ArchiefHerkomst): Afwijsreden[] {
 export function standaardReden(stap: ArchiefHerkomst, aanleiding?: "niet_verschenen" | "negatief"): string {
   if (aanleiding === "niet_verschenen") return "niet_verschenen";
   if (aanleiding === "negatief") return "referentie_negatief";
-  return stap === "gesprek_gepland" ? "" : "beoordeling";
+  return stap === "gesprek_gepland" || stap === "kandidaten" ? "" : "beoordeling";
 }
 
 export interface Afwijsmail { onderwerp: string; aanhef: string; alineas: string[] }
-export function afwijsmail(code: string, voornaam: string, o: { naGesprek: boolean; eigenTekst?: string }): Afwijsmail {
+export function afwijsmail(code: string, voornaam: string, o: { naGesprek: boolean; metJob?: boolean; eigenTekst?: string }): Afwijsmail {
   const r = afwijsreden(code) || afwijsreden("anders")!;
   const opening = o.naGesprek
     ? "Dank je voor je aanmelding en voor het gesprek op kantoor."
-    : "Dank je voor je aanmelding bij EXTRA.";
+    : o.metJob
+      ? "Dank je voor je aanmelding en je gesprek met Job."
+      : "Dank je voor je aanmelding bij EXTRA.";
   const kern = (o.eigenTekst && o.eigenTekst.trim()) || r.mail.replace(/\{voornaam\}/g, voornaam);
   return {
     onderwerp: "Je aanmelding bij EXTRA",

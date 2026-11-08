@@ -14,8 +14,8 @@ export function afwijsmailAan(): boolean {
   return process.env.SOLLICITANTEN_AFWIJSMAIL !== "0";
 }
 
-export function maakAfwijsmail(o: { voornaam: string; functie: string; reden: string; naGesprek: boolean; eigenTekst?: string }) {
-  const m = afwijsmail(o.reden, o.voornaam, { naGesprek: o.naGesprek, eigenTekst: o.eigenTekst });
+export function maakAfwijsmail(o: { voornaam: string; functie: string; reden: string; naGesprek: boolean; metJob?: boolean; eigenTekst?: string }) {
+  const m = afwijsmail(o.reden, o.voornaam, { naGesprek: o.naGesprek, metJob: o.metJob, eigenTekst: o.eigenTekst });
   const html = mailOpmaak({
     branche: brancheVanFunctie(o.functie),
     taal: "nl",
@@ -23,13 +23,14 @@ export function maakAfwijsmail(o: { voornaam: string; functie: string; reden: st
     voorkop: "Je aanmelding",
     kop: escapeHtml(m.aanhef),
     preheader: m.alineas[1].slice(0, 110),
-    inhoud: [...m.alineas.map((a) => alinea(escapeHtml(a))), afsluiting("nl")].join(""),
+    inhoud: [...m.alineas.map((a) => alinea(escapeHtml(a))), afsluiting("nl", { groet: "Groet," })].join(""),
+    voetExtra: "Lees in onze privacyverklaring hoe lang we je gegevens bewaren: doehetextra.nl/privacybeleid",
   });
   const tekst = `${m.aanhef}\n\n${m.alineas.join("\n\n")}\n\nGroet,\nTeam EXTRA`;
   return { onderwerp: m.onderwerp, html, tekst };
 }
 
-export async function stuurAfwijsmail(o: { email: string; voornaam: string; functie: string; reden: string; naGesprek: boolean; eigenTekst?: string }): Promise<boolean> {
+export async function stuurAfwijsmail(o: { email: string; voornaam: string; functie: string; reden: string; naGesprek: boolean; metJob?: boolean; eigenTekst?: string }): Promise<boolean> {
   const m = maakAfwijsmail(o);
   return sendEmail({ to: o.email, from: AFZENDER, subject: m.onderwerp, html: m.html, text: m.tekst });
 }

@@ -6,7 +6,7 @@ import {
   WOORDPAREN, STELLINGEN, ONDERDELEN, AFWIJSREDENEN, vragenVoor, scriptVoor, motivatie, disc, rasterTelling,
   beschikbaarheidSamenvatting, dagenSinds, dagenTekst, dagKleur, leeftijd, bewaardTot, referentieStatus,
   magAccepteren, magOnboarden, idInOrde, checkUitIntake, openVragen, gestoptInLabel, terugzetLabel,
-  afwijsmail, afwijsLabel, redenenVoor, standaardReden, beoordelingCompleet, brancheVan, functieNaam,
+  afwijsmail, afwijsLabel, redenenVoor, standaardReden, beoordelingCompleet, brancheVan, functieNaam, isAfwas,
   vulIn, voortgangIndex, type Raster,
 } from "./sollicitantRegels";
 
@@ -127,7 +127,13 @@ function test(naam: string, ok: boolean, uitleg = "") {
   test("geen gedachtestreepjes in redenen en mails", !AFWIJSREDENEN.some((r) => streep.test(r.label) || streep.test(r.mail)));
   test("geen gedachtestreepjes in het script", !ONDERDELEN.some((o) => streep.test(JSON.stringify(o))));
   test("beoordeling compleet", beoordelingCompleet({ communicatief: 0, representatief: 50, extravert: 40, indruk: 100 }) && !beoordelingCompleet({ communicatief: 10 }));
-  test("branche", brancheVan("logistiek") === "logistiek" && brancheVan("horecamedewerker") === "hotels" && brancheVan("chef", "events") === "events");
+  test("branche: bediening is Events, afwas Hotels", brancheVan("logistiek") === "logistiek" && brancheVan("horecamedewerker") === "events" && brancheVan("horecamedewerker", null, true) === "hotels" && brancheVan("chef", "events") === "events");
+  test("branche: ingang gaat voor functie, opgeslagen gaat voor ingang", brancheVan("chef", null, false, "events") === "events" && brancheVan("chef", "hotels", false, "events") === "hotels");
+  test("afwas herkennen", isAfwas({ functionType: "chef", functieEersteKeus: "afwas" }) && isAfwas({ functionType: "horecamedewerker", canDoWashing: true }) && !isAfwas({ functionType: "chef", canDoWashing: true, functieEersteKeus: "keuken" }));
+  test("afwas: script en naam", scriptVoor("chef", true) === "afwas" && functieNaam("chef", true) === "Afwas");
+  test("redenen Kandidaten: H2 plus te jong en zelf afgehaakt", redenenVoor("kandidaten").map((r) => r.code).join(",") === "te_weinig_diensten,cv,locatie,geen_reactie,geen_twv,taal,te_jong,zelf_afgehaakt,anders");
+  test("standaardreden Kandidaten: geen", standaardReden("kandidaten") === "");
+  test("afwijsmail na Job", afwijsmail("cv", "Lisa", { naGesprek: false, metJob: true }).alineas[0] === "Dank je voor je aanmelding en je gesprek met Job.");
   test("functienaam afwas", functieNaam("horecamedewerker", true) === "Afwas" && functieNaam("chef") === "Keuken");
 }
 

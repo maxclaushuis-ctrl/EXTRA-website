@@ -117,6 +117,7 @@ const FUNCTIE_LABEL: Record<string, { nl: string; en: string }> = {
   horecamedewerker: { nl: "bediening en bar", en: "service and bar" },
   housekeeping: { nl: "housekeeping", en: "housekeeping" },
   chef: { nl: "de keuken", en: "the kitchen" },
+  afwas: { nl: "de afwas", en: "dishwashing" },
   frontoffice: { nl: "front office", en: "front office" },
   logistiek: { nl: "logistiek", en: "logistics" },
 };
@@ -140,6 +141,10 @@ const FUNCTIEVRAAG: Record<string, { nl: string; en: string }> = {
   chef: {
     nl: "Kookte je zelfstandig op een post, of vooral als hulp? Deed je ook de mise-en-place?",
     en: "Did you cook independently on a station, or mostly as an assistant? Did you also do the mise en place?",
+  },
+  afwas: {
+    nl: "Heb je al eens in een spoelkeuken gewerkt? Het is staand en fysiek werk; past dat bij je?",
+    en: "Have you worked in a dish room before? It is standing, physical work; does that suit you?",
   },
   frontoffice: {
     nl: "Met welk reserveringssysteem heb je gewerkt, bijvoorbeeld Opera?",
@@ -289,6 +294,28 @@ export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext): Uit
     case "talen": return { tekst: t.talen };
     case "cv": return { tekst: t.cv, keuzes: t.cvKeuzes };
   }
+}
+
+/** Welke onderwerpen nog open staan (voor "Nog 3 vragen open" in Kandidaten). Het cv telt apart. */
+export function openOnderwerpen(v: JobVelden, ctx: JobContext): { vragen: number; cv: boolean } {
+  const kopie: JobVelden = { ...v };
+  let vragen = 0;
+  let cv = false;
+  for (let i = 0; i < 12; i++) {
+    const o = volgendeOnderwerp(kopie, ctx);
+    if (!o) break;
+    if (o === "cv") { cv = true; break; }
+    vragen++;
+    if (o === "ervaring") kopie.ervaring = "x";
+    else if (o === "functievraag") kopie.functievraag = "x";
+    else if (o === "specialisatie") kopie.specialisatie = "nee";
+    else if (o === "werkautorisatie") kopie.werkautorisatie = "vrij" as any;
+    else if (o === "geldigheid") kopie.geldigTot = "x";
+    else if (o === "diensten") kopie.diensten = "1-2";
+    else if (o === "werkgebied") kopie.werkgebied = "x";
+    else if (o === "talen") kopie.talen = "x";
+  }
+  return { vragen, cv };
 }
 
 // ─── Wanneer moet een planner kijken? (C2, C4) ───────────────────────────────

@@ -473,6 +473,23 @@ export const ROUTE_META: RouteMeta[] = [
     changefreq: "monthly",
   },
   {
+    path: "/aanmelden/ontvangen",
+    title: "Aanmelding ontvangen | EXTRA",
+    description:
+      "Je aanmelding bij EXTRA is binnen. Job, onze AI-recruiter, stuurt je nu een bericht met een paar korte vragen; daarna plan je zelf je kennismaking.",
+    // Bedankpagina na het aanmeldformulier: niet indexeren en geen prerender.
+    noindex: true,
+    prerender: false,
+  },
+  {
+    path: "/en/apply/received",
+    title: "Application received | EXTRA",
+    description:
+      "Your application to EXTRA is in. Job, our AI recruiter, is sending you a message with a few quick questions; then you book your own meeting at our office.",
+    noindex: true,
+    prerender: false,
+  },
+  {
     path: "/job-gesprek",
     title: "Gesprek met Job | EXTRA",
     description:

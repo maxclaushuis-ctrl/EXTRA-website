@@ -56,3 +56,28 @@ export async function geocodeNlAddress(input: GeocodeInput): Promise<GeocodeResu
     return null; // timeout, netwerkfout, ongeldige JSON — allemaal: geen coördinaten
   }
 }
+
+/**
+ * Plaatsnaam bij een Nederlandse postcode via de PDOK Locatieserver.
+ * Best-effort: geeft null bij een fout of time-out (nooit een exception).
+ */
+export async function plaatsBijPostcode(postcode: string): Promise<string | null> {
+  const pc = String(postcode || "").replace(/\s+/g, "").toUpperCase();
+  if (!/^[1-9][0-9]{3}[A-Z]{2}$/.test(pc)) return null;
+  try {
+    const url = `${PDOK_URL}?q=${encodeURIComponent(pc)}&fq=type:postcode&rows=1&fl=woonplaatsnaam`;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
+      if (!res.ok) return null;
+      const json: any = await res.json();
+      const plaats = json?.response?.docs?.[0]?.woonplaatsnaam;
+      return typeof plaats === "string" && plaats.trim() ? plaats.trim() : null;
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    return null;
+  }
+}

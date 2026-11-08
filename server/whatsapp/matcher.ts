@@ -36,6 +36,7 @@ export async function matchPhoneToContact(normalizedPhone: string): Promise<Matc
     .select({
       id: candidates.id,
       phone: candidates.phone,
+      whatsappNummer: candidates.whatsappNummer,
       firstName: candidates.firstName,
       lastName: candidates.lastName,
       status: candidates.status,
@@ -44,7 +45,8 @@ export async function matchPhoneToContact(normalizedPhone: string): Promise<Matc
     .where(isNotNull(candidates.phone));
 
   for (const row of candidateRows) {
-    if (normalizePhone(row.phone) === normalizedPhone) {
+    // Een apart WhatsApp-nummer (nieuw aanmeldformulier) telt ook.
+    if (normalizePhone(row.phone) === normalizedPhone || (row.whatsappNummer && normalizePhone(row.whatsappNummer) === normalizedPhone)) {
       // Pas wanneer iemand 'aangenomen' is, hoort 'ie thuis op het Medewerkers-
       // tabblad. Sollicitanten/kandidaten in alle eerdere statussen blijven op
       // het Kandidaten-tabblad ('unmatched'), maar houden wel de candidate-link.

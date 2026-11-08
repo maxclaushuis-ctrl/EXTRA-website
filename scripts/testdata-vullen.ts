@@ -18,10 +18,10 @@ import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "../server/db";
-import { candidates, users, sollicitantDossiers, sollicitantGebeurtenissen } from "../shared/schema";
+import { candidates, users, sollicitantDossiers, sollicitantGebeurtenissen, jobGesprekken, kandidaatMogelijkeMatch } from "../shared/schema";
 import { bewaardTot } from "../shared/sollicitantRegels";
 import { landvelden } from "../shared/landen";
-import { magVullen, testrijen, testdossiers, TESTACCOUNTS } from "./testdataRegels";
+import { magVullen, testrijen, testdossiers, testJobGesprekken, TESTACCOUNTS } from "./testdataRegels";
 
 function wachtwoord(): string {
   // 12 tekens uit letters en cijfers, zonder verwarrende tekens.
@@ -136,6 +136,31 @@ async function main() {
     dossiers++;
   }
   console.log(`Sollicitanten: ${dossiers} dossiers toegevoegd.`);
+
+  // Gesprekken met Job, zodat Kandidaten 3.0 elk bolletje laat zien.
+  let gesprekken = 0;
+  for (const t of testJobGesprekken()) {
+    const [c] = await db.select().from(candidates).where(eq(candidates.email, t.email));
+    if (!c) continue;
+    const [al] = await db.select({ id: jobGesprekken.id }).from(jobGesprekken).where(eq(jobGesprekken.candidateId, c.id));
+    if (al) continue;
+    const at = new Date(Date.now() - t.uur * 3600 * 1000);
+    await db.insert(jobGesprekken).values({
+      candidateId: c.id, token: randomBytes(24).toString("base64url"), kanaal: "web", taal: "nl", status: t.status,
+      velden: t.velden, twijfels: t.twijfels || [], herinneringen: t.herinneringen, herinneringAt: t.herinneringen ? at : null,
+      laatsteActiviteitAt: at, gestartAt: new Date(at.getTime() - 3600 * 1000), bijgewerktAt: at,
+    } as any);
+    const extra: Record<string, unknown> = {};
+    if (t.woonland) extra.woonland = t.woonland;
+    if (t.functieEersteKeus) { extra.functieEersteKeus = t.functieEersteKeus; if (t.functieEersteKeus === "afwas") extra.canDoWashing = true; }
+    if (Object.keys(extra).length) await db.update(candidates).set(extra as any).where(eq(candidates.id, c.id));
+    if (t.matchMet) {
+      const [m] = await db.select({ id: candidates.id }).from(candidates).where(eq(candidates.email, t.matchMet));
+      if (m) await db.insert(kandidaatMogelijkeMatch).values({ candidateId: c.id, soort: "kandidaat", matchId: m.id, redenen: ["naam_geboortedatum"] });
+    }
+    gesprekken++;
+  }
+  console.log(`Kandidaten: ${gesprekken} gesprekken met Job toegevoegd.`);
   if (aangemaakt.length > 0) {
     console.log("\nNieuwe testaccounts (wachtwoord wordt maar één keer getoond; bewaar het in je wachtwoordmanager):");
     for (const a of aangemaakt) console.log(`  ${a.email}   ${a.wachtwoord}`);

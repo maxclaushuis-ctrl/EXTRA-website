@@ -24,7 +24,7 @@ import {
   type Stap, type ArchiefHerkomst, type Check, type Intake, type Beoordeling,
   brancheVan, functieNaam, scriptVoor, dagenSinds, leeftijd, bewaardTot, referentieStatus, idInOrde,
   magAccepteren, magOnboarden, checkUitIntake, beoordelingCompleet, afwijsreden, afwijsLabel,
-  gestoptInLabel, terugzetLabel, geenGehoorTeller,
+  gestoptInLabel, terugzetLabel, geenGehoorTeller, isAfwas, ingangBranche,
 } from "@shared/sollicitantRegels";
 import { afwijsmailAan, maakAfwijsmail, stuurAfwijsmail } from "./afwijsmail";
 
@@ -73,7 +73,7 @@ async function zorgVoorDossier(c: Candidate): Promise<SollicitantDossier> {
   if (d) return d;
   const stap = stapZonderDossier(c);
   await db.insert(sollicitantDossiers).values({
-    candidateId: c.id, stap, branche: brancheVan(c.functionType),
+    candidateId: c.id, stap,
     gearchiveerdUit: stap === "archief" ? "kandidaten" : null,
     archiefReden: stap === "archief" ? c.rejectionReason : null,
     gearchiveerdAt: stap === "archief" ? c.updatedAt : null,
@@ -138,7 +138,7 @@ async function week(vanParam?: string) {
     const a = afspraken.get(c.id);
     return {
       id: c.id, naam: naam(c), datum: String(c.interviewDate), tijd: String(c.interviewTime || "").slice(0, 5),
-      functie: functieNaam(c.functionType, c.canDoWashing), branche: brancheVan(c.functionType, d?.branche),
+      functie: functieNaam(c.functionType, isAfwas(c)), branche: brancheVan(c.functionType, d?.branche, isAfwas(c), ingangBranche(c.bronDetails)),
       interviewer: a?.interviewer || d?.interviewer || "", bevestigd: !!a?.bevestigd, stap: d?.stap || stapZonderDossier(c),
     };
   }).sort((p, q) => (p.datum + p.tijd).localeCompare(q.datum + q.tijd));
@@ -155,7 +155,7 @@ async function lijst(stap: "beoordelen" | "ref_doc_check" | "extra_check") {
     const c = cm.get(d.candidateId)!;
     const ctl = (d.controle || {}) as Check;
     return {
-      id: c.id, naam: naam(c), functie: functieNaam(c.functionType, c.canDoWashing), branche: brancheVan(c.functionType, d.branche),
+      id: c.id, naam: naam(c), functie: functieNaam(c.functionType, isAfwas(c)), branche: brancheVan(c.functionType, d.branche, isAfwas(c), ingangBranche(c.bronDetails)),
       dagen: dagenSinds(d.stapSinds, nu), interviewer: (d.intakeDoor || d.interviewer || "").split(" ")[0],
       intakeAfgerond: d.intakeAfgerondAt, referentie: referentieStatus(ctl), pogingen: geenGehoorTeller(ctl),
       idOk: idInOrde(ctl, twvNodig(c, d)), twijfelDoor: d.twijfelDoor, twijfelAt: d.twijfelAt,
@@ -179,7 +179,7 @@ async function onboarding() {
   return [...cs, ...zonder].map((c) => {
     const d = dm.get(c.id);
     return {
-      id: c.id, naam: naam(c), functie: functieNaam(c.functionType, c.canDoWashing), branche: brancheVan(c.functionType, d?.branche),
+      id: c.id, naam: naam(c), functie: functieNaam(c.functionType, isAfwas(c)), branche: brancheVan(c.functionType, d?.branche, isAfwas(c), ingangBranche(c.bronDetails)),
       geaccepteerd: d?.geaccepteerdAt || c.updatedAt, interviewer: (d?.geaccepteerdDoor || d?.intakeDoor || "").split(" ")[0],
     };
   }).sort((a, b) => new Date(b.geaccepteerd).getTime() - new Date(a.geaccepteerd).getTime());
@@ -197,7 +197,7 @@ async function archief() {
     const uit = (d?.gearchiveerdUit || "kandidaten") as ArchiefHerkomst;
     const at = d?.gearchiveerdAt || c.updatedAt;
     return {
-      id: c.id, naam: naam(c), voornaam: c.firstName, functie: functieNaam(c.functionType, c.canDoWashing), branche: brancheVan(c.functionType, d?.branche),
+      id: c.id, naam: naam(c), voornaam: c.firstName, functie: functieNaam(c.functionType, isAfwas(c)), branche: brancheVan(c.functionType, d?.branche, isAfwas(c), ingangBranche(c.bronDetails)),
       gestoptIn: gestoptInLabel(uit), terugNaar: terugzetLabel(uit), reden: afwijsLabel(d?.archiefReden ?? c.rejectionReason, d?.archiefRedenTekst),
       datum: at, door: d?.gearchiveerdDoor || "", bewaardTot: c.retentionUntil || bewaardTot(new Date(at)),
     };
@@ -221,14 +221,14 @@ async function kaart(id: number) {
     kandidaat: {
       id: c.id, voornaam: c.firstName, achternaam: c.lastName, naam: naam(c), email: c.email, telefoon: c.phone,
       geboren: c.birthDate, leeftijd: leeftijd(c.birthDate ? String(c.birthDate) : null, NU()), nationaliteit: c.nationality,
-      zone: c.nationalityZone, woonplaats: c.city, functie: c.functionType, functieNaam: functieNaam(c.functionType, c.canDoWashing),
+      zone: c.nationalityZone, woonplaats: c.city, functie: c.functionType, functieNaam: functieNaam(c.functionType, isAfwas(c)),
       afwas: !!c.canDoWashing, twvNodig: twvNodig(c, d), heeftCv: !!c.hasCv, status: c.status, gespreksdatum: c.interviewDate,
       gesprekstijd: c.interviewTime ? String(c.interviewTime).slice(0, 5) : null, talen: c.language, ervaring: c.horecaExperience,
       beschikbaarheid: c.availability, aangemeld: c.createdAt, whatsapp: c.whatsappOptInStatus, bewaardTot: c.retentionUntil,
     },
     stap: (d?.stap || stapZonderDossier(c)) as Stap,
-    branche: brancheVan(c.functionType, d?.branche),
-    script: scriptVoor(c.functionType, c.canDoWashing),
+    branche: brancheVan(c.functionType, d?.branche, isAfwas(c), ingangBranche(c.bronDetails)),
+    script: scriptVoor(c.functionType, isAfwas(c)),
     interviewer: afspraak?.interviewer || d?.interviewer || null,
     bevestigd: !!afspraak?.bevestigd,
     dossier: d ? {
@@ -270,13 +270,24 @@ async function afwijzen(c: Candidate, d: SollicitantDossier, w: Wie, body: any) 
   await db.update(candidates).set({ status: "afgewezen", rejectionReason: reden.code, retentionUntil: tot, updatedAt: nu }).where(eq(candidates.id, c.id));
   await db.update(jobAfspraken).set({ status: "geannuleerd" }).where(and(eq(jobAfspraken.candidateId, c.id), eq(jobAfspraken.status, "gepland")));
 
+  // Job stopt: geen herinneringen meer na een afwijzing.
+  let metJob = false;
+  try {
+    const job = await import("../job/jobService");
+    const g = await job.gesprekVanKandidaat(c.id);
+    if (g) {
+      metJob = (await job.berichtenVan(g.id)).some((b: any) => b.richting === "in");
+      await job.stopGesprek(c.id).catch(() => {});
+    }
+  } catch (e: any) { console.warn("[Sollicitanten] Job stoppen mislukt:", e?.message || e); }
+
   const wilMail = body?.mail !== false && afwijsmailAan() && !!c.email;
   let verstuurd = false;
   if (wilMail) {
     const mailTekst = typeof body?.mailTekst === "string" ? body.mailTekst.trim().slice(0, 3000) : "";
     verstuurd = await stuurAfwijsmail({
       email: c.email!, voornaam: c.firstName, functie: c.functionType, reden: reden.code,
-      naGesprek: uit !== "kandidaten" && uit !== "gesprek_gepland" || body?.naGesprek === true, eigenTekst: mailTekst || undefined,
+      naGesprek: uit !== "kandidaten" && uit !== "gesprek_gepland" || body?.naGesprek === true, metJob, eigenTekst: mailTekst || undefined,
     }).catch(() => false);
     if (verstuurd) await werkBij(c.id, { afwijsmailAt: NU() });
   }
@@ -367,7 +378,7 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
   };
 
   app.get(r("/status"), adminMiddleware, (_req, res) => {
-    res.json({ aan: sollicitantenAan(), afwijsmail: afwijsmailAan() });
+    res.json({ aan: sollicitantenAan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", afwijsmail: afwijsmailAan() });
   });
 
   app.get(r("/week"), adminMiddleware, alleenAan, veilig(async (req, res) => { res.json(await week(String(req.query.van || ""))); }));

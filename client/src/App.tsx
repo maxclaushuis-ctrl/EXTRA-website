@@ -108,6 +108,7 @@ const InHolland = lazy(() => import("@/pages/InHolland"));
 const Aanmelden = lazy(() => import("@/pages/d3/Aanmelden"));
 const CvUpload = lazy(() => import("@/pages/CvUpload"));
 const JobGesprek = lazy(() => import("@/pages/JobGesprek"));
+const AanmeldenOntvangen = lazy(() => import("@/pages/d3/AanmeldenOntvangen"));
 const NieuwsPage = lazy(() => import("@/pages/d3/Blog").then((m) => ({ default: m.BlogOverzicht })));
 const NieuwsArtikel = lazy(() => import("@/pages/d3/Blog").then((m) => ({ default: m.BlogArtikel })));
 const Vacatures = lazy(() => import("@/pages/Vacatures"));
@@ -373,6 +374,7 @@ function Router() {
           <Route path="/en/request-staff" component={PersoneelsAanvraag} />
           <Route path="/en/request-received" component={AanvraagOntvangen} />
           <Route path="/en/jobs" component={Vacatures} />
+          <Route path="/en/apply/received" component={AanmeldenOntvangen} />
           <Route path="/en/apply" component={Aanmelden} />
 
           {/* Blog */}
@@ -406,6 +408,7 @@ function Router() {
           {/* QR-bestemming voor de gastles bij InHolland. */}
           <Route path="/inholland" component={InHolland} />
           <Route path="/aanvraag-ontvangen" component={AanvraagOntvangen} />
+          <Route path="/aanmelden/ontvangen" component={AanmeldenOntvangen} />
           <Route path="/aanmelden" component={Aanmelden} />
           <Route path="/cv-upload" component={CvUpload} />
           <Route path="/job-gesprek" component={JobGesprek} />

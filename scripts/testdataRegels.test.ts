@@ -7,7 +7,7 @@
  * TESTOMGEVING=1. Daarnaast: de testset is intern consistent, zodat de
  * mock-ups en de testomgeving dezelfde personen laten zien.
  */
-import { testdossiers, magVullen, maandagVan, isoDatum, testkandidaten, testrijen, TESTACCOUNTS, TEST_DOMEIN } from "./testdataRegels";
+import { testdossiers, testJobGesprekken, magVullen, maandagVan, isoDatum, testkandidaten, testrijen, TESTACCOUNTS, TEST_DOMEIN } from "./testdataRegels";
 
 let geslaagd = 0;
 let gefaald = 0;
@@ -63,6 +63,15 @@ test("vier testaccounts op het testdomein", TESTACCOUNTS.length === 4 && TESTACC
   test("dossiers: elke stap komt voor", ["beoordelen", "ref_doc_check", "extra_check", "onboarding", "archief"].every((s) => ds.some((d) => d.stap === s)));
   test("dossiers: geen dubbele kandidaat", new Set(ds.map((d) => d.email)).size === ds.length);
   test("dossiers: Lisa de Vries blijft vóór de intake", !ds.some((d) => d.email.startsWith("lisa.")));
+}
+
+// 8. Gesprekken met Job voor Kandidaten 3.0
+{
+  const emails = new Set(testkandidaten().map((k) => k.email));
+  const js = testJobGesprekken();
+  test("Job-gesprekken horen bij testkandidaten", js.every((j) => emails.has(j.email)), js.filter((j) => !emails.has(j.email)).map((j) => j.email).join(", "));
+  test("Job-gesprekken: geen kandidaat met een dossier", js.every((j) => !testdossiers().some((d) => d.email === j.email)));
+  test("Job-gesprekken: elke toestand komt voor", ["geen_reactie", "bezig", "planner", "wacht_cv"].every((s) => js.some((j) => j.status === s)));
 }
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
