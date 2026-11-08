@@ -220,6 +220,17 @@ async function archief() {
   }).sort((a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime());
 }
 
+/** Het cv op de kaart: nette naam, soort voor de voorvertoning en wie het controleerde (Accepteren in Kandidaten). */
+function cvInfo(c: typeof candidates.$inferSelect, gebeurtenissen: { soort: string; door: string | null; at: Date }[]) {
+  if (!c.hasCv || !c.cvFilename) return null;
+  const bestand = String(c.cvFilename).split("/").pop() || "cv";
+  const naam = bestand.replace(/^\d{10,}[-_]/, "").replace(/^[0-9a-f]{8}-[0-9a-f-]{27,}[-_]/i, "") || "cv";
+  const ext = (naam.split(".").pop() || "").toLowerCase();
+  const soort = ext === "pdf" ? "pdf" : ["jpg", "jpeg", "png", "webp", "heic"].includes(ext) ? "afbeelding" : ["doc", "docx"].includes(ext) ? "word" : "anders";
+  const check = gebeurtenissen.find((e) => e.soort === "uitgenodigd");
+  return { naam, soort, gecontroleerdDoor: check?.door || null };
+}
+
 async function kaart(id: number) {
   const c = await kandidaat(id);
   if (!c) return null;
@@ -241,6 +252,7 @@ async function kaart(id: number) {
       afwas: !!c.canDoWashing, twvNodig: twvNodig(c, d), heeftCv: !!c.hasCv, status: c.status, gespreksdatum: c.interviewDate,
       gesprekstijd: c.interviewTime ? String(c.interviewTime).slice(0, 5) : null, talen: c.language, ervaring: c.horecaExperience,
       beschikbaarheid: c.availability, aangemeld: c.createdAt, whatsapp: c.whatsappOptInStatus, bewaardTot: c.retentionUntil, postcode: c.postcode, woonland: c.woonland,
+      cv: cvInfo(c, gebeurtenissen),
     },
     stap: (d?.stap || stapZonderDossier(c)) as Stap,
     branche: brancheVan(c.functionType, d?.branche, isAfwas(c), ingangBranche(c.bronDetails)),

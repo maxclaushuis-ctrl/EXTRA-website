@@ -7247,7 +7247,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? 'application/pdf'
         : ext === 'docx'
           ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          : 'application/octet-stream';
+          : ext === 'jpg' || ext === 'jpeg'
+            ? 'image/jpeg'
+            : ext === 'png'
+              ? 'image/png'
+              : ext === 'webp'
+                ? 'image/webp'
+                : 'application/octet-stream';
 
       const safeName = encodeURIComponent(candidate.cvFilename.split('/').pop() || 'cv');
       res.setHeader('Content-Type', mimeType);

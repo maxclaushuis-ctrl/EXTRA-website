@@ -4,7 +4,7 @@
  */
 import { Fragment, useEffect, useRef, useState } from "react";
 import {
-  BRANCHE, DAGDELEN, DAGEN_KORT, DISC, SCHUIVEN, beschikbaarheidSamenvatting, beoordelingCompleet, disc, magAccepteren,
+  BRANCHE, DAGDELEN, DAGEN_KORT, DISC, ONDERDELEN, SCHUIVEN, beschikbaarheidSamenvatting, beoordelingCompleet, disc, magAccepteren,
   magOnboarden, motivatie, rasterTelling, referentieStatus, terugzetLabel, voortgangIndex, geenGehoorTeller,
   type ArchiefHerkomst, type Beoordeling, type Branche, type Check, type Intake, type Script, type Stap,
 } from "@shared/sollicitantRegels";
@@ -20,6 +20,7 @@ export interface KaartData {
     leeftijd: number | null; nationaliteit: string | null; zone: string | null; woonplaats: string | null; functie: string; functieNaam: string;
     afwas: boolean; twvNodig: boolean; heeftCv: boolean; status: string; gespreksdatum: string | null; gesprekstijd: string | null;
     talen: string | null; ervaring: string | null; beschikbaarheid: string | null; aangemeld: string; whatsapp: string; bewaardTot: string | null; postcode?: string | null; woonland?: string | null;
+    cv?: { naam: string; soort: "pdf" | "afbeelding" | "word" | "anders"; gecontroleerdDoor: string | null } | null;
   };
   stap: Stap; branche: Branche; script: Script; interviewer: string | null; bevestigd: boolean;
   dossier: null | {
@@ -204,6 +205,7 @@ function Kopkaart({ data, huidig, chip, alles }: { data: KaartData; huidig: numb
         <div className="sv-rij">
           {data.job && <Knop onClick={() => setJobOpen((o) => !o)}>{jobOpen ? "Gesprek met Job sluiten" : "Gesprek met Job"}</Knop>}
           {d?.intakeStatus === "afgerond" && <IntakeBekijken data={data} />}
+          <CvKnoppen data={data} />
         </div>
       </div>
       <Voortgang huidig={huidig} alles={alles} />
@@ -564,7 +566,7 @@ function Tijdlijn({ data }: { data: KaartData }) {
   );
 }
 
-// ─── Vóór de intake (I2) ────────────────────────────────────────────────────
+// ─── Vóór de intake (I2, mock-up kaart v3) ──────────────────────────────────
 
 function VoorIntake({ data, bezig, startIntake, nietVerschenen, afwijzen, verzetten, persoon }: {
   data: KaartData; bezig: boolean; startIntake: () => void; nietVerschenen: () => void; afwijzen: () => void; verzetten: () => void; persoon: () => void;
@@ -572,65 +574,165 @@ function VoorIntake({ data, bezig, startIntake, nietVerschenen, afwijzen, verzet
   const k = data.kandidaat;
   const d = data.dossier;
   const concept = d?.intakeStatus === "concept";
+  const totaal = ONDERDELEN.length;
+  const klaar = concept ? Math.max(0, (d?.intakeStap || 1) - 1) : 0;
+  const initialen = `${k.voornaam.charAt(0)}${k.achternaam.charAt(0)}`.toUpperCase();
   return <>
-    <h1 style={{ fontSize: 30 }}>{k.naam}</h1>
-    <p className="sv-sub">{[k.functieNaam, BRANCHE[data.branche].label, k.leeftijd !== null ? `${k.leeftijd} jaar` : null, k.woonplaats].filter(Boolean).join(" · ")}</p>
-    <div className="sv-rij" style={{ marginTop: 10 }}>
-      {k.gespreksdatum ? <span className="sv-chip" style={{ background: BRANCHE[data.branche].vlak, color: BRANCHE[data.branche].tekst }}>Gesprek {dagDatum(k.gespreksdatum)}{k.gesprekstijd ? `, ${k.gesprekstijd}` : ""}</span> : <Chip soort="open">Nog geen gesprek gepland</Chip>}
-      <span className="sv-grijs">{data.interviewer ? `met ${data.interviewer} · ` : ""}Herengracht 372</span>
-      {data.bevestigd && <b style={{ color: "#3E8E5A" }}>✓ bevestigd door {k.voornaam}</b>}
+    <div className="sv3-kop">
+      <div className="sv3-wie">
+        {d?.foto ? <Foto src={d.foto} branche={data.branche} /> : <div className="sv3-avatar" style={{ background: BRANCHE[data.branche].vlak, color: BRANCHE[data.branche].tekst }}>{initialen}</div>}
+        <div style={{ minWidth: 0 }}>
+          <h1>{k.naam}</h1>
+          <p className="sv3-sub">{[k.functieNaam, BRANCHE[data.branche].label, k.leeftijd !== null ? `${k.leeftijd} jaar` : null, k.woonplaats].filter(Boolean).join(" · ")}</p>
+        </div>
+      </div>
+      <div className="sv3-gereedschap">
+        <CvKnoppen data={data} />
+        <MeerMenu items={[
+          { label: "Verzetten", doe: verzetten },
+          { label: "Niet verschenen", doe: nietVerschenen },
+          { label: "Gegevens aanpassen", doe: persoon },
+          { label: "Afwijzen", doe: afwijzen, rood: true },
+        ]} disabled={bezig} />
+      </div>
+    </div>
+    <div className="sv3-status">
+      {k.gespreksdatum
+        ? <span className="sv-chip" style={{ background: "#E8F0FA", color: "#1D4566" }}>Gesprek {dagDatum(k.gespreksdatum)}{k.gesprekstijd ? `, ${k.gesprekstijd}` : ""}{data.interviewer ? ` · ${data.interviewer}` : ""}</span>
+        : <Chip soort="open">Nog geen gesprek gepland</Chip>}
+      {data.bevestigd && <Chip soort="ok">✓ Bevestigd door {k.voornaam}</Chip>}
+      {k.cv?.gecontroleerdDoor && <Chip soort="ok">✓ Cv gecontroleerd door {k.cv.gecontroleerdDoor}</Chip>}
+      {!k.heeftCv && <Chip soort="waarschuw">Nog geen cv</Chip>}
     </div>
     <Voortgang huidig={2} onder={[kortDatum(k.aangemeld), data.job ? `gesprek met Job${data.job.status === "gepland" ? " · gepland" : ""}` : null, k.gespreksdatum ? `${dagDatum(k.gespreksdatum).split(" ").slice(0, 3).join(" ")}${k.gesprekstijd ? `, ${k.gesprekstijd}` : ""}` : null]} />
-    <div className="sv-twee" style={{ gridTemplateColumns: data.job ? "minmax(0,1fr) 380px" : "1fr", gap: 32, marginTop: 22 }}>
-      <div className="sv-kolom">
-        <div className="sv-rij" style={{ flexWrap: "nowrap" }}>
-          <button className="sv-knop sv-knop-donker" style={{ height: 64, fontSize: 18, fontWeight: 800, flex: 1, justifyContent: "space-between", padding: "0 22px" }} onClick={startIntake} disabled={bezig}>
-            {concept ? `Verder met de intake (onderdeel ${d?.intakeStap || 1})` : "Intakeformulier"}<span>→</span>
-          </button>
-          <Knop style={{ height: 64 }} onClick={nietVerschenen} disabled={bezig}>Niet verschenen</Knop>
-          <Knop style={{ height: 64 }} onClick={verzetten} disabled={bezig}>Verzetten</Knop>
-        </div>
-        <Kaartje titel="Besluit na het gesprek">
-          <p className="sv-grijs" style={{ marginBottom: 12 }}>Twijfel en Referentie checken worden actief zodra het intakeformulier is afgerond.</p>
-          <div className="sv-rij"><Knop onClick={afwijzen} disabled={bezig}>Afwijzen</Knop><Knop soort="geel" disabled>Twijfel</Knop><Knop disabled>Referentie checken →</Knop></div>
-        </Kaartje>
-        <div className="sv-onder" style={{ marginTop: 0 }}>
-        <Kaartje titel="Persoonsgegevens" rechts={<button className="sv-knop sv-knop-link" onClick={persoon}>✎ Aanpassen</button>}>
-          <dl className="sv-gegevens">
-            <dt>Telefoon</dt><dd>{k.telefoon || "Onbekend"}</dd>
-            <dt>E-mail</dt><dd>{k.email || "Onbekend"}</dd>
-            <dt>Geboortedatum</dt><dd>{k.geboren ? `${langDatum(k.geboren)}${k.leeftijd !== null ? ` · ${k.leeftijd} jaar` : ""}` : "Onbekend"}</dd>
-            <dt>Nationaliteit</dt><dd>{k.nationaliteit || "Onbekend"}</dd>
-            <dt>Werkvergunning (TWV)</dt><dd>{k.twvNodig ? "Nodig" : "Niet nodig"} <i className="sv-grijs" style={{ fontWeight: 400 }}>{k.zone === "NL" ? "Nederlandse nationaliteit" : k.zone === "EU" ? "EU-nationaliteit" : k.zone === "NON_EU" ? "buiten de EU" : ""}</i></dd>
-            <dt>Adres</dt><dd>{k.woonland ? `Woont nog in ${k.woonland}` : [k.postcode, k.woonplaats].filter(Boolean).join(" ") || "Onbekend"} <i className="sv-grijs" style={{ fontWeight: 400 }}>straat en huisnummer volgen in de intake</i></dd>
-            <dt>Toestemming</dt><dd>{k.whatsapp === "actief" ? "WhatsApp en e-mail" : "E-mail"}, {kortDatum(k.aangemeld)}</dd>
-            <dt>ID</dt><dd>Nog te controleren in de intake</dd>
-          </dl>
-        </Kaartje>
-        <Kaartje titel="Profiel">
-          <p className="sv-lbl">WERK</p>
-          <dl className="sv-gegevens" style={{ marginBottom: 14 }}>
-            <dt>Functie</dt><dd>{k.functieNaam}</dd>
-            <dt>Ervaring</dt><dd>{k.ervaring || "Onbekend"} <i className="sv-grijs" style={{ fontWeight: 400 }}>zelf opgegeven</i></dd>
-            <dt>Diensten</dt><dd>{k.beschikbaarheid || "Onbekend"} <i className="sv-grijs" style={{ fontWeight: 400 }}>zelf opgegeven</i></dd>
-            <dt>Werkgebied</dt><dd>{data.job?.velden?.werkgebied ? <>{String(data.job.velden.werkgebied)} <i className="sv-grijs" style={{ fontWeight: 400 }}>zelf opgegeven</i></> : "Nog te vragen in de intake"}</dd>
-          </dl>
-          <p className="sv-lbl">PERSOON</p>
-          <dl className="sv-gegevens">
-            <dt>Talen</dt><dd>{k.talen || "Onbekend"}{data.job?.velden?.talen ? <i className="sv-grijs" style={{ fontWeight: 400 }}> inschatting Job</i> : null}</dd>
-            <dt>Cv</dt><dd>{k.heeftCv ? <>Ontvangen · <a href={`/api/admin/candidates/${k.id}/cv?preview=1`} target="_blank" rel="noreferrer" style={{ color: "inherit" }}>bekijken</a></> : "Nog niet ontvangen"}</dd>
-            <dt>Referenties</dt><dd>Nog op te vragen in de intake</dd>
-          </dl>
-        </Kaartje>
-        </div>
-        <details className="sv-kaart"><summary style={{ cursor: "pointer", fontWeight: 800 }}>Tijdlijn en notities <span className="sv-grijs" style={{ fontWeight: 500 }}>· {data.tijdlijn.length} {data.tijdlijn.length === 1 ? "gebeurtenis" : "gebeurtenissen"}</span></summary>
-          <div className="sv-tijdlijn" style={{ marginTop: 12 }}>{data.tijdlijn.map((t, i) => <div key={i}><b>{kortDatum(t.at)}</b><span>{t.tekst}</span></div>)}</div>
-        </details>
+
+    <div className="sv3-volgende">
+      <div>
+        <small>VOLGENDE STAP</small>
+        <b>{concept ? "Intake afronden" : k.gespreksdatum ? "Intake afnemen tijdens het gesprek" : "Gesprek plannen"}</b>
+        {concept && <div className="sv3-balk" aria-label={`${klaar} van ${totaal} onderdelen klaar`}>{ONDERDELEN.map((o) => <i key={o.nr} className={o.nr <= klaar ? "ok" : ""} />)}</div>}
       </div>
-      {data.job && <aside style={{ background: "#F2EEE7", borderRadius: 16, padding: 18, maxHeight: 820, overflow: "auto", alignSelf: "start" }}><JobGesprekPaneel candidateId={k.id} kolom /></aside>}
+      {k.gespreksdatum || concept
+        ? <button className="sv3-knop-licht" onClick={startIntake} disabled={bezig}>{concept ? `Verder met onderdeel ${d?.intakeStap || 1}` : "Intakeformulier starten"} <span aria-hidden>→</span></button>
+        : <button className="sv3-knop-licht" onClick={verzetten} disabled={bezig}>Gesprek plannen <span aria-hidden>→</span></button>}
+    </div>
+
+    <div className="sv3-raster" style={data.job ? undefined : { gridTemplateColumns: "1fr" }}>
+      <div className="sv3-links">
+        <GegevensKaart data={data} aanpassen={persoon} />
+        <Kaartje titel="Tijdlijn">
+          <div className="sv-tijdlijn">{data.tijdlijn.map((t, i) => <div key={i}><b>{kortDatum(t.at)}</b><span>{t.tekst}</span></div>)}</div>
+        </Kaartje>
+      </div>
+      {data.job && <aside className="sv3-chat"><JobGesprekPaneel candidateId={k.id} kolom /></aside>}
     </div>
   </>;
 }
+
+/** Gegevens als label boven waarde: alles op één regel, te lange tekst krijgt ... met de volledige tekst als tooltip. */
+function GegevensKaart({ data, aanpassen }: { data: KaartData; aanpassen: () => void }) {
+  const k = data.kandidaat;
+  const ctl = (data.dossier?.controle || {}) as Check;
+  const v = (data.job?.velden || {}) as Record<string, unknown>;
+  const tekst = (x: unknown) => (typeof x === "string" && x.trim() ? x.trim() : null);
+  const veld = (label: string, waarde: string | null, breed = false, leeg = "Volgt in de intake") => (
+    <div className={`sv3-veld${breed ? " breed" : ""}`}><span>{label}</span><b title={waarde || undefined}>{waarde || <i>{leeg}</i>}</b></div>
+  );
+  const adres = k.woonland ? `Woont nog in ${k.woonland}` : [k.postcode, k.woonplaats].filter(Boolean).join(" ") || null;
+  return (
+    <Kaartje titel="Gegevens" rechts={<button className="sv-knop sv-knop-link" onClick={aanpassen}>Aanpassen</button>}>
+      <p className="sv3-lbl">CONTACT</p>
+      <div className="sv3-velden">
+        {veld("Telefoon", k.telefoon && /^\+316\d{8}$/.test(k.telefoon) ? `+31 6 ${k.telefoon.slice(4, 8)} ${k.telefoon.slice(8)}` : k.telefoon, false, "Onbekend")}
+        {veld("Geboren", k.geboren ? `${langDatum(k.geboren)}${k.leeftijd !== null ? ` · ${k.leeftijd} jaar` : ""}` : null, false, "Onbekend")}
+        {veld("E-mail", k.email, true, "Onbekend")}
+        {veld("Adres", adres, false, "Onbekend")}
+        {veld("Nationaliteit", k.nationaliteit, false, "Onbekend")}
+        {veld("Werkvergunning", k.twvNodig ? "Nodig" : "Niet nodig")}
+        {veld("ID", ctl.idGezien ? "Gezien" : "Tonen bij de intake")}
+      </div>
+      <div className="sv3-scheiding" />
+      <p className="sv3-lbl">WERK</p>
+      <div className="sv3-velden">
+        {veld("Functie", k.functieNaam)}
+        {veld("Ervaring", tekst(v.ervaring) || k.ervaring, true)}
+        {veld("Diensten", k.beschikbaarheid || (tekst(v.diensten) ? `${v.diensten} per week` : null))}
+        {veld("Werkgebied", tekst(v.werkgebied))}
+        {veld("Talen", k.talen || tekst(v.talen))}
+        {veld("Vervoer", tekst(v.vervoer))}
+      </div>
+    </Kaartje>
+  );
+}
+
+/** Cv bekijken en downloaden, met de voorvertoning rechts over de kaart. */
+function CvKnoppen({ data }: { data: KaartData }) {
+  const [open, setOpen] = useState(false);
+  const k = data.kandidaat;
+  if (!k.heeftCv) return null;
+  return <>
+    <Knop onClick={() => setOpen(true)}><CvIcoon /> Cv bekijken</Knop>
+    <a className="sv-knop sv3-icoon" href={`/api/admin/candidates/${k.id}/cv`} title="Cv downloaden" aria-label="Cv downloaden"><NeerIcoon /></a>
+    {open && <CvVoorvertoning data={data} sluit={() => setOpen(false)} />}
+  </>;
+}
+
+function CvVoorvertoning({ data, sluit }: { data: KaartData; sluit: () => void }) {
+  const k = data.kandidaat;
+  const cv = k.cv;
+  const bron = `/api/admin/candidates/${k.id}/cv?preview=1`;
+  useEffect(() => {
+    const toets = (e: KeyboardEvent) => { if (e.key === "Escape") sluit(); };
+    window.addEventListener("keydown", toets);
+    return () => window.removeEventListener("keydown", toets);
+  }, [sluit]);
+  return (
+    <div className="sv3-scherm" onClick={(e) => { if (e.target === e.currentTarget) sluit(); }} role="dialog" aria-modal="true" aria-label={`Cv van ${k.voornaam}`}>
+      <div className="sv3-paneel">
+        <header>
+          <div style={{ minWidth: 0 }}><b>{cv?.naam || "Cv"}</b><span>Cv van {k.naam}{cv?.gecontroleerdDoor ? ` · gecontroleerd door ${cv.gecontroleerdDoor}` : ""}</span></div>
+          <div className="sv-rij" style={{ flexWrap: "nowrap" }}>
+            <a className="sv-knop sv3-icoon" href={`/api/admin/candidates/${k.id}/cv`} title="Downloaden" aria-label="Downloaden"><NeerIcoon /></a>
+            <a className="sv-knop sv3-icoon" href={cv?.soort === "word" ? `/api/admin/candidates/${k.id}/cv-html` : bron} target="_blank" rel="noreferrer" title="Openen in nieuw tabblad" aria-label="Openen in nieuw tabblad"><NieuwIcoon /></a>
+            <Knop onClick={sluit}>Sluiten</Knop>
+          </div>
+        </header>
+        <div className="sv3-pdf">
+          {cv?.soort === "afbeelding"
+            ? <img src={bron} alt={`Cv van ${k.voornaam}`} />
+            : cv?.soort === "anders"
+              ? <p className="sv-grijs" style={{ padding: 24 }}>Dit bestand kan niet in de browser getoond worden. Download het om het te bekijken.</p>
+              : <iframe title={`Cv van ${k.voornaam}`} src={cv?.soort === "word" ? `/api/admin/candidates/${k.id}/cv-html` : bron} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MeerMenu({ items, disabled }: { items: { label: string; doe: () => void; rood?: boolean }[]; disabled?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const klik = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const toets = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", klik);
+    document.addEventListener("keydown", toets);
+    return () => { document.removeEventListener("mousedown", klik); document.removeEventListener("keydown", toets); };
+  }, [open]);
+  return (
+    <div className="sv3-meer" ref={ref}>
+      <button className="sv-knop sv3-icoon" aria-haspopup="menu" aria-expanded={open} aria-label="Meer acties" title="Meer acties" disabled={disabled} onClick={() => setOpen((o) => !o)}>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+      </button>
+      {open && <div className="sv3-menu" role="menu">{items.map((i) => <button key={i.label} role="menuitem" className={i.rood ? "rood" : ""} onClick={() => { setOpen(false); i.doe(); }}>{i.label}</button>)}</div>}
+    </div>
+  );
+}
+
+const CvIcoon = () => <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></svg>;
+const NeerIcoon = () => <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>;
+const NieuwIcoon = () => <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>;
 
 function VerzetDialoog({ data, sluit, klaar }: { data: KaartData; sluit: () => void; klaar: () => void }) {
   const [datum, setDatum] = useState(data.kandidaat.gespreksdatum || "");

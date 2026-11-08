@@ -329,17 +329,20 @@ export function JobGesprekPaneel({ candidateId, kolom = false }: { candidateId: 
             </div>
           ))}
           {!kolom && <p style={{ margin: "8px 0 0", fontSize: 12, color: "#8A8478" }}>Zelf opgegeven aan Job; een collega bevestigt het bij de kennismaking.</p>}
-          <div style={{ display: "flex", gap: 8, marginTop: 10, order: kolom ? 2 : 0 }}>
+          {!kolom && (
+            <div style={{ display: "flex", gap: 8, marginTop: 10, order: kolom ? 2 : 0 }}>
             {!kolom && <button type="button" style={knop()} onClick={() => setOpen(!open)}>{open ? "Verberg gesprek" : `Toon gesprek (${data.berichten?.length || 0})`}</button>}
             <a href={g.link} target="_blank" rel="noopener noreferrer" style={{ ...knop(), display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Open webgesprek</a>
           </div>
+          )}
           {open && (
-            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6, maxHeight: kolom ? 680 : 320, overflowY: "auto", background: kolom ? "transparent" : "#F2EEE7", borderRadius: 12, padding: kolom ? 0 : 10 }}>
+            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6, maxHeight: kolom ? 680 : 320, overflowY: "auto", background: kolom ? "#F7F5F0" : "#F2EEE7", borderRadius: 12, padding: 10 }}>
               {(data.berichten || []).map((b) => (
                 <div key={b.id} style={{ alignSelf: b.richting === "in" ? "flex-end" : "flex-start", maxWidth: "88%", background: b.richting === "in" ? "#E3F0E5" : "#fff", border: b.richting === "in" ? 0 : "1px solid #ECE7DF", borderRadius: b.richting === "in" ? "14px 4px 14px 14px" : "4px 14px 14px 14px", padding: "7px 10px", fontSize: 12.5, whiteSpace: "pre-wrap" }}>{b.tekst}{b.aangemaaktAt ? <small style={{ display: "block", fontSize: 10, color: "#8A8478", marginTop: 2 }}>{new Date(b.aangemaaktAt).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Amsterdam" })}</small> : null}</div>
               ))}
             </div>
           )}
+          {kolom && <a href={g.link} target="_blank" rel="noopener noreferrer" style={{ ...knop(), display: "flex", justifyContent: "center", alignItems: "center", textDecoration: "none", marginTop: 12 }}>Open webgesprek</a>}
         </div>
       )}
     </section>

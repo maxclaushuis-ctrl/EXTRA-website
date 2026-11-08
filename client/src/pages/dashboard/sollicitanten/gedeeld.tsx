@@ -219,6 +219,46 @@ export const CSS = `
 .sv-legenda i{width:14px;height:14px;border-radius:4px;display:inline-block}
 /* kaart */
 .sv-dossier{background:#F4F2EE;padding:24px 40px;min-height:100%;border-radius:18px}
+.sv3-kop{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sv3-wie{display:flex;align-items:center;gap:14px;min-width:0}
+.sv3-wie h1{margin:0;font-size:26px;letter-spacing:-.02em}
+.sv3-avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:17px;flex:none}
+.sv3-sub{margin:2px 0 0;color:#7A766D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv3-gereedschap{display:flex;gap:8px;align-items:center;flex:none}
+.sv3-icoon{width:40px;padding:0 !important;justify-content:center;display:inline-flex;align-items:center;color:inherit}
+.sv3-status{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+.sv3-meer{position:relative}
+.sv3-menu{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:6px;min-width:200px;z-index:30;display:grid}
+.sv3-menu button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;font-size:13.5px}
+.sv3-menu button:hover,.sv3-menu button:focus-visible{background:#F3F1EC}
+.sv3-menu button.rood{color:#A2321F}
+.sv3-volgende{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#37352C;color:#fff;border-radius:16px;padding:16px 18px 16px 22px;margin:18px 0 16px;flex-wrap:wrap}
+.sv3-volgende small{display:block;font-size:11px;letter-spacing:.09em;color:#BDB8AD;font-weight:700}
+.sv3-volgende b{display:block;font-size:16px;margin-top:2px}
+.sv3-balk{display:flex;gap:4px;margin-top:8px}.sv3-balk i{width:26px;height:4px;border-radius:3px;background:#5B584E}.sv3-balk i.ok{background:#9FD3A9}
+.sv3-knop-licht{height:42px;padding:0 18px;border-radius:11px;border:0;background:#fff;color:#2F2D27;font:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:10px}
+.sv3-knop-licht:disabled{opacity:.6;cursor:default}
+.sv3-raster{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.sv3-links{display:grid;gap:16px;min-width:0;container-type:inline-size}
+.sv3-lbl{font-size:11px;letter-spacing:.09em;color:#948F84;font-weight:700;margin:4px 0 10px}
+.sv3-velden{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
+.sv3-veld{min-width:0}.sv3-veld.breed{grid-column:1/-1}
+.sv3-veld span{display:block;font-size:12.5px;color:#7A766D}
+.sv3-veld b{display:block;font-size:14.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv3-veld b i{font-style:normal;font-weight:500;color:#9A958B}
+.sv3-scheiding{height:1px;background:#ECE8E1;margin:16px 0}
+.sv3-chat{background:#fff;border-radius:16px;padding:18px;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto}
+.sv3-scherm{position:fixed;inset:0;background:rgba(30,29,25,.5);display:flex;justify-content:flex-end;z-index:2000}
+.sv3-paneel{width:min(680px,92vw);background:#fff;height:100%;display:flex;flex-direction:column}
+.sv3-paneel header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #ECE8E1}
+.sv3-paneel header b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv3-paneel header span{display:block;color:#7A766D;font-size:12.5px}
+.sv3-pdf{flex:1;background:#EDEAE4;display:flex;min-height:0}
+.sv3-pdf iframe{flex:1;border:0;background:#fff}
+.sv3-pdf img{max-width:100%;max-height:100%;margin:auto;object-fit:contain;padding:16px}
+@container (max-width:440px){.sv3-velden{grid-template-columns:1fr}}
+@media (max-width:900px){.sv3-raster{grid-template-columns:1fr}.sv3-chat{position:static;max-height:none}}
+@media (max-width:1180px){.sv-dossier:has(.sv3-kop){padding:24px}}
 .sv-terug{border:0;background:none;font:inherit;font-weight:600;font-size:13px;color:#5C594F;cursor:pointer;padding:0;margin-bottom:14px}
 .sv-kop{display:flex;gap:18px;align-items:center}
 .sv-kpirij{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
