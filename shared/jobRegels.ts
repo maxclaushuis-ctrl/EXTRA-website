@@ -173,7 +173,7 @@ const FUNCTIEVRAAG: Record<string, { nl: string; en: string }> = {
 
 const T = {
   nl: {
-    welkom: (v: string, f: string) => `Hoi ${v}, ik ben Job, de AI-recruiter van EXTRA! Leuk dat je je hebt aangemeld voor ${f}. Een paar korte vragen, dan kunnen we je goed voorstellen.`,
+    welkom: (v: string, f: string) => `Hi ${v},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor ${f}! Ik stel je een paar korte vragen.`,
     disclaimer: "Je praat met Job, een AI. Typ MENS voor een collega of ENGLISH om te wisselen.",
     ervaring: (functie: string) =>
       functie === "chef" ? "Vertel eens: waar heb je tot nu toe gekookt?"
@@ -227,11 +227,11 @@ const T = {
     bellen: "Prima, een collega van EXTRA belt je zo snel mogelijk.",
   },
   en: {
-    welkom: (v: string, f: string) => `Hi ${v}, I'm Job, the AI recruiter at EXTRA! Thanks for signing up for ${f}. A few quick questions so we can introduce you well.`,
+    welkom: (v: string, f: string) => `Hi ${v},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for ${f}! I have a few quick questions for you.`,
     disclaimer: "You're chatting with Job, an AI. Type HUMAN for a colleague or NEDERLANDS to switch.",
     ervaring: (functie: string) =>
       functie === "chef" ? "Tell me: where have you cooked so far?"
-      : functie === "housekeeping" ? "Tell me about your housekeeping experience so far?"
+      : functie === "housekeeping" ? "Tell me: what experience do you have in housekeeping so far?"
       : functie === "logistiek" ? "Tell me: what kind of work have you done so far, for example in a warehouse?"
       : "Tell me: where have you worked in hospitality so far?",
     specialisatie: "Shall I add events and banqueting as a specialisation?",

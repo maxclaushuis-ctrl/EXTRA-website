@@ -39,7 +39,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
 {
   const ctx: JobContext = { voornaam: "Lisa", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false };
   let r = start(ctx, "nl", NU);
-  test("Lisa: welkom noemt naam en functie", r.berichten[0].tekst.includes("Hoi Lisa") && r.berichten[0].tekst.includes("bediening en bar"));
+  test("Lisa: welkom noemt naam en functie", r.berichten[0].tekst.startsWith("Hi Lisa,\n\nIk ben Job") && r.berichten[0].tekst.includes("bediening en bar"));
   test("Lisa: welkom zegt dat Job een AI-recruiter is", r.berichten[0].tekst.includes("AI-recruiter"));
   test("Lisa: eerste vraag gaat over ervaring", r.state.laatsteOnderwerp === "ervaring" && laatste(r).tekst.includes("horeca gewerkt"));
 

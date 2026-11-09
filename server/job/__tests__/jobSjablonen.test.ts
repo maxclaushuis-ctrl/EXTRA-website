@@ -2,8 +2,8 @@
  * Huistests: de WhatsApp-sjablonen van Job en de herinnering bij het plannen.
  * Run met:  npx tsx server/job/__tests__/jobSjablonen.test.ts
  */
-import { SJABLOON_DEFS, NAMEN, componenten, sjabloonNaam } from "../jobSjablonen";
-import { planHerinneringNodig, planHerinnering, nieuweState, type JobState } from "@shared/jobRegels";
+import { SJABLOON_DEFS, NAMEN, START_OUD, componenten, sjabloonNaam, startParameters } from "../jobSjablonen";
+import { planHerinneringNodig, planHerinnering, nieuweState, teksten, type JobState } from "@shared/jobRegels";
 
 let geslaagd = 0;
 let gefaald = 0;
@@ -14,7 +14,19 @@ function test(naam: string, ok: boolean, uitleg = "") {
 
 async function main() {
   test("zes sjablonen: drie soorten in NL en EN", SJABLOON_DEFS.length === 6 && (["start", "herinnering", "afspraak"] as const).every((s) => ["nl", "en"].every((t) => SJABLOON_DEFS.some((d) => d.soort === s && d.taal === t))));
-  test("namen zoals in docs/JOB.md", NAMEN.start === "job_start" && NAMEN.herinnering === "job_herinnering" && NAMEN.afspraak === "job_afspraak");
+  test("namen zoals in docs/JOB.md", NAMEN.start === "job_start_v2" && START_OUD === "job_start" && NAMEN.herinnering === "job_herinnering" && NAMEN.afspraak === "job_afspraak");
+  // Startsjabloon v2: de kern van elke eerste vraag past in "Vertel eens: {{3}}?" / "Tell me: {{3}}?"
+  for (const taal of ["nl", "en"] as const) {
+    for (const functie of ["housekeeping", "chef", "logistiek", "horecamedewerker", "frontoffice"]) {
+      const vraag = teksten(taal).ervaring(functie);
+      const p = startParameters(NAMEN.start, "Lisa", "x", vraag);
+      const def = SJABLOON_DEFS.find((d) => d.soort === "start" && d.taal === taal)!;
+      const zin = def.tekst.replace("{{1}}", p[0]).replace("{{2}}", p[1]).replace("{{3}}", p[2]);
+      test(`start v2 ${taal}/${functie}: eindigt met precies de eerste vraag`, zin.endsWith(vraag), zin.split("\n").pop());
+    }
+  }
+  test("oud startsjabloon krijgt de hele vraag", startParameters(START_OUD, "Lisa", "x", "Vertel eens: waar?")[2] === "Vertel eens: waar?");
+  test("start v2: welkomstregel met witregel na de naam", /^Hi \{\{1\}\},\n\n/.test(SJABLOON_DEFS.find((d) => d.soort === "start" && d.taal === "nl")!.tekst));
   for (const d of SJABLOON_DEFS) {
     const vars = (d.tekst.match(/\{\{\d\}\}/g) || []).length;
     const c = componenten(d);

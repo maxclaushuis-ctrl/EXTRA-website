@@ -12,17 +12,19 @@
 import * as meta from "../whatsapp/metaClient";
 
 export type SjabloonSoort = "start" | "herinnering" | "afspraak";
-export const NAMEN: Record<SjabloonSoort, string> = { start: "job_start", herinnering: "job_herinnering", afspraak: "job_afspraak" };
+export const NAMEN: Record<SjabloonSoort, string> = { start: "job_start_v2", herinnering: "job_herinnering", afspraak: "job_afspraak" };
+/** Eerste versie van het startsjabloon: Job gebruikt hem zolang job_start_v2 nog niet is goedgekeurd. */
+export const START_OUD = "job_start";
 
 interface Def { soort: SjabloonSoort; taal: "nl" | "en"; tekst: string; voorbeeld: string[]; knoppen?: string[] }
 
 export const SJABLOON_DEFS: Def[] = [
   { soort: "start", taal: "nl",
-    tekst: "Hoi {{1}}, ik ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen; typ MENS als je liever een collega spreekt. Eerste vraag: {{3}} Je kunt hier gewoon antwoorden.",
-    voorbeeld: ["Lisa", "bediening en bar", "Vertel eens: waar heb je tot nu toe in de horeca gewerkt?"] },
+    tekst: "Hi {{1}},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen.\n\nVertel eens: {{3}}?",
+    voorbeeld: ["Lisa", "housekeeping", "wat is je ervaring met housekeeping tot nu toe"] },
   { soort: "start", taal: "en",
-    tekst: "Hi {{1}}, I'm Job, the AI recruiter of EXTRA. Thanks for signing up for {{2}}! I have a few quick questions; type HUMAN if you'd rather talk to a colleague. First question: {{3}} You can simply reply here.",
-    voorbeeld: ["Lisa", "service and bar", "Tell me: where have you worked in hospitality so far?"] },
+    tekst: "Hi {{1}},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for {{2}}! I have a few quick questions for you.\n\nTell me: {{3}}?",
+    voorbeeld: ["Lisa", "housekeeping", "what experience do you have in housekeeping so far"] },
   { soort: "herinnering", taal: "nl",
     tekst: "Hoi {{1}}, je aanmelding bij EXTRA is nog niet af. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen. Zullen we verder?",
     voorbeeld: ["Noor"], knoppen: ["Verder", "Liever bellen"] },
@@ -36,6 +38,17 @@ export const SJABLOON_DEFS: Def[] = [
     tekst: "Hi {{1}}, tomorrow at {{2}} you have your meeting with {{3}} at EXTRA, Herengracht 372 in Amsterdam. Bring your passport or ID card. Does that still work?",
     voorbeeld: ["Lisa", "14:00", "Charlotte"], knoppen: ["I'll be there", "Reschedule"] },
 ];
+
+/**
+ * De variabelen van het startsjabloon. job_start_v2 zet "Vertel eens:" en het
+ * vraagteken zelf om de vraag (Meta wil geen variabele aan het eind), dus daar
+ * gaat alleen de kern van de eerste vraag in. Het oude sjabloon krijgt de hele vraag.
+ */
+export function startParameters(naam: string, voornaam: string, functie: string, eersteVraag: string): string[] {
+  if (naam !== NAMEN.start) return [voornaam, functie, eersteVraag];
+  const kern = eersteVraag.trim().replace(/^(vertel eens|tell me)\s*:\s*/i, "").replace(/\?+\s*$/, "");
+  return [voornaam, functie, kern];
+}
 
 /** De componenten zoals de Graph API ze verwacht. Puur, getest in shared/job.test.ts via jobSjablonen.test. */
 export function componenten(d: Def): any[] {
@@ -120,7 +133,7 @@ export async function standBijMeta(vers = false): Promise<{ ok: boolean; lijst: 
   if (!vers && cache && Date.now() - cache.at < CACHE_MS) return { ok: true, lijst: cache.lijst };
   const r = await meta.listTemplates();
   if (!r.ok) return { ok: false, lijst: cache?.lijst || [], fout: (r.error?.message || "Meta gaf een fout.") + (r.error?.details ? ` (${r.error.details})` : "") + (await accountHint()) };
-  const namen = Object.values(NAMEN);
+  const namen = [...Object.values(NAMEN), START_OUD];
   const lijst = (r.templates || []).filter((t) => namen.includes(t.name)).map((t) => ({ naam: t.name, taal: t.language, status: t.status, reden: t.rejectedReason && t.rejectedReason !== "NONE" ? t.rejectedReason : undefined }));
   cache = { at: Date.now(), lijst };
   return { ok: true, lijst };
@@ -137,8 +150,11 @@ export async function sjabloonNaam(soort: SjabloonSoort): Promise<string> {
   if (!metaActief()) return "";
   const s = await standBijMeta().catch(() => null);
   if (!s?.ok) return "";
-  const goed = s.lijst.filter((t) => t.naam === NAMEN[soort] && t.status === "APPROVED").map((t) => t.taal);
-  return goed.includes("nl") && goed.includes("en") ? NAMEN[soort] : "";
+  const klaar = (naam: string) => { const goed = s.lijst.filter((t) => t.naam === naam && t.status === "APPROVED").map((t) => t.taal); return goed.includes("nl") && goed.includes("en"); };
+  if (klaar(NAMEN[soort])) return NAMEN[soort];
+  // Start: tot job_start_v2 is goedgekeurd blijft het eerste startsjabloon werken.
+  if (soort === "start" && klaar(START_OUD)) return START_OUD;
+  return "";
 }
 
 /** Dient de sjablonen in die nog niet bij Meta staan. Bestaande laat het staan. */

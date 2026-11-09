@@ -32,7 +32,7 @@ testomgeving" (6 november 2026).
 | `JOB_ENABLED=1` | Job start na elke voltooide aanmelding en de herinneringen lopen elk uur. Zonder deze schakelaar doet Job niets uit zichzelf. |
 | `TESTOMGEVING=1` | Alleen in de testomgeving: Job mag met de hand gestart worden (simulator) en de klok mag vooruit. |
 | `JOB_WA_NUMMER` | Optioneel. Het nummer voor de wa.me-links in de mails. Zonder deze Secret haalt Job het nummer zelf op bij Meta. |
-| `JOB_WA_SJABLOON_START`, `_HERINNERING`, `_AFSPRAAK` | Optioneel. Alleen nodig als een sjabloon een andere naam heeft dan `job_start`, `job_herinnering` of `job_afspraak`. Zonder deze Secrets gebruikt Job vanzelf het sjabloon zodra Meta het heeft goedgekeurd. |
+| `JOB_WA_SJABLOON_START`, `_HERINNERING`, `_AFSPRAAK` | Optioneel. Alleen nodig als een sjabloon een andere naam heeft dan `job_start_v2`, `job_herinnering` of `job_afspraak`. Zonder deze Secrets gebruikt Job vanzelf het sjabloon zodra Meta het heeft goedgekeurd. |
 
 Zonder goedgekeurd startsjabloon praat Job via het webgesprek en krijgt de
 kandidaat de link per mail. Zonder herinneringssjabloon gaat de herinnering
@@ -52,17 +52,29 @@ Categorie: **Utility** (gaat over een aanmelding die de kandidaat zelf deed).
 Maak elk sjabloon in het Nederlands (taal `nl`) en in het Engels (taal `en`),
 met precies deze tekst. Job vult de variabelen zelf in.
 
-### 1. Start: `job_start`
+### 1. Start: `job_start_v2`
 
-Nederlands:
+Nederlands (witregel na de naam en voor de vraag):
 
-> Hoi {{1}}, ik ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen; typ MENS als je liever een collega spreekt. Eerste vraag: {{3}} Je kunt hier gewoon antwoorden.
+> Hi {{1}},
+>
+> Ik ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen.
+>
+> Vertel eens: {{3}}?
 
 Engels:
 
-> Hi {{1}}, I'm Job, the AI recruiter of EXTRA. Thanks for signing up for {{2}}! I have a few quick questions; type HUMAN if you'd rather talk to a colleague. First question: {{3}} You can simply reply here.
+> Hi {{1}},
+>
+> I'm Job, the AI recruiter at EXTRA. Great that you signed up for {{2}}! I have a few quick questions for you.
+>
+> Tell me: {{3}}?
 
-Voorbeeldwaarden voor Meta: `Lisa`, `bediening en bar`, `Vertel eens: waar heb je tot nu toe in de horeca gewerkt?`
+Voorbeeldwaarden voor Meta: `Lisa`, `housekeeping`, `wat is je ervaring met housekeeping tot nu toe`.
+In {{3}} staat alleen de kern van de eerste vraag; "Vertel eens:" en het vraagteken staan in het sjabloon,
+omdat Meta geen sjabloon goedkeurt dat met een variabele eindigt.
+
+Zolang `job_start_v2` nog niet in beide talen is goedgekeurd, gebruikt Job het eerste startsjabloon `job_start`.
 
 ### 2. Herinnering: `job_herinnering`
 
