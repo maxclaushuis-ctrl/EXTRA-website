@@ -75,6 +75,27 @@ async function accountHint(): Promise<string> {
     const t = await fetch(`${meta.META_GRAPH_BASE_URL}/${encodeURIComponent(tel)}?fields=display_phone_number`, { headers: { Authorization: `Bearer ${token}` } });
     const td: any = await t.json().catch(() => ({}));
     if (t.ok && td?.display_phone_number) {
+      // Wat voor ding is het ingestelde ID volgens Meta? Dan weet de beheerder precies wat er mis is.
+      let soort = "";
+      if (!huidig) soort = " META_WA_BOT_WABA_ID is leeg.";
+      else if (!/^\d+$/.test(huidig)) soort = ` META_WA_BOT_WABA_ID (${huidig}) bevat meer dan alleen cijfers.`;
+      else {
+        try {
+          const m = await fetch(`${meta.META_GRAPH_BASE_URL}/${huidig}?metadata=1&fields=id,name`, { headers: { Authorization: `Bearer ${token}` } });
+          const md: any = await m.json().catch(() => ({}));
+          const type = md?.metadata?.type as string | undefined;
+          const namen: Record<string, string> = {
+            whatsapp_business_account: "een WhatsApp Business-account (dat is goed)",
+            whatsapp_business_phone_number: "het telefoonnummer-ID, niet het account-ID",
+            business: "het ID van het Business-portfolio, niet van het WhatsApp-account",
+            application: "het app-ID, niet het WhatsApp-account-ID",
+            user: "een gebruikers-ID, niet het WhatsApp-account-ID",
+          };
+          if (type === "whatsapp_business_account") return ` Het ingestelde ID (${huidig}) is wel een WhatsApp Business-account en de token werkt, dus de fout zit in het verzoek zelf.`;
+          if (type) soort = ` Het ingestelde ID (${huidig}) is volgens Meta ${namen[type] || `van het soort "${type}"`}.`;
+          else if (md?.error?.message) soort = ` Meta kent het ingestelde ID (${huidig}) niet: ${md.error.message}`;
+        } catch { /* geen soort */ }
+      }
       // Welke WhatsApp Business-accounts heeft deze systeemgebruiker? Dan staat het juiste ID er meteen bij.
       let lijst = "";
       try {
@@ -83,7 +104,7 @@ async function accountHint(): Promise<string> {
         const rijen = (ad?.data || []) as { id: string; name?: string }[];
         if (rijen.length) lijst = ` Deze systeemgebruiker heeft deze WhatsApp Business-accounts: ${rijen.map((r) => `${r.name || "zonder naam"} (${r.id})`).join(", ")}. Zet het ID van het testaccount in META_WA_BOT_WABA_ID.`;
       } catch { /* geen lijst */ }
-      return ` Het telefoonnummer (${td.display_phone_number}) is wel bereikbaar, dus de token werkt. Het ID in META_WA_BOT_WABA_ID is waarschijnlijk niet het WhatsApp Business-account-ID.${lijst || " Neem het ID van het account uit WhatsApp Manager."}`;
+      return ` Het telefoonnummer (${td.display_phone_number}) is wel bereikbaar, dus de token werkt. Het ID in META_WA_BOT_WABA_ID is waarschijnlijk niet het WhatsApp Business-account-ID.${soort}${lijst || " Neem het ID van het account uit WhatsApp Manager."}`;
     }
     return " De token kan ook het telefoonnummer niet lezen: wijs het WhatsApp-account van dit nummer toe aan de systeemgebruiker (volledige controle) en maak daarna een nieuwe token.";
   } catch { return ""; }
@@ -98,7 +119,7 @@ export async function standBijMeta(vers = false): Promise<{ ok: boolean; lijst: 
   if (!metaActief()) return { ok: false, lijst: [], fout: "Meta is niet gekoppeld (WHATSAPP_PROVIDER=meta en de META_WA_BOT_*-gegevens)." };
   if (!vers && cache && Date.now() - cache.at < CACHE_MS) return { ok: true, lijst: cache.lijst };
   const r = await meta.listTemplates();
-  if (!r.ok) return { ok: false, lijst: cache?.lijst || [], fout: (r.error?.message || "Meta gaf een fout.") + (await accountHint()) };
+  if (!r.ok) return { ok: false, lijst: cache?.lijst || [], fout: (r.error?.message || "Meta gaf een fout.") + (r.error?.details ? ` (${r.error.details})` : "") + (await accountHint()) };
   const namen = Object.values(NAMEN);
   const lijst = (r.templates || []).filter((t) => namen.includes(t.name)).map((t) => ({ naam: t.name, taal: t.language, status: t.status, reden: t.rejectedReason }));
   cache = { at: Date.now(), lijst };
@@ -129,9 +150,9 @@ export async function dienIn(): Promise<{ ingediend: string[]; bestond: string[]
     const label = `${NAMEN[d.soort]} (${d.taal})`;
     if (s.lijst.some((t) => t.naam === NAMEN[d.soort] && t.taal === d.taal)) { uit.bestond.push(label); continue; }
     const r = await meta.submitTemplate({ name: NAMEN[d.soort], language: d.taal, category: "UTILITY", components: componenten(d) });
-    if (r.ok) uit.ingediend.push(label); else uit.fouten.push(`${label}: ${r.error?.message || "onbekende fout"}`);
+    if (r.ok) uit.ingediend.push(label); else uit.fouten.push(`${label}: ${r.error?.message || "onbekende fout"}${r.error?.details ? ` (${r.error.details})` : ""}`);
     // Zelfde fout bij elk sjabloon (bijvoorbeeld een verkeerd account): één keer melden is genoeg.
-    if (!r.ok && uit.ingediend.length === 0 && uit.fouten.length === 1 && /does not exist|permission/i.test(r.error?.message || "")) {
+    if (!r.ok && uit.ingediend.length === 0 && uit.fouten.length === 1 && /does not exist|permission|invalid parameter/i.test(r.error?.message || "")) {
       uit.fouten[0] = `${r.error?.message || "Meta gaf een fout."}${await accountHint()}`;
       break;
     }

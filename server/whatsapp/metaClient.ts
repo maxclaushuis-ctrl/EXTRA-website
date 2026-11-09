@@ -20,13 +20,13 @@ const REQUEST_TIMEOUT_MS = 15_000;
 // Env wordt per call gelezen (niet op module-niveau gecached) zodat tests en
 // runtime-configuratie zonder herstart/re-import werken.
 function accessToken(): string {
-  return process.env.META_WA_BOT_ACCESS_TOKEN || '';
+  return (process.env.META_WA_BOT_ACCESS_TOKEN || '').trim();
 }
 function phoneNumberId(): string {
-  return process.env.META_WA_BOT_PHONE_NUMBER_ID || '';
+  return (process.env.META_WA_BOT_PHONE_NUMBER_ID || '').trim();
 }
 export function wabaId(): string {
-  return process.env.META_WA_BOT_WABA_ID || '';
+  return (process.env.META_WA_BOT_WABA_ID || '').trim();
 }
 
 /** True als de minimale config voor versturen aanwezig is. */
@@ -69,7 +69,7 @@ function parseMetaError(data: any, httpStatus: number, rawText: string): MetaErr
       code: e.code != null ? String(e.code) : String(httpStatus),
       title: e.title || e.type || undefined,
       message: e.message || `HTTP ${httpStatus}`,
-      details: e.error_data?.details || undefined,
+      details: e.error_data?.details || e.error_user_msg || undefined,
       httpStatus,
     };
   }
