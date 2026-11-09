@@ -69,7 +69,7 @@ function parseMetaError(data: any, httpStatus: number, rawText: string): MetaErr
       code: e.code != null ? String(e.code) : String(httpStatus),
       title: e.title || e.type || undefined,
       message: e.message || `HTTP ${httpStatus}`,
-      details: e.error_data?.details || e.error_user_msg || undefined,
+      details: e.error_data?.details || [e.error_user_title, e.error_user_msg].filter(Boolean).join(': ') || undefined,
       httpStatus,
     };
   }

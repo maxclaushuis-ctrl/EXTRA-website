@@ -168,8 +168,8 @@ export async function dienIn(): Promise<{ ingediend: string[]; bestond: string[]
     const r = await meta.submitTemplate({ name: NAMEN[d.soort], language: d.taal, category: "UTILITY", components: componenten(d) });
     if (r.ok) uit.ingediend.push(label); else uit.fouten.push(`${label}: ${r.error?.message || "onbekende fout"}${r.error?.details ? ` (${r.error.details})` : ""}`);
     // Zelfde fout bij elk sjabloon (bijvoorbeeld een verkeerd account): één keer melden is genoeg.
-    if (!r.ok && uit.ingediend.length === 0 && uit.fouten.length === 1 && /does not exist|permission|invalid parameter/i.test(r.error?.message || "")) {
-      uit.fouten[0] = `${r.error?.message || "Meta gaf een fout."}${await accountHint()}`;
+    if (!r.ok && uit.ingediend.length === 0 && uit.fouten.length === 1 && /does not exist|permission/i.test(r.error?.message || "")) {
+      uit.fouten[0] = `${r.error?.message || "Meta gaf een fout."}${r.error?.details ? ` (${r.error.details})` : ""}${await accountHint()}`;
       break;
     }
   }
