@@ -212,7 +212,8 @@ export function registerJobRoutes(express: Express, adminMiddleware: Middleware)
       const t = stand.lijst.find((x) => x.naam === sj.NAMEN[d.soort] && x.taal === d.taal);
       return { naam: sj.NAMEN[d.soort], taal: d.taal, tekst: d.tekst, knoppen: d.knoppen || [], status: t?.status || null, reden: t?.reden || null };
     });
-    const basis = (process.env.BASE_URL || "https://www.doehetextra.nl").replace(/\/$/, "");
+    // In de testomgeving het adres van de testomgeving zelf (zie job.basisUrl), anders BASE_URL.
+    const basis = job.basisUrl();
     res.json({
       metaActief: sj.metaActief(), fout: stand.ok ? null : stand.fout, rijen, nummer: await sj.jobNummer(),
       webhook: `${basis}/api/whatsapp/meta-webhook`, verifyToken: !!process.env.META_WA_BOT_VERIFY_TOKEN, appSecret: !!process.env.META_WA_BOT_APP_SECRET,
