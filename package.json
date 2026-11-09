@@ -47,6 +47,7 @@
     "kandidaat:test": "tsx shared/kandidaat.test.ts",
     "aanmeldlabels:test": "tsx shared/aanmeldLabels.test.ts",
     "sollicitant:test": "tsx shared/sollicitant.test.ts",
+    "kpi:test": "tsx shared/kpiJob.test.ts",
     "job:test": "tsx shared/job.test.ts && tsx shared/jobWhatsapp.test.ts && tsx server/whatsapp/__tests__/jobInbound.test.ts && tsx server/job/__tests__/jobSjablonen.test.ts",
     "testdata:vullen": "tsx scripts/testdata-vullen.ts",
     "csv:test": "tsx shared/csv.test.ts",

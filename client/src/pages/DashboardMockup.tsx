@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import extraLogo from '@assets/extra-logo-zwart.svg';
+import { KpiPeriode, KpiJobBlok, csvRegelsJob } from "@/pages/dashboard/KpiJob";
 import '@/styles/dashboard3.css';
 import { D3Kop, D3Tegels, FunctieLabel, Persoon, Talen, Kanaal, StatusLabel, type StatusSoort } from '@/pages/dashboard/d3';
 import { BedDouble, ConciergeBell, Package, UtensilsCrossed } from 'lucide-react';
@@ -765,14 +766,16 @@ export default function DashboardMockup() {
   // KPI tab state
   const [kpiFromDate, setKpiFromDate] = useState('');
   const [kpiToDate, setKpiToDate] = useState('');
+  const [kpiLabel, setKpiLabel] = useState('');
 
   const kpiQueryParams = new URLSearchParams();
   if (kpiFromDate) kpiQueryParams.set('from', kpiFromDate);
   if (kpiToDate) kpiQueryParams.set('to', kpiToDate);
+  if (kpiLabel) kpiQueryParams.set('label', kpiLabel);
   const kpiQueryString = kpiQueryParams.toString();
 
   const { data: kpiData, isLoading: kpiLoading, refetch: refetchKpi } = useQuery<any>({
-    queryKey: ['/api/admin/kpi', kpiFromDate, kpiToDate],
+    queryKey: ['/api/admin/kpi', kpiFromDate, kpiToDate, kpiLabel],
     queryFn: () => fetchJson<any>(`/api/admin/kpi${kpiQueryString ? '?' + kpiQueryString : ''}`),
     enabled: isAuthenticated && user?.role === 'admin',
     staleTime: 30000,
@@ -6622,7 +6625,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">KPI & Rapportage</h1>
-                  <p className="text-sm text-gray-500 mt-0.5">Conversietrechter, doorlooptijden en bronanalyse</p>
+                  <p className="text-sm text-gray-500 mt-0.5">Van aanmelding tot aangenomen, per week en per label</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -6652,6 +6655,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                         [],
                         ['Maand', 'Aanmeldingen', 'Gesprekken', 'Aangenomen'],
                         ...(kpiData.maandTrend ?? []).map((m: any) => [m.label, m.aanmeldingen, m.gesprekken, m.aangenomen]),
+                        ...csvRegelsJob(kpiData.job),
                       ];
                       const csv = rows.map(r => r.join(';')).join('\n');
                       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -6678,9 +6682,12 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                 </div>
               </div>
 
+              {/* Periode en label (mock-up Job en KPI) */}
+              <KpiPeriode van={kpiFromDate} tot={kpiToDate} zet={(v, t) => { setKpiFromDate(v); setKpiToDate(t); }} label={kpiLabel} zetLabel={setKpiLabel} />
+
               {/* Datum filter */}
               <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <span className="text-xs font-medium text-gray-600">Periode:</span>
+                <span className="text-xs font-medium text-gray-600">Kies periode:</span>
                 <div className="flex items-center gap-2">
                   <label className="text-xs text-gray-500">Van</label>
                   <input
@@ -6718,115 +6725,8 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                 <div className="text-center text-gray-400 text-sm py-16">Geen data beschikbaar</div>
               ) : (
                 <>
-                  {/* Sleutelcijfers */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    {[
-                      { label: 'Totaal aanmeldingen', value: kpiData.trechter?.total ?? 0, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'Gesprek gepland', value: kpiData.trechter?.gesprekGepland ?? 0, sub: `${kpiData.ratios?.ratioGesprek ?? 0}% conversie`, color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200' },
-                      { label: 'Aangenomen', value: kpiData.trechter?.aangenomen ?? 0, sub: `${kpiData.ratios?.ratioAangenomen ?? 0}% conversie`, color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Gem. dagen → gesprek', value: kpiData.avgDaysToInterview != null ? `${kpiData.avgDaysToInterview}d` : 'N/B', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
-                    ].map((card, i) => (
-                      <div key={i} className={`rounded-xl border p-4 ${card.bg}`}>
-                        <p className="text-xs text-gray-500 mb-1">{card.label}</p>
-                        <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                        {card.sub && <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Conversietrechter */}
-                  <Card className="mb-6">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-semibold">Conversietrechter</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        const total = kpiData.trechter?.total || 1;
-                        const steps = [
-                          { label: 'Aangemeld', count: kpiData.trechter?.total ?? 0, color: 'bg-blue-500', light: 'bg-blue-100 text-blue-700' },
-                          { label: 'CV ingediend', count: kpiData.trechter?.metCv ?? 0, color: 'bg-indigo-500', light: 'bg-indigo-100 text-indigo-700' },
-                          { label: 'Gesprek gepland', count: kpiData.trechter?.gesprekGepland ?? 0, color: 'bg-violet-500', light: 'bg-violet-100 text-violet-700' },
-                          { label: 'Aangenomen', count: kpiData.trechter?.aangenomen ?? 0, color: 'bg-green-500', light: 'bg-green-100 text-green-700' },
-                          { label: 'Afgewezen', count: kpiData.trechter?.afgewezen ?? 0, color: 'bg-red-400', light: 'bg-red-100 text-red-600' },
-                        ];
-                        return (
-                          <div className="space-y-3">
-                            {steps.map((step, i) => {
-                              const pct = Math.round((step.count / total) * 100);
-                              return (
-                                <div key={i} className="flex items-center gap-3">
-                                  <div className="w-28 text-xs text-gray-600 text-right shrink-0">{step.label}</div>
-                                  <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden relative">
-                                    <div
-                                      className={`h-full ${step.color} rounded-full transition-all duration-700`}
-                                      style={{ width: `${Math.max(pct, pct > 0 ? 3 : 0)}%` }}
-                                    />
-                                  </div>
-                                  <div className="w-24 flex items-center gap-1.5 shrink-0">
-                                    <span className="text-sm font-semibold text-gray-800">{step.count}</span>
-                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${step.light}`}>{pct}%</span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
-
-                  {/* Maandelijkse trend */}
-                  <Card className="mb-6">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-semibold">Maandelijkse trend (12 maanden)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        const trend = kpiData.maandTrend ?? [];
-                        const maxVal = Math.max(...trend.map((m: any) => m.aanmeldingen), 1);
-                        return (
-                          <div className="overflow-x-auto">
-                            <div className="flex items-end gap-2 min-w-max pb-2" style={{ height: 140 }}>
-                              {trend.map((m: any, i: number) => (
-                                <div key={i} className="flex flex-col items-center gap-1" style={{ width: 52 }}>
-                                  <div className="flex items-end gap-0.5" style={{ height: 100 }}>
-                                    <div
-                                      title={`Aanmeldingen: ${m.aanmeldingen}`}
-                                      className="w-3 bg-blue-400 rounded-t transition-all"
-                                      style={{ height: `${Math.round((m.aanmeldingen / maxVal) * 100)}%` }}
-                                    />
-                                    <div
-                                      title={`Gesprekken: ${m.gesprekken}`}
-                                      className="w-3 bg-violet-400 rounded-t transition-all"
-                                      style={{ height: `${Math.round((m.gesprekken / maxVal) * 100)}%` }}
-                                    />
-                                    <div
-                                      title={`Aangenomen: ${m.aangenomen}`}
-                                      className="w-3 bg-green-400 rounded-t transition-all"
-                                      style={{ height: `${Math.round((m.aangenomen / maxVal) * 100)}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-[9px] text-gray-400 leading-tight text-center">{m.label}</span>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="flex items-center gap-4 mt-2 pt-2 border-t">
-                              {[
-                                { color: 'bg-blue-400', label: 'Aanmeldingen' },
-                                { color: 'bg-violet-400', label: 'Gesprekken' },
-                                { color: 'bg-green-400', label: 'Aangenomen' },
-                              ].map((l, i) => (
-                                <div key={i} className="flex items-center gap-1.5">
-                                  <div className={`w-3 h-3 rounded-sm ${l.color}`} />
-                                  <span className="text-xs text-gray-500">{l.label}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
+                  {/* Job, trechter, afhaken, snelheid en weken (vervangt sleutelcijfers, trechter en maandgrafiek) */}
+                  <KpiJobBlok job={kpiData.job} />
 
                   {/* Bron & Functie verdeling */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

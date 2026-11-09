@@ -8522,16 +8522,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/kpi", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const { from, to } = req.query;
+      const label = ["hotels", "events", "logistiek"].includes(String(req.query.label || "")) ? String(req.query.label) as "hotels" | "events" | "logistiek" : null;
       const { candidates: allCandidates } = await storage.getCandidates({ limit: 10000 });
 
+      // Job en de dossiers: voor het label, de stappen van Job, opkomst en snelheid (shared/kpiJob.ts).
+      const { jobGesprekken, sollicitantDossiers } = await import("@shared/schema");
+      const { brancheVan, isAfwas, ingangBranche } = await import("@shared/sollicitantRegels");
+      const { berekenJobKpi } = await import("@shared/kpiJob");
+      const dossierRijen = await db.select({
+        candidateId: sollicitantDossiers.candidateId, stap: sollicitantDossiers.stap, intakeStatus: sollicitantDossiers.intakeStatus,
+        archiefReden: sollicitantDossiers.archiefReden, branche: sollicitantDossiers.branche,
+      }).from(sollicitantDossiers);
+      const dossierVan = new Map(dossierRijen.map((d) => [d.candidateId, d]));
+      const labelVan = (c: any) => brancheVan(c.functionType, dossierVan.get(c.id)?.branche, isAfwas(c), ingangBranche(c.bronDetails));
+      const gesprekRijen = await db.select({
+        candidateId: jobGesprekken.candidateId, status: jobGesprekken.status, laatsteOnderwerp: jobGesprekken.laatsteOnderwerp, gestartAt: jobGesprekken.gestartAt,
+        eersteAntwoordAt: sql<string | null>`(select min(b.aangemaakt_at) from job_berichten b where b.gesprek_id = ${jobGesprekken.id} and b.richting = 'in')`,
+        cvAt: sql<string | null>`(select min(b.aangemaakt_at) from job_berichten b where b.gesprek_id = ${jobGesprekken.id} and b.richting = 'in' and (b.bijlage is not null or b.tekst in ('Cv gestuurd', 'CV sent')))`,
+      }).from(jobGesprekken);
+
       const filterFrom = from ? new Date(from as string) : null;
-      const filterTo = to ? new Date(to as string) : null;
+      // "Tot" is een datum: die hele dag telt mee.
+      const filterTo = to ? new Date(new Date(to as string).getTime() + 24 * 3600 * 1000) : null;
 
       const filtered = allCandidates.filter((c: any) => {
         const d = new Date(c.createdAt);
         if (filterFrom && d < filterFrom) return false;
-        if (filterTo && d > filterTo) return false;
+        if (filterTo && d >= filterTo) return false;
+        if (label && labelVan(c) !== label) return false;
         return true;
+      });
+
+      const job = berekenJobKpi({
+        kandidaten: allCandidates.map((c: any) => ({
+          id: c.id, createdAt: c.createdAt, hasCv: !!c.hasCv, interviewDate: c.interviewDate ? String(c.interviewDate) : null,
+          interviewTime: c.interviewTime ? String(c.interviewTime) : null, status: c.status, label: labelVan(c),
+        })),
+        gesprekken: gesprekRijen.map((g) => ({ ...g, eersteAntwoordAt: g.eersteAntwoordAt ? new Date(g.eersteAntwoordAt) : null, cvAt: g.cvAt ? new Date(g.cvAt) : null })),
+        dossiers: dossierRijen,
+        van: filterFrom, tot: filterTo, label, nu: new Date(),
       });
 
       const total = filtered.length;
@@ -8617,6 +8646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         functieVerdeling,
         nationaliteitVerdeling,
         maandTrend,
+        job,
       });
     } catch (error) {
       console.error("Error fetching KPI data:", error);
