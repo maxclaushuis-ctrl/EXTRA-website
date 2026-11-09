@@ -148,6 +148,25 @@ export async function sendTextMessage(to: string, body: string): Promise<MetaSen
   });
 }
 
+/**
+ * Stuur een bericht met maximaal drie knoppen (binnen het 24-uurs window).
+ * Meta: hooguit 3 knoppen, titel hooguit 20 tekens, tekst hooguit 1024.
+ * Het antwoord komt binnen als interactive.button_reply met de titel.
+ */
+export async function sendButtonsMessage(to: string, body: string, knoppen: string[]): Promise<MetaSendResult> {
+  return postMessages({
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'interactive',
+    interactive: {
+      type: 'button',
+      body: { text: body.slice(0, 1024) },
+      action: { buttons: knoppen.slice(0, 3).map((t, i) => ({ type: 'reply', reply: { id: `k${i + 1}`, title: t.slice(0, 20) } })) },
+    },
+  });
+}
+
 /** Stuur een (approved) template-bericht — verplicht buiten het 24-uurs window. */
 export async function sendTemplateMessage(
   to: string,

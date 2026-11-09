@@ -34,6 +34,8 @@ import {
   type Bezet, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
 import { lees } from "./jobAi";
+import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
+export { knopTitel, whatsappKnoppen, keuzeUitNummer };
 import { stuurBevestigingsmail, stuurHerinneringsmail, stuurStartmail, stuurCvMail } from "./jobMails";
 
 export function jobAan(): boolean {
@@ -214,8 +216,8 @@ async function bewaarInkomend(g: JobGesprek, tekst: string, bijlage?: string | n
   await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "in", tekst, bijlage: bijlage || null, kanaal: kanaal || g.kanaal });
 }
 
-/** Tekst voor WhatsApp: keuzes genummerd, links voor cv en planning erbij. */
-export function whatsappTekst(b: Uitgaand, token: string, taal: JobTaal): string {
+/** Tekst voor WhatsApp: links voor cv en planning erbij; keuzes genummerd als er geen knoppen komen. */
+export function whatsappTekst(b: Uitgaand, token: string, taal: JobTaal, metKnoppen = false): string {
   const t = teksten(taal);
   let tekst = b.tekst;
   if (b.cvUpload) tekst = b.tekst === t.cvUpload ? t.cvUploadWa(gesprekLink(token, "&cv=1")) : `${b.tekst}\n${gesprekLink(token, "&cv=1")}`;
@@ -224,17 +226,10 @@ export function whatsappTekst(b: Uitgaand, token: string, taal: JobTaal): string
     else if (b.tekst === t.verzetten) tekst = t.verzettenWa(gesprekLink(token, "&plannen=1"));
     else tekst = `${b.tekst}\n${gesprekLink(token, "&plannen=1")}`;
   }
-  if (b.keuzes && b.keuzes.length) tekst += "\n\n" + b.keuzes.map((k, i) => `${i + 1}. ${k}`).join("\n");
+  if (b.keuzes && b.keuzes.length && !metKnoppen) tekst += "\n\n" + b.keuzes.map((k, i) => `${i + 1}. ${k}`).join("\n");
   return tekst;
 }
 
-/** Een genummerd antwoord ("2") wordt de tekst van die keuze. */
-export function keuzeUitNummer(tekst: string, keuzes: string[] | null | undefined): string {
-  const m = (tekst || "").trim().match(/^(\d)\.?$/);
-  if (!m || !keuzes || !keuzes.length) return tekst;
-  const k = keuzes[Number(m[1]) - 1];
-  return k || tekst;
-}
 
 /** Fictieve testkandidaten (e-mail op @voorbeeld.nl) krijgen nooit een echt WhatsApp-bericht. */
 async function isTestkandidaat(candidateId: number): Promise<boolean> {
@@ -242,7 +237,13 @@ async function isTestkandidaat(candidateId: number): Promise<boolean> {
   return !!c?.email && c.email.toLowerCase().endsWith("@voorbeeld.nl");
 }
 
-async function verstuurWhatsappTekst(candidateId: number, telefoon: string, tekst: string): Promise<boolean> {
+/** Een bericht van Job naar WhatsApp: met knoppen als dat kan, anders als tekst. */
+async function stuurJobBericht(candidateId: number, telefoon: string, b: Uitgaand, token: string, taal: JobTaal): Promise<boolean> {
+  const knoppen = whatsappKnoppen(b);
+  return verstuurWhatsappTekst(candidateId, telefoon, whatsappTekst(b, token, taal, !!knoppen), knoppen);
+}
+
+async function verstuurWhatsappTekst(candidateId: number, telefoon: string, tekst: string, knoppen: string[] | null = null): Promise<boolean> {
   try {
     const waProvider = await import("../whatsapp/provider");
     const waStorage = await import("../whatsapp/storage");
@@ -250,11 +251,12 @@ async function verstuurWhatsappTekst(candidateId: number, telefoon: string, teks
     if (await isTestkandidaat(candidateId)) { console.log(`[Job] kandidaat ${candidateId} is fictief (testdata), geen WhatsApp`); return false; }
     const match = await waStorage.resolveAndUpsertConversation({ phoneNumber: telefoon, inbound: false, bodyPreview: tekst, at: new Date() });
     const dbId = await waStorage.insertOutboundQueued({
-      direction: "outbound", fromNumber: "extra", toNumber: telefoon, messageType: "text", body: tekst,
+      direction: "outbound", fromNumber: "extra", toNumber: telefoon, messageType: knoppen ? "interactive" : "text",
+      body: knoppen ? `${tekst}\n\n${knoppen.map((k) => `[${k}]`).join(" ")}` : tekst,
       candidateId: match.candidateId ?? candidateId, prospectContactId: match.prospectContactId, matchCategory: match.category,
-      sentByUserId: null, rawPayload: { type: "text", text: { body: tekst }, to: telefoon, job: true },
+      sentByUserId: null, rawPayload: knoppen ? { type: "interactive", knoppen, text: { body: tekst }, to: telefoon, job: true } : { type: "text", text: { body: tekst }, to: telefoon, job: true },
     } as any);
-    const r = await waProvider.sendText(telefoon, tekst);
+    const r = knoppen ? await waProvider.sendButtons(telefoon, tekst, knoppen) : await waProvider.sendText(telefoon, tekst);
     await waStorage.updateOutboundResult(dbId, r.ok ? { waMessageId: r.waMessageId ?? null, status: "sent" } : { status: "failed", errorCode: r.errorCode ?? null, errorMessage: r.errorMessage ?? null });
     if (!r.ok) console.warn(`[Job] WhatsApp naar kandidaat ${candidateId} mislukt: ${r.errorMessage}`);
     return r.ok;
@@ -302,7 +304,7 @@ async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[
       extra: b.planning ? "planning" : b.cvUpload ? "cv_upload" : null, kanaal: g.kanaal,
     });
     if (c?.phone && c.whatsappOptInStatus === "actief" && binnenVenster(s, nu)) {
-      await verstuurWhatsappTekst(g.candidateId, waNummer(c), whatsappTekst(b, g.token, s.taal));
+      await stuurJobBericht(g.candidateId, waNummer(c), b, g.token, s.taal);
     }
   }
 }
@@ -502,7 +504,7 @@ export async function uitnodigingNaCheck(candidateId: number): Promise<void> {
   const b: Uitgaand = { tekst: teksten(s.taal).uitgenodigd(c.firstName), planning: true };
   await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
   if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
-    if (binnenVenster(s, new Date())) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst(b, g.token, s.taal));
+    if (binnenVenster(s, new Date())) await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);
     else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], b.tekst);
   }
 }
@@ -624,7 +626,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     if (!c) continue;
     if (g.kanaal === "whatsapp" && c.phone && c.whatsappOptInStatus === "actief") {
       const tekst = r.berichten[0].tekst;
-      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst(r.berichten[0], g.token, s.taal));
+      if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), r.berichten[0], g.token, s.taal);
       else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], tekst);
     }
     if (c.email && soort === "eerste") {
@@ -647,7 +649,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     const b = r.berichten[0];
     await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
     if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
-      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst(b, g.token, s.taal));
+      if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);
       else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], b.tekst);
     }
     if (c.email) {
@@ -669,7 +671,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     const tekst = t.afspraakHerinnering(c.firstName, a.tijd, a.interviewer);
     await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst, keuzes: t.afspraakKeuzes, kanaal: g.kanaal });
     if (c.phone && c.whatsappOptInStatus === "actief" && g.kanaal === "whatsapp") {
-      if (binnenVenster(s, nu)) await verstuurWhatsappTekst(c.id, waNummer(c), whatsappTekst({ tekst, keuzes: t.afspraakKeuzes }, g.token, s.taal));
+      if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), { tekst, keuzes: t.afspraakKeuzes }, g.token, s.taal);
       else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).afspraak, s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
     }
   }

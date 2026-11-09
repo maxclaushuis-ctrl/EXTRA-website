@@ -161,6 +161,17 @@ export async function sendText(to: string, body: string): Promise<ProviderSendRe
   return d360PostMessages({ messaging_product: 'whatsapp', to, type: 'text', text: { body } });
 }
 
+/** Stuur een bericht met maximaal drie knoppen via de actieve provider (zelfde Cloud API-vorm bij beide). */
+export async function sendButtons(to: string, body: string, knoppen: string[]): Promise<ProviderSendResult> {
+  if (activeProvider() === 'meta') {
+    return fromMetaResult(await metaClient.sendButtonsMessage(to, body, knoppen));
+  }
+  return d360PostMessages({
+    messaging_product: 'whatsapp', to, type: 'interactive',
+    interactive: { type: 'button', body: { text: body.slice(0, 1024) }, action: { buttons: knoppen.slice(0, 3).map((t, i) => ({ type: 'reply', reply: { id: `k${i + 1}`, title: t.slice(0, 20) } })) } },
+  });
+}
+
 /** Stuur een template-bericht via de actieve provider. */
 export async function sendTemplate(
   to: string,
