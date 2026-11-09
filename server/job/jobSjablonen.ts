@@ -66,9 +66,16 @@ async function accountHint(): Promise<string> {
     if (!d?.data?.is_valid) return " De token is niet (meer) geldig: maak een nieuwe token aan.";
     const mist = ["whatsapp_business_messaging", "whatsapp_business_management"].filter((x) => !rechten.includes(x));
     if (mist.length) return ` De token mist de rechten: ${mist.join(", ")}.`;
-    if (!ids.length) return " De token heeft geen toegang tot een WhatsApp-account. Wijs het account toe aan de systeemgebruiker en maak daarna een nieuwe token.";
     const huidig = meta.wabaId();
-    return ids.includes(huidig) ? "" : ` De token heeft toegang tot WhatsApp-account ${ids.join(" of ")}. Zet dat ID in META_WA_BOT_WABA_ID.`;
+    if (ids.length) return ids.includes(huidig) ? "" : ` De token heeft toegang tot WhatsApp-account ${ids.join(" of ")}. Zet dat ID in META_WA_BOT_WABA_ID.`;
+    // "Applies to all objects": de token mag alles waar de systeemgebruiker bij kan.
+    // Kan hij het telefoonnummer lezen, dan klopt waarschijnlijk het account-ID niet.
+    const tel = process.env.META_WA_BOT_PHONE_NUMBER_ID || "";
+    if (!tel) return " META_WA_BOT_PHONE_NUMBER_ID ontbreekt.";
+    const t = await fetch(`${meta.META_GRAPH_BASE_URL}/${encodeURIComponent(tel)}?fields=display_phone_number`, { headers: { Authorization: `Bearer ${token}` } });
+    const td: any = await t.json().catch(() => ({}));
+    if (t.ok && td?.display_phone_number) return ` Het telefoonnummer (${td.display_phone_number}) is wel bereikbaar, dus de token werkt. Het ID in META_WA_BOT_WABA_ID is waarschijnlijk niet het WhatsApp Business-account-ID: neem het ID van het account uit WhatsApp Manager.`;
+    return " De token kan ook het telefoonnummer niet lezen: wijs het WhatsApp-account van dit nummer toe aan de systeemgebruiker (volledige controle) en maak daarna een nieuwe token.";
   } catch { return ""; }
 }
 
