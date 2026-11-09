@@ -135,6 +135,30 @@ export async function gesprekVanKandidaat(candidateId: number): Promise<JobGespr
   return g || null;
 }
 
+/**
+ * Het gesprek met Job voor een inkomend WhatsApp-bericht. Meldt iemand zich
+ * vaker aan met hetzelfde nummer, dan koppelt de WhatsApp-matcher het bericht
+ * aan de eerste kandidaat met dat nummer, niet per se aan die met het lopende
+ * gesprek. Daarom: het meest recent actieve gesprek van alle kandidaten met
+ * dit nummer (niet gestopt); anders het gesprek van de gematchte kandidaat.
+ */
+export async function gesprekVoorNummer(nummer: string, candidateId: number | null): Promise<JobGesprek | null> {
+  const { normalizePhone } = await import("../whatsapp/phone");
+  const doel = normalizePhone(nummer);
+  if (doel) {
+    const rijen = await db.select({ id: candidates.id, phone: candidates.phone, whatsappNummer: candidates.whatsappNummer }).from(candidates)
+      .where(sql`${candidates.phone} is not null or ${candidates.whatsappNummer} is not null`);
+    const ids = rijen.filter((r) => normalizePhone(r.phone) === doel || (!!r.whatsappNummer && normalizePhone(r.whatsappNummer) === doel)).map((r) => r.id);
+    if (ids.length) {
+      const [g] = await db.select().from(jobGesprekken)
+        .where(and(inArray(jobGesprekken.candidateId, ids), sql`${jobGesprekken.status} <> 'gestopt'`))
+        .orderBy(desc(jobGesprekken.laatsteActiviteitAt)).limit(1);
+      if (g) return g;
+    }
+  }
+  return candidateId ? gesprekVanKandidaat(candidateId) : null;
+}
+
 export async function berichtenVan(gesprekId: number) {
   return db.select().from(jobBerichten).where(eq(jobBerichten.gesprekId, gesprekId)).orderBy(jobBerichten.id);
 }

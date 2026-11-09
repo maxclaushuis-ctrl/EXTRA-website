@@ -12951,19 +12951,20 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   // antwoord van Job, niet van de gewone auto-reply. Een document of foto kan
   // het cv zijn; STOP zet Job stil. Zonder gesprek met Job verandert er niets.
   async function jobInbound(args: { phoneNumber: string; candidateId: number | null; type: string; body: string; media?: { objectPath: string; mimeType?: string | null; filename?: string | null } | null }): Promise<boolean> {
-    if (!args.candidateId) return false;
     try {
       const job = await import('./job/jobService');
-      const g = await job.gesprekVanKandidaat(args.candidateId);
+      // Op nummer zoeken: wie zich vaker aanmeldde, heeft meerdere kandidaten met hetzelfde nummer.
+      const g = await job.gesprekVoorNummer(args.phoneNumber, args.candidateId);
       if (!g) return false;
+      const candidateId = g.candidateId;
       if (args.type === 'stop') {
-        await job.stopGesprek(args.candidateId);
+        await job.stopGesprek(candidateId);
         return true;
       }
       if (args.media) {
         if (!['bezig', 'wacht_cv', 'geen_reactie', 'cv_controle'].includes(g.status)) return false;
-        await storage.updateCandidate(args.candidateId, { hasCv: true, cvFilename: args.media.objectPath } as any);
-        await job.cvOntvangen(args.candidateId, args.media.objectPath, 'whatsapp');
+        await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: args.media.objectPath } as any);
+        await job.cvOntvangen(candidateId, args.media.objectPath, 'whatsapp');
         return true;
       }
       if (args.type !== 'text' || !args.body) return false;
