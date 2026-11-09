@@ -74,7 +74,17 @@ async function accountHint(): Promise<string> {
     if (!tel) return " META_WA_BOT_PHONE_NUMBER_ID ontbreekt.";
     const t = await fetch(`${meta.META_GRAPH_BASE_URL}/${encodeURIComponent(tel)}?fields=display_phone_number`, { headers: { Authorization: `Bearer ${token}` } });
     const td: any = await t.json().catch(() => ({}));
-    if (t.ok && td?.display_phone_number) return ` Het telefoonnummer (${td.display_phone_number}) is wel bereikbaar, dus de token werkt. Het ID in META_WA_BOT_WABA_ID is waarschijnlijk niet het WhatsApp Business-account-ID: neem het ID van het account uit WhatsApp Manager.`;
+    if (t.ok && td?.display_phone_number) {
+      // Welke WhatsApp Business-accounts heeft deze systeemgebruiker? Dan staat het juiste ID er meteen bij.
+      let lijst = "";
+      try {
+        const a = await fetch(`${meta.META_GRAPH_BASE_URL}/me/assigned_whatsapp_business_accounts?fields=id,name`, { headers: { Authorization: `Bearer ${token}` } });
+        const ad: any = await a.json().catch(() => ({}));
+        const rijen = (ad?.data || []) as { id: string; name?: string }[];
+        if (rijen.length) lijst = ` Deze systeemgebruiker heeft deze WhatsApp Business-accounts: ${rijen.map((r) => `${r.name || "zonder naam"} (${r.id})`).join(", ")}. Zet het ID van het testaccount in META_WA_BOT_WABA_ID.`;
+      } catch { /* geen lijst */ }
+      return ` Het telefoonnummer (${td.display_phone_number}) is wel bereikbaar, dus de token werkt. Het ID in META_WA_BOT_WABA_ID is waarschijnlijk niet het WhatsApp Business-account-ID.${lijst || " Neem het ID van het account uit WhatsApp Manager."}`;
+    }
     return " De token kan ook het telefoonnummer niet lezen: wijs het WhatsApp-account van dit nummer toe aan de systeemgebruiker (volledige controle) en maak daarna een nieuwe token.";
   } catch { return ""; }
 }
