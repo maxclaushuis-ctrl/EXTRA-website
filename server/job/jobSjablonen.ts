@@ -121,7 +121,7 @@ export async function standBijMeta(vers = false): Promise<{ ok: boolean; lijst: 
   const r = await meta.listTemplates();
   if (!r.ok) return { ok: false, lijst: cache?.lijst || [], fout: (r.error?.message || "Meta gaf een fout.") + (r.error?.details ? ` (${r.error.details})` : "") + (await accountHint()) };
   const namen = Object.values(NAMEN);
-  const lijst = (r.templates || []).filter((t) => namen.includes(t.name)).map((t) => ({ naam: t.name, taal: t.language, status: t.status, reden: t.rejectedReason }));
+  const lijst = (r.templates || []).filter((t) => namen.includes(t.name)).map((t) => ({ naam: t.name, taal: t.language, status: t.status, reden: t.rejectedReason && t.rejectedReason !== "NONE" ? t.rejectedReason : undefined }));
   cache = { at: Date.now(), lijst };
   return { ok: true, lijst };
 }
