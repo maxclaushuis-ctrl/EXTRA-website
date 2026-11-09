@@ -48,6 +48,30 @@ export function metaActief(): boolean {
   return (process.env.WHATSAPP_PROVIDER || "").trim().toLowerCase() === "meta" && meta.isMetaConfigured() && !!meta.wabaId();
 }
 
+/**
+ * Bij een fout van Meta over het WhatsApp-account: welke accounts kan de
+ * token wel bereiken? Meta geeft dat via debug_token (de token mag zichzelf
+ * controleren). Zo ziet de beheerder direct welk ID in META_WA_BOT_WABA_ID hoort.
+ */
+async function accountHint(): Promise<string> {
+  const token = process.env.META_WA_BOT_ACCESS_TOKEN || "";
+  if (!token) return "";
+  try {
+    const url = `${meta.META_GRAPH_BASE_URL}/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(token)}`;
+    const r = await fetch(url);
+    const d: any = await r.json().catch(() => ({}));
+    const scopes: { scope: string; target_ids?: string[] }[] = d?.data?.granular_scopes || [];
+    const ids = Array.from(new Set(scopes.filter((x) => /^whatsapp_business_(management|messaging)$/.test(x.scope)).flatMap((x) => x.target_ids || [])));
+    const rechten = (d?.data?.scopes || []) as string[];
+    if (!d?.data?.is_valid) return " De token is niet (meer) geldig: maak een nieuwe token aan.";
+    const mist = ["whatsapp_business_messaging", "whatsapp_business_management"].filter((x) => !rechten.includes(x));
+    if (mist.length) return ` De token mist de rechten: ${mist.join(", ")}.`;
+    if (!ids.length) return " De token heeft geen toegang tot een WhatsApp-account. Wijs het account toe aan de systeemgebruiker en maak daarna een nieuwe token.";
+    const huidig = meta.wabaId();
+    return ids.includes(huidig) ? "" : ` De token heeft toegang tot WhatsApp-account ${ids.join(" of ")}. Zet dat ID in META_WA_BOT_WABA_ID.`;
+  } catch { return ""; }
+}
+
 interface Stand { naam: string; taal: string; status: string; reden?: string }
 let cache: { at: number; lijst: Stand[] } | null = null;
 const CACHE_MS = 10 * 60 * 1000;
@@ -57,7 +81,7 @@ export async function standBijMeta(vers = false): Promise<{ ok: boolean; lijst: 
   if (!metaActief()) return { ok: false, lijst: [], fout: "Meta is niet gekoppeld (WHATSAPP_PROVIDER=meta en de META_WA_BOT_*-gegevens)." };
   if (!vers && cache && Date.now() - cache.at < CACHE_MS) return { ok: true, lijst: cache.lijst };
   const r = await meta.listTemplates();
-  if (!r.ok) return { ok: false, lijst: cache?.lijst || [], fout: r.error?.message || "Meta gaf een fout." };
+  if (!r.ok) return { ok: false, lijst: cache?.lijst || [], fout: (r.error?.message || "Meta gaf een fout.") + (await accountHint()) };
   const namen = Object.values(NAMEN);
   const lijst = (r.templates || []).filter((t) => namen.includes(t.name)).map((t) => ({ naam: t.name, taal: t.language, status: t.status, reden: t.rejectedReason }));
   cache = { at: Date.now(), lijst };
@@ -89,6 +113,11 @@ export async function dienIn(): Promise<{ ingediend: string[]; bestond: string[]
     if (s.lijst.some((t) => t.naam === NAMEN[d.soort] && t.taal === d.taal)) { uit.bestond.push(label); continue; }
     const r = await meta.submitTemplate({ name: NAMEN[d.soort], language: d.taal, category: "UTILITY", components: componenten(d) });
     if (r.ok) uit.ingediend.push(label); else uit.fouten.push(`${label}: ${r.error?.message || "onbekende fout"}`);
+    // Zelfde fout bij elk sjabloon (bijvoorbeeld een verkeerd account): één keer melden is genoeg.
+    if (!r.ok && uit.ingediend.length === 0 && uit.fouten.length === 1 && /does not exist|permission/i.test(r.error?.message || "")) {
+      uit.fouten[0] = `${r.error?.message || "Meta gaf een fout."}${await accountHint()}`;
+      break;
+    }
   }
   cache = null;
   return uit;
