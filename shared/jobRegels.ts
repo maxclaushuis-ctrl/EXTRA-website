@@ -566,6 +566,13 @@ function verwerkLos(
       state.taal = "en";
     }
     const oudeAutorisatie = state.velden.werkautorisatie;
+    // Een no-go op taal alleen als het antwoord zelf geen Nederlands of Engels is
+    // en echt tekst bevat: "1" of "Tot 25 km" mag nooit tot een afwijzing leiden.
+    const letters = (invoer.tekst || "").replace(/[^A-Za-z\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF\u0590-\u06FF\u0E00-\u0E7F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g, "").length;
+    if (lezing.velden.nlOfEn === false && (lezing.taal !== "anders" || letters < 6)) {
+      const { nlOfEn: _weg, ...rest } = lezing.velden;
+      lezing = { ...lezing, velden: rest };
+    }
     state.velden = samenvoegen(state.velden, lezing.velden);
     if (lezing.twijfel && !state.twijfels.includes(lezing.twijfel)) state.twijfels.push(lezing.twijfel);
 

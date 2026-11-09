@@ -155,6 +155,14 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("No-go taal: naar de planner, Job wijst zelf niet af", n.state.status === "planner" && n.acties.some((a) => a.soort === "nogo"));
   test("No-go taal: vriendelijk bericht in het Engels", alleTekst(n).includes("Dutch or English"));
 
+  // Een kort of Nederlands antwoord is nooit een no-go op taal, ook niet als de AI dat denkt
+  let n2 = start(ctx, "nl", NU);
+  n2 = verwerk(n2.state, ctx, { tekst: "1" }, { velden: { nlOfEn: false }, taal: "anders", twijfel: null, ack: "" }, later(1));
+  test("Geen no-go: antwoord \"1\"", n2.state.status !== "planner" && !n2.acties.some((a) => a.soort === "nogo"));
+  let n3 = start(ctx, "nl", NU);
+  n3 = verwerk(n3.state, ctx, { tekst: "Tot 25 km" }, { velden: { nlOfEn: false }, taal: "nl", twijfel: null, ack: "" }, later(1));
+  test("Geen no-go: Nederlands antwoord", !n3.acties.some((a) => a.soort === "nogo") && !alleTekst(n3).includes("Dutch or English"));
+
   // Geen cv bij de hand
   const zonderCv: JobContext = { ...ctx, hasCv: false };
   let c = start(zonderCv, "nl", NU);
