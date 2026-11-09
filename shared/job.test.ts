@@ -41,7 +41,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   let r = start(ctx, "nl", NU);
   test("Lisa: welkom noemt naam en functie", r.berichten[0].tekst.startsWith("Hi Lisa,\n\nIk ben Job") && r.berichten[0].tekst.includes("bediening en bar"));
   test("Lisa: welkom zegt dat Job een AI-recruiter is", r.berichten[0].tekst.includes("AI-recruiter"));
-  test("Lisa: eerste vraag gaat over ervaring", r.state.laatsteOnderwerp === "ervaring" && laatste(r).tekst.includes("horeca gewerkt"));
+  test("Lisa: eerste vraag gaat over ervaring", r.state.laatsteOnderwerp === "ervaring" && laatste(r).tekst === "Vertel eens: wat is je ervaring met werken in de horeca tot nu toe?");
 
   r = antwoord(r, ctx, "Twee zomers bij een strandtent in Zandvoort, daar deden we ook bruiloften en grote groepen. Nu werk ik op zaterdag in een lunchroom. Ik studeer, dus meestal kan ik twee dagen per week, en ik fiets overal heen");
   test("Lisa: één antwoord vult ervaring, diensten en vervoer", !!r.state.velden.ervaring && r.state.velden.diensten === "1-2" && r.state.velden.vervoer === "fiets", JSON.stringify(r.state.velden));

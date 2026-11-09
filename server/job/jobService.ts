@@ -26,7 +26,7 @@ import { db } from "../db";
 import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
 import { planHerinneringNodig, planHerinnering,
-  functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
+  ervaringWerk, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
@@ -399,7 +399,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
     const eersteVraag = r.berichten[r.berichten.length - 1].tekst;
     const { startParameters } = await import("./jobSjablonen");
     const ok = await verstuurSjabloon(candidateId, waNummer(c), sjabloon, taal,
-      startParameters(sjabloon, c.firstName, functieLabel(c.functionType, taal), eersteVraag),
+      startParameters(sjabloon, c.firstName, functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(c.functionType, taal)),
       `${r.berichten[0].tekst}\n\n${eersteVraag}`);
     if (!ok) {
       await db.update(jobGesprekken).set({ kanaal: "web" }).where(eq(jobGesprekken.id, g.id));

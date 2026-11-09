@@ -177,17 +177,29 @@ const FUNCTIEVRAAG: Record<string, { nl: string; en: string }> = {
   },
 };
 
+/**
+ * Het werk in de eerste vraag ("wat is je ervaring met ... tot nu toe?").
+ * Ook variabele {{3}} van het startsjabloon job_start_v2: Meta wil geen
+ * variabele aan het eind, dus de vraag zelf staat vast in het sjabloon.
+ */
+const ERVARING_WERK: Record<string, { nl: string; en: string }> = {
+  housekeeping: { nl: "housekeeping", en: "housekeeping" },
+  chef: { nl: "werken in een keuken", en: "working in a kitchen" },
+  frontoffice: { nl: "front office", en: "front office work" },
+  logistiek: { nl: "werk in een magazijn of de logistiek", en: "warehouse or logistics work" },
+  horecamedewerker: { nl: "werken in de horeca", en: "working in hospitality" },
+};
+export function ervaringWerk(functie: string, taal: JobTaal): string {
+  return (ERVARING_WERK[functie] || ERVARING_WERK.horecamedewerker)[taal];
+}
+
 // ─── Teksten ─────────────────────────────────────────────────────────────────
 
 const T = {
   nl: {
     welkom: (v: string, f: string) => `Hi ${v},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor ${f}! Ik stel je een paar korte vragen.`,
     disclaimer: "Je praat met Job, een AI. Typ MENS voor een collega of ENGLISH om te wisselen.",
-    ervaring: (functie: string) =>
-      functie === "chef" ? "Vertel eens: waar heb je tot nu toe gekookt?"
-      : functie === "housekeeping" ? "Vertel eens: wat is je ervaring met housekeeping tot nu toe?"
-      : functie === "logistiek" ? "Vertel eens: wat voor werk heb je tot nu toe gedaan, bijvoorbeeld in een magazijn?"
-      : "Vertel eens: waar heb je tot nu toe in de horeca gewerkt?",
+    ervaring: (functie: string) => `Vertel eens: wat is je ervaring met ${ervaringWerk(functie, "nl")} tot nu toe?`,
     specialisatie: "Dan zet ik evenementen en banqueting erbij als specialisatie. Goed?",
     specialisatieKeuzes: ["Ja, graag", "Liever niet"],
     werkautorisatie: "Nog één praktische vraag over werken in Nederland. Wat staat er op je verblijfsdocument bij arbeid?",
@@ -241,11 +253,7 @@ const T = {
   en: {
     welkom: (v: string, f: string) => `Hi ${v},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for ${f}! I have a few quick questions for you.`,
     disclaimer: "You're chatting with Job, an AI. Type HUMAN for a colleague or NEDERLANDS to switch.",
-    ervaring: (functie: string) =>
-      functie === "chef" ? "Tell me: where have you cooked so far?"
-      : functie === "housekeeping" ? "Tell me: what experience do you have in housekeeping so far?"
-      : functie === "logistiek" ? "Tell me: what kind of work have you done so far, for example in a warehouse?"
-      : "Tell me: where have you worked in hospitality so far?",
+    ervaring: (functie: string) => `Tell me: what experience do you have with ${ervaringWerk(functie, "en")} so far?`,
     specialisatie: "Shall I add events and banqueting as a specialisation?",
     specialisatieKeuzes: ["Yes, please", "Rather not"],
     werkautorisatie: "One practical question about working in the Netherlands. What does your residence document say about work?",

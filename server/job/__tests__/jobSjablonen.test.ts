@@ -3,7 +3,7 @@
  * Run met:  npx tsx server/job/__tests__/jobSjablonen.test.ts
  */
 import { SJABLOON_DEFS, NAMEN, START_OUD, componenten, sjabloonNaam, startParameters } from "../jobSjablonen";
-import { planHerinneringNodig, planHerinnering, nieuweState, teksten, type JobState } from "@shared/jobRegels";
+import { planHerinneringNodig, planHerinnering, nieuweState, teksten, ervaringWerk, type JobState } from "@shared/jobRegels";
 
 let geslaagd = 0;
 let gefaald = 0;
@@ -19,13 +19,13 @@ async function main() {
   for (const taal of ["nl", "en"] as const) {
     for (const functie of ["housekeeping", "chef", "logistiek", "horecamedewerker", "frontoffice"]) {
       const vraag = teksten(taal).ervaring(functie);
-      const p = startParameters(NAMEN.start, "Lisa", "x", vraag);
+      const p = startParameters(NAMEN.start, "Lisa", "x", vraag, ervaringWerk(functie, taal));
       const def = SJABLOON_DEFS.find((d) => d.soort === "start" && d.taal === taal)!;
       const zin = def.tekst.replace("{{1}}", p[0]).replace("{{2}}", p[1]).replace("{{3}}", p[2]);
       test(`start v2 ${taal}/${functie}: eindigt met precies de eerste vraag`, zin.endsWith(vraag), zin.split("\n").pop());
     }
   }
-  test("oud startsjabloon krijgt de hele vraag", startParameters(START_OUD, "Lisa", "x", "Vertel eens: waar?")[2] === "Vertel eens: waar?");
+  test("oud startsjabloon krijgt de hele vraag", startParameters(START_OUD, "Lisa", "x", "Vertel eens: waar?", "housekeeping")[2] === "Vertel eens: waar?");
   test("start v2: welkomstregel met witregel na de naam", /^Hi \{\{1\}\},\n\n/.test(SJABLOON_DEFS.find((d) => d.soort === "start" && d.taal === "nl")!.tekst));
   for (const d of SJABLOON_DEFS) {
     const vars = (d.tekst.match(/\{\{\d\}\}/g) || []).length;

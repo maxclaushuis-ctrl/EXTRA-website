@@ -60,7 +60,7 @@ Nederlands (witregel na de naam en voor de vraag):
 >
 > Ik ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen.
 >
-> Vertel eens: {{3}}?
+> Vertel eens: wat is je ervaring met {{3}} tot nu toe?
 
 Engels:
 
@@ -68,11 +68,11 @@ Engels:
 >
 > I'm Job, the AI recruiter at EXTRA. Great that you signed up for {{2}}! I have a few quick questions for you.
 >
-> Tell me: {{3}}?
+> Tell me: what experience do you have with {{3}} so far?
 
-Voorbeeldwaarden voor Meta: `Lisa`, `housekeeping`, `wat is je ervaring met housekeeping tot nu toe`.
-In {{3}} staat alleen de kern van de eerste vraag; "Vertel eens:" en het vraagteken staan in het sjabloon,
-omdat Meta geen sjabloon goedkeurt dat met een variabele eindigt.
+Voorbeeldwaarden voor Meta: `Lisa`, `housekeeping`, `housekeeping`.
+In {{3}} staat alleen het werk (bijvoorbeeld `werken in een keuken`); de vraag zelf staat in het sjabloon,
+omdat Meta geen sjabloon goedkeurt dat met een variabele eindigt (ook niet met alleen een vraagteken erachter).
 
 Zolang `job_start_v2` nog niet in beide talen is goedgekeurd, gebruikt Job het eerste startsjabloon `job_start`.
 

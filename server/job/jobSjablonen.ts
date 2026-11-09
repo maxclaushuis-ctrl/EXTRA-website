@@ -20,11 +20,11 @@ interface Def { soort: SjabloonSoort; taal: "nl" | "en"; tekst: string; voorbeel
 
 export const SJABLOON_DEFS: Def[] = [
   { soort: "start", taal: "nl",
-    tekst: "Hi {{1}},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen.\n\nVertel eens: {{3}}?",
-    voorbeeld: ["Lisa", "housekeeping", "wat is je ervaring met housekeeping tot nu toe"] },
+    tekst: "Hi {{1}},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen.\n\nVertel eens: wat is je ervaring met {{3}} tot nu toe?",
+    voorbeeld: ["Lisa", "housekeeping", "housekeeping"] },
   { soort: "start", taal: "en",
-    tekst: "Hi {{1}},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for {{2}}! I have a few quick questions for you.\n\nTell me: {{3}}?",
-    voorbeeld: ["Lisa", "housekeeping", "what experience do you have in housekeeping so far"] },
+    tekst: "Hi {{1}},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for {{2}}! I have a few quick questions for you.\n\nTell me: what experience do you have with {{3}} so far?",
+    voorbeeld: ["Lisa", "housekeeping", "housekeeping"] },
   { soort: "herinnering", taal: "nl",
     tekst: "Hoi {{1}}, je aanmelding bij EXTRA is nog niet af. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen. Zullen we verder?",
     voorbeeld: ["Noor"], knoppen: ["Verder", "Liever bellen"] },
@@ -40,14 +40,14 @@ export const SJABLOON_DEFS: Def[] = [
 ];
 
 /**
- * De variabelen van het startsjabloon. job_start_v2 zet "Vertel eens:" en het
- * vraagteken zelf om de vraag (Meta wil geen variabele aan het eind), dus daar
- * gaat alleen de kern van de eerste vraag in. Het oude sjabloon krijgt de hele vraag.
+ * De variabelen van het startsjabloon. In job_start_v2 staat de eerste vraag
+ * vast ("wat is je ervaring met {{3}} tot nu toe?"), want Meta wil geen
+ * variabele aan het eind; {{3}} is alleen het werk (ervaringWerk). Het oude
+ * sjabloon krijgt de hele vraag.
  */
-export function startParameters(naam: string, voornaam: string, functie: string, eersteVraag: string): string[] {
+export function startParameters(naam: string, voornaam: string, functie: string, eersteVraag: string, werk: string): string[] {
   if (naam !== NAMEN.start) return [voornaam, functie, eersteVraag];
-  const kern = eersteVraag.trim().replace(/^(vertel eens|tell me)\s*:\s*/i, "").replace(/\?+\s*$/, "");
-  return [voornaam, functie, kern];
+  return [voornaam, functie, werk];
 }
 
 /** De componenten zoals de Graph API ze verwacht. Puur, getest in shared/job.test.ts via jobSjablonen.test. */
