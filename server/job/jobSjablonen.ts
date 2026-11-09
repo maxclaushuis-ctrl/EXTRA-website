@@ -93,7 +93,7 @@ async function accountHint(): Promise<string> {
           };
           if (type === "whatsapp_business_account") return ` Het ingestelde ID (${huidig}) is wel een WhatsApp Business-account en de token werkt, dus de fout zit in het verzoek zelf.`;
           if (type) soort = ` Het ingestelde ID (${huidig}) is volgens Meta ${namen[type] || `van het soort "${type}"`}.`;
-          else if (md?.error?.message) soort = ` Meta kent het ingestelde ID (${huidig}) niet: ${md.error.message}`;
+          else if (md?.error) return ` De token kan het telefoonnummer (${td.display_phone_number}) wel lezen, maar het WhatsApp-account ${huidig} niet. Geef de systeemgebruiker toegang tot dit account: Bedrijfsinstellingen, WhatsApp-accounts, dit account, tabblad Mensen, systeemgebruiker toevoegen met volledige controle.`;
         } catch { /* geen soort */ }
       }
       // Welke WhatsApp Business-accounts heeft deze systeemgebruiker? Dan staat het juiste ID er meteen bij.
