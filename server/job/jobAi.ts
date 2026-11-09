@@ -13,7 +13,7 @@
  * (AI_INTEGRATIONS_OPENAI_*, gpt-4o-mini).
  */
 import type { JobContext, JobTaal, JobVelden, Lezing, Onderwerp } from "@shared/jobRegels";
-import { functieLabel } from "@shared/jobRegels";
+import { functieLabel, isHotelPad } from "@shared/jobRegels";
 import { reserveLezing, valideerLezing } from "@shared/jobLezen";
 
 export function aiBeschikbaar(): boolean {
@@ -31,6 +31,8 @@ const UITLEG_VELDEN = `
 - diensten: "1-2", "3-4" of "5+" diensten per week
 - werkgebied: "tot 25 km", "tot 35 km", "tot 50 km" of een regio (tekst)
 - vervoer: fiets, auto, scooter, ov of iets anders (tekst)
+- hotels: de hotels waar de kandidaat werkte, zoals genoemd (tekst)
+- sterren: "3" (3 sterren of minder), "4" of "5": alleen als de kandidaat zelf het aantal sterren van het beste hotel noemt; nooit zelf afleiden uit een hotelnaam
 - werkmoment: "doordeweeks", "avond_weekend" of "flexibel" (wanneer nodig), wanneer de kandidaat kan werken
 - startdatum: "direct", "twee_weken" (binnen twee weken) of "later", wanneer de kandidaat kan beginnen
 - talen: de talen die de kandidaat noemt, met niveau als dat genoemd wordt (tekst)
@@ -50,8 +52,10 @@ Velden:${UITLEG_VELDEN}
 Geef ook:
 - taal: "nl" als de kandidaat Nederlands schrijft, "en" bij Engels, "anders" bij een andere taal
 - twijfel: alleen als het antwoord iets bevat waar een collega naar moet kijken (bijvoorbeeld een vergunning die verlopen is, of iets wat niet klopt). Kort, in het Nederlands. Anders null.
-- ack: een korte reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt, door iets concreets uit het antwoord te noemen, bijvoorbeeld "Twee jaar achter de bar, dat is mooi." of "Festivals, gezellig druk werk.". Geen vraag, geen beloftes, geen standaardzinnen zoals "Mooi, dank je!" of "Top, bedankt!". Bij een kort of keuze-antwoord (zoals "1 tot 2", "Ja", "Tot 35 km" of een lijstje talen) laat je ack leeg. Laat ack ook leeg als er niets bijzonders in het antwoord staat.
-- vervolgvraag: alleen als de laatste vraag over ervaring ging en de kandidaat werkervaring noemt: één korte vervolgvraag in het ${taal === "en" ? "Engels" : "Nederlands"} over wat de kandidaat daar precies deed, passend bij die plek en bij de functie ${functieLabel(ctx.functie, "nl")}. Vraag niet naar iets wat daar niet voorkomt (bij festivals bijvoorbeeld niet naar diners of tafelbediening, wel naar bar, drankuitgifte of kassa). Eindigt met een vraagteken. Anders weglaten.
+- ack: een korte reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt, door iets concreets uit het antwoord te noemen, bijvoorbeeld "Twee jaar achter de bar, dat is mooi." of "Festivals, gezellig druk werk.". Geen vraag, geen beloftes, geen standaardzinnen zoals "Mooi, dank je!" of "Top, bedankt!". Bij een kort of keuze-antwoord (zoals "1 tot 2", "Ja", "Tot 35 km", "Direct" of een lijstje talen) laat je ack leeg. Herhaal nooit iets wat al eerder gezegd is. Laat ack ook leeg als er niets bijzonders in het antwoord staat.
+${isHotelPad(ctx)
+  ? `- vervolgvraag: alleen als de laatste vraag over ervaring ging en uit het antwoord NIET duidelijk is dat de kandidaat ervaring heeft als ${functieLabel(ctx.functie, "nl")} (bijvoorbeeld alleen "AD", "public areas", "linnenkamer" of ander werk bij housekeeping): één korte, vriendelijke vraag in het ${taal === "en" ? "Engels" : "Nederlands"} of de kandidaat ook als ${functieLabel(ctx.functie, "nl")} werkte, bijvoorbeeld "Heb je ook op de kamers gewerkt?". Vraag niet naar hotels of sterren, die vraagt Job zelf. Past het antwoord wel bij de functie, laat dan weg. Eindigt met een vraagteken.`
+  : `- vervolgvraag: alleen als de laatste vraag over ervaring ging en de kandidaat werkervaring noemt: één korte vervolgvraag in het ${taal === "en" ? "Engels" : "Nederlands"} over wat de kandidaat daar precies deed, passend bij die plek en bij de functie ${functieLabel(ctx.functie, "nl")}. Vraag niet naar iets wat daar niet voorkomt (bij festivals bijvoorbeeld niet naar diners of tafelbediening, wel naar bar, drankuitgifte of kassa). Eindigt met een vraagteken. Anders weglaten.`}
 
 Antwoord uitsluitend met JSON: {"velden": {...}, "taal": "...", "twijfel": null, "ack": "", "vervolgvraag": null}`;
 }

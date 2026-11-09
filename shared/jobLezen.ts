@@ -37,6 +37,8 @@ export function valideerLezing(ruw: any): Lezing {
   const vervoer = tekstOf(v.vervoer, 100); if (vervoer) velden.vervoer = vervoer;
   const talen = tekstOf(v.talen, 300); if (talen) velden.talen = talen;
   if (["doordeweeks", "avond_weekend", "flexibel"].includes(v.werkmoment)) velden.werkmoment = v.werkmoment;
+  const hotels = tekstOf(v.hotels, 300); if (hotels) velden.hotels = hotels;
+  if (["3", "4", "5"].includes(String(v.sterren))) velden.sterren = String(v.sterren) as JobVelden["sterren"];
   if (["direct", "twee_weken", "later"].includes(v.startdatum)) velden.startdatum = v.startdatum;
   if (v.nlOfEn === true || v.nlOfEn === false) velden.nlOfEn = v.nlOfEn;
   if (v.cvParaat === "ja" || v.cvParaat === "nee") velden.cvParaat = v.cvParaat;
@@ -93,6 +95,15 @@ function autorisatie(s: string): Werkautorisatie {
 
 const TALEN_NL_EN = /(nederlands|dutch|engels|english)/i;
 
+/** Sterren van het beste hotel, uit een knop of een eigen antwoord. Bij twijfel de hoogste. */
+export function sterren(s: string): JobVelden["sterren"] {
+  const t = s.toLowerCase();
+  if (/\b5\b|vijf|five/.test(t)) return "5";
+  if (/\b4\b|vier|four/.test(t)) return "4";
+  if (/\b[0-3]\b|drie|twee|een ster|three|two|one star|minder|fewer|less|hostel/.test(t)) return "3";
+  return undefined;
+}
+
 /** Wanneer iemand kan werken, uit een knop of een eigen antwoord. */
 export function werkmoment(s: string): JobVelden["werkmoment"] {
   const t = s.toLowerCase();
@@ -126,7 +137,7 @@ export function reserveLezing(tekst: string, onderwerp: Onderwerp | null): Lezin
   switch (onderwerp) {
     case "ervaring":
       velden.ervaring = s.slice(0, 1000);
-      velden.ervaringNiveau = /^(nee|no|nooit|never|geen|none)\b|geen ervaring|no experience|nog nooit|never worked/i.test(s) ? "geen" : "ervaren";
+      velden.ervaringNiveau = /^(nee|no|nooit|never|geen|none|0|nul|zero)\b|geen ervaring|no experience|nog nooit|never worked|\b(0|nul|geen) jaar|zero years|0 years/i.test(s) ? "geen" : "ervaren";
       if (/(bruiloft|evenement|event|banquet|banqueting|catering|feest|festival|congres)/i.test(s)) velden.specialisatieHint = true;
       break;
     case "functievraag":
@@ -150,6 +161,14 @@ export function reserveLezing(tekst: string, onderwerp: Onderwerp | null): Lezin
     case "werkgebied":
       velden.werkgebied = werkgebied(s) || s.slice(0, 200);
       break;
+    case "hotels":
+      velden.hotels = s.slice(0, 300);
+      break;
+    case "sterren": {
+      const st = sterren(s);
+      if (st) velden.sterren = st;
+      break;
+    }
     case "werkmoment": {
       const w = werkmoment(s);
       if (w) velden.werkmoment = w;

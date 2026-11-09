@@ -12,19 +12,19 @@
 import * as meta from "../whatsapp/metaClient";
 
 export type SjabloonSoort = "start" | "herinnering" | "afspraak";
-export const NAMEN: Record<SjabloonSoort, string> = { start: "job_start_v2", herinnering: "job_herinnering", afspraak: "job_afspraak" };
-/** Eerste versie van het startsjabloon: Job gebruikt hem zolang job_start_v2 nog niet is goedgekeurd. */
+export const NAMEN: Record<SjabloonSoort, string> = { start: "job_start_v3", herinnering: "job_herinnering", afspraak: "job_afspraak" };
+/** Eerste versie van het startsjabloon: Job gebruikt hem zolang job_start_v3 nog niet is goedgekeurd (v2 wordt niet meer gebruikt). */
 export const START_OUD = "job_start";
 
 interface Def { soort: SjabloonSoort; taal: "nl" | "en"; tekst: string; voorbeeld: string[]; knoppen?: string[] }
 
 export const SJABLOON_DEFS: Def[] = [
   { soort: "start", taal: "nl",
-    tekst: "Hi {{1}},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen.\n\nVertel eens: wat is je ervaring met {{3}} tot nu toe?",
-    voorbeeld: ["Lisa", "housekeeping", "housekeeping"] },
+    tekst: "Hi {{1}},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor {{2}}! Ik stel je een paar korte vragen.\n\nVertel eens: hoeveel jaar ervaring heb je {{3}} tot nu toe?",
+    voorbeeld: ["Lisa", "housekeeping", "in de housekeeping"] },
   { soort: "start", taal: "en",
-    tekst: "Hi {{1}},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for {{2}}! I have a few quick questions for you.\n\nTell me: what experience do you have with {{3}} so far?",
-    voorbeeld: ["Lisa", "housekeeping", "housekeeping"] },
+    tekst: "Hi {{1}},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for {{2}}! I have a few quick questions for you.\n\nTell me: how many years of experience do you have {{3}} so far?",
+    voorbeeld: ["Lisa", "housekeeping", "in housekeeping"] },
   { soort: "herinnering", taal: "nl",
     tekst: "Hoi {{1}}, je aanmelding bij EXTRA is nog niet af. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen. Zullen we verder?",
     voorbeeld: ["Noor"], knoppen: ["Verder", "Liever bellen"] },
@@ -40,8 +40,8 @@ export const SJABLOON_DEFS: Def[] = [
 ];
 
 /**
- * De variabelen van het startsjabloon. In job_start_v2 staat de eerste vraag
- * vast ("wat is je ervaring met {{3}} tot nu toe?"), want Meta wil geen
+ * De variabelen van het startsjabloon. In job_start_v3 staat de eerste vraag
+ * vast ("hoeveel jaar ervaring heb je {{3}} tot nu toe?"), want Meta wil geen
  * variabele aan het eind; {{3}} is alleen het werk (ervaringWerk). Het oude
  * sjabloon krijgt de hele vraag.
  */
@@ -152,7 +152,7 @@ export async function sjabloonNaam(soort: SjabloonSoort): Promise<string> {
   if (!s?.ok) return "";
   const klaar = (naam: string) => { const goed = s.lijst.filter((t) => t.naam === naam && t.status === "APPROVED").map((t) => t.taal); return goed.includes("nl") && goed.includes("en"); };
   if (klaar(NAMEN[soort])) return NAMEN[soort];
-  // Start: tot job_start_v2 is goedgekeurd blijft het eerste startsjabloon werken.
+  // Start: tot job_start_v3 is goedgekeurd blijft het eerste startsjabloon werken.
   if (soort === "start" && klaar(START_OUD)) return START_OUD;
   return "";
 }

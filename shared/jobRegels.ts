@@ -42,6 +42,8 @@ export type Onderwerp =
   | "geldigheid"
   | "diensten"
   | "werkgebied"
+  | "hotels"       // hotelfuncties: bij welke hotels (akkoord Max 9 nov 2026)
+  | "sterren"      // hotelfuncties: hoeveel sterren had het beste hotel
   | "werkmoment"
   | "startdatum"
   | "talen"        // oud: vervangen door werkmoment en startdatum (akkoord Max 9 nov 2026)
@@ -50,6 +52,8 @@ export type Onderwerp =
 export type Werkautorisatie = "vrij" | "twv" | "onbekend" | "anders";
 export type Diensten = "1-2" | "3-4" | "5+";
 export type Werkmoment = "doordeweeks" | "avond_weekend" | "flexibel";
+/** Sterren van het beste hotel: "3" betekent 3 of minder. */
+export type Sterren = "3" | "4" | "5";
 export type Startdatum = "direct" | "twee_weken" | "later";
 
 /** Wat Job uit het gesprek verzamelt. Alles optioneel: Job vraagt wat ontbreekt. */
@@ -64,6 +68,12 @@ export interface JobVelden {
   diensten?: Diensten;
   werkgebied?: string;
   vervoer?: string;
+  /** Hotelfuncties: bij welke hotels de kandidaat werkte (tekst). */
+  hotels?: string;
+  /** Hotelfuncties: sterren van het beste hotel. */
+  sterren?: Sterren;
+  /** Hotelfuncties: verduidelijkende vraag van de AI als de ervaring niet duidelijk bij de functie past. */
+  verduidelijking?: string;
   /** Wanneer iemand kan werken (knoppen in het gesprek). */
   werkmoment?: Werkmoment;
   /** Wanneer iemand kan beginnen (knoppen in het gesprek). */
@@ -83,6 +93,8 @@ export interface JobContext {
   hasCv: boolean;
   /** De functie zoals de kandidaat hem koos op het formulier per label (bijv. "front office"). */
   functieNaam?: { nl: string; en: string };
+  /** Het label waarlangs iemand binnenkwam (hotels, events of logistiek). */
+  label?: "hotels" | "events" | "logistiek";
   /** Alleen als er een kennismaking gepland staat, in de taal van het gesprek. */
   afspraak?: { dag: string; tijd: string; wie: string };
 }
@@ -183,12 +195,18 @@ const FUNCTIEVRAAG: Record<string, { nl: string; en: string }> = {
  * variabele aan het eind, dus de vraag zelf staat vast in het sjabloon.
  */
 const ERVARING_WERK: Record<string, { nl: string; en: string }> = {
-  housekeeping: { nl: "housekeeping", en: "housekeeping" },
-  chef: { nl: "werken in een keuken", en: "working in a kitchen" },
-  frontoffice: { nl: "front office", en: "front office work" },
-  logistiek: { nl: "werk in een magazijn of de logistiek", en: "warehouse or logistics work" },
-  horecamedewerker: { nl: "werken in de horeca", en: "working in hospitality" },
+  housekeeping: { nl: "in de housekeeping", en: "in housekeeping" },
+  chef: { nl: "in een keuken", en: "in a kitchen" },
+  afwas: { nl: "in een keuken", en: "in a kitchen" },
+  frontoffice: { nl: "op een front office", en: "at a front office" },
+  logistiek: { nl: "in een magazijn of de logistiek", en: "in a warehouse or logistics" },
+  horecamedewerker: { nl: "in de horeca", en: "in hospitality" },
 };
+
+/** Hotelfuncties krijgen na de ervaring de vragen over hotels en sterren in plaats van de functievraag. */
+export function isHotelPad(ctx: JobContext): boolean {
+  return ctx.label === "hotels" || ctx.functie === "housekeeping" || ctx.functie === "frontoffice";
+}
 export function ervaringWerk(functie: string, taal: JobTaal): string {
   return (ERVARING_WERK[functie] || ERVARING_WERK.horecamedewerker)[taal];
 }
@@ -199,7 +217,10 @@ const T = {
   nl: {
     welkom: (v: string, f: string) => `Hi ${v},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor ${f}! Ik stel je een paar korte vragen.`,
     disclaimer: "Je praat met Job, een AI. Typ MENS voor een collega of ENGLISH om te wisselen.",
-    ervaring: (functie: string) => `Vertel eens: wat is je ervaring met ${ervaringWerk(functie, "nl")} tot nu toe?`,
+    ervaring: (functie: string) => `Vertel eens: hoeveel jaar ervaring heb je ${ervaringWerk(functie, "nl")} tot nu toe?`,
+    hotels: "Bij welke hotels heb je gewerkt?",
+    sterren: "Hoeveel sterren had het beste hotel waar je werkte?",
+    sterrenKeuzes: ["3 of minder", "4 sterren", "5 sterren"],
     specialisatie: "Dan zet ik evenementen en banqueting erbij als specialisatie. Goed?",
     specialisatieKeuzes: ["Ja, graag", "Liever niet"],
     werkautorisatie: "Nog één praktische vraag over werken in Nederland. Wat staat er op je verblijfsdocument bij arbeid?",
@@ -253,7 +274,10 @@ const T = {
   en: {
     welkom: (v: string, f: string) => `Hi ${v},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for ${f}! I have a few quick questions for you.`,
     disclaimer: "You're chatting with Job, an AI. Type HUMAN for a colleague or NEDERLANDS to switch.",
-    ervaring: (functie: string) => `Tell me: what experience do you have with ${ervaringWerk(functie, "en")} so far?`,
+    ervaring: (functie: string) => `Tell me: how many years of experience do you have ${ervaringWerk(functie, "en")} so far?`,
+    hotels: "Which hotels have you worked at?",
+    sterren: "How many stars did the best hotel you worked at have?",
+    sterrenKeuzes: ["3 or fewer", "4 stars", "5 stars"],
     specialisatie: "Shall I add events and banqueting as a specialisation?",
     specialisatieKeuzes: ["Yes, please", "Rather not"],
     werkautorisatie: "One practical question about working in the Netherlands. What does your residence document say about work?",
@@ -315,7 +339,14 @@ export function teksten(taal: JobTaal) {
 /** De volgende vraag die Job moet stellen, of null als alles bekend is. */
 export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | null {
   if (!v.ervaring) return "ervaring";
-  if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) return "functievraag";
+  if (isHotelPad(ctx)) {
+    // Hotels: alleen een verduidelijking als de AI die nodig vond, dan hotels en sterren.
+    if (v.ervaringNiveau !== "geen") {
+      if (v.verduidelijking && v.functievraag === undefined) return "functievraag";
+      if (!v.hotels) return "hotels";
+      if (!v.sterren) return "sterren";
+    }
+  } else if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) return "functievraag";
   if (ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) return "specialisatie";
   if (ctx.nationalityZone === "NON_EU" && !v.werkautorisatie) return "werkautorisatie";
   if (v.werkautorisatie === "vrij" && v.geldigTot === undefined) return "geldigheid";
@@ -332,6 +363,7 @@ export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, veld
   switch (onderwerp) {
     case "ervaring": return { tekst: t.ervaring(ctx.functie) };
     case "functievraag":
+      if (velden?.verduidelijking) return { tekst: velden.verduidelijking };
       if (ctx.functie === "horecamedewerker" && FESTIVAL.test(velden?.ervaring || "")) return { tekst: FUNCTIEVRAAG_FESTIVAL[taal] };
       return { tekst: FUNCTIEVRAAG[ctx.functie]?.[taal] ?? t.ervaring(ctx.functie) };
     case "specialisatie": return { tekst: t.specialisatie, keuzes: t.specialisatieKeuzes };
@@ -339,6 +371,8 @@ export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, veld
     case "geldigheid": return { tekst: t.geldigheid };
     case "diensten": return { tekst: t.diensten, keuzes: t.dienstenKeuzes };
     case "werkgebied": return { tekst: t.werkgebied, keuzes: t.werkgebiedKeuzes };
+    case "hotels": return { tekst: t.hotels };
+    case "sterren": return { tekst: t.sterren, keuzes: t.sterrenKeuzes };
     case "werkmoment": return { tekst: t.werkmoment, keuzes: t.werkmomentKeuzes };
     case "startdatum": return { tekst: t.startdatum, keuzes: t.startdatumKeuzes };
     case "talen": return { tekst: t.talen };
@@ -363,6 +397,8 @@ export function openOnderwerpen(v: JobVelden, ctx: JobContext): { vragen: number
     else if (o === "geldigheid") kopie.geldigTot = "x";
     else if (o === "diensten") kopie.diensten = "1-2";
     else if (o === "werkgebied") kopie.werkgebied = "x";
+    else if (o === "hotels") kopie.hotels = "x";
+    else if (o === "sterren") kopie.sterren = "4";
     else if (o === "werkmoment") kopie.werkmoment = "flexibel";
     else if (o === "startdatum") kopie.startdatum = "direct";
     else if (o === "talen") kopie.talen = "x";
@@ -617,7 +653,12 @@ function verwerkLos(
     }
 
     // Korte reacties die het ontwerp voorschrijft
-    if (lezing.ack) berichten.push({ tekst: lezing.ack, reactie: true });
+    // Een korte reactie alleen na een open vraag; na een knop of keuze zou hij herhalen wat al gezegd is.
+    if (lezing.ack && ["ervaring", "functievraag", "hotels"].includes(vorigOnderwerp || "")) berichten.push({ tekst: lezing.ack, reactie: true });
+    // Hotelfuncties: past de ervaring niet duidelijk bij de functie, dan vraagt Job eerst door.
+    if (vorigOnderwerp === "ervaring" && isHotelPad(ctx) && lezing.vervolgvraag && state.velden.ervaringNiveau !== "geen") {
+      state.velden.verduidelijking = lezing.vervolgvraag;
+    }
     if (!oudeAutorisatie && state.velden.werkautorisatie && state.velden.werkautorisatie !== "vrij") {
       berichten.push({ tekst: t().werkautorisatieCollega, reactie: true });
     }
@@ -628,6 +669,7 @@ function verwerkLos(
       berichten.push({ tekst: t().geenErvaringOk, reactie: true });
     }
     // Een vraag die niet beantwoord kon worden, stelt Job niet eindeloos opnieuw.
+    if (vorigOnderwerp === "hotels" && !state.velden.hotels) state.velden.hotels = (invoer.tekst || "").trim().slice(0, 300) || "-";
     if (vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
       state.velden.functievraag = (invoer.tekst || "").trim() || "-";
     }
@@ -643,7 +685,7 @@ function verwerkLos(
     state.status = "bezig";
     state.laatsteOnderwerp = onderwerp;
     const v = vraag(onderwerp, state.taal, ctx, state.velden);
-    if (onderwerp === "functievraag" && lezing?.vervolgvraag) v.tekst = lezing.vervolgvraag;
+    if (onderwerp === "functievraag" && lezing?.vervolgvraag && !isHotelPad(ctx)) v.tekst = lezing.vervolgvraag;
     berichten.push(v);
     return { state, berichten, acties };
   }
@@ -740,6 +782,11 @@ export const WERKMOMENT_TEKST: Record<Werkmoment, { nl: string; en: string }> = 
   avond_weekend: { nl: "Avond en weekend", en: "Evenings and weekends" },
   flexibel: { nl: "Wanneer nodig", en: "Whenever needed" },
 };
+export const STERREN_TEKST: Record<Sterren, { nl: string; en: string }> = {
+  "3": { nl: "3 sterren of minder", en: "3 stars or fewer" },
+  "4": { nl: "4 sterren", en: "4 stars" },
+  "5": { nl: "5 sterren", en: "5 stars" },
+};
 export const STARTDATUM_TEKST: Record<Startdatum, { nl: string; en: string }> = {
   direct: { nl: "Direct", en: "Right away" },
   twee_weken: { nl: "Binnen 2 weken", en: "Within 2 weeks" },
@@ -763,7 +810,10 @@ export function samenvatting(v: JobVelden, ctx: JobContext, taal: JobTaal = "nl"
  */
 export function profielVelden(v: JobVelden): Record<string, string> {
   const uit: Record<string, string> = {};
-  if (v.ervaring) uit.previousExperience = v.ervaring.slice(0, 2000);
+  if (v.ervaring) {
+    const hotel = [v.hotels && v.hotels !== "-" ? `Hotels: ${v.hotels}` : "", v.sterren ? `beste hotel ${STERREN_TEKST[v.sterren].nl}` : ""].filter(Boolean).join(", ");
+    uit.previousExperience = (hotel ? `${v.ervaring}. ${hotel}` : v.ervaring).slice(0, 2000);
+  }
   const beschikbaar = [v.diensten ? DIENSTEN_TEKST[v.diensten] : "", v.werkmoment ? WERKMOMENT_TEKST[v.werkmoment].nl.toLowerCase() : ""].filter(Boolean).join(", ");
   if (beschikbaar) uit.availability = beschikbaar;
   if (v.talen) uit.language = v.talen.slice(0, 500);

@@ -14,7 +14,7 @@ function test(naam: string, ok: boolean, uitleg = "") {
 
 async function main() {
   test("zes sjablonen: drie soorten in NL en EN", SJABLOON_DEFS.length === 6 && (["start", "herinnering", "afspraak"] as const).every((s) => ["nl", "en"].every((t) => SJABLOON_DEFS.some((d) => d.soort === s && d.taal === t))));
-  test("namen zoals in docs/JOB.md", NAMEN.start === "job_start_v2" && START_OUD === "job_start" && NAMEN.herinnering === "job_herinnering" && NAMEN.afspraak === "job_afspraak");
+  test("namen zoals in docs/JOB.md", NAMEN.start === "job_start_v3" && START_OUD === "job_start" && NAMEN.herinnering === "job_herinnering" && NAMEN.afspraak === "job_afspraak");
   // Startsjabloon v2: de kern van elke eerste vraag past in "Vertel eens: {{3}}?" / "Tell me: {{3}}?"
   for (const taal of ["nl", "en"] as const) {
     for (const functie of ["housekeeping", "chef", "logistiek", "horecamedewerker", "frontoffice"]) {

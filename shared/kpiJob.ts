@@ -75,7 +75,7 @@ const VERDER = ["beoordelen", "ref_doc_check", "extra_check", "onboarding"];
 
 const ONDERWERP_LABEL: Record<string, string> = {
   ervaring: "Ervaring", functievraag: "Vervolgvraag", specialisatie: "Specialisatie", werkautorisatie: "Werkvergunning",
-  geldigheid: "Geldigheid document", diensten: "Diensten", werkgebied: "Regio", werkmoment: "Wanneer werken",
+  geldigheid: "Geldigheid document", diensten: "Diensten", werkgebied: "Regio", hotels: "Hotels", sterren: "Sterren", werkmoment: "Wanneer werken",
   startdatum: "Wanneer beginnen", talen: "Talen", cv: "Cv sturen",
 };
 

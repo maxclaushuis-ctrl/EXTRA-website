@@ -41,7 +41,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   let r = start(ctx, "nl", NU);
   test("Lisa: welkom noemt naam en functie", r.berichten[0].tekst.startsWith("Hi Lisa,\n\nIk ben Job") && r.berichten[0].tekst.includes("bediening en bar"));
   test("Lisa: welkom zegt dat Job een AI-recruiter is", r.berichten[0].tekst.includes("AI-recruiter"));
-  test("Lisa: eerste vraag gaat over ervaring", r.state.laatsteOnderwerp === "ervaring" && laatste(r).tekst === "Vertel eens: wat is je ervaring met werken in de horeca tot nu toe?");
+  test("Lisa: eerste vraag gaat over ervaring", r.state.laatsteOnderwerp === "ervaring" && laatste(r).tekst === "Vertel eens: hoeveel jaar ervaring heb je in de horeca tot nu toe?");
 
   r = antwoord(r, ctx, "Twee zomers bij een strandtent in Zandvoort, daar deden we ook bruiloften en grote groepen. Nu werk ik op zaterdag in een lunchroom. Ik studeer, dus meestal kan ik twee dagen per week, en ik fiets overal heen");
   test("Lisa: één antwoord vult ervaring, diensten en vervoer", !!r.state.velden.ervaring && r.state.velden.diensten === "1-2" && r.state.velden.vervoer === "fiets", JSON.stringify(r.state.velden));
@@ -79,8 +79,11 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   let r = start(ctx, "nl", NU);
   r = antwoord(r, ctx, "Hi, sorry, I don't speak Dutch. I have 2 years in a hotel in Lisbon");
   test("Maria: Job schakelt naar Engels", r.state.taal === "en");
-  test("Maria: volgende vraag in het Engels", /rooms/i.test(laatste(r).tekst), laatste(r).tekst);
-  r = antwoord(r, ctx, "Around 14 to 16");
+  test("Maria: housekeeping, dus de vraag naar hotels, in het Engels", laatste(r).tekst === "Which hotels have you worked at?", laatste(r).tekst);
+  r = antwoord(r, ctx, "Pestana and a Marriott");
+  test("Maria: hotels opgeslagen, dan de sterren met knoppen", r.state.velden.hotels === "Pestana and a Marriott" && r.state.laatsteOnderwerp === "sterren" && (laatste(r).keuzes || []).length === 3);
+  r = antwoord(r, ctx, "5 stars");
+  test("Maria: vijf sterren", r.state.velden.sterren === "5");
   r = antwoord(r, ctx, "3 or 4 shifts");
   test("Maria: geen werkautorisatievraag (EU)", r.state.laatsteOnderwerp === "werkgebied");
   r = antwoord(r, ctx, "Up to 35 km");
@@ -127,6 +130,47 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   r = antwoord(r, ctx, "Doordeweeks");
   r = antwoord(r, ctx, "Direct");
   test("Ahmed: alles in orde, cv-controle", r.state.status === "cv_controle");
+}
+
+// ─── 4b. Hotelfuncties: jaren, hotels, sterren (akkoord Max 9 nov 2026) ─────
+{
+  const ctx: JobContext = { voornaam: "Noor", functie: "housekeeping", nationalityZone: "NL", hasCv: true, label: "hotels" };
+  let r = start(ctx, "nl", NU);
+  test("Noor: eerste vraag in jaren", laatste(r).tekst === "Vertel eens: hoeveel jaar ervaring heb je in de housekeeping tot nu toe?");
+  // AI ziet dat AD niet duidelijk housekeeping is en vraagt door
+  r = verwerk(r.state, ctx, { tekst: "2 jaar AD gedaan" }, { velden: { ervaring: "2 jaar AD", ervaringNiveau: "ervaren" }, taal: "nl", twijfel: null, ack: "Twee jaar AD, goed om te weten.", vervolgvraag: "Heb je ook op de kamers gewerkt?" }, later(1));
+  test("Noor: bij AD vraagt Job door, met de reactie ervoor", laatste(r).tekst === "Twee jaar AD, goed om te weten. Heb je ook op de kamers gewerkt?" && r.state.laatsteOnderwerp === "functievraag", laatste(r).tekst);
+  r = antwoord(r, ctx, "Ja, ook kamers");
+  test("Noor: daarna de hotels", r.state.laatsteOnderwerp === "hotels");
+  r = antwoord(r, ctx, "Okura en Ibis Centraal");
+  r = antwoord(r, ctx, "4 sterren");
+  test("Noor: vier sterren, daarna diensten", r.state.velden.sterren === "4" && r.state.laatsteOnderwerp === "diensten");
+  test("Noor: geen vraag naar kamers per dienst", !alleTekst(r).includes("kamers maakte je"));
+  // Een reactie na een knop wordt niet herhaald
+  const k = verwerk(r.state, ctx, { tekst: "3 tot 4" }, { velden: { diensten: "3-4" }, taal: "nl", twijfel: null, ack: "Twee jaar AD, goed om te weten." }, later(5));
+  test("Noor: geen reactie na een keuze-antwoord", !alleTekst(k).includes("Twee jaar AD"));
+  test("Noor: profiel noemt hotels en sterren", /Okura en Ibis Centraal.*4 sterren/.test(profielVelden(k.state.velden).previousExperience || ""));
+
+  // Past het antwoord wel: geen doorvraag, meteen hotels
+  let p = start(ctx, "nl", NU);
+  p = verwerk(p.state, ctx, { tekst: "3 jaar housekeeping" }, { velden: { ervaring: "3 jaar housekeeping", ervaringNiveau: "ervaren" }, taal: "nl", twijfel: null, ack: "" }, later(1));
+  test("Noor 2: past het, dan meteen de hotels", p.state.laatsteOnderwerp === "hotels");
+
+  // Geen ervaring: geen hotelvragen
+  let z = start(ctx, "nl", NU);
+  z = antwoord(z, ctx, "0 jaar");
+  test("Noor 3: 0 jaar is geen ervaring, geen hotelvragen", z.state.velden.ervaringNiveau === "geen" && z.state.laatsteOnderwerp === "diensten" && alleTekst(z).includes("veel collega's zijn zo begonnen"));
+
+  // Keuken via Hotels krijgt ook de hotelvragen; bediening via Events niet
+  const keuken: JobContext = { voornaam: "Daan", functie: "chef", nationalityZone: "NL", hasCv: true, label: "hotels" };
+  let kk = start(keuken, "nl", NU);
+  kk = antwoord(kk, keuken, "4 jaar");
+  test("Daan: keuken via Hotels, dan de hotels", kk.state.laatsteOnderwerp === "hotels");
+  const events: JobContext = { voornaam: "Sem", functie: "horecamedewerker", nationalityZone: "NL", hasCv: true, label: "events" };
+  let ev = start(events, "nl", NU);
+  ev = antwoord(ev, events, "2 jaar achter de bar");
+  test("Sem: Events houdt de eigen vervolgvraag", ev.state.laatsteOnderwerp === "functievraag");
+  test("Reserve: sterren", reserveLezing("3 of minder", "sterren").velden.sterren === "3" && reserveLezing("vier", "sterren").velden.sterren === "4" && reserveLezing("4 of 5", "sterren").velden.sterren === "5");
 }
 
 // ─── 5. Uitzonderingen ───────────────────────────────────────────────────────

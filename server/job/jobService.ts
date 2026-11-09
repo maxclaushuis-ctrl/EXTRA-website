@@ -34,6 +34,7 @@ import {
   type Bezet, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
 import { lees } from "./jobAi";
+import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
 import { stuurBevestigingsmail, stuurHerinneringsmail, stuurStartmail, stuurCvMail } from "./jobMails";
@@ -61,8 +62,15 @@ export function gesprekPad(token: string): string {
   return `/job-gesprek?token=${encodeURIComponent(token)}`;
 }
 
+/**
+ * Korte link naar het webgesprek: /j/<token>, met /cv of /plan voor de
+ * uploadknop of de planning (jobRoutes stuurt door naar /job-gesprek).
+ * Andere extra's (bijv. &stop=1) gaan via de lange vorm.
+ */
 export function gesprekLink(token: string, extra = ""): string {
-  return `${basisUrl()}/job-gesprek?token=${encodeURIComponent(token)}${extra}`;
+  const kort = extra === "" ? "" : extra === "&cv=1" ? "/cv" : extra === "&plannen=1" ? "/plan" : null;
+  if (kort === null) return `${basisUrl()}/job-gesprek?token=${encodeURIComponent(token)}${extra}`;
+  return `${basisUrl()}/j/${encodeURIComponent(token)}${kort}`;
 }
 
 /** De sjablonen die Job mag gebruiken: een Secret, of het eigen sjabloon zodra Meta het goedkeurde (jobSjablonen.ts). */
@@ -199,6 +207,7 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
     voornaam: c.firstName,
     functie: c.functieEersteKeus === "afwas" ? "afwas" : c.functionType,
     functieNaam: functieNaamVan(c),
+    label: brancheVan(c.functionType, null, isAfwas(c as any), ingangBranche(c.bronDetails)),
     nationalityZone: (c.nationalityZone as any) || null,
     hasCv: !!c.hasCv,
     afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,
@@ -357,8 +366,9 @@ async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
 
 // ─── Starten ─────────────────────────────────────────────────────────────────
 
+/** 16 tekens (96 bits): kort genoeg voor een nette link in WhatsApp, lang genoeg om niet te raden. */
 function nieuwToken(): string {
-  return randomBytes(24).toString("base64url");
+  return randomBytes(12).toString("base64url");
 }
 
 /**
@@ -399,7 +409,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
     const eersteVraag = r.berichten[r.berichten.length - 1].tekst;
     const { startParameters } = await import("./jobSjablonen");
     const ok = await verstuurSjabloon(candidateId, waNummer(c), sjabloon, taal,
-      startParameters(sjabloon, c.firstName, functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(c.functionType, taal)),
+      startParameters(sjabloon, c.firstName, functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(ctx.functie, taal)),
       `${r.berichten[0].tekst}\n\n${eersteVraag}`);
     if (!ok) {
       await db.update(jobGesprekken).set({ kanaal: "web" }).where(eq(jobGesprekken.id, g.id));

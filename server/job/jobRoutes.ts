@@ -94,6 +94,17 @@ export function registerJobRoutes(express: Express, adminMiddleware: Middleware)
   };
   // ─── Openbaar, met token ──────────────────────────────────────────────────
 
+  // Korte link uit WhatsApp en mail (job.gesprekLink): /j/<token>, /j/<token>/cv, /j/<token>/plan.
+  const kort = (actie: string) => (req: Request, res: Response) => {
+    const token = String(req.params.token || "");
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(token)) return res.redirect(302, "/");
+    res.set("X-Robots-Tag", "noindex");
+    return res.redirect(302, `/job-gesprek?token=${encodeURIComponent(token)}${actie}`);
+  };
+  app.get("/j/:token", kort(""));
+  app.get("/j/:token/cv", kort("&cv=1"));
+  app.get("/j/:token/plan", kort("&plannen=1"));
+
   app.get("/api/job/:token", chatLimiter, async (req: Request, res: Response) => {
     const g = await gesprekVoorKandidaat(req, res);
     if (!g) return;
