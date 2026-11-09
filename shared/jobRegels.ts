@@ -42,11 +42,15 @@ export type Onderwerp =
   | "geldigheid"
   | "diensten"
   | "werkgebied"
-  | "talen"
+  | "werkmoment"
+  | "startdatum"
+  | "talen"        // oud: vervangen door werkmoment en startdatum (akkoord Max 9 nov 2026)
   | "cv";
 
 export type Werkautorisatie = "vrij" | "twv" | "onbekend" | "anders";
 export type Diensten = "1-2" | "3-4" | "5+";
+export type Werkmoment = "doordeweeks" | "avond_weekend" | "flexibel";
+export type Startdatum = "direct" | "twee_weken" | "later";
 
 /** Wat Job uit het gesprek verzamelt. Alles optioneel: Job vraagt wat ontbreekt. */
 export interface JobVelden {
@@ -60,6 +64,10 @@ export interface JobVelden {
   diensten?: Diensten;
   werkgebied?: string;
   vervoer?: string;
+  /** Wanneer iemand kan werken (knoppen in het gesprek). */
+  werkmoment?: Werkmoment;
+  /** Wanneer iemand kan beginnen (knoppen in het gesprek). */
+  startdatum?: Startdatum;
   talen?: string;
   /** false = spreekt geen Nederlands en geen Engels: harde no-go voor de planner. */
   nlOfEn?: boolean;
@@ -190,6 +198,10 @@ const T = {
     werkgebied: "In welke regio wil je werken? Kies hoe ver je wilt reizen vanaf je huis, of typ een regio.",
     werkgebiedKeuzes: ["Tot 25 km", "Tot 35 km", "Tot 50 km"],
     talen: "Welke talen spreek je?",
+    werkmoment: "Wanneer kun je werken?",
+    werkmomentKeuzes: ["Doordeweeks", "Avond en weekend", "Wanneer nodig"],
+    startdatum: "Wanneer kun je beginnen?",
+    startdatumKeuzes: ["Direct", "Binnen 2 weken", "Later"],
     cv: "Laatste vraag: heb je je cv paraat?",
     cvKeuzes: ["Ja", "Nee"],
     cvUpload: "Top! Upload je cv hier, dat kan als pdf of foto.",
@@ -244,6 +256,10 @@ const T = {
     werkgebied: "Which area would you like to work in? Choose how far you'd travel from home, or type an area.",
     werkgebiedKeuzes: ["Up to 25 km", "Up to 35 km", "Up to 50 km"],
     talen: "Which languages do you speak?",
+    werkmoment: "When can you work?",
+    werkmomentKeuzes: ["Weekdays", "Evenings and weekends", "Whenever needed"],
+    startdatum: "When can you start?",
+    startdatumKeuzes: ["Right away", "Within 2 weeks", "Later"],
     cv: "Last question: do you have your CV ready?",
     cvKeuzes: ["Yes", "No"],
     cvUpload: "Great! Upload your CV here, a PDF or a photo is fine.",
@@ -297,7 +313,8 @@ export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | nu
   if (v.werkautorisatie === "vrij" && v.geldigTot === undefined) return "geldigheid";
   if (!v.diensten) return "diensten";
   if (!v.werkgebied) return "werkgebied";
-  if (!v.talen) return "talen";
+  if (!v.werkmoment) return "werkmoment";
+  if (!v.startdatum) return "startdatum";
   if (!ctx.hasCv && !v.cvParaat) return "cv";
   return null;
 }
@@ -314,6 +331,8 @@ export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, veld
     case "geldigheid": return { tekst: t.geldigheid };
     case "diensten": return { tekst: t.diensten, keuzes: t.dienstenKeuzes };
     case "werkgebied": return { tekst: t.werkgebied, keuzes: t.werkgebiedKeuzes };
+    case "werkmoment": return { tekst: t.werkmoment, keuzes: t.werkmomentKeuzes };
+    case "startdatum": return { tekst: t.startdatum, keuzes: t.startdatumKeuzes };
     case "talen": return { tekst: t.talen };
     case "cv": return { tekst: t.cv, keuzes: t.cvKeuzes };
   }
@@ -336,6 +355,8 @@ export function openOnderwerpen(v: JobVelden, ctx: JobContext): { vragen: number
     else if (o === "geldigheid") kopie.geldigTot = "x";
     else if (o === "diensten") kopie.diensten = "1-2";
     else if (o === "werkgebied") kopie.werkgebied = "x";
+    else if (o === "werkmoment") kopie.werkmoment = "flexibel";
+    else if (o === "startdatum") kopie.startdatum = "direct";
     else if (o === "talen") kopie.talen = "x";
   }
   return { vragen, cv };
@@ -705,6 +726,17 @@ export function herinnering(s: JobState, ctx: JobContext, soort: Herinnering, nu
 // ─── Velden naar het kandidaatprofiel ────────────────────────────────────────
 
 const DIENSTEN_TEKST: Record<Diensten, string> = { "1-2": "1 tot 2 diensten per week", "3-4": "3 tot 4 diensten per week", "5+": "5 of meer diensten per week" };
+/** Leesbare tekst voor de planner (kaart, profiel). */
+export const WERKMOMENT_TEKST: Record<Werkmoment, { nl: string; en: string }> = {
+  doordeweeks: { nl: "Doordeweeks", en: "Weekdays" },
+  avond_weekend: { nl: "Avond en weekend", en: "Evenings and weekends" },
+  flexibel: { nl: "Wanneer nodig", en: "Whenever needed" },
+};
+export const STARTDATUM_TEKST: Record<Startdatum, { nl: string; en: string }> = {
+  direct: { nl: "Direct", en: "Right away" },
+  twee_weken: { nl: "Binnen 2 weken", en: "Within 2 weeks" },
+  later: { nl: "Later", en: "Later" },
+};
 
 /** Korte samenvatting voor de planner en de bevestigingsmail ("Wat je Job vertelde"). */
 export function samenvatting(v: JobVelden, ctx: JobContext, taal: JobTaal = "nl"): string {
@@ -712,6 +744,8 @@ export function samenvatting(v: JobVelden, ctx: JobContext, taal: JobTaal = "nl"
   if (v.specialisatie === "ja") delen[0] += taal === "nl" ? ", ook evenementen en banqueting" : ", also events and banqueting";
   if (v.diensten) delen.push(taal === "nl" ? DIENSTEN_TEKST[v.diensten] : { "1-2": "1 to 2 shifts a week", "3-4": "3 to 4 shifts a week", "5+": "5 or more shifts a week" }[v.diensten]);
   if (v.werkgebied) delen.push(v.werkgebied);
+  if (v.werkmoment) delen.push(WERKMOMENT_TEKST[v.werkmoment][taal].toLowerCase());
+  if (v.startdatum) delen.push(taal === "nl" ? `beginnen: ${STARTDATUM_TEKST[v.startdatum].nl.toLowerCase()}` : `start: ${STARTDATUM_TEKST[v.startdatum].en.toLowerCase()}`);
   return delen.join(" · ");
 }
 
@@ -722,7 +756,8 @@ export function samenvatting(v: JobVelden, ctx: JobContext, taal: JobTaal = "nl"
 export function profielVelden(v: JobVelden): Record<string, string> {
   const uit: Record<string, string> = {};
   if (v.ervaring) uit.previousExperience = v.ervaring.slice(0, 2000);
-  if (v.diensten) uit.availability = DIENSTEN_TEKST[v.diensten];
+  const beschikbaar = [v.diensten ? DIENSTEN_TEKST[v.diensten] : "", v.werkmoment ? WERKMOMENT_TEKST[v.werkmoment].nl.toLowerCase() : ""].filter(Boolean).join(", ");
+  if (beschikbaar) uit.availability = beschikbaar;
   if (v.talen) uit.language = v.talen.slice(0, 500);
   return uit;
 }

@@ -36,6 +36,8 @@ export function valideerLezing(ruw: any): Lezing {
   const gebied = tekstOf(v.werkgebied, 200); if (gebied) velden.werkgebied = gebied;
   const vervoer = tekstOf(v.vervoer, 100); if (vervoer) velden.vervoer = vervoer;
   const talen = tekstOf(v.talen, 300); if (talen) velden.talen = talen;
+  if (["doordeweeks", "avond_weekend", "flexibel"].includes(v.werkmoment)) velden.werkmoment = v.werkmoment;
+  if (["direct", "twee_weken", "later"].includes(v.startdatum)) velden.startdatum = v.startdatum;
   if (v.nlOfEn === true || v.nlOfEn === false) velden.nlOfEn = v.nlOfEn;
   if (v.cvParaat === "ja" || v.cvParaat === "nee") velden.cvParaat = v.cvParaat;
   const zoekt = tekstOf(v.zoekt, 200); if (zoekt) velden.zoekt = zoekt;
@@ -91,6 +93,24 @@ function autorisatie(s: string): Werkautorisatie {
 
 const TALEN_NL_EN = /(nederlands|dutch|engels|english)/i;
 
+/** Wanneer iemand kan werken, uit een knop of een eigen antwoord. */
+export function werkmoment(s: string): JobVelden["werkmoment"] {
+  const t = s.toLowerCase();
+  if (/wanneer nodig|altijd|flexibel|maakt niet uit|whenever|any ?time|always|flexible|alles/.test(t)) return "flexibel";
+  if (/avond|weekend|evening|nacht|night/.test(t)) return "avond_weekend";
+  if (/doordeweeks|weekdag|weekday|overdag|daytime|maandag tot vrijdag|monday to friday/.test(t)) return "doordeweeks";
+  return undefined;
+}
+
+/** Wanneer iemand kan beginnen, uit een knop of een eigen antwoord. */
+export function startdatum(s: string): JobVelden["startdatum"] {
+  const t = s.toLowerCase();
+  if (/binnen 2 weken|binnen twee weken|within 2 weeks|within two weeks|volgende week|next week|2 weken|two weeks/.test(t)) return "twee_weken";
+  if (/^later$|over een maand|volgende maand|next month|in a month|na de zomer|later/.test(t)) return "later";
+  if (/direct|meteen|nu\b|asap|zo snel mogelijk|right away|immediately|now|morgen|tomorrow|vandaag|today/.test(t)) return "direct";
+  return undefined;
+}
+
 /**
  * Leest één antwoord met eenvoudige regels. Bewust voorzichtig: bij twijfel
  * laat de reserve een veld leeg (dan vraagt Job het nog eens) in plaats van
@@ -130,6 +150,16 @@ export function reserveLezing(tekst: string, onderwerp: Onderwerp | null): Lezin
     case "werkgebied":
       velden.werkgebied = werkgebied(s) || s.slice(0, 200);
       break;
+    case "werkmoment": {
+      const w = werkmoment(s);
+      if (w) velden.werkmoment = w;
+      break;
+    }
+    case "startdatum": {
+      const d = startdatum(s);
+      if (d) velden.startdatum = d;
+      break;
+    }
     case "talen":
       velden.talen = s.slice(0, 300);
       if (TALEN_NL_EN.test(s)) velden.nlOfEn = true;

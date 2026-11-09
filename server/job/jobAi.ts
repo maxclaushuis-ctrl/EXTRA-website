@@ -31,6 +31,8 @@ const UITLEG_VELDEN = `
 - diensten: "1-2", "3-4" of "5+" diensten per week
 - werkgebied: "tot 25 km", "tot 35 km", "tot 50 km" of een regio (tekst)
 - vervoer: fiets, auto, scooter, ov of iets anders (tekst)
+- werkmoment: "doordeweeks", "avond_weekend" of "flexibel" (wanneer nodig), wanneer de kandidaat kan werken
+- startdatum: "direct", "twee_weken" (binnen twee weken) of "later", wanneer de kandidaat kan beginnen
 - talen: de talen die de kandidaat noemt, met niveau als dat genoemd wordt (tekst)
 - nlOfEn: false ALLEEN als duidelijk is dat de kandidaat geen Nederlands én geen Engels spreekt; true als Nederlands of Engels genoemd wordt; anders weglaten
 - cvParaat: "ja" of "nee", alleen bij de vraag of het cv paraat is

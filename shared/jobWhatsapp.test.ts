@@ -25,7 +25,7 @@ for (const [taal, t] of [["nl", nl], ["en", en]] as const) {
   for (const [naam, waarde] of Object.entries(t)) {
     if (!/Keuzes$/.test(naam) || !Array.isArray(waarde)) continue;
     const k = whatsappKnoppen({ tekst: "x", keuzes: waarde as string[] });
-    test(`${taal} ${naam}: knoppen passen`, !!k && k.every((x) => x.length <= 20));
+    test(`${taal} ${naam}: knoppen passen zonder afgekapte tekst`, !!k && k.every((x) => x.length <= 20) && (waarde as string[]).every((w) => w.length <= 20 || knopTitel(w) !== w.slice(0, 20)));
   }
 }
 

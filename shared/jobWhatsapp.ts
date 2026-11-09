@@ -10,6 +10,7 @@ const KORTE_KNOP: Record<string, string> = {
   "Arbeid vrij toegestaan": "Vrij toegestaan",
   "Work freely permitted": "Freely permitted",
   "Work permit (TWV) required": "TWV required",
+  "Evenings and weekends": "Evenings, weekends",
 };
 export function knopTitel(keuze: string): string {
   return keuze.length <= 20 ? keuze : (KORTE_KNOP[keuze] || keuze.slice(0, 20));

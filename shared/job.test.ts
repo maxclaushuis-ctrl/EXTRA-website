@@ -55,8 +55,11 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Lisa: geen vraag over werkautorisatie (Nederlands) en diensten overgeslagen", r.state.laatsteOnderwerp === "werkgebied", String(r.state.laatsteOnderwerp));
   r = antwoord(r, ctx, "Tot 25 km. Amsterdam en Haarlem vind ik allebei prima");
   test("Lisa: werkgebied tot 25 km", r.state.velden.werkgebied === "tot 25 km");
-  test("Lisa: daarna talen", r.state.laatsteOnderwerp === "talen");
-  r = antwoord(r, ctx, "Nederlands, Engels goed en een beetje Spaans");
+  test("Lisa: daarna wanneer je kunt werken, met drie keuzes", r.state.laatsteOnderwerp === "werkmoment" && (laatste(r).keuzes || []).length === 3);
+  r = antwoord(r, ctx, "Avond en weekend");
+  test("Lisa: werkmoment avond en weekend, dan wanneer je kunt beginnen", r.state.velden.werkmoment === "avond_weekend" && r.state.laatsteOnderwerp === "startdatum");
+  r = antwoord(r, ctx, "Direct");
+  test("Lisa: kan direct beginnen", r.state.velden.startdatum === "direct");
   test("Lisa: als laatste het cv", r.state.laatsteOnderwerp === "cv");
   r = antwoord(r, ctx, "Ja");
   test("Lisa: cv paraat geeft de uploadknop, nog niet plannen", r.state.status === "wacht_cv" && laatste(r).cvUpload === true && !r.berichten.some((b) => b.planning));
@@ -66,8 +69,8 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Lisa: collega krijgt een melding om het cv te controleren", r.acties.some((a) => a.soort === "planner" && a.reden.startsWith("Cv controleren")));
   test("Lisa: Job zegt dat een collega het cv bekijkt", alleTekst(r).includes("Een collega bekijkt nu je cv"));
   test("Lisa: 'Fantastisch, je cv is binnen!'", alleTekst(r).includes("Fantastisch, je cv is binnen!"));
-  test("Lisa: samenvatting voor de mail", samenvatting(r.state.velden, ctx) === "bediening en bar, ook evenementen en banqueting · 1 tot 2 diensten per week · tot 25 km", samenvatting(r.state.velden, ctx));
-  test("Lisa: profielvelden alleen bestaande kolommen", JSON.stringify(Object.keys(profielVelden(r.state.velden)).sort()) === JSON.stringify(["availability", "language", "previousExperience"]));
+  test("Lisa: samenvatting voor de mail", samenvatting(r.state.velden, ctx) === "bediening en bar, ook evenementen en banqueting · 1 tot 2 diensten per week · tot 25 km · avond en weekend · beginnen: direct", samenvatting(r.state.velden, ctx));
+  test("Lisa: profielvelden alleen bestaande kolommen", JSON.stringify(Object.keys(profielVelden(r.state.velden)).sort()) === JSON.stringify(["availability", "previousExperience"]) && profielVelden(r.state.velden).availability === "1 tot 2 diensten per week, avond en weekend");
 }
 
 // ─── 2. Maria: antwoordt in het Engels, Job gaat mee ─────────────────────────
@@ -81,7 +84,8 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   r = antwoord(r, ctx, "3 or 4 shifts");
   test("Maria: geen werkautorisatievraag (EU)", r.state.laatsteOnderwerp === "werkgebied");
   r = antwoord(r, ctx, "Up to 35 km");
-  r = antwoord(r, ctx, "Portuguese, Spanish and good English");
+  r = antwoord(r, ctx, "Evenings and weekends");
+  r = antwoord(r, ctx, "Right away");
   test("Maria: cv al binnen, dus cv-controle", r.state.status === "cv_controle" && !r.berichten.some((b) => b.planning));
   test("Maria: afsluiting in het Engels", alleTekst(r).includes("A colleague is now looking at your CV"));
   const nog = antwoord(r, ctx, "Ok thanks");
@@ -101,7 +105,8 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Samir: Job vraagt gewoon verder", r.state.laatsteOnderwerp === "diensten" && r.state.status === "bezig");
   r = antwoord(r, ctx, "3 of 4");
   r = antwoord(r, ctx, "35 km");
-  r = antwoord(r, ctx, "Arabisch, Engels goed, Nederlands een beetje");
+  r = antwoord(r, ctx, "Wanneer nodig");
+  r = antwoord(r, ctx, "Binnen 2 weken");
   test("Samir: aan het eind naar de planner, niet afgewezen", r.state.status === "planner" && r.acties.some((a) => a.soort === "planner" && a.reden.includes("Werkautorisatie")));
   test("Samir: nooit gevraagd om een foto of nummer van een document", !alleTekst(r).match(/foto van|nummer van je|documentnummer/i));
 }
@@ -118,8 +123,9 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   r = antwoord(r, ctx, "Tot 2029");
   test("Ahmed: document meenemen naar het gesprek", alleTekst(r).includes("Neem het document mee"));
   r = antwoord(r, ctx, "3 of 4. Ik heb een auto, tot 50 km is prima");
-  test("Ahmed: werkgebied uit hetzelfde antwoord", r.state.velden.werkgebied === "tot 50 km" && r.state.laatsteOnderwerp === "talen");
-  r = antwoord(r, ctx, "Nederlands, Arabisch en Frans");
+  test("Ahmed: werkgebied uit hetzelfde antwoord", r.state.velden.werkgebied === "tot 50 km" && r.state.laatsteOnderwerp === "werkmoment");
+  r = antwoord(r, ctx, "Doordeweeks");
+  r = antwoord(r, ctx, "Direct");
   test("Ahmed: alles in orde, cv-controle", r.state.status === "cv_controle");
 }
 
@@ -130,7 +136,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   r = antwoord(r, ctx, "Nee, nog nooit");
   test("Mark: geen ervaring is geen probleem", alleTekst(r).includes("veel collega's zijn zo begonnen"));
   test("Mark: geen functievraag zonder ervaring", r.state.laatsteOnderwerp === "diensten");
-  r = antwoord(r, ctx, "2"); r = antwoord(r, ctx, "25 km"); r = antwoord(r, ctx, "Nederlands");
+  r = antwoord(r, ctx, "2"); r = antwoord(r, ctx, "25 km"); r = antwoord(r, ctx, "Avond en weekend"); r = antwoord(r, ctx, "Direct");
   test("Mark: starter in de bediening gaat gewoon door naar de cv-controle", r.state.status === "cv_controle");
 
   const chef: JobContext = { voornaam: "Tim", functie: "chef", nationalityZone: "NL", hasCv: true };
@@ -167,7 +173,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   const zonderCv: JobContext = { ...ctx, hasCv: false };
   let c = start(zonderCv, "nl", NU);
   c = antwoord(c, zonderCv, "Twee jaar bediening"); c = antwoord(c, zonderCv, "Allebei"); c = antwoord(c, zonderCv, "3 of 4");
-  c = antwoord(c, zonderCv, "Tot 35 km"); c = antwoord(c, zonderCv, "Nederlands en Engels");
+  c = antwoord(c, zonderCv, "Tot 35 km"); c = antwoord(c, zonderCv, "Doordeweeks"); c = antwoord(c, zonderCv, "Later");
   c = antwoord(c, zonderCv, "Nee");
   test("Geen cv: mail met uploadknop, wachten", c.state.status === "wacht_cv" && c.acties.some((a) => a.soort === "cv_mail"));
   c = antwoord(c, zonderCv, "Ok, komt eraan");
@@ -211,7 +217,12 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
 {
   const ctx: JobContext = { voornaam: "X", functie: "logistiek", nationalityZone: null, hasCv: false };
   test("Onbekende nationaliteit: geen werkautorisatievraag", volgendeOnderwerp({ ervaring: "x", functievraag: "y" }, ctx) === "diensten");
-  test("Alles bekend en cv paraat: geen vraag meer", volgendeOnderwerp({ ervaring: "x", functievraag: "y", diensten: "1-2", werkgebied: "a", talen: "nl", cvParaat: "ja" }, ctx) === null);
+  test("Alles bekend en cv paraat: geen vraag meer", volgendeOnderwerp({ ervaring: "x", functievraag: "y", diensten: "1-2", werkgebied: "a", werkmoment: "flexibel", startdatum: "direct", cvParaat: "ja" }, ctx) === null);
+  test("Talen wordt niet meer gevraagd", volgendeOnderwerp({ ervaring: "x", functievraag: "y", diensten: "1-2", werkgebied: "a", werkmoment: "flexibel", startdatum: "later" }, ctx) === "cv");
+  test("Reserve: werkmoment uit eigen woorden", reserveLezing("vooral in het weekend", "werkmoment").velden.werkmoment === "avond_weekend" && reserveLezing("maakt niet uit", "werkmoment").velden.werkmoment === "flexibel" && reserveLezing("Weekdays", "werkmoment").velden.werkmoment === "doordeweeks");
+  test("Reserve: startdatum uit eigen woorden", reserveLezing("Meteen!", "startdatum").velden.startdatum === "direct" && reserveLezing("volgende week", "startdatum").velden.startdatum === "twee_weken" && reserveLezing("Later", "startdatum").velden.startdatum === "later" && reserveLezing("Within 2 weeks", "startdatum").velden.startdatum === "twee_weken");
+  test("Reserve: vaag startmoment blijft leeg", reserveLezing("weet ik nog niet", "startdatum").velden.startdatum === undefined);
+  test("AI-antwoord: werkmoment en startdatum alleen geldige waarden", valideerLezing({ velden: { werkmoment: "avond_weekend", startdatum: "morgen" } }).velden.werkmoment === "avond_weekend" && valideerLezing({ velden: { startdatum: "morgen" } }).velden.startdatum === undefined);
   test("Bij de vraag naar talen is 'Nederlands' een antwoord", herkenCommando("Nederlands", "talen") === null && herkenCommando("Nederlands", "diensten") === "nederlands");
   test("Commando's herkend", herkenCommando("Mens") === "mens" && herkenCommando("HUMAN.") === "mens" && herkenCommando("reschedule") === "verzetten" && herkenCommando("Ik kom") === "ikkom" && herkenCommando("ik kom morgen om 2 uur") === null);
 }
