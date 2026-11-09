@@ -35,6 +35,7 @@ const UITLEG_VELDEN = `
 - sterren: "3" (3 sterren of minder), "4" of "5": alleen als de kandidaat zelf het aantal sterren van het beste hotel noemt; nooit zelf afleiden uit een hotelnaam
 - werkmoment: "doordeweeks", "avond_weekend" of "flexibel" (wanneer nodig), wanneer de kandidaat kan werken
 - startdatum: "direct", "twee_weken" (binnen twee weken) of "later", wanneer de kandidaat kan beginnen
+- werkvorm: "studie" (naast de studie), "ander_werk" (naast een andere baan) of "hoofdbaan"
 - talen: de talen die de kandidaat noemt, met niveau als dat genoemd wordt (tekst)
 - nlOfEn: false ALLEEN als duidelijk is dat de kandidaat geen Nederlands én geen Engels spreekt; true als Nederlands of Engels genoemd wordt; anders weglaten
 - cvParaat: "ja" of "nee", alleen bij de vraag of het cv paraat is

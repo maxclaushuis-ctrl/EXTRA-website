@@ -2,7 +2,7 @@
  * Huistests: de WhatsApp-sjablonen van Job en de herinnering bij het plannen.
  * Run met:  npx tsx server/job/__tests__/jobSjablonen.test.ts
  */
-import { SJABLOON_DEFS, NAMEN, START_OUD, componenten, sjabloonNaam, startParameters } from "../jobSjablonen";
+import { SJABLOON_DEFS, NAMEN, START_OUD, START_V2, componenten, sjabloonNaam, startParameters } from "../jobSjablonen";
 import { planHerinneringNodig, planHerinnering, nieuweState, teksten, ervaringWerk, type JobState } from "@shared/jobRegels";
 
 let geslaagd = 0;
@@ -26,6 +26,7 @@ async function main() {
     }
   }
   test("oud startsjabloon krijgt de hele vraag", startParameters(START_OUD, "Lisa", "x", "Vertel eens: waar?", "housekeeping")[2] === "Vertel eens: waar?");
+  test("tussenstap v2 krijgt het oude werk", JSON.stringify(startParameters(START_V2, "Lisa", "front office", "x", "op een front office", "frontoffice", "nl")) === JSON.stringify(["Lisa", "front office", "front office"]));
   test("start v2: welkomstregel met witregel na de naam", /^Hi \{\{1\}\},\n\n/.test(SJABLOON_DEFS.find((d) => d.soort === "start" && d.taal === "nl")!.tekst));
   for (const d of SJABLOON_DEFS) {
     const vars = (d.tekst.match(/\{\{\d\}\}/g) || []).length;

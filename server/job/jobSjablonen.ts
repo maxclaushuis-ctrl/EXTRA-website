@@ -13,8 +13,21 @@ import * as meta from "../whatsapp/metaClient";
 
 export type SjabloonSoort = "start" | "herinnering" | "afspraak";
 export const NAMEN: Record<SjabloonSoort, string> = { start: "job_start_v3", herinnering: "job_herinnering", afspraak: "job_afspraak" };
-/** Eerste versie van het startsjabloon: Job gebruikt hem zolang job_start_v3 nog niet is goedgekeurd (v2 wordt niet meer gebruikt). */
+/** Eerste versie van het startsjabloon: de laatste terugval. */
 export const START_OUD = "job_start";
+/**
+ * Tweede versie ("wat is je ervaring met {{3}} tot nu toe?"), door Meta goedgekeurd
+ * op 9 nov 2026. Job gebruikt hem zolang job_start_v3 nog niet is goedgekeurd.
+ */
+export const START_V2 = "job_start_v2";
+const WERK_V2: Record<string, { nl: string; en: string }> = {
+  housekeeping: { nl: "housekeeping", en: "housekeeping" },
+  chef: { nl: "werken in een keuken", en: "working in a kitchen" },
+  afwas: { nl: "werken in een keuken", en: "working in a kitchen" },
+  frontoffice: { nl: "front office", en: "front office work" },
+  logistiek: { nl: "werk in een magazijn of de logistiek", en: "warehouse or logistics work" },
+  horecamedewerker: { nl: "werken in de horeca", en: "working in hospitality" },
+};
 
 interface Def { soort: SjabloonSoort; taal: "nl" | "en"; tekst: string; voorbeeld: string[]; knoppen?: string[] }
 
@@ -45,9 +58,10 @@ export const SJABLOON_DEFS: Def[] = [
  * variabele aan het eind; {{3}} is alleen het werk (ervaringWerk). Het oude
  * sjabloon krijgt de hele vraag.
  */
-export function startParameters(naam: string, voornaam: string, functie: string, eersteVraag: string, werk: string): string[] {
-  if (naam !== NAMEN.start) return [voornaam, functie, eersteVraag];
-  return [voornaam, functie, werk];
+export function startParameters(naam: string, voornaam: string, functie: string, eersteVraag: string, werk: string, functieCode = "", taal: "nl" | "en" = "nl"): string[] {
+  if (naam === NAMEN.start) return [voornaam, functie, werk];
+  if (naam === START_V2) return [voornaam, functie, (WERK_V2[functieCode] || WERK_V2.horecamedewerker)[taal]];
+  return [voornaam, functie, eersteVraag];
 }
 
 /** De componenten zoals de Graph API ze verwacht. Puur, getest in shared/job.test.ts via jobSjablonen.test. */
@@ -133,7 +147,7 @@ export async function standBijMeta(vers = false): Promise<{ ok: boolean; lijst: 
   if (!vers && cache && Date.now() - cache.at < CACHE_MS) return { ok: true, lijst: cache.lijst };
   const r = await meta.listTemplates();
   if (!r.ok) return { ok: false, lijst: cache?.lijst || [], fout: (r.error?.message || "Meta gaf een fout.") + (r.error?.details ? ` (${r.error.details})` : "") + (await accountHint()) };
-  const namen = [...Object.values(NAMEN), START_OUD];
+  const namen = [...Object.values(NAMEN), START_V2, START_OUD];
   const lijst = (r.templates || []).filter((t) => namen.includes(t.name)).map((t) => ({ naam: t.name, taal: t.language, status: t.status, reden: t.rejectedReason && t.rejectedReason !== "NONE" ? t.rejectedReason : undefined }));
   cache = { at: Date.now(), lijst };
   return { ok: true, lijst };
@@ -152,7 +166,8 @@ export async function sjabloonNaam(soort: SjabloonSoort): Promise<string> {
   if (!s?.ok) return "";
   const klaar = (naam: string) => { const goed = s.lijst.filter((t) => t.naam === naam && t.status === "APPROVED").map((t) => t.taal); return goed.includes("nl") && goed.includes("en"); };
   if (klaar(NAMEN[soort])) return NAMEN[soort];
-  // Start: tot job_start_v3 is goedgekeurd blijft het eerste startsjabloon werken.
+  // Start: tot job_start_v3 is goedgekeurd eerst v2, anders het eerste startsjabloon.
+  if (soort === "start" && klaar(START_V2)) return START_V2;
   if (soort === "start" && klaar(START_OUD)) return START_OUD;
   return "";
 }

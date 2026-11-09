@@ -40,6 +40,7 @@ export function valideerLezing(ruw: any): Lezing {
   const hotels = tekstOf(v.hotels, 300); if (hotels) velden.hotels = hotels;
   if (["3", "4", "5"].includes(String(v.sterren))) velden.sterren = String(v.sterren) as JobVelden["sterren"];
   if (["direct", "twee_weken", "later"].includes(v.startdatum)) velden.startdatum = v.startdatum;
+  if (["studie", "ander_werk", "hoofdbaan"].includes(v.werkvorm)) velden.werkvorm = v.werkvorm;
   if (v.nlOfEn === true || v.nlOfEn === false) velden.nlOfEn = v.nlOfEn;
   if (v.cvParaat === "ja" || v.cvParaat === "nee") velden.cvParaat = v.cvParaat;
   const zoekt = tekstOf(v.zoekt, 200); if (zoekt) velden.zoekt = zoekt;
@@ -113,6 +114,15 @@ export function werkmoment(s: string): JobVelden["werkmoment"] {
   return undefined;
 }
 
+/** Naast studie, naast ander werk of als hoofdbaan, uit een knop of een eigen antwoord. */
+export function werkvorm(s: string): JobVelden["werkvorm"] {
+  const t = s.toLowerCase();
+  if (/studie|studeer|student|school|study|studies|studying|universiteit|university|hbo|mbo|college/.test(t)) return "studie";
+  if (/hoofdbaan|fulltime|full-time|full time|voltijd|main job|alleen dit|only this/.test(t)) return "hoofdbaan";
+  if (/ander werk|andere baan|naast mijn werk|other job|another job|second job|bijbaan|parttime|part-time/.test(t)) return "ander_werk";
+  return undefined;
+}
+
 /** Wanneer iemand kan beginnen, uit een knop of een eigen antwoord. */
 export function startdatum(s: string): JobVelden["startdatum"] {
   const t = s.toLowerCase();
@@ -172,6 +182,11 @@ export function reserveLezing(tekst: string, onderwerp: Onderwerp | null): Lezin
     case "werkmoment": {
       const w = werkmoment(s);
       if (w) velden.werkmoment = w;
+      break;
+    }
+    case "werkvorm": {
+      const w = werkvorm(s);
+      if (w) velden.werkvorm = w;
       break;
     }
     case "startdatum": {

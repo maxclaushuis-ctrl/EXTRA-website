@@ -46,6 +46,7 @@ export type Onderwerp =
   | "sterren"      // hotelfuncties: hoeveel sterren had het beste hotel
   | "werkmoment"
   | "startdatum"
+  | "werkvorm"     // naast studie, naast ander werk of hoofdbaan (akkoord Max 9 nov 2026)
   | "talen"        // oud: vervangen door werkmoment en startdatum (akkoord Max 9 nov 2026)
   | "cv";
 
@@ -55,6 +56,7 @@ export type Werkmoment = "doordeweeks" | "avond_weekend" | "flexibel";
 /** Sterren van het beste hotel: "3" betekent 3 of minder. */
 export type Sterren = "3" | "4" | "5";
 export type Startdatum = "direct" | "twee_weken" | "later";
+export type Werkvorm = "studie" | "ander_werk" | "hoofdbaan";
 
 /** Wat Job uit het gesprek verzamelt. Alles optioneel: Job vraagt wat ontbreekt. */
 export interface JobVelden {
@@ -78,6 +80,8 @@ export interface JobVelden {
   werkmoment?: Werkmoment;
   /** Wanneer iemand kan beginnen (knoppen in het gesprek). */
   startdatum?: Startdatum;
+  /** Naast studie, naast ander werk of als hoofdbaan (knoppen in het gesprek). */
+  werkvorm?: Werkvorm;
   talen?: string;
   /** false = spreekt geen Nederlands en geen Engels: harde no-go voor de planner. */
   nlOfEn?: boolean;
@@ -235,6 +239,8 @@ const T = {
     werkmomentKeuzes: ["Doordeweeks", "Avond en weekend", "Wanneer nodig"],
     startdatum: "Wanneer kun je beginnen?",
     startdatumKeuzes: ["Direct", "Binnen 2 weken", "Later"],
+    werkvorm: "Doe je dit naast je studie, naast ander werk of als hoofdbaan?",
+    werkvormKeuzes: ["Naast mijn studie", "Naast ander werk", "Als hoofdbaan"],
     cv: "Laatste vraag: heb je je cv paraat?",
     cvKeuzes: ["Ja", "Nee"],
     cvUpload: "Top! Upload je cv hier, dat kan als pdf of foto.",
@@ -292,6 +298,8 @@ const T = {
     werkmomentKeuzes: ["Weekdays", "Evenings and weekends", "Whenever needed"],
     startdatum: "When can you start?",
     startdatumKeuzes: ["Right away", "Within 2 weeks", "Later"],
+    werkvorm: "Would you do this alongside your studies, alongside another job or as your main job?",
+    werkvormKeuzes: ["Alongside studies", "Alongside other job", "As my main job"],
     cv: "Last question: do you have your CV ready?",
     cvKeuzes: ["Yes", "No"],
     cvUpload: "Great! Upload your CV here, a PDF or a photo is fine.",
@@ -354,6 +362,7 @@ export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | nu
   if (!v.werkgebied) return "werkgebied";
   if (!v.werkmoment) return "werkmoment";
   if (!v.startdatum) return "startdatum";
+  if (!v.werkvorm) return "werkvorm";
   if (!ctx.hasCv && !v.cvParaat) return "cv";
   return null;
 }
@@ -375,6 +384,7 @@ export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, veld
     case "sterren": return { tekst: t.sterren, keuzes: t.sterrenKeuzes };
     case "werkmoment": return { tekst: t.werkmoment, keuzes: t.werkmomentKeuzes };
     case "startdatum": return { tekst: t.startdatum, keuzes: t.startdatumKeuzes };
+    case "werkvorm": return { tekst: t.werkvorm, keuzes: t.werkvormKeuzes };
     case "talen": return { tekst: t.talen };
     case "cv": return { tekst: t.cv, keuzes: t.cvKeuzes };
   }
@@ -401,6 +411,7 @@ export function openOnderwerpen(v: JobVelden, ctx: JobContext): { vragen: number
     else if (o === "sterren") kopie.sterren = "4";
     else if (o === "werkmoment") kopie.werkmoment = "flexibel";
     else if (o === "startdatum") kopie.startdatum = "direct";
+    else if (o === "werkvorm") kopie.werkvorm = "hoofdbaan";
     else if (o === "talen") kopie.talen = "x";
   }
   return { vragen, cv };
@@ -786,6 +797,11 @@ export const STERREN_TEKST: Record<Sterren, { nl: string; en: string }> = {
   "3": { nl: "3 sterren of minder", en: "3 stars or fewer" },
   "4": { nl: "4 sterren", en: "4 stars" },
   "5": { nl: "5 sterren", en: "5 stars" },
+};
+export const WERKVORM_TEKST: Record<Werkvorm, { nl: string; en: string }> = {
+  studie: { nl: "Naast studie", en: "Alongside studies" },
+  ander_werk: { nl: "Naast ander werk", en: "Alongside another job" },
+  hoofdbaan: { nl: "Hoofdbaan", en: "Main job" },
 };
 export const STARTDATUM_TEKST: Record<Startdatum, { nl: string; en: string }> = {
   direct: { nl: "Direct", en: "Right away" },

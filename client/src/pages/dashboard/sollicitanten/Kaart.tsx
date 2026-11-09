@@ -3,7 +3,7 @@
  * Stappen D3, D6, D7, D8 en D9 van het bouwplan.
  */
 import { Fragment, useEffect, useRef, useState } from "react";
-import { WERKMOMENT_TEKST, STARTDATUM_TEKST, STERREN_TEKST, type Werkmoment, type Startdatum, type Sterren } from "@shared/jobRegels";
+import { WERKMOMENT_TEKST, STARTDATUM_TEKST, STERREN_TEKST, WERKVORM_TEKST, type Werkmoment, type Startdatum, type Sterren, type Werkvorm } from "@shared/jobRegels";
 import {
   BRANCHE, DAGDELEN, DAGEN_KORT, DISC, ONDERDELEN, SCHUIVEN, beschikbaarheidSamenvatting, beoordelingCompleet, disc, magAccepteren,
   magOnboarden, motivatie, rasterTelling, referentieStatus, terugzetLabel, voortgangIndex, geenGehoorTeller,
@@ -665,6 +665,7 @@ function GegevensKaart({ data, aanpassen }: { data: KaartData; aanpassen: () => 
         </> : null}
         {veld("Beschikbaar", WERKMOMENT_TEKST[v.werkmoment as Werkmoment]?.nl || null)}
         {veld("Kan beginnen", STARTDATUM_TEKST[v.startdatum as Startdatum]?.nl || null)}
+        {veld("Situatie", WERKVORM_TEKST[v.werkvorm as Werkvorm]?.nl || null)}
         {veld("Talen", k.talen || tekst(v.talen))}
         {veld("Vervoer", tekst(v.vervoer))}
       </div>

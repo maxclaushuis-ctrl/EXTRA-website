@@ -409,7 +409,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
     const eersteVraag = r.berichten[r.berichten.length - 1].tekst;
     const { startParameters } = await import("./jobSjablonen");
     const ok = await verstuurSjabloon(candidateId, waNummer(c), sjabloon, taal,
-      startParameters(sjabloon, c.firstName, functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(ctx.functie, taal)),
+      startParameters(sjabloon, c.firstName, functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(ctx.functie, taal), ctx.functie, taal),
       `${r.berichten[0].tekst}\n\n${eersteVraag}`);
     if (!ok) {
       await db.update(jobGesprekken).set({ kanaal: "web" }).where(eq(jobGesprekken.id, g.id));
