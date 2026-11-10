@@ -197,5 +197,18 @@ for (const k of ["gestopt", "welkomTerug", "welkomTerugKort", "blijftGestopt", "
   test("Slotbericht na de vragen", cvAfrondingTekst("cv_controle", "Kevin", "nl").includes("Een collega bekijkt nu je cv"));
 }
 
+// ─── Geen sterrenvraag als iemand nog niet in een hotel werkte (test Max, 10 nov) ─
+{
+  const c: JobContext = { voornaam: "Max", functie: "chef", label: "hotels", nationalityZone: "NL", hasCv: false, stopV3: true };
+  let r = start(c, "nl", NU);
+  r = antwoord(r.state, c, "9 jaar in keukens");
+  for (const t of ["Ik heb nog niet in een hotel gewerkt", "Nee", "Geen hotels, alleen restaurants", "I haven't worked in a hotel"]) {
+    const x = antwoord(r.state, c, t, 2);
+    test(`Na "${t}": geen sterrenvraag`, x.state.laatsteOnderwerp !== "sterren" && x.state.velden.geenHotel === true, String(x.state.laatsteOnderwerp));
+  }
+  const wel = antwoord(r.state, c, "Bij het Amrath en Marriott", 2);
+  test("Wel in hotels gewerkt: de sterrenvraag blijft", wel.state.laatsteOnderwerp === "sterren", String(wel.state.laatsteOnderwerp));
+}
+
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

@@ -74,6 +74,8 @@ export interface JobVelden {
   hotels?: string;
   /** Hotelfuncties: sterren van het beste hotel. */
   sterren?: Sterren;
+  /** Hotelfuncties: de kandidaat werkte nog niet in een hotel; dan geen vraag naar sterren. */
+  geenHotel?: boolean;
   /** Hotelfuncties: verduidelijkende vraag van de AI als de ervaring niet duidelijk bij de functie past. */
   verduidelijking?: string;
   /** Wanneer iemand kan werken (knoppen in het gesprek). */
@@ -403,7 +405,7 @@ export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | nu
     if (v.ervaringNiveau !== "geen") {
       if (v.verduidelijking && v.functievraag === undefined) return "functievraag";
       if (!v.hotels) return "hotels";
-      if (!v.sterren) return "sterren";
+      if (!v.sterren && !v.geenHotel) return "sterren";
     }
   } else if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) return "functievraag";
   if (ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) return "specialisatie";
@@ -571,6 +573,9 @@ export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: 
   if (vorig !== "cv") delete uit.cvParaat;
   return uit;
 }
+
+/** Antwoord op de hotelvraag dat zegt: nog niet in een hotel gewerkt. */
+const GEEN_HOTEL = /^\s*(nee|no|nope|geen|nooit|never|nergens)\b|nog (niet|nooit)|niet in (een )?hotel|geen hotel|nooit in (een )?hotel|not in a hotel|no hotels?\b|never (worked )?in a hotel|haven'?t worked in a hotel|not yet/i;
 
 /** Geen antwoord maar verwarring: Job stelt dezelfde vraag opnieuw. */
 const VERWARD = /^\s*(\?+|huh\?*|hè\?*|wat bedoel je\?*|wat\?+|sorry\?+|what do you mean\?*|what\?+)\s*$/i;
@@ -887,6 +892,11 @@ function verwerkLos(
       berichten.push({ tekst: t().geenErvaringOk, reactie: true });
     }
     // Een vraag die niet beantwoord kon worden, stelt Job niet eindeloos opnieuw.
+    // Nog nooit in een hotel gewerkt: dan ook niet vragen naar de sterren van "het beste hotel".
+    if (!verward && vorigOnderwerp === "hotels" && GEEN_HOTEL.test(invoer.tekst || "")) {
+      state.velden.hotels = "nog niet in een hotel gewerkt";
+      state.velden.geenHotel = true;
+    }
     if (!verward && vorigOnderwerp === "hotels" && !state.velden.hotels) state.velden.hotels = (invoer.tekst || "").trim().slice(0, 300) || "-";
     if (!verward && vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
       state.velden.functievraag = (invoer.tekst || "").trim() || "-";
