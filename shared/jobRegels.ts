@@ -535,11 +535,18 @@ export interface Lezing {
 
 /**
  * Velden die alleen als antwoord op hun eigen vraag mogen tellen. Een AI-lezing die bij een
- * ander antwoord toch werkautorisatie of een geldigheid invult (gezien bij "Drinken inschenken"),
+ * ander antwoord toch werkautorisatie, een geldigheid of "geen ervaring" invult (gezien bij "Drinken inschenken"
+ * en bij "Ik heb nog niet in een hotel gewerkt"),
  * mag het gesprek nooit naar vragen over een verblijfsdocument sturen.
  */
-export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: JobContext): JobVelden {
+export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: JobContext, bekend: JobVelden = {}): JobVelden {
   const uit: JobVelden = { ...v };
+  // De ervaring komt uit de ervaringsvraag. Een later antwoord ("ik heb nog niet in een hotel
+  // gewerkt" bij de hotelvraag) overschrijft die niet en maakt er nooit "geen ervaring" van.
+  if (vorig !== "ervaring") {
+    delete uit.ervaringNiveau;
+    if (bekend.ervaring) delete uit.ervaring;
+  }
   if (ctx.nationalityZone !== "NON_EU") { delete uit.werkautorisatie; delete uit.geldigTot; }
   else if (vorig !== "werkautorisatie" && vorig !== "geldigheid") delete uit.geldigTot;
   if (vorig !== "specialisatie") delete uit.specialisatie;
@@ -814,7 +821,7 @@ function verwerkLos(
     }
     // Een "?" of "wat bedoel je" is geen antwoord: niets invullen, dezelfde vraag komt terug.
     const verward = VERWARD.test(invoer.tekst || "");
-    lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx) };
+    lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx, state.velden) };
     state.velden = samenvoegen(state.velden, lezing.velden);
     // Barwerk spreekt voor zich: geen vraag meer wat iemand achter de bar deed.
     if (vorigOnderwerp === "ervaring" && barwerkDuidelijk(invoer.tekst || "", ctx) && state.velden.functievraag === undefined) {

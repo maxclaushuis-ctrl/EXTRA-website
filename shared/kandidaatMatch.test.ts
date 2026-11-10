@@ -3,7 +3,7 @@
  * en het afleiden van de invoer uit een cv-analyse. Fictieve kandidaten.
  * Run met:  npx tsx shared/kandidaatMatch.test.ts
  */
-import { bereken, invoerVan, matchKaart, modelVoor, FUNCTIE_MODELLEN, type Invoer, type Periode } from "./kandidaatMatch";
+import { bereken, datumTekst, duurTekst, invoerVan, matchKaart, modelVoor, FUNCTIE_MODELLEN, type Invoer, type Periode } from "./kandidaatMatch";
 const d = (min: number, max = min) => ({ min, max });
 const V: [string, Invoer, Partial<ReturnType<typeof bereken>>][] = [
   ["Lotte, housekeeping", { soort: "vereist", eis: "voldaan", A: d(33), B: 2, C: d(2, 24), D: "nu" }, { score: 98, laag: 93, hoog: 100, dekking: 100, voorlopig: false }],
@@ -87,6 +87,13 @@ function check(naam: string, ok: boolean, uitleg = "") { console.log(`${ok ? "�
   // Overlap telt één keer
   const a = invoerVan(FUNCTIE_MODELLEN.housekeeping, [P({ begin: "2025-01", einde: "2025-12" }), P({ begin: "2025-06", einde: "2026-05" })], [], {}, PEIL).invoer.A as any;
   check("Overlappende periodes: 17 maanden, niet 24", a.min === 17 && a.max === 17, JSON.stringify(a));
+}
+check("Datum leesbaar", datumTekst("2022-08") === "aug 2022" && datumTekst("heden") === "nu" && datumTekst("2024") === "2024");
+check("Duur leesbaar", duurTekst(99, 109) === "8 tot 9 jaar" && duurTekst(33, 33) === "ruim 2 jaar" && duurTekst(14, 20) === "14 tot 20 maanden");
+{
+  const m = matchKaart(FUNCTIE_MODELLEN.kok, [P({ functie: "Souschef", begin: "2016", einde: "heden", kerntaken: [0, 1] })], [], { ervaringNiveau: "geen" }, PEIL);
+  check("Gesprek zegt geen, cv wel: eis voldaan, verschil zichtbaar", m.eis.status === "voldaan" && m.aandacht[0]?.t === "Gesprek en cv verschillen", JSON.stringify(m.aandacht));
+  check("Uitleg in jaren", m.uitleg.startsWith("10 tot 10 jaar") === false && /jaar ervaring in de functie/.test(m.uitleg), m.uitleg);
 }
 check("Indeling: keuken is zelfstandig werkend kok", modelVoor("keuken", "chef", "hotels").sleutel === "kok");
 check("Indeling: afwas", modelVoor("afwas", "chef", "hotels").sleutel === "afwas");

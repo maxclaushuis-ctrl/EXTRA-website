@@ -268,6 +268,21 @@ export function invoerVan(model: FunctieModel, periodes: Periode[], certificaten
 
 // ─── Voor de kaart ───────────────────────────────────────────────────────────
 
+const MAAND_KORT = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+/** "2022-08" wordt "aug 2022"; "heden" wordt "nu". */
+export function datumTekst(d: string | null): string {
+  if (!d) return "?";
+  if (d === "heden") return "nu";
+  const m = /^(\d{4})-(\d{2})$/.exec(d);
+  return m ? `${MAAND_KORT[Number(m[2]) - 1]} ${m[1]}` : d;
+}
+/** Een duur leesbaar: onder twee jaar in maanden, daarboven in jaren. */
+export function duurTekst(min: number, max: number): string {
+  if (max < 24) return `${min === max ? min : `${min} tot ${max}`} maanden`;
+  const a = Math.floor(min / 12), b = Math.floor(max / 12);
+  return a === b ? `ruim ${a} jaar` : `${a} tot ${b} jaar`;
+}
+
 const GEWICHT_PUBLIEK = (s: Soort) => GEWICHT[s];
 const NIVEAU_TEKST = (n: number | null) => (n === null ? "onbekend" : String(n).replace(".", ","));
 
@@ -305,8 +320,10 @@ export function matchKaart(model: FunctieModel, periodes: Periode[], certificate
   const eisTekst = model.soort !== "vereist" ? `Geen ervaringseis: ${model.soort === "starters" ? "starters zijn welkom" : "ervaring is gewenst, niet vereist"}.`
     : ({ voldaan: "Voldaan", niet_voldaan: "Niet voldaan, zelf aangegeven", onbekend: "Onbekend", af_te_wegen: "Af te wegen door de beoordelaar", geen: "" } as Record<Eis, string>)[invoer.eis] + `: ${model.eisTekst}.`;
   const zelfde = periodes.filter((p) => p.soort === "zelfde");
-  const sterk: [string, string][] = zelfde.slice(0, 3).map((p) => [`${p.functie}${p.werkgever ? `, ${p.werkgever}` : ""}${p.begin || p.einde ? `, ${p.begin || "?"} tot ${p.einde === "heden" ? "nu" : p.einde || "?"}` : p.duurMaanden ? `, ${p.duurMaanden} maanden` : ""}`, p.bron]);
+  const sterk: [string, string][] = zelfde.slice(0, 3).map((p) => [`${p.functie}${p.werkgever ? `, ${p.werkgever}` : ""}${p.begin || p.einde ? `, ${datumTekst(p.begin)} tot ${datumTekst(p.einde)}` : p.duurMaanden ? `, ${p.duurMaanden} maanden` : ""}`, p.bron]);
   const aandacht: MatchKaart["aandacht"] = [];
+  const cvZelfde = periodes.some((p) => p.soort === "zelfde" && p.bron === "cv");
+  if (gesprek.ervaringNiveau === "geen" && cvZelfde) aandacht.push({ t: "Gesprek en cv verschillen", d: "In het gesprek gaf de kandidaat aan geen ervaring te hebben; het cv toont wel ervaring in de functie. Vraag het bij de kennismaking.", soort: "open" });
   if (invoer.eis === "onbekend") aandacht.push({ t: "Ervaringseis onbekend", d: `Niet aangetoond: ${model.eisTekst}. Vraag het bij de kennismaking.`, soort: "open" });
   if (invoer.eis === "af_te_wegen") aandacht.push({ t: "Alleen verwante ervaring", d: `Verwant (${model.verwant}) telt niet vanzelf als ervaring in de functie. Weeg het af.`, soort: "open" });
   if (invoer.B === "titel") aandacht.push({ t: "Werkzaamheden onbekend", d: "Alleen de functietitel is bekend, de werkzaamheden niet.", soort: "open" });
@@ -316,6 +333,6 @@ export function matchKaart(model: FunctieModel, periodes: Periode[], certificate
   const uitleg = u.toestand === "eis_niet_voldaan" ? "De kandidaat geeft zelf aan geen ervaring in deze functie te hebben."
     : invoer.A === null ? "Geen ervaring in deze functie gevonden in het cv of het gesprek."
       : invoer.A === 0 ? "Geen ervaring in deze functie; voor deze functie zijn starters welkom."
-        : `${feiten.A.split(" · ")[0]} ervaring in de functie; ${invoer.B === "titel" ? "werkzaamheden niet beschreven" : invoer.B === 2 ? "kerntaken beschreven" : invoer.B === 1 ? "één kerntaak beschreven" : "geen kerntaken"}.`;
+        : `${invoer.A && typeof invoer.A === "object" ? duurTekst(invoer.A.min, invoer.A.max) : feiten.A.split(" · ")[0]} ervaring in de functie; ${invoer.B === "titel" ? "werkzaamheden niet beschreven" : invoer.B === 2 ? "kerntaken beschreven" : invoer.B === 1 ? "één kerntaak beschreven" : "geen kerntaken"}.`;
   return { model: { sleutel: model.sleutel, naam: model.naam, soort: model.soort }, uitkomst: u, eis: { status: invoer.eis, tekst: eisTekst }, uitleg, berekening, som, sterk, aandacht: aandacht.slice(0, 3) };
 }

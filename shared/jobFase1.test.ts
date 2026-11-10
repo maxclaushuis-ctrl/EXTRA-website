@@ -167,5 +167,16 @@ for (const k of ["gestopt", "welkomTerug", "welkomTerugKort", "blijftGestopt", "
   test("Bediening: functievraag blijft", o.state.laatsteOnderwerp === "functievraag", String(o.state.laatsteOnderwerp));
 }
 
+// ─── Hotelantwoord overschrijft de ervaring niet (test Max, 10 nov) ──────────
+{
+  const keuken: JobContext = { voornaam: "Daan", functie: "chef", label: "hotels", nationalityZone: "NL", hasCv: false, stopV3: true };
+  let r = start(keuken, "nl", NU);
+  r = verwerk(r.state, keuken, { tekst: "9 jaar in keukens, als souschef" }, { velden: { ervaring: "9 jaar in keukens, als souschef", ervaringNiveau: "ervaren" }, taal: "nl", twijfel: null, ack: "" }, later(1));
+  test("Keuken via hotels: na de ervaring de hotelvraag", r.state.laatsteOnderwerp === "hotels", String(r.state.laatsteOnderwerp));
+  const h = verwerk(r.state, keuken, { tekst: "Ik heb nog niet in een hotel gewerkt" }, { velden: { hotels: "geen", ervaring: "Ik heb nog niet in een hotel gewerkt", ervaringNiveau: "geen" }, taal: "nl", twijfel: null, ack: "" }, later(2));
+  test("Hotelantwoord laat de ervaring staan", h.state.velden.ervaring === "9 jaar in keukens, als souschef" && h.state.velden.ervaringNiveau === "ervaren", JSON.stringify(h.state.velden));
+  test("Geen twijfel 'geen ervaring' door het hotelantwoord", !h.acties.some((a: any) => a.soort === "twijfel" && /ervaring/i.test(a.reden || "")) && h.state.status !== "planner", h.state.status);
+}
+
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

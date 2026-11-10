@@ -21,8 +21,8 @@ export function aiBeschikbaar(): boolean {
 }
 
 const UITLEG_VELDEN = `
-- ervaring: korte samenvatting van de werkervaring (tekst, in de taal van de kandidaat)
-- ervaringNiveau: "geen" (nooit in dit soort werk gewerkt), "starter" (heel weinig) of "ervaren"
+- ervaring: korte samenvatting van de werkervaring (tekst, in de taal van de kandidaat), ALLEEN als de laatste vraag over ervaring ging
+- ervaringNiveau: ALLEEN als de laatste vraag over ervaring ging: "geen" (nooit in dit soort werk gewerkt), "starter" (heel weinig) of "ervaren". "Nog niet in een hotel gewerkt" betekent niet dat iemand geen ervaring heeft.
 - functievraag: het antwoord op de functiegerichte vervolgvraag (tekst)
 - specialisatieHint: true als de ervaring wijst op evenementen, banqueting, catering of bruiloften
 - specialisatie: "ja" of "nee", alleen als de kandidaat antwoordt op de vraag of evenementen en banqueting erbij mogen
