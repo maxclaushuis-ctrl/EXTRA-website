@@ -106,6 +106,7 @@ export function alsLezing(b: Beurt): Lezing {
 // ─── Controle vóór verzending ────────────────────────────────────────────────
 
 const STANDAARD_OPENERS = /^(top|fantastisch|super|geweldig|perfect|mooi zo|prima|fijn|great|awesome|perfect|fantastic|wonderful|excellent)\b[!,. ]/i;
+const OPVULLING = /goed om te weten|fijn om te horen|bedankt voor (je|het)|dank (je|u) voor (je|het)|good to know|thanks for (your|the|sharing)|nice to hear/i;
 const BELOFTE = /https?:|www\.|aangenomen|garantie|gegarandeerd|beloof|zeker weten|\bje krijgt\b|€|\beuro\b|\d+[.,]\d{2}|per uur|hired|guarantee|promise|you will get|per hour/i;
 
 function zinnen(t: string): number {
@@ -125,7 +126,7 @@ export function reactieGoed(t: string, taal: JobTaal): boolean {
   const r = t.trim();
   if (!r) return false;
   if (r.length > 200 || r.includes("?") || zinnen(r) > 1) return false;
-  if (STANDAARD_OPENERS.test(r + " ") || BELOFTE.test(r)) return false;
+  if (STANDAARD_OPENERS.test(r + " ") || BELOFTE.test(r) || OPVULLING.test(r)) return false;
   return taalKlopt(r, taal);
 }
 

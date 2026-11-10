@@ -23,7 +23,7 @@ import {
   type JobContext, type JobState, type JobTaal, type JobVelden, type Lezing, type Onderwerp, type Resultaat, type Uitgaand,
 } from "@shared/jobRegels";
 import { reserveLezing } from "@shared/jobLezen";
-import { alsLezing, stelSamen, valideerBeurt, type Beurt, type Samenstelling } from "@shared/jobBeurt";
+import { alsLezing, reactieGoed, stelSamen, valideerBeurt, type Beurt, type Samenstelling } from "@shared/jobBeurt";
 import { kennisOverzicht } from "@shared/jobKennis";
 import { modelVoor } from "@shared/kandidaatMatch";
 import { VELD_DOEL } from "./jobAi";
@@ -43,6 +43,7 @@ const BEZIG = ["bezig", "wacht_cv", "geen_reactie", "gestopt"];
 const T = {
   nl: {
     nietBegrepen: "Ik begrijp je antwoord niet helemaal.",
+    frustratie: "Ik snap het, nog maar een paar korte vragen.",
     onbekendVerder: "Geen probleem, dat bespreken we bij de kennismaking.",
     graagGedaan: "Graag gedaan! 😊",
     begrenzen: "Ik help je graag verder, maar dan wel op een normale toon.",
@@ -50,6 +51,7 @@ const T = {
   },
   en: {
     nietBegrepen: "I didn't quite get that.",
+    frustratie: "I get it, just a few more quick questions.",
     onbekendVerder: "No problem, we'll go through that at the meeting.",
     graagGedaan: "You're welcome! 😊",
     begrenzen: "Happy to help, but let's keep it respectful.",
@@ -116,17 +118,17 @@ ${i.geschiedenis || "(nog niets)"}`;
   const regels = `
 Wat je teruggeeft (alleen JSON):
 - soort: lijst met wat het bericht is, een of meer van: "antwoord" (beantwoordt een vraag van Job), "correctie" (verbetert iets wat eerder gezegd is), "vraag" (de kandidaat vraagt zelf iets), "hulp" (snapt niet hoe iets werkt), "verwarring" (begrijpt de vraag niet), "frustratie", "bedankje" (bedankt of sluit af), "onduidelijk" (geen bruikbaar antwoord, bijvoorbeeld iets wat niet bij de vraag past), "andere_taal" (niet Nederlands of Engels), "mens" (wil een mens spreken), "grens" (zie onder). Een bericht kan meerdere dingen tegelijk zijn, bijvoorbeeld ["antwoord","vraag"].
-- velden: alleen wat het bericht echt zegt. Een vraag, klacht of iets wat niet bij de vraag past is NOOIT ervaring, een hotelnaam of ander gegeven. Bij een correctie het verbeterde veld. Velden:${BEURT_VELDEN}
+- velden: ALLES wat het bericht echt zegt, ook antwoorden op vragen die nog moeten komen (noemt iemand bij de ervaring een hotel, het aantal diensten of hoe ver hij wil reizen, vul dan ook hotels, diensten of werkgebied in). Een kort antwoord ("5", "nh", "maakt niet uit") is een gewoon antwoord op de vraag die Job stelde. Een vraag, klacht of iets wat niet bij de vraag past is NOOIT ervaring, een hotelnaam of ander gegeven. Bij een correctie het verbeterde veld. Velden:${BEURT_VELDEN}
   ervaringNiveau is ten opzichte van de functie: wie zich als kok aanmeldt en alleen afwaservaring heeft, is voor koken "starter". "Nog niet in een hotel gewerkt" zegt niets over ervaring in het algemeen.
 - bewijs: per ingevuld veld het letterlijke stukje uit het bericht (overgenomen zoals het er staat, ook met tikfouten).
 - kennis: als soort "vraag" bevat: welk onderwerp uit deze lijst de vraag beantwoordt, anders "onbekend". Schrijf het antwoord zelf NIET, Job voegt de goedgekeurde tekst toe. Onderwerpen:
 ${kennisOverzicht()}
 - vraagKandidaat: de vraag van de kandidaat in een paar woorden (voor een collega), anders null.
-- grens: alleen bij grensoverschrijdend gedrag van de kandidaat zelf, gericht aan Job, EXTRA of een medewerker, en alleen als je zeker bent: {"regel": "G1" (concrete dreiging met geweld of schade) | "G2" (seksuele intimidatie) | "G3" (discriminatie of haat) | "G4" (gerichte, ernstige belediging), "bewijs": "letterlijk stukje"}. Een losse krachtterm, frustratie, kritiek of een citaat van iemand anders is geen grens.
+- grens: alleen bij grensoverschrijdend gedrag van de kandidaat zelf, gericht aan Job, EXTRA of een medewerker, en alleen als je zeker bent: {"regel": "G1" (concrete dreiging met geweld of schade) | "G2" (seksuele intimidatie) | "G3" (discriminatie of haat) | "G4" (gerichte, ernstige belediging), "bewijs": "letterlijk stukje"}. Voorbeelden G4: "Hou je bek met je vragen, idioot", "kankerbedrijf". Geen grens: een losse krachtterm ("kut, ik ben mijn cv kwijt"), frustratie ("DIT DUURT TE LANG"), kritiek ("jullie organisatie is slecht"), een citaat van iemand anders ("mijn baas noemde me een idioot"). Zet bij een grens ook "frustratie" in soort als dat past.
 - taal: de taal van dit bericht zelf: "nl", "en", "anders" of null als het te kort of neutraal is (ok, ja, een naam, een plaats, een getal).
 - nvt: vragen die door dit bericht niet meer van toepassing zijn, uit: hotels, sterren, restaurant, functievraag, specialisatie (bijvoorbeeld ["hotels","sterren"] als de kandidaat nooit in een hotel werkte).
 - twijfel: alleen iets waar een collega naar moet kijken (kort, Nederlands), anders null. Past de ervaring niet bij de functie, zeg dat hier feitelijk.
-- reactie: een korte, natuurlijke reactie in het ${taal} op wat de kandidaat zei, hooguit één zin, geen vraag. Alleen als die iets toevoegt: frustratie kort erkennen, een correctie bevestigen, iets concreets uit het antwoord benoemen. Meestal leeg. Nooit beginnen met "Top", "Fantastisch", "Super", "Mooi", "Prima", "Dank je" of vergelijkbaar; geen lof, geen beloftes, geen feiten over EXTRA (die komen uit de kennisbank).`;
+- reactie: een korte, natuurlijke reactie in het ${taal} op wat de kandidaat zei, hooguit één zin, geen vraag. Verplicht bij frustratie (kort erkennen) en bij een correctie (bevestigen). Anders alleen als die iets concreets toevoegt; meestal leeg. Geen opvulzinnen als "goed om te weten" of "bedankt voor je antwoord". Nooit beginnen met "Top", "Fantastisch", "Super", "Mooi", "Prima", "Dank je" of vergelijkbaar; geen lof, geen beloftes, geen feiten over EXTRA (die komen uit de kennisbank).`;
 
   if (i.modus === "na") {
     return `${kern}
@@ -145,7 +147,7 @@ Job vroeg zojuist (over ${state.laatsteOnderwerp ?? "onbekend"}): "${i.laatsteVr
 Vragen die nog open staan, in deze volgorde:
 ${openTekst}
 ${regels}
-- doorvragen: alleen als het bericht de open vraag beantwoordt maar te vaag is voor de beoordeling en een verduidelijking echt nodig is (bijvoorbeeld "Ik maak al jaren schoon" bij housekeeping: in hotelkamers, kantoren of bij mensen thuis?). Dan het veld, anders null. Vraag nooit naar iets wat al bekend is.
+- doorvragen: als het antwoord op de ervaringsvraag niet laat zien of de ervaring de kerntaken van deze functie betreft (bijvoorbeeld "Ik maak al jaren schoon" bij housekeeping: in hotelkamers, kantoren of bij mensen thuis?), of als een ander antwoord te vaag is voor de beoordeling: het veld, anders null. Eén keer per veld is meestal genoeg. Vraag nooit naar iets wat al bekend is.
 - vraag en volgende: de vraag die Job hierna stelt, in het ${taal}, één korte zin die eindigt met een vraagteken, je-vorm, warm en direct, aansluitend op wat de kandidaat zei.
   * Beantwoordt het bericht de open vraag niet (vraag, verwarring, onduidelijk, frustratie): stel dezelfde vraag opnieuw, eenvoudiger of met een korte uitleg of voorbeeld. volgende = ${state.laatsteOnderwerp ?? "het open veld"}.
   * Te vaag (doorvragen): één concrete doorvraag. volgende = dat veld.
@@ -269,8 +271,12 @@ export async function verwerkBeurt(i: { state: JobState; ctx: JobContext; tekst:
   // De AI noemt het een antwoord maar vult het open veld niet: dan de gecontroleerde terugval voor
   // dat veld (een duidelijk antwoord gaat door, anders telt het als onduidelijk). Zo ontstaat geen lus.
   let zonderVeld = false;
-  if (beurt && onderwerp && !lezing.geenAntwoord && !beurt.doorvragen && !veldGevuld(onderwerp, lezing.velden, state.velden)) {
-    const t2 = terugvalLezing(tekst, onderwerp);
+  // Alleen als de AI helemaal niets invulde: vulde hij andere velden (een correctie, een antwoord op een
+  // latere vraag), dan blijven die staan en komt de open vraag gewoon terug.
+  if (beurt && onderwerp && !lezing.geenAntwoord && !beurt.doorvragen && Object.keys(lezing.velden).length === 0 && !veldGevuld(onderwerp, lezing.velden, state.velden)) {
+    const vrij: Onderwerp[] = ["ervaring", "functievraag", "hotels", "restaurant", "geldigheid"];
+    // Vrije tekst die de AI niet als gegeven herkende, wordt nooit ruw opgeslagen ("Look for job" als hotel).
+    const t2 = vrij.includes(onderwerp) ? { ...lezing, velden: {}, geenAntwoord: true } : terugvalLezing(tekst, onderwerp);
     if (t2.geenAntwoord) { lezing = { ...lezing, geenAntwoord: true }; zonderVeld = true; }
     else {
       // Alleen het veld van deze vraag uit de terugval, niets anders (de reserve-lezer is grof).
@@ -308,6 +314,8 @@ export async function verwerkBeurt(i: { state: JobState; ctx: JobContext; tekst:
 
   const r = verwerk(state, ctx, { tekst }, lezing, i.nu);
   const std = standaardVraag(r.state, ctx);
+  // Frustratie wordt altijd kort erkend; komt de reactie van de AI niet door de controle, dan een vaste korte zin.
+  if (beurt && beurt.soorten.includes("frustratie") && !beurt.kennis && !reactieGoed(beurt.reactie, r.state.taal)) beurt = { ...beurt, reactie: T[r.state.taal].frustratie };
   const sam = stelSamen({ beurt, regels: r.berichten, onderwerp: r.state.status === "bezig" || r.state.status === "wacht_cv" ? r.state.laatsteOnderwerp : null, standaard: std, taal: r.state.taal });
   let berichten = sam.berichten;
   // Terugval zonder AI bij een onduidelijk antwoord: zeg dat Job het niet begreep.

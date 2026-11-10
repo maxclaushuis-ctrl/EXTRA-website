@@ -158,7 +158,7 @@ export const GESPREKKEN: Gesprek[] = [
   },
   {
     naam: "Ben jij een robot?", ctx: nlCtx("housekeeping"), taal: "nl",
-    antwoorden: { ervaring: "Eerst even: ben jij een robot?" },
+    antwoorden: { ervaring: ["Eerst even: ben jij een robot?", "Oké. Ik heb 2 jaar housekeeping gedaan in een hotel"] },
     verwacht: { reactie: [{ na: /robot/i, moet: /AI/ }], nooit: [{ veld: "ervaring", bevat: /robot/i }] },
   },
   {
@@ -173,7 +173,8 @@ export const GESPREKKEN: Gesprek[] = [
   },
   {
     naam: "Klacht is geen gegeven", ctx: nlCtx("horecamedewerker"), taal: "nl",
-    antwoorden: { ervaring: "Waarom moet ik dit allemaal invullen, ik heb toch al een formulier gedaan?" },
-    verwacht: { nooit: [{ veld: "ervaring", bevat: /formulier|waarom/i }] },
+    antwoorden: { ervaring: ["Waarom moet ik dit allemaal invullen, ik heb toch al een formulier gedaan?", "Oké, ik heb 1 jaar in de bediening gewerkt"] },
+    // De klacht krijgt een antwoord (waarom deze vragen) en wordt geen gegeven.
+    verwacht: { nooit: [{ veld: "ervaring", bevat: /formulier|waarom/i }], reactie: [{ na: /formulier gedaan/i, moet: /welk werk bij je past|collega/i }] },
   },
 ];

@@ -102,6 +102,7 @@ async function beoordeel(u: Uitslag, rechter: AiAanroep): Promise<Uitslag["recht
 2. Is het logisch na de vorige vraag, zonder herhaling van iets wat al beantwoord is?
 3. Kort en natuurlijk (hooguit twee zinnen en één vraag), warm en direct, geen standaardlof?
 4. Verzint Job geen feiten of beloftes?
+Achtergrond: vaste stappen van Job zijn waar en horen bij de flow: hij stuurt echt een mail met een uploadknop als de kandidaat het cv later stuurt, een collega bekijkt daarna de aanmelding en de kandidaat kiest zelf een moment; de vraag naar het aantal sterren van het beste hotel hoort bij hotelfuncties. Beoordeel die stappen niet als verzonnen.
 Antwoord uitsluitend met JSON: {"beurten": [{"nr": 1, "goed": true, "reden": "kort"}]}`;
   const r = await rechter(systeem, transcript);
   if (!r?.inhoud) return undefined;

@@ -141,6 +141,21 @@ async function main() {
   for (let n = 0; n < 4; n++) v = (await beurt(v, hk, "hmm", { soort: ["antwoord"], velden: {}, reactie: "", vraag: "", volgende: "diensten" })).r.state;
   test("Antwoord zonder veld: na drie keer onbekend, geen eindeloze herhaling", v.velden.onbekend?.includes("diensten") === true && v.laatsteOnderwerp !== "diensten", String(v.laatsteOnderwerp));
 
+  // ─── Uit de gesprekstest met de echte AI (11 nov) ───
+  s = { ...start(hk, "nl", NU).state, velden: { ervaring: "2 jaar", ervaringNiveau: "ervaren", hotels: "Marriott" }, laatsteOnderwerp: "sterren" };
+  u = await beurt(s, hk, "5", { soort: ["antwoord"], velden: { sterren: "5" }, bewijs: { sterren: "5" }, vraag: "Hoeveel diensten per week wil je werken?", volgende: "diensten" });
+  test("Kort antwoord '5' met citaat '5' telt", u.r.state.velden.sterren === "5" && u.r.state.laatsteOnderwerp === "diensten", String(u.r.state.laatsteOnderwerp));
+  s = { ...start(hk, "nl", NU).state, velden: { ervaring: "2 jaar", ervaringNiveau: "ervaren", hotels: "NH", sterren: "4", diensten: "5+", werkgebied: "tot 25 km" }, laatsteOnderwerp: "werkmoment" };
+  u = await beurt(s, hk, "Sorry, ik bedoelde 1 tot 2 diensten per week, niet 5", { soort: ["correctie"], velden: { diensten: "1-2" }, bewijs: { diensten: "1 tot 2 diensten per week" }, reactie: "Helder, ik zet het op 1 tot 2 diensten.", vraag: "Wanneer kun je werken?", volgende: "werkmoment" });
+  test("Correctie terwijl een andere vraag openstaat: diensten bijgewerkt", u.r.state.velden.diensten === "1-2" && u.r.state.laatsteOnderwerp === "werkmoment", JSON.stringify(u.r.state.velden));
+  s = { ...start(hk, "nl", NU).state, velden: { ervaring: "2 jaar", ervaringNiveau: "ervaren" }, laatsteOnderwerp: "hotels" };
+  u = await beurt(s, hk, "Look for job", { soort: ["antwoord"], velden: {}, vraag: "", volgende: "hotels" });
+  test("AI noemt het antwoord maar vult niets bij vrije tekst: niet ruw opslaan", !u.r.state.velden.hotels && u.r.state.laatsteOnderwerp === "hotels");
+  s = { ...start(hk, "nl", NU).state, velden: { ervaring: "2 jaar", ervaringNiveau: "ervaren", hotels: "NH", sterren: "4" }, laatsteOnderwerp: "diensten" };
+  u = await beurt(s, hk, "Pff wat een gedoe zeg", { soort: ["frustratie"], reactie: "", vraag: "", volgende: "diensten" });
+  test("Frustratie zonder reactie van de AI: toch kort erkend", tekst(u.r).startsWith(BEURT_TEKSTEN.nl.frustratie), tekst(u.r));
+  test("Opvulzin geweigerd", !reactieGoed("Dat is goed om te weten.", "nl"));
+
   console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
   process.exit(gefaald > 0 ? 1 : 0);
 }

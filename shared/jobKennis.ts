@@ -47,9 +47,9 @@ export const KENNIS: KennisItem[] = [
   { sleutel: "cv_nodig", onderwerp: "of een cv nodig is",
     nl: "Een cv helpt ons om je ervaring goed te zien; heb je er geen, dan kijken we samen bij de kennismaking.",
     en: "A CV helps us see your experience; if you don't have one, we'll go through it together at the meeting." },
-  { sleutel: "waarom_vraag", onderwerp: "waarom Job iets vraagt",
-    nl: "Ik vraag dit zodat een collega straks weet welk werk bij je past.",
-    en: "I'm asking so a colleague knows which work suits you." },
+  { sleutel: "waarom_vraag", onderwerp: "waarom Job iets vraagt, of waarom er na het formulier nog vragen komen",
+    nl: "In het formulier staan je gegevens; met deze paar korte vragen weet een collega welk werk bij je past.",
+    en: "The form has your details; with these few quick questions a colleague knows which work suits you." },
 ];
 
 export function kennis(sleutel: string | null | undefined): KennisItem | null {

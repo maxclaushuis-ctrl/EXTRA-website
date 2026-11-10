@@ -111,7 +111,8 @@ export function bewijsCheck(velden: JobVelden, bewijs: unknown, antwoord: string
   for (const [k, w] of Object.entries(velden) as [keyof JobVelden, unknown][]) {
     const eigen = VELD_VAN[k];
     const citaat = typeof b[k] === "string" ? schoon(String(b[k])) : "";
-    const gedragen = citaat.length >= 2 && tekst.includes(citaat);
+    // Een kort antwoord ("5", "3") is zelf het citaat: dan moet het het hele bericht of een los woord zijn.
+    const gedragen = citaat.length >= 2 ? tekst.includes(citaat) : !!citaat && (tekst === citaat || tekst.split(" ").includes(citaat));
     // Met citaat: alleen als het citaat echt in het antwoord staat. Zonder citaat: alleen als antwoord op de eigen vraag.
     if (citaat ? gedragen : !eigen || eigen === onderwerp) (uit as any)[k] = w;
   }
