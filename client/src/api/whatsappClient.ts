@@ -223,7 +223,7 @@ export const snoozeGesprek = async (conversationId: number, until: string | null
   return data as { success: boolean; snoozedUntil: string | null };
 };
 export const haalBerichten = (phoneNumber: string) =>
-  get<Message[]>(`/conversations/${encodeURIComponent(phoneNumber)}/messages`);
+  get<Message[]>(`/conversations/${encodeURIComponent(phoneNumber)}/messages?limit=500`);
 export const markeerGelezen = (phoneNumber: string) =>
   post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-read`);
 export const markeerOngelezen = (phoneNumber: string) =>

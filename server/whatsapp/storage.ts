@@ -550,11 +550,16 @@ export async function setTaskAssignee(
  */
 export async function getMessagesForPhone(phoneNumber: string, limit = 50) {
   // Berichten waar phoneNumber óf de from óf de to is (in/out).
+  // Oudere berichten van Job staan met het nummer zoals in het dossier
+  // ("+31 6 ..." of "06 ..."). Die horen bij hetzelfde gesprek; alleen lezen, niets omzetten.
+  const lokaal = phoneNumber.startsWith('31') ? '0' + phoneNumber.slice(2) : null;
   const rows = await db
     .select()
     .from(whatsappMessages)
     .where(
-      sql`${whatsappMessages.fromNumber} = ${phoneNumber} OR ${whatsappMessages.toNumber} = ${phoneNumber}`,
+      sql`${whatsappMessages.fromNumber} = ${phoneNumber} OR ${whatsappMessages.toNumber} = ${phoneNumber}
+        OR (${whatsappMessages.direction} = 'outbound' AND ${whatsappMessages.fromNumber} = 'extra'
+            AND regexp_replace(${whatsappMessages.toNumber}, '[^0-9]', '', 'g') IN (${phoneNumber}, ${'00' + phoneNumber}, ${lokaal ?? phoneNumber}))`,
     )
     .orderBy(desc(whatsappMessages.createdAt))
     .limit(limit);

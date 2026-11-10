@@ -12980,7 +12980,7 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   // Job, de AI-recruiter: een kandidaat met een lopend gesprek met Job krijgt
   // antwoord van Job, niet van de gewone auto-reply. Een document of foto kan
   // het cv zijn; STOP zet Job stil. Zonder gesprek met Job verandert er niets.
-  async function jobInbound(args: { phoneNumber: string; candidateId: number | null; type: string; body: string; media?: { objectPath: string; mimeType?: string | null; filename?: string | null } | null }): Promise<boolean> {
+  async function jobInbound(args: { phoneNumber: string; candidateId: number | null; type: string; body: string; knop?: boolean; media?: { objectPath: string; mimeType?: string | null; filename?: string | null } | null }): Promise<boolean> {
     try {
       const job = await import('./job/jobService');
       // Op nummer zoeken: wie zich vaker aanmeldde, heeft meerdere kandidaten met hetzelfde nummer.
@@ -13004,7 +13004,8 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
         return true;
       }
       if (args.type !== 'text' || !args.body) return false;
-      await job.verwerkBericht(g, { tekst: args.body, kanaal: 'whatsapp' });
+      // Berichten kort na elkaar krijgen samen één antwoord (shared/jobBundel.ts).
+      await job.whatsappBinnen(g, args.body, !!args.knop);
       return true;
     } catch (e: any) {
       console.error('[Job] WhatsApp-bericht verwerken mislukt:', e?.message || e);

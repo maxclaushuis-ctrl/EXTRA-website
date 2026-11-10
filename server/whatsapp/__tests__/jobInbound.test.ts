@@ -67,6 +67,17 @@ async function main() {
     const { d, log } = deps(true);
     await processIncomingPayload(payload({ type: 'button', button: { text: 'Ik kom', payload: 'Ik kom' } }), d);
     test('knop uit een sjabloon komt als tekst bij Job', log.job.length === 1 && log.job[0].type === 'text' && log.job[0].body === 'Ik kom');
+    test('knop is gemarkeerd als knop (Job antwoordt meteen)', log.job[0].knop === true);
+  }
+  {
+    const { d, log } = deps(true);
+    await processIncomingPayload(payload({ type: 'interactive', interactive: { type: 'list_reply', list_reply: { id: 'moment:2026-11-12T10:00', title: 'do 12 nov 10:00' } } }), d);
+    test('regel uit de keuzelijst komt als knop bij Job', log.job.length === 1 && log.job[0].body === 'do 12 nov 10:00' && log.job[0].knop === true);
+  }
+  {
+    const { d, log } = deps(true);
+    await processIncomingPayload(payload({ type: 'text', text: { body: 'Amsterdam' } }), d);
+    test('getypt bericht is geen knop (Job wacht even op een volgend bericht)', log.job.length === 1 && log.job[0].knop === false);
   }
   {
     const { d, log } = deps(true);

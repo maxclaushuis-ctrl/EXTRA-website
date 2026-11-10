@@ -44,6 +44,8 @@ export interface JobInboundArgs {
   /** 'text', 'document', 'image', … of 'stop'. */
   type: string;
   body: string;
+  /** True bij een aangetikte knop of lijstregel (dan antwoordt Job meteen). */
+  knop?: boolean;
   media?: { objectPath: string; mimeType?: string | null; filename?: string | null } | null;
 }
 
@@ -407,7 +409,7 @@ export async function processIncomingPayload(
                     .catch((e: any) => console.error(`${logPrefix} Job (STOP) error:`, e?.message));
                 }
               } else if (jobInbound && match.candidateId && antwoordVoorJob(type, body_, msg)
-                && await jobInbound({ phoneNumber: normalizedFrom, candidateId: match.candidateId, type: 'text', body: antwoordVoorJob(type, body_, msg)! })
+                && await jobInbound({ phoneNumber: normalizedFrom, candidateId: match.candidateId, type: 'text', body: antwoordVoorJob(type, body_, msg)!, knop: type !== 'text' })
                   .catch((e: any) => { console.error(`${logPrefix} Job error:`, e?.message); return false; })) {
                 // Job heeft het bericht afgehandeld: geen gewone auto-reply.
               } else if (type === 'text' && body_ && tryAutoReply) {

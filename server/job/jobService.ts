@@ -35,7 +35,8 @@ import {
   type Bezet, type LijstSectie, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
 import { begrijpenAan, formulerenAan, lees } from "./jobAi";
-import { filterPrivacy, privacyMelding } from "@shared/jobPrivacy";
+import { filterPrivacy, privacyMelding, type PrivacyUitkomst } from "@shared/jobPrivacy";
+import { Bundelaar, type Deel } from "@shared/jobBundel";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
@@ -287,8 +288,18 @@ async function stuurJobBericht(candidateId: number, telefoon: string, b: Uitgaan
   return verstuurWhatsappTekst(candidateId, telefoon, whatsappTekst(b, token, taal, !!knoppen), knoppen);
 }
 
+/**
+ * Het nummer zoals de WhatsApp-inbox het bewaart (31612345678). Zo staan de berichten
+ * van Job in hetzelfde gesprek als de berichten van de kandidaat.
+ */
+async function inboxNummer(telefoon: string): Promise<string> {
+  const { normalizePhone } = await import("../whatsapp/phone");
+  return normalizePhone(telefoon) || telefoon;
+}
+
 async function verstuurWhatsappTekst(candidateId: number, telefoon: string, tekst: string, knoppen: string[] | null = null): Promise<boolean> {
   try {
+    telefoon = await inboxNummer(telefoon);
     const waProvider = await import("../whatsapp/provider");
     const waStorage = await import("../whatsapp/storage");
     if (!waProvider.isSendConfigured()) return false;
@@ -312,6 +323,7 @@ async function verstuurWhatsappTekst(candidateId: number, telefoon: string, teks
 
 async function verstuurWhatsappLijst(candidateId: number, telefoon: string, tekst: string, knop: string, secties: LijstSectie[]): Promise<boolean> {
   try {
+    telefoon = await inboxNummer(telefoon);
     const waProvider = await import("../whatsapp/provider");
     const waStorage = await import("../whatsapp/storage");
     if (!waProvider.isSendConfigured()) return false;
@@ -337,6 +349,7 @@ async function verstuurWhatsappLijst(candidateId: number, telefoon: string, teks
 async function verstuurSjabloon(candidateId: number, telefoon: string, naam: string, taal: JobTaal, parameters: string[], tekstVoorInbox: string): Promise<boolean> {
   if (!naam) return false;
   try {
+    telefoon = await inboxNummer(telefoon);
     const waProvider = await import("../whatsapp/provider");
     const waStorage = await import("../whatsapp/storage");
     if (!waProvider.isSendConfigured()) return false;
@@ -380,6 +393,29 @@ async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[
       await stuurJobBericht(g.candidateId, waNummer(c), b, g.token, s.taal);
     }
   }
+}
+
+// ─── WhatsApp: berichten kort na elkaar bundelen ──────────────────────────────
+
+/**
+ * JOB_WA_BUNDELEN: in de testomgeving aan tenzij =0, elders alleen met =1.
+ * Uit: elk bericht krijgt meteen een eigen antwoord, zoals eerder.
+ */
+export function bundelenAan(): boolean {
+  const w = process.env.JOB_WA_BUNDELEN;
+  return testomgeving() ? w !== "0" : w === "1";
+}
+
+const bundelaar = new Bundelaar<number>(async (gesprekId, delen: Deel[]) => {
+  const [g] = await db.select().from(jobGesprekken).where(eq(jobGesprekken.id, gesprekId)).limit(1);
+  if (!g) return;
+  await verwerkBericht(g, { delen: delen.map((d) => d.tekst), kanaal: "whatsapp" });
+});
+
+/** Een WhatsApp-bericht voor Job: gebundeld (antwoord volgt na een korte stilte) of meteen. */
+export async function whatsappBinnen(g: JobGesprek, tekst: string, knop: boolean): Promise<void> {
+  if (!bundelenAan()) { await verwerkBericht(g, { tekst, kanaal: "whatsapp" }); return; }
+  bundelaar.voegToe(g.id, { tekst, knop });
 }
 
 // ─── Acties: planner, cv-mail, profiel ───────────────────────────────────────
@@ -549,28 +585,40 @@ async function gesprekVoorAi(gesprekId: number, nieuw: string): Promise<{ laatst
   return { laatsteVraag: laatsteVraag.slice(0, 400), geschiedenis };
 }
 
-export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cvOntvangen?: boolean; bijlage?: string | null; kanaal?: "web" | "whatsapp" }): Promise<VerwerkResultaat> {
+export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; delen?: string[]; cvOntvangen?: boolean; bijlage?: string | null; kanaal?: "web" | "whatsapp" }): Promise<VerwerkResultaat> {
   const nu = new Date();
   let s = naarState(g);
-  // Een genummerd antwoord op WhatsApp ("2") wordt de tekst van die keuze.
-  let tekst = (invoer.tekst || "").slice(0, 2000);
+  // Gebundelde WhatsApp-berichten (shared/jobBundel.ts) komen als delen binnen. Elk deel
+  // wordt los bewaard en gefilterd; Job antwoordt op alles samen.
+  const ruw = (invoer.delen?.length ? invoer.delen : [invoer.tekst || ""]).map((d) => (d || "").slice(0, 2000));
+  const [vorig] = ruw.some(Boolean) ? await db.select().from(jobBerichten)
+    .where(and(eq(jobBerichten.gesprekId, g.id), eq(jobBerichten.richting, "uit")))
+    .orderBy(desc(jobBerichten.id)).limit(1) : [];
   // Job 3.0: BSN, IBAN, documentnummers en adressen komen niet in de opslag van Job en niet bij de AI.
-  let privacy: ReturnType<typeof filterPrivacy> | null = null;
-  if (tekst && v3("PRIVACY")) {
-    const f = filterPrivacy(tekst);
-    if (f.gevonden.length) {
-      privacy = f;
-      tekst = f.tekst;
-      console.log(`[Job] privacyfilter: ${f.gevonden.join(", ")} weggelaten (gesprek ${g.id})`);
-    }
+  const gevonden = new Set<PrivacyUitkomst["gevonden"][number]>();
+  let allesLeeg = true;
+  const delen: string[] = [];
+  for (const d0 of ruw) {
+    let d = d0;
+    if (d && v3("PRIVACY")) {
+      const f = filterPrivacy(d);
+      if (f.gevonden.length) {
+        f.gevonden.forEach((x) => gevonden.add(x));
+        d = f.tekst;
+        if (!f.leeg) allesLeeg = false;
+      } else allesLeeg = false;
+    } else if (d) allesLeeg = false;
+    // Een genummerd antwoord op WhatsApp ("2") wordt de tekst van die keuze.
+    if (d) d = keuzeUitNummer(d, vorig?.keuzes as string[] | null);
+    delen.push(d);
   }
-  if (tekst) {
-    const [vorig] = await db.select().from(jobBerichten)
-      .where(and(eq(jobBerichten.gesprekId, g.id), eq(jobBerichten.richting, "uit")))
-      .orderBy(desc(jobBerichten.id)).limit(1);
-    tekst = keuzeUitNummer(tekst, vorig?.keuzes as string[] | null);
-  }
-  if (tekst || invoer.bijlage) await bewaarInkomend(g, tekst || (invoer.cvOntvangen ? (g.taal === "en" ? "CV sent" : "Cv gestuurd") : ""), invoer.bijlage, invoer.kanaal);
+  const gevuld = delen.filter(Boolean);
+  // Meerdere berichten: een commando (MENS, VERZETTEN, ...) gaat voor, anders alles samen.
+  let tekst = gevuld.length > 1 ? (gevuld.find((d) => herkenCommando(d, s.laatsteOnderwerp)) || gevuld.join("\n")) : (gevuld[0] || "");
+  const privacy: PrivacyUitkomst | null = gevonden.size ? { tekst, gevonden: Array.from(gevonden), leeg: allesLeeg } : null;
+  if (privacy) console.log(`[Job] privacyfilter: ${privacy.gevonden.join(", ")} weggelaten (gesprek ${g.id})`);
+  if (gevuld.length > 1) for (const d of gevuld) await bewaarInkomend(g, d, null, invoer.kanaal);
+  else if (tekst || invoer.bijlage) await bewaarInkomend(g, tekst || (invoer.cvOntvangen ? (g.taal === "en" ? "CV sent" : "Cv gestuurd") : ""), invoer.bijlage, invoer.kanaal);
   if (invoer.kanaal === "whatsapp" && g.kanaal !== "whatsapp") {
     await db.update(jobGesprekken).set({ kanaal: "whatsapp" }).where(eq(jobGesprekken.id, g.id));
     g = { ...g, kanaal: "whatsapp" };
@@ -583,7 +631,8 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
   // Een moment uit de WhatsApp-keuzelijst: meteen boeken, de bevestiging komt in WhatsApp.
   let planKeuze: ReturnType<typeof gekozenMoment> = null;
   if (tekst && g.kanaal === "whatsapp" && s.status === "plannen" && !invoer.cvOntvangen && !herkenCommando(tekst, s.laatsteOnderwerp)) {
-    planKeuze = gekozenMoment(tekst, await momenten());
+    const ms = await momenten();
+    for (const d of gevuld) planKeuze = gekozenMoment(d, ms) ?? planKeuze;
     if (planKeuze && typeof planKeuze === "object") {
       const uit = await boek({ ...g, laatsteInkomendAt: nu, laatsteActiviteitAt: nu } as JobGesprek, planKeuze);
       if (uit.ok) return { ok: true, status: "gepland", berichten: uit.berichten };
