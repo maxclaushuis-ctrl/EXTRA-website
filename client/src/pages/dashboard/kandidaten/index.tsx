@@ -10,10 +10,12 @@ import { KLEUREN, KLEUR_VOLGORDE, type Kleur } from "@shared/kandidaatRegels";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { CSS, Dialoog, Knop, Leeg, Meldingen, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
 import { Dossier3, K3CSS } from "./Kaart3";
+import type { MatchKaart } from "@shared/kandidaatMatch";
 
 interface Rij {
   id: number; naam: string; functie: string; functieCode: string; branche: Branche; kleur: Kleur; cijfer: string | null;
   status: string; sinds: string; sindsTekst: string; planner: string; plannerId: number | null; mijn: boolean; aangemeld: string;
+  match?: { score: number | null; toestand: string; voorlopig: boolean } | null;
 }
 interface Overzicht { rijen: Rij[]; tellers: { perKleur: Record<Kleur, number>; perBranche: Record<string, number>; aandacht: number }; planners: { id: number; naam: string }[] }
 interface Filter { kleuren: Kleur[]; functie: string; planner: string; datum: string }
@@ -117,11 +119,12 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
         <div className="sv-legenda">{KLEUR_VOLGORDE.map((k) => <span key={k}><Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} />{KLEUREN[k].label}</span>)}</div>
         {fout && <div className="sv-fout">Laden mislukt. Probeer het opnieuw. <button className="sv-knop sv-knop-link" onClick={opnieuw}>Opnieuw</button></div>}
         <table className="sv-tabel">
-          <thead><tr><th>Kandidaat</th><th>Status</th><th className="k-breed">Sinds</th><th className="k-breed">Planner</th><th aria-label="Openen" style={{ width: 30 }} /></tr></thead>
+          <thead><tr><th>Kandidaat</th><th>Status</th><th className="k-breed">Match</th><th className="k-breed">Sinds</th><th className="k-breed">Planner</th><th aria-label="Openen" style={{ width: 30 }} /></tr></thead>
           <tbody>{lijst.map((r) => (
             <tr key={r.id} className="klik" tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
               <td><div className="sv-rij" style={{ flexWrap: "nowrap" }}><Stip kleur={r.kleur} cijfer={r.cijfer} /><div><b style={{ fontSize: 15 }}>{r.naam}</b><div className="sv-klein">{r.functie}</div></div></div></td>
               <td style={{ whiteSpace: "normal" }}>{r.status}<div className="k-smal sv-klein">{r.sindsTekst} · {r.planner}</div></td>
+              <td className="k-breed"><MatchKort m={r.match} /></td>
               <td className="k-breed sv-grijs">{r.sindsTekst}</td>
               <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>
               <td style={{ color: "#B3AEA3" }}>›</td>
@@ -140,6 +143,17 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
   );
 }
 
+/** De kandidaatmatch als compact kenmerk in de lijst. */
+function MatchKort({ m }: { m?: Rij["match"] }) {
+  if (!m) return null;
+  if (m.toestand === "score" && m.score !== null) return (
+    <span className="k-match-kort" title={m.voorlopig ? "Voorlopige kandidaatmatch" : "Kandidaatmatch"}>
+      <span className="k-meter" aria-hidden="true"><i style={{ width: `${m.score}%` }} /></span><b>{m.score}</b>{m.voorlopig && <span className="sv-grijs" style={{ fontSize: 12 }}>voorlopig</span>}
+    </span>
+  );
+  return <span className="sv-grijs" style={{ fontSize: 12.5 }}>{m.toestand === "eis_niet_voldaan" ? "eis niet voldaan" : "onvoldoende info"}</span>;
+}
+
 // ─── Dossier (bord H) ───────────────────────────────────────────────────────
 
 export interface DossierData {
@@ -154,6 +168,7 @@ export interface DossierData {
   cvBestand?: { naam: string; soort: "pdf" | "afbeelding" | "word" | "anders"; at: string | null; via: string | null } | null;
   functieCode?: string;
   functies?: string[] | null;
+  match?: { status: string; op?: string | null; melding?: string; kaart?: MatchKaart | null };
 }
 
 export const MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
@@ -424,6 +439,9 @@ const KCSS = `
 .sv .k-bericht.in{align-self:flex-end;background:#E3F0E5;color:#1F3B26;border-radius:14px 4px 14px 14px}
 .sv .k-systeem{align-self:center;background:#EFEAE2;border-radius:99px;padding:2px 10px;font-size:12px;color:#5C594F}
 .sv .k-smal{display:none}
+.sv .k-match-kort{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.sv .k-meter{width:40px;height:6px;border-radius:6px;background:#EDEAE4;overflow:hidden;display:inline-block}
+.sv .k-meter i{display:block;height:100%;background:#37352C;border-radius:6px}
 @media (max-width:1023px){.sv .k-twee{grid-template-columns:1fr}}
 @media (max-width:640px){.sv .k-breed{display:none}.sv .k-smal{display:block}.sv .k-profiel{grid-template-columns:1fr}.sv .k-filter{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;border-radius:16px 16px 0 0}}
 `;

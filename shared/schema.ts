@@ -2761,3 +2761,42 @@ export const kandidaatMogelijkeMatch = pgTable("kandidaat_mogelijke_match", {
   kandidaatIdx: index("kandidaat_mogelijke_match_kandidaat_idx").on(t.candidateId),
 }));
 export type KandidaatMogelijkeMatch = typeof kandidaatMogelijkeMatch.$inferSelect;
+
+// Job 3.0, fase 4: cv-analyse en kandidaatmatch (migratie 0033). Alleen nieuwe tabellen.
+export const cvAnalyses = pgTable("cv_analyses", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  bestand: text("bestand").notNull(),
+  soort: text("soort").notNull(),                       // pdf | word | afbeelding | anders
+  status: text("status").notNull(),                     // klaar | niet_leesbaar | geen_tekst | afschermen | geen_ai | fout
+  tekens: integer("tekens"),
+  periodes: jsonb("periodes").$type<unknown[]>().notNull().default([]),
+  certificaten: jsonb("certificaten").$type<string[]>().notNull().default([]),
+  model: text("model"),
+  fout: text("fout"),
+  aangemaaktOp: timestamp("aangemaakt_op").defaultNow().notNull(),
+}, (t) => ({
+  kandidaatIdx: index("cv_analyses_kandidaat_idx").on(t.candidateId),
+}));
+export type CvAnalyse = typeof cvAnalyses.$inferSelect;
+
+export const kandidaatMatches = pgTable("kandidaat_matches", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  cvAnalyseId: integer("cv_analyse_id"),
+  functie: text("functie").notNull(),
+  toestand: text("toestand").notNull(),                 // score | onvoldoende | eis_niet_voldaan
+  score: integer("score"),
+  laag: integer("laag"),
+  hoog: integer("hoog"),
+  dekking: integer("dekking").notNull(),
+  voorlopig: boolean("voorlopig").notNull().default(false),
+  onzekerheid: text("onzekerheid").notNull(),
+  eis: text("eis").notNull(),
+  label: text("label").notNull(),
+  invoer: jsonb("invoer").notNull(),
+  aangemaaktOp: timestamp("aangemaakt_op").defaultNow().notNull(),
+}, (t) => ({
+  kandidaatIdx: index("kandidaat_matches_kandidaat_idx").on(t.candidateId),
+}));
+export type KandidaatMatch = typeof kandidaatMatches.$inferSelect;

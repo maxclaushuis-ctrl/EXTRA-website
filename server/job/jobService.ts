@@ -389,6 +389,7 @@ async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
     }
     if (a.soort === "cv_bevestigd") {
       try { await storage.updateCandidate(g.candidateId, { hasCv: true, cvFilename: a.bijlage } as any); } catch (e: any) { console.warn("[Job] cv bijwerken mislukt:", e?.message); }
+      import("./cvAnalyse").then((m) => m.startCvAnalyse(g.candidateId)).catch(() => {});
       await db.update(jobBerichten).set({ extra: null })
         .where(and(eq(jobBerichten.gesprekId, g.id), eq(jobBerichten.extra, "bestand"), eq(jobBerichten.bijlage, a.bijlage)));
     }
@@ -538,6 +539,8 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
 
 /** Het cv is binnen (site, link of WhatsApp). Loopt het gesprek nog, dan gaat Job verder. */
 export async function cvOntvangen(candidateId: number, bijlage?: string | null, kanaal?: "web" | "whatsapp"): Promise<VerwerkResultaat | null> {
+  // Job 3.0, fase 4: het cv uitlezen op de achtergrond (schakelaar JOB_V3_MATCH).
+  import("./cvAnalyse").then((m) => m.startCvAnalyse(candidateId)).catch(() => {});
   const g = await gesprekVanKandidaat(candidateId);
   if (!g) return null;
   if (!["bezig", "wacht_cv", "geen_reactie", "cv_controle"].includes(g.status)) return null;

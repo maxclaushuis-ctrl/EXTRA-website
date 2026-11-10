@@ -4,8 +4,8 @@
  * dossier in index.tsx; alleen de opmaak en de volgorde zijn anders.
  * Schakelaar KANDIDATEN_KAART3 (in de testomgeving vanzelf aan).
  *
- * Het blok Kandidaatmatch toont nog geen score: die komt met de cv-analyse
- * (Job 3.0, fase 4). Het gesprek met Job is alleen lezen; overnemen kan niet
+ * Het blok Kandidaatmatch toont de score uit de cv-analyse (Job 3.0, fase 4,
+ * schakelaar JOB_V3_MATCH), met de onderbouwing achter openklikken. Het gesprek met Job is alleen lezen; overnemen kan niet
  * vanuit dit scherm.
  */
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
@@ -90,6 +90,12 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
     window.addEventListener("resize", zet);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", zet); };
   }, [d?.id, d?.job?.berichten.length]);
+  // Het cv wordt op de achtergrond uitgelezen: even later opnieuw kijken.
+  useEffect(() => {
+    if (d?.match?.status !== "bezig") return;
+    const t = setTimeout(opnieuw, 5000);
+    return () => clearTimeout(t);
+  }, [d?.match?.status, opnieuw]);
   useEffect(() => {
     if (!menu) return;
     const dicht = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest(".k3-meer")) setMenu(false); };
@@ -133,7 +139,8 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
   ].filter(Boolean) as { label: string; doe: () => void }[];
 
   const gele = d.bolletje.kleur === "geel" || d.bolletje.kleur === "rood" ? d.bolletje.gele : [];
-  const aantalPunten = gele.length + d.matches.length;
+  const matchPunten = d.match?.status === "klaar" && d.match.kaart ? d.match.kaart.aandacht : [];
+  const aantalPunten = gele.length + d.matches.length + matchPunten.length;
 
   return (
     <div className="k3" ref={wortel}>
@@ -179,22 +186,7 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
 
       <div className="k3-romp"><div className="k3-werk">
         <div className="k3-raster">
-          <section className="k3-paneel" aria-labelledby="k3-match">
-            <div className="k3-paneel-kop"><h2 id="k3-match">Kandidaatmatch</h2></div>
-            <div className="k3-paneel-in">
-              <div className="k3-match">
-                <div className="k3-ring" role="img" aria-label="Nog geen kandidaatmatch">
-                  <svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" fill="none" stroke="#CFC9BE" strokeWidth="7" strokeDasharray="4 6" /></svg>
-                  <b>Nog geen score</b>
-                </div>
-                <div className="k3-match-tekst">
-                  <div className="k3-voor">{d.functie}</div>
-                  <h3>Nog geen kandidaatmatch</h3>
-                  <p>De score op basis van het cv komt met de cv-analyse. Beoordeel nu op het cv en het gesprek met Job.</p>
-                </div>
-              </div>
-            </div>
-          </section>
+          <MatchPaneel d={d} bezig={bezig} analyseer={() => post(`${id}/cv-analyse`).then(opnieuw).catch((e) => melding(e.message))} />
 
           <section className="k3-paneel k3-aandacht" aria-labelledby="k3-aandacht">
             <div className="k3-paneel-kop"><h2 id="k3-aandacht">Aandachtspunten</h2><span className="k3-num k3-zacht">{aantalPunten || "geen"}</span></div>
@@ -203,6 +195,9 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
               {aantalPunten > 0 && <ul>
                 {gele.map((g, n) => (
                   <li key={n} className={d.bolletje.kleur === "rood" ? "rood" : ""}><div><b>{g.titel || g.tekst.replace(/^Twijfel: /, "")}</b><span>{uitleg(d, g.reden)}</span>{g.actie && <span className="k3-actie">Volgende actie: {g.actie}</span>}</div></li>
+                ))}
+                {matchPunten.map((a, n) => (
+                  <li key={`k${n}`} className={a.soort === "onbekend" ? "onbekend" : ""}><div><b>{a.t}</b><span>{a.d}</span></div></li>
                 ))}
                 {d.matches.map((m) => (
                   <li key={`m${m.id}`}><div>
@@ -331,6 +326,84 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
   );
 }
 
+const SOORT_TEKST: Record<string, string> = { starters: "starters welkom", gewenst: "ervaring gewenst", vereist: "ervaring vereist" };
+const EIS_KLAS: Record<string, string> = { voldaan: "goed", niet_voldaan: "stop", onbekend: "letop", af_te_wegen: "letop", geen: "neutraal" };
+
+function MatchPaneel({ d, bezig, analyseer }: { d: DossierData; bezig: boolean; analyseer: () => void }) {
+  const m = d.match;
+  const [open, setOpen] = useState(false);
+  const leeg = (titel: string, tekst: string, knop?: boolean) => (
+    <div className="k3-match">
+      <div className="k3-ring" role="img" aria-label={titel}>
+        <svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" fill="none" stroke="#CFC9BE" strokeWidth="7" strokeDasharray="4 6" /></svg>
+        <b>Geen score</b>
+      </div>
+      <div className="k3-match-tekst">
+        <div className="k3-voor">{d.functie}</div>
+        <h3>{titel}</h3>
+        <p>{tekst}</p>
+        {knop && <button className="k3-knop klein" style={{ marginTop: 10 }} disabled={bezig} onClick={analyseer}>{bezig ? "Bezig..." : "Cv uitlezen"}</button>}
+      </div>
+    </div>
+  );
+  let inhoud: ReactNode;
+  if (!m || m.status === "uit") inhoud = leeg("Nog geen kandidaatmatch", "De kandidaatmatch staat uit. Beoordeel op het cv en het gesprek met Job.");
+  else if (m.status === "geen_cv") inhoud = leeg("Nog geen cv", "De match volgt zodra het cv binnen is.");
+  else if (m.status === "bezig") inhoud = leeg("Cv wordt uitgelezen", "Even geduld, dit duurt meestal minder dan een minuut.");
+  else if (m.status === "nog_niet") inhoud = leeg("Cv nog niet uitgelezen", "Dit cv kwam binnen voordat de kandidaatmatch aan stond.", true);
+  else if (m.status !== "klaar" || !m.kaart) inhoud = leeg("Onvoldoende informatie", `${m.melding || "Het cv is niet uitgelezen."} Beoordeel op het cv en het gesprek met Job.`, m.status === "fout" || m.status === "geen_ai");
+  else {
+    const k = m.kaart, u = k.uitkomst;
+    const score = u.toestand === "score" && typeof u.score === "number";
+    const r = 40, omtrek = 2 * Math.PI * r;
+    inhoud = <>
+      <div className="k3-match">
+        <div className="k3-ring" role="img" aria-label={score ? `Kandidaatmatch ${u.score} van 100${u.voorlopig ? ", voorlopig" : ""}` : u.label}>
+          {score
+            ? <svg viewBox="0 0 92 92" style={{ transform: "rotate(-90deg)" }}><circle cx="46" cy="46" r={r} fill="none" stroke="#EDEAE4" strokeWidth="7" /><circle cx="46" cy="46" r={r} fill="none" stroke="#37352C" strokeWidth="7" strokeLinecap="round" strokeDasharray={`${(omtrek * (u.score as number)) / 100} ${omtrek}`} /></svg>
+            : <svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" fill="none" stroke={u.toestand === "eis_niet_voldaan" ? "#E6B3AE" : "#CFC9BE"} strokeWidth="7" strokeDasharray="4 6" /></svg>}
+          {score ? <span className="k3-getal"><b className="k3-num">{u.score}</b><small>van 100</small></span> : <b>Geen score</b>}
+        </div>
+        <div className="k3-match-tekst">
+          <div className="k3-voor">{k.model.naam}{score ? " · matchscore, geen plaatsingskans" : ""}</div>
+          <h3>{u.label}</h3>
+          <p>{k.uitleg}</p>
+        </div>
+      </div>
+      <div className={`k3-eis ${EIS_KLAS[k.eis.status] || ""}`}><b>Ervaringseis</b><span>{k.eis.tekst}</span></div>
+      <div className="k3-kenmerken">
+        {u.voorlopig && <span className="k3-st letop">Voorlopig</span>}
+        <span className="k3-kenmerk"><i>Bron</i> cv{k.sterk.some((s) => s[1] === "gesprek") ? " en gesprek met Job" : ""}</span>
+        <span className="k3-kenmerk"><i>Dekking</i> <span className="k3-num">{u.dekking}%</span></span>
+        {score && <span className="k3-kenmerk"><i>Onzekerheid</i> {u.onzekerheid}</span>}
+        {score && u.laag !== u.hoog && <span className="k3-kenmerk"><i>Bandbreedte</i> <span className="k3-num">{u.laag} tot {u.hoog}</span></span>}
+      </div>
+    </>;
+  }
+  const k = m?.status === "klaar" ? m.kaart : null;
+  return (
+    <section className="k3-paneel" aria-labelledby="k3-match">
+      <div className="k3-paneel-kop"><h2 id="k3-match">Kandidaatmatch</h2>{k && <span className="k3-zacht" style={{ fontSize: 12 }}>{SOORT_TEKST[k.model.soort]}</span>}</div>
+      <div className="k3-paneel-in">{inhoud}</div>
+      {k && <>
+        <button className="k3-uitklap" onClick={() => setOpen(!open)} aria-expanded={open}>
+          <span className={`k3-pijl ${open ? "open" : ""}`} aria-hidden="true" /><b>Onderbouwing</b><span className="k3-zacht">sterke punten, bronnen en berekening</span>
+        </button>
+        {open && <div className="k3-paneel-in k3-onder" style={{ paddingTop: 0 }}>
+          {k.sterk.length > 0 && <div><h4>Sterk</h4><ul className="k3-sterk">{k.sterk.map((x, n) => <li key={n}>{x[0]}<span className="k3-bron">{x[1]}</span></li>)}</ul></div>}
+          <div><h4>Berekening</h4>
+            <table className="k3-tabel"><thead><tr><th>Criterium</th><th>Gewicht</th><th>Niveau</th><th>Feit en bron</th></tr></thead>
+              <tbody>{k.berekening.map((r2) => <tr key={r2[0]}><td>{r2[0]}</td><td className="k3-num">{r2[1]}</td><td>{r2[2]}</td><td>{r2[3]}</td></tr>)}</tbody></table>
+          </div>
+          <div className="k3-som">{k.som}</div>
+          <div className="k3-zacht" style={{ fontSize: 12.5 }}>Alleen aantoonbare gegevens tellen. Onbekend telt niet als ongeschikt. Naam, leeftijd, foto, afkomst, opmaak en spelling tellen niet mee. Beschikbaarheid, documenten en referentie zijn hiermee niet gecontroleerd.</div>
+          <div><button className="k3-link klein" disabled={bezig} onClick={analyseer}>Cv opnieuw uitlezen</button></div>
+        </div>}
+      </>}
+    </section>
+  );
+}
+
 function Groep({ titel, children }: { titel: string; children: ReactNode }) {
   return <div className="k3-groep"><h3>{titel}</h3><dl>{children}</dl></div>;
 }
@@ -440,6 +513,26 @@ export const K3CSS = `
 .sv .k3-voor{font-size:12px;color:var(--label);font-weight:600}
 .sv .k3-match-tekst h3{margin:2px 0 4px;font-size:16px;line-height:1.25;font-weight:600}
 .sv .k3-match-tekst p{margin:0;color:var(--tekst-2);font-size:13.5px}
+.sv .k3-getal{position:relative;display:grid;line-height:1;text-align:center}
+.sv .k3-getal b{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--espresso);padding:0}
+.sv .k3-getal small{font-size:11px;color:var(--label);font-weight:600;margin-top:2px}
+.sv .k3-eis{display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding:9px 11px;border-radius:10px;font-size:13px;border:1px solid var(--rand);background:var(--rij)}
+.sv .k3-eis b{white-space:nowrap}
+.sv .k3-eis.goed{background:var(--goed-vlak);border-color:var(--goed-rand);color:#2F4A20}
+.sv .k3-eis.letop{background:var(--letop-vlak);border-color:var(--letop-rand);color:#5F4A12}
+.sv .k3-eis.stop{background:var(--stop-vlak);border-color:var(--stop-rand);color:var(--stop)}
+.sv .k3-kenmerken{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.sv .k3-kenmerk{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:7px;background:var(--rij);box-shadow:inset 0 0 0 1px var(--lijn);font-size:12px;color:var(--tekst-2);font-weight:600;white-space:nowrap}
+.sv .k3-kenmerk i{font-style:normal;color:var(--label);font-weight:500}
+.sv .k3-onder{display:grid;gap:14px}
+.sv .k3-onder h4{margin:0 0 6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--label);font-weight:700}
+.sv .k3-sterk{margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:3px}
+.sv .k3-sterk .k3-bron{margin-left:6px}
+.sv .k3-tabel{width:100%;border-collapse:collapse;font-size:13px}
+.sv .k3-tabel th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--label);font-weight:700;padding:8px;border-bottom:1px solid var(--rand);background:var(--rij)}
+.sv .k3-tabel td{padding:8px;border-bottom:1px solid var(--lijn);vertical-align:top}
+.sv .k3-som{font-size:12.5px;color:var(--tekst-2);background:var(--rij);border-radius:8px;padding:8px 10px}
+.sv .k3-aandacht li.onbekend::before{background:#B8B2A6}
 .sv .k3-aandacht ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .sv .k3-aandacht li{display:grid;grid-template-columns:8px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.4}
 .sv .k3-aandacht li::before{content:"";width:8px;height:8px;border-radius:50%;margin-top:6px;background:#C9962E}

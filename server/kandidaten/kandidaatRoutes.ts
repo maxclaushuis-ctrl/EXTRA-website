@@ -18,6 +18,7 @@ import { bolletje, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_A
 import { brancheVan, functieNaam, isAfwas, ingangBranche, BRANCHE, leeftijd } from "@shared/sollicitantRegels";
 import type { JobVelden } from "@shared/jobRegels";
 import { functieVan, isLabel } from "@shared/aanmeldLabels";
+import { analyseerCv, laatsteAnalyses, matchAan, matchUit } from "../job/cvAnalyse";
 
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
 
@@ -61,9 +62,17 @@ async function lopende() {
   };
 }
 
+/** Voor de lijst: alleen het getal of de toestand. */
+function kortMatch(m: ReturnType<typeof matchUit>): { score: number | null; toestand: string; voorlopig: boolean } | null {
+  if (m.status !== "klaar" || !m.kaart) return null;
+  const u = m.kaart.uitkomst;
+  return { score: u.score ?? null, toestand: u.toestand, voorlopig: u.voorlopig };
+}
+
 async function overzicht(ik: number | null) {
   const nu = new Date();
   const { cs, gm, mm, um, pm } = await lopende();
+  const am = await laatsteAnalyses(cs.map((c) => c.id));
   const rijen = cs.filter((c) => inKandidaten({ status: c.status, interviewDate: c.interviewDate ? String(c.interviewDate) : null })).map((c) => {
     const b = bolletje(invoer(c, gm.get(c.id), mm.get(c.id), um.get(c.id)), nu);
     const planner = c.plannerUserId ? pm.get(c.plannerUserId) : null;
@@ -72,6 +81,7 @@ async function overzicht(ik: number | null) {
       branche: brancheVan(c.functionType, null, isAfwas(c), ingangBranche(c.bronDetails)),
       kleur: b.kleur, cijfer: b.cijfer || null, status: b.tekst, sinds: b.sinds, sindsTekst: sindsTekst(b.sinds, nu),
       planner: plannerLabel(planner || null), plannerId: c.plannerUserId || null, mijn: !!ik && c.plannerUserId === ik, aangemeld: c.createdAt,
+      match: kortMatch(matchUit(c, am.get(c.id), gm.get(c.id)?.velden as JobVelden | undefined, nu)),
     };
   }).sort((a, b) => vergelijk({ kleur: a.kleur as Kleur, sinds: new Date(a.sinds) }, { kleur: b.kleur as Kleur, sinds: new Date(b.sinds) }));
   const perKleur = Object.fromEntries(KLEUR_VOLGORDE.map((k) => [k, rijen.filter((r) => r.kleur === k).length]));
@@ -146,6 +156,7 @@ async function dossier(id: number) {
       cv: c.hasCv ? (c.cvFilename || "") : null, uitJob: !!g,
     },
     cvBestand: cvBestand(c, g?.kanaal || null, berichten),
+    match: matchUit(c, (await laatsteAnalyses([c.id])).get(c.id), v),
     functies: gekozenFuncties(c.bronDetails),
     functieCode: c.functieEersteKeus || c.functionType,
     contact: {
@@ -190,6 +201,14 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
     const d = await dossier(nummer(req.params.id));
     if (!d) throw new Fout(404, "Kandidaat niet gevonden.");
     res.json(d);
+  }));
+
+  app.post(r("/:id/cv-analyse"), adminMiddleware, aan, veilig(async (req, res) => {
+    if (!matchAan()) throw new Fout(404, "Kandidaatmatch staat uit.");
+    const c = await kandidaat(nummer(req.params.id));
+    if (!c.hasCv || !c.cvFilename) throw new Fout(409, "Er is nog geen cv.");
+    const a = await analyseerCv(c.id);
+    res.json({ ok: true, status: a?.status || null });
   }));
 
   app.post(r("/:id/accepteren"), adminMiddleware, aan, veilig(async (req, res) => {
