@@ -21,7 +21,7 @@ export function aiBeschikbaar(): boolean {
   return !!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || !!process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
 }
 
-const UITLEG_VELDEN = `
+export const UITLEG_VELDEN = `
 - ervaring: korte samenvatting van de werkervaring (tekst, in de taal van de kandidaat), ALLEEN als de laatste vraag over ervaring ging
 - ervaringNiveau: ALLEEN als de laatste vraag over ervaring ging: "geen" (nooit in dit soort werk gewerkt), "starter" (heel weinig) of "ervaren". "Nog niet in een hotel gewerkt" betekent niet dat iemand geen ervaring heeft.
 - functievraag: het antwoord op de functiegerichte vervolgvraag (tekst)
@@ -63,7 +63,7 @@ Antwoord uitsluitend met JSON: {"velden": {...}, "taal": "...", "twijfel": null,
 }
 
 /** Wat de interviewer van elk invulveld wil weten (fase 2). */
-const VELD_DOEL: Partial<Record<Onderwerp, string>> = {
+export const VELD_DOEL: Partial<Record<Onderwerp, string>> = {
   ervaring: "ervaring: wat de kandidaat precies deed, hoe lang en waar, en of dat past bij de functie",
   functievraag: "functievraag: wat de kandidaat in die functie zelf deed (de kerntaken)",
   hotels: "hotels: in welke hotels de kandidaat werkte (alleen hotelfuncties)",

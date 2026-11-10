@@ -50,7 +50,8 @@ test("Knopkeuze wisselt niet", w("nl", "Alongside studies", "en", { keuze: true 
 test("Twee woorden is te kort", w("nl", "Begrijp niet", "nl").soort === "blijf" && w("en", "Begrijp niet", "nl").soort === "blijf");
 test("Hooguit één automatische wissel", w("en", "Ik spreek ook Nederlands hoor", "nl", { wissels: 1 }).soort === "blijf");
 test("AI spreekt tegen: geen wissel", w("nl", "I am in Amsterdam", "nl").soort === "blijf");
-test("Korte Engelse zin met AI erbij wisselt (Look for job)", w("nl", "Look for job", "en").soort === "wissel");
+test("Drie woorden met één herkend woord wisselt niet (Look for job)", w("nl", "Look for job", "en").soort === "blijf");
+test("Vier woorden met AI-bevestiging wisselt wel", w("nl", "Looking for a job", "en").soort === "wissel");
 test("Andere taal (Pools): Engels met uitleg", w("nl", "Szukam pracy w hotelu", "anders").soort === "andere_taal");
 test("Andere taal zonder AI, zes woorden", w("nl", "Szukam pracy w hotelu jako pokojówka teraz", null).soort === "andere_taal");
 test("Nederlandse zin met hoofdletter na een punt is geen andere taal", w("nl", "Allebei. Ook drie borden tegelijk", null).soort === "blijf");

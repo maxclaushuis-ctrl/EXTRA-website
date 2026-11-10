@@ -22,3 +22,4 @@ cookies.txt
 # commit, dan groeide elke `git pull` met duizenden regels die niets met de
 # site te maken hebben.
 *.patch
+job-gesprekstest.txt

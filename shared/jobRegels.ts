@@ -95,6 +95,12 @@ export interface JobVelden {
   /** Taal (shared/jobTaal.ts): aantal automatische wissels en keren dat Job zei alleen NL en EN te spreken. */
   taalWissels?: number;
   andereTaal?: number;
+  /** Job 4: vragen die na herhaald onduidelijke antwoorden als onbekend staan (de kennismaking vult ze aan). */
+  onbekend?: Onderwerp[];
+  /** Job 4: Job heeft één keer begrensd na een gerichte belediging (gedragsregel G4). */
+  begrensd?: boolean;
+  /** Job 4: aantal onduidelijke antwoorden per vraag. */
+  pogingen?: Partial<Record<Onderwerp, number>>;
   cvParaat?: "ja" | "nee";
   zoekt?: string;
   /**
@@ -274,7 +280,7 @@ const T = {
     specialisatieKeuzes: ["Ja, graag", "Liever niet"],
     werkautorisatie: "Nog één praktische vraag over werken in Nederland. Wat staat er op je verblijfsdocument bij arbeid?",
     werkautorisatieKeuzes: ["Arbeid vrij toegestaan", "TWV vereist", "Weet ik niet"],
-    geldigheid: "Dank je. Weet je tot wanneer het geldig is?",
+    geldigheid: "Weet je tot wanneer het geldig is?",
     diensten: "Hoeveel diensten per week zou je willen werken?",
     dienstenKeuzes: ["1 tot 2", "3 tot 4", "5 of meer"],
     werkgebied: "In welke regio wil je werken? Kies hoe ver je wilt reizen vanaf je huis, of typ een regio.",
@@ -288,11 +294,11 @@ const T = {
     werkvormKeuzes: ["Naast mijn studie", "Naast ander werk", "Als hoofdbaan"],
     cv: "Laatste vraag: heb je je cv paraat?",
     cvKeuzes: ["Ja", "Nee"],
-    cvUpload: "Top! Upload je cv hier als pdf of Word-bestand.",
-    cvUploadWa: "Top! Stuur je cv hier in WhatsApp als pdf of Word-bestand: tik op + of het paperclipje en kies Document.",
+    cvUpload: "Upload je cv hier als pdf of Word-bestand.",
+    cvUploadWa: "Stuur je cv hier in WhatsApp als pdf of Word-bestand: tik op + of het paperclipje en kies Document.",
     cvLaterWa: "Geen probleem! Stuur je cv later gewoon hier in WhatsApp als pdf of Word-bestand: tik op + of het paperclipje en kies Document. Zodra het binnen is, kun je meteen een kennismaking plannen.",
     cvLater: "Geen probleem! Ik heb je een mail gestuurd met een knop om je cv te uploaden. Zodra het binnen is, kun je meteen een kennismaking plannen.",
-    cvOntvangen: "Fantastisch, je cv is binnen!",
+    cvOntvangen: "Je cv is binnen, dank je.",
     cvBekijken: "Ik kijk er even naar.",
     cvVraagEerste: (vraag: string) => `Ik heb je cv bekeken, dank je. Een vraag daarover: ${vraag}`,
     cvVraagDank: "Dank je, dat helpt.",
@@ -308,7 +314,7 @@ const T = {
     planner: (v: string) => `Dankjewel, ${v}! Een collega van EXTRA bekijkt je aanmelding en laat je zo snel mogelijk weten hoe het verder gaat.`,
     werkautorisatieCollega: "Geen zorgen. Een collega van EXTRA kijkt met je mee en laat het je weten.",
     geenErvaringOk: "Geen probleem, veel collega's zijn zo begonnen.",
-    documentMee: "Fijn. Neem het document mee naar het gesprek, dan kijkt een collega het samen met je na.",
+    documentMee: "Neem het document mee naar het gesprek, dan kijkt een collega het samen met je na.",
     mens: "Prima, ik geef het door aan een collega van EXTRA. Die neemt zo snel mogelijk contact met je op.",
     wisselNl: "Prima, we gaan verder in het Nederlands.",
     alleenNlEn: "Ik spreek Nederlands en Engels. Zullen we verder gaan in het Nederlands?",
@@ -331,7 +337,7 @@ const T = {
     spraak: "Spraakberichten kan ik helaas niet beluisteren. Wil je je antwoord even typen?",
     bestandVraag: "Dank je, ik heb je bestand ontvangen. Is dit je cv?",
     bestandKeuzes: ["Ja, mijn cv", "Nee"],
-    cvBinnenKort: "Top, je cv is binnen.",
+    cvBinnenKort: "Je cv is binnen.",
     herinnering1: (v: string) => `Hoi ${v}, je was bijna klaar. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen. Zullen we verder?`,
     herinnering2: (v: string) => `Hoi ${v}, je aanmelding bij EXTRA staat nog open. Wil je verder? Stuur gerust een bericht, ik ga verder waar we gebleven waren.`,
     herinneringKeuzes: ["Verder", "Liever bellen"],
@@ -356,7 +362,7 @@ const T = {
     specialisatieKeuzes: ["Yes, please", "Rather not"],
     werkautorisatie: "One practical question about working in the Netherlands. What does your residence document say about work?",
     werkautorisatieKeuzes: ["Work freely permitted", "Work permit (TWV) required", "I don't know"],
-    geldigheid: "Thanks. Do you know until when it is valid?",
+    geldigheid: "Do you know until when it is valid?",
     diensten: "How many shifts per week would you like to work?",
     dienstenKeuzes: ["1 to 2", "3 to 4", "5 or more"],
     werkgebied: "Which area would you like to work in? Choose how far you'd travel from home, or type an area.",
@@ -370,11 +376,11 @@ const T = {
     werkvormKeuzes: ["Alongside studies", "Alongside other job", "As my main job"],
     cv: "Last question: do you have your CV ready?",
     cvKeuzes: ["Yes", "No"],
-    cvUpload: "Great! Upload your CV here as a PDF or Word file.",
-    cvUploadWa: "Great! Send your CV here in WhatsApp as a PDF or Word file: tap + or the paperclip and choose Document.",
+    cvUpload: "Upload your CV here as a PDF or Word file.",
+    cvUploadWa: "Send your CV here in WhatsApp as a PDF or Word file: tap + or the paperclip and choose Document.",
     cvLaterWa: "No problem! Just send your CV here in WhatsApp later as a PDF or Word file: tap + or the paperclip and choose Document. As soon as it's in, you can book a short meeting at our office.",
     cvLater: "No problem! I've sent you an email with a button to upload your CV. As soon as it's in, you can book a short meeting at our office.",
-    cvOntvangen: "Fantastic, your CV is in!",
+    cvOntvangen: "Your CV is in, thank you.",
     cvBekijken: "Let me take a quick look.",
     cvVraagEerste: (vraag: string) => `I've looked at your CV, thanks. A question about it: ${vraag}`,
     cvVraagDank: "Thanks, that helps.",
@@ -390,7 +396,7 @@ const T = {
     planner: (v: string) => `Thank you, ${v}! A colleague from EXTRA will look at your application and let you know as soon as possible.`,
     werkautorisatieCollega: "No worries. A colleague from EXTRA will check it with you and let you know.",
     geenErvaringOk: "No problem, many colleagues started that way.",
-    documentMee: "Great. Bring the document to the meeting, and a colleague will check it with you.",
+    documentMee: "Bring the document to the meeting, and a colleague will check it with you.",
     mens: "Sure, I'll pass this on to a colleague from EXTRA. They'll get in touch as soon as possible.",
     wisselNl: "Sure, we'll continue in English.",
     alleenNlEn: "Sorry, I speak Dutch and English. Let's continue in English.",
@@ -413,7 +419,7 @@ const T = {
     spraak: "I can't listen to voice messages, unfortunately. Could you type your answer?",
     bestandVraag: "Thanks, I've received your file. Is this your CV?",
     bestandKeuzes: ["Yes, my CV", "No"],
-    cvBinnenKort: "Great, your CV is in.",
+    cvBinnenKort: "Your CV is in.",
     herinnering1: (v: string) => `Hi ${v}, you were almost done. A few more quick questions, then you can book a meeting right away. Shall we continue?`,
     herinnering2: (v: string) => `Hi ${v}, your application at EXTRA is still open. Want to continue? Just send a message and I'll pick up where we left off.`,
     herinneringKeuzes: ["Continue", "Call me instead"],
@@ -433,26 +439,33 @@ export function teksten(taal: JobTaal) {
 
 /** De volgende vraag die Job moet stellen, of null als alles bekend is. */
 export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | null {
-  if (!v.ervaring) return "ervaring";
+  // Job 4: een vraag die na een paar pogingen onduidelijk bleef, staat als onbekend en komt niet terug.
+  return openOnderwerpenOpVolgorde(v, ctx).find((o) => !v.onbekend?.includes(o)) ?? null;
+}
+
+/** Alle vragen die nog open staan, in de volgorde waarin Job ze stelt. */
+export function openOnderwerpenOpVolgorde(v: JobVelden, ctx: JobContext): Onderwerp[] {
+  const uit: Onderwerp[] = [];
+  if (!v.ervaring) uit.push("ervaring");
   if (isHotelPad(ctx)) {
     // Hotels: alleen een verduidelijking als de AI die nodig vond, dan hotels en sterren.
     if (v.ervaringNiveau !== "geen") {
-      if (v.verduidelijking && v.functievraag === undefined) return "functievraag";
-      if (!v.hotels) return "hotels";
-      if (!v.sterren && !v.geenHotel) return "sterren";
-      if (v.geenHotel && v.restaurantWerk && !v.restaurantSoort) return "restaurant";
+      if (v.verduidelijking && v.functievraag === undefined) uit.push("functievraag");
+      if (!v.hotels) uit.push("hotels");
+      else if (!v.sterren && !v.geenHotel) uit.push("sterren");
+      else if (v.geenHotel && v.restaurantWerk && !v.restaurantSoort) uit.push("restaurant");
     }
-  } else if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) return "functievraag";
-  if (ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) return "specialisatie";
-  if (ctx.nationalityZone === "NON_EU" && !v.werkautorisatie) return "werkautorisatie";
-  if (ctx.nationalityZone === "NON_EU" && v.werkautorisatie === "vrij" && v.geldigTot === undefined) return "geldigheid";
-  if (!v.diensten) return "diensten";
-  if (!v.werkgebied) return "werkgebied";
-  if (!v.werkmoment) return "werkmoment";
-  if (!v.startdatum) return "startdatum";
-  if (!v.werkvorm) return "werkvorm";
-  if (!ctx.hasCv && !v.cvParaat) return "cv";
-  return null;
+  } else if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) uit.push("functievraag");
+  if (ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) uit.push("specialisatie");
+  if (ctx.nationalityZone === "NON_EU" && !v.werkautorisatie) uit.push("werkautorisatie");
+  if (ctx.nationalityZone === "NON_EU" && v.werkautorisatie === "vrij" && v.geldigTot === undefined) uit.push("geldigheid");
+  if (!v.diensten) uit.push("diensten");
+  if (!v.werkgebied) uit.push("werkgebied");
+  if (!v.werkmoment) uit.push("werkmoment");
+  if (!v.startdatum) uit.push("startdatum");
+  if (!v.werkvorm) uit.push("werkvorm");
+  if (!ctx.hasCv && !v.cvParaat) uit.push("cv");
+  return uit;
 }
 
 export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, velden?: JobVelden): Uitgaand {
@@ -595,6 +608,10 @@ export interface Lezing {
   doorvraag?: { tekst: string; voor: Onderwerp };
   /** Fase 2: vragen die door dit antwoord niet meer van toepassing zijn (zoals sterren zonder hotelervaring). */
   nvt?: Onderwerp[];
+  /** Job 4: het bericht is geen antwoord op de vraag (een vraag, klacht of onduidelijk): niets invullen, de vraag blijft open. */
+  geenAntwoord?: boolean;
+  /** Job 4: de kandidaat verbetert of vult iets eerder gezegds aan (met citaat). */
+  correctie?: boolean;
 }
 
 /** Velden waar Job op mag doorvragen, en welke vragen door een antwoord kunnen vervallen. */
@@ -610,8 +627,15 @@ export const MAX_DOORVRAGEN_TOTAAL = 5;
  * en bij "Ik heb nog niet in een hotel gewerkt"),
  * mag het gesprek nooit naar vragen over een verblijfsdocument sturen.
  */
-export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: JobContext, bekend: JobVelden = {}): JobVelden {
+export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: JobContext, bekend: JobVelden = {}, correctie = false): JobVelden {
   const uit: JobVelden = { ...v };
+  // Job 4: een correctie of aanvulling met citaat (gecontroleerd in jobBeurt.ts) mag de ervaring wel bijwerken.
+  if (correctie && vorig !== "ervaring" && uit.ervaring) {
+    if (ctx.nationalityZone !== "NON_EU") { delete uit.werkautorisatie; delete uit.geldigTot; }
+    if (vorig !== "specialisatie") delete uit.specialisatie;
+    if (vorig !== "cv") delete uit.cvParaat;
+    return uit;
+  }
   // De ervaring komt uit de ervaringsvraag. Een later antwoord ("ik heb nog niet in een hotel
   // gewerkt" bij de hotelvraag) overschrijft die niet en maakt er nooit "geen ervaring" van.
   if (vorig !== "ervaring") {
@@ -983,8 +1007,8 @@ function verwerkLos(
       lezing = { ...lezing, velden: rest };
     }
     // Een "?" of "wat bedoel je" is geen antwoord: niets invullen, dezelfde vraag komt terug.
-    const verward = VERWARD.test(invoer.tekst || "");
-    lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx, state.velden) };
+    const verward = VERWARD.test(invoer.tekst || "") || !!lezing.geenAntwoord;
+    lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx, state.velden, !!lezing.correctie) };
     if (!verward) {
       const vo = vervolgOpErvaring(lezing.velden, state.velden, vorigOnderwerp, invoer.tekst || "");
       lezing = { ...lezing, velden: vo.velden };
@@ -1032,7 +1056,8 @@ function verwerkLos(
       state.velden.hotels = "nog niet in een hotel gewerkt";
       state.velden.geenHotel = true;
       // Keuken of bediening en restaurantervaring: Job vraagt wat voor restaurant, in plaats van de sterren.
-      if ((ctx.functie === "chef" || ctx.functie === "horecamedewerker") && restaurantGenoemd(invoer.tekst || "")) state.velden.restaurantWerk = true;
+      // Hotelervaring is hier al ontkend: elk genoemd restaurant telt (ook "nog niet in een hotel, vooral restaurants").
+      if ((ctx.functie === "chef" || ctx.functie === "horecamedewerker") && /\b(restaurants?|brasserie|bistro|eetcaf[eé]|pizzeria|trattoria)\b/i.test(invoer.tekst || "")) state.velden.restaurantWerk = true;
     }
     if (!verward && vorigOnderwerp === "restaurant" && !state.velden.restaurantSoort) state.velden.restaurantSoort = (invoer.tekst || "").trim().slice(0, 100) || "-";
     if (!verward && vorigOnderwerp === "hotels" && !state.velden.hotels) state.velden.hotels = (invoer.tekst || "").trim().slice(0, 300) || "-";
@@ -1046,7 +1071,7 @@ function verwerkLos(
   }
 
   // Fase 2: een logische vervolgvraag op dit antwoord, om het invulveld goed te krijgen.
-  const dv = ctx.begrijpen && lezing && !VERWARD.test(invoer.tekst || "") ? lezing.doorvraag : undefined;
+  const dv = ctx.begrijpen && lezing && !lezing.geenAntwoord && !VERWARD.test(invoer.tekst || "") ? lezing.doorvraag : undefined;
   if (dv && DOORVRAAG_VOOR.includes(dv.voor)) {
     const teller = { ...(state.velden.doorvragen || {}) };
     const totaal = Object.values(teller).reduce((a, b) => a + (b || 0), 0);

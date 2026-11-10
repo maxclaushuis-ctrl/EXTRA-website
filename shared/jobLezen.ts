@@ -137,7 +137,7 @@ function diensten(s: string): Diensten | undefined {
   const t = s.toLowerCase();
   if (/(5|vijf|five|6|zes|six|7|fulltime|full time|full-time|elke dag|every day)/.test(t) && !/1 tot 2|1 to 2/.test(t)) return "5+";
   if (/(3|4|drie|vier|three|four)/.test(t)) return "3-4";
-  if (/(1|2|een|één|twee|one|two|weekend)/.test(t)) return "1-2";
+  if (/(^|\D)[12](\D|$)|\b(een|één|twee|one|two|weekend)\b/.test(t)) return "1-2";
   return undefined;
 }
 

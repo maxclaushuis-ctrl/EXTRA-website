@@ -148,7 +148,7 @@ export function taalWissel(i: WisselInvoer): WisselUitkomst {
   const aiZegt = ai === doel;
   const aiTegen = ai === i.huidig;
   if (aiTegen || hits <= ander) return { soort: "blijf" };
-  if (!(hits >= 2 || (aiZegt && hits >= 1))) return { soort: "blijf" };
+  if (!(hits >= 2 || (aiZegt && hits >= 1 && t.woorden >= 4))) return { soort: "blijf" };
   if (i.wissels >= 1) return { soort: "blijf" };
   return { soort: "wissel", taal: doel };
 }

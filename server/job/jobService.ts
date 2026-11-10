@@ -38,6 +38,7 @@ import { begrijpenAan, formulerenAan, lees } from "./jobAi";
 import { filterPrivacy, privacyMelding, type PrivacyUitkomst } from "@shared/jobPrivacy";
 import { Bundelaar, type Deel } from "@shared/jobBundel";
 import { landcodes, starttaal } from "@shared/jobTaal";
+import { beurtAan, echteAi, verwerkBeurt } from "./jobBeurt";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
@@ -600,12 +601,13 @@ async function herformuleer(r: ReturnType<typeof verwerk>, gesprekId: number, ct
 }
 
 /** Fase 2: het gesprek tot nu toe voor de AI (laatste berichten, het nieuwe antwoord niet meegerekend). */
-async function gesprekVoorAi(gesprekId: number, nieuw: string): Promise<{ laatsteVraag: string; geschiedenis: string }> {
+async function gesprekVoorAi(gesprekId: number, nieuw: string, aantal = 16): Promise<{ laatsteVraag: string; geschiedenis: string }> {
   const rijen = await db.select({ richting: jobBerichten.richting, tekst: jobBerichten.tekst }).from(jobBerichten)
-    .where(eq(jobBerichten.gesprekId, gesprekId)).orderBy(desc(jobBerichten.id)).limit(16);
+    .where(eq(jobBerichten.gesprekId, gesprekId)).orderBy(desc(jobBerichten.id)).limit(aantal);
   const lijst = rijen.reverse();
   // Het zojuist opgeslagen antwoord staat er mogelijk al in: niet dubbel.
-  if (lijst.length && lijst[lijst.length - 1].richting === "in" && lijst[lijst.length - 1].tekst.trim() === nieuw.trim()) lijst.pop();
+  // Ook bij gebundelde berichten (los opgeslagen, samen verwerkt).
+  while (lijst.length && lijst[lijst.length - 1].richting === "in" && nieuw.includes(lijst[lijst.length - 1].tekst.trim())) lijst.pop();
   const laatsteVraag = [...lijst].reverse().find((r) => r.richting === "uit")?.tekst || "";
   const geschiedenis = lijst.map((r) => `${r.richting === "uit" ? "Job" : "Kandidaat"}: ${r.tekst.replace(/\s+/g, " ").slice(0, 300)}`).join("\n");
   return { laatsteVraag: laatsteVraag.slice(0, 400), geschiedenis };
@@ -675,6 +677,12 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
     r = { state: { ...s, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null }, berichten: herhaal, acties: [] };
   } else if (planKeuze === "geen" || planKeuze === "bezet") {
     r = momentAntwoord(s, planKeuze, nu, planKeuze === "geen" && !!(await actieveAfspraak(g.candidateId)));
+  } else if (beurtAan() && tekst && !invoer.cvOntvangen) {
+    // Job 4: één beurt die het hele bericht begrijpt; de vaste regels bewaken wat er mag (jobBeurt.ts).
+    const gesprek = await gesprekVoorAi(g.id, tekst, 24);
+    const uit = await verwerkBeurt({ state: s, ctx, tekst, laatsteVraag: gesprek.laatsteVraag, geschiedenis: gesprek.geschiedenis, nu, ai: echteAi() });
+    r = uit.r;
+    console.log(`[Job] beurt gesprek ${g.id}: ${uit.bron}${uit.beurt ? ` ${uit.beurt.soorten.join("+")} velden=${Object.keys(uit.beurt.velden).join(",") || "-"}` : ""}${uit.gebruikt ? ` reactie=${uit.gebruikt.reactie} vraag=${uit.gebruikt.vraag} kennis=${uit.gebruikt.kennis ?? "-"}` : ""}${uit.ai ? ` ${uit.ai.model} ${uit.ai.ms}ms` : ""}`);
   } else {
     const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
     const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal, ctx.begrijpen ? await gesprekVoorAi(g.id, tekst) : undefined) : null;

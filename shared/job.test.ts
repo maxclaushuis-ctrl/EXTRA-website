@@ -70,7 +70,7 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Lisa: cv binnen en alles in orde: eerst cv-controle, nog niet plannen", r.state.status === "cv_controle" && !r.berichten.some((b) => b.planning));
   test("Lisa: collega krijgt een melding om het cv te controleren", r.acties.some((a) => a.soort === "planner" && a.reden.startsWith("Cv controleren")));
   test("Lisa: Job zegt dat een collega het cv bekijkt", alleTekst(r).includes("Een collega bekijkt nu je cv"));
-  test("Lisa: 'Fantastisch, je cv is binnen!'", alleTekst(r).includes("Fantastisch, je cv is binnen!"));
+  test("Lisa: 'Je cv is binnen, dank je.'", alleTekst(r).includes("Je cv is binnen, dank je."));
   test("Lisa: samenvatting voor de mail", samenvatting(r.state.velden, ctx) === "bediening en bar, ook evenementen en banqueting · 1 tot 2 diensten per week · tot 25 km · avond en weekend · beginnen: direct", samenvatting(r.state.velden, ctx));
   test("Lisa: profielvelden alleen bestaande kolommen", JSON.stringify(Object.keys(profielVelden(r.state.velden)).sort()) === JSON.stringify(["availability", "previousExperience"]) && profielVelden(r.state.velden).availability === "1 tot 2 diensten per week, avond en weekend");
 }
