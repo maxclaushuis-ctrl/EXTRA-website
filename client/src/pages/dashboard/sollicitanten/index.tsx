@@ -9,7 +9,8 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { BRANCHE } from "@shared/sollicitantRegels";
 import { Gesprekken, Stappenlijst, weekLabel, type Lijst } from "./Overzicht";
 import { SollicitantKaart } from "./Kaart";
-import { IntakeScherm } from "./Intake";
+import { IntakeStart } from "./IntakeV2";
+import { CSS_V2 } from "./KaartV2";
 import { AfwijzenDialoog } from "./Afwijzen";
 import { CSS, Knop, Leeg, Meldingen, api, kortDatum, melding, useData } from "./gedeeld";
 
@@ -77,11 +78,11 @@ export function SollicitantenV2({ ingang, oudeWeergave }: { ingang: Ingang; oude
     );
   } else {
     const s = scherm;
-    inhoud = <IntakeScherm id={s.id} sluit={() => setScherm({ soort: "kaart", id: s.id, van: s.van })} klaar={() => setScherm({ soort: "kaart", id: s.id, van: s.van })} />;
+    inhoud = <IntakeStart id={s.id} sluit={() => setScherm({ soort: "kaart", id: s.id, van: s.van })} klaar={() => setScherm({ soort: "kaart", id: s.id, van: s.van })} />;
   }
   return (
     <div className="sv" style={{ borderRadius: 18, minHeight: "calc(100vh - 120px)" }}>
-      <style>{CSS}</style>
+      <style>{CSS}{CSS_V2}</style>
       {inhoud}
       {oudeWeergave && ((scherm.soort === "lijst" && scherm.lijst === "gesprekken") || scherm.soort === "onboarding") && (
         <p className="sv-klein" style={{ padding: "0 40px 24px", background: "#F8F7F4" }}>{oudeWeergave.tekst} <button className="sv-knop sv-knop-link" onClick={oudeWeergave.doe}>Open de oude weergave</button>.</p>
@@ -93,7 +94,7 @@ export function SollicitantenV2({ ingang, oudeWeergave }: { ingang: Ingang; oude
 
 // ─── Onboarding (J) en Archief (J2) ─────────────────────────────────────────
 
-interface OnboardingRij { id: number; naam: string; functie: string; branche: keyof typeof BRANCHE; geaccepteerd: string; interviewer: string }
+interface OnboardingRij { id: number; naam: string; functie: string; branche: keyof typeof BRANCHE; geaccepteerd: string; interviewer: string; medewerkerId?: number | null }
 interface ArchiefRij { id: number; naam: string; voornaam: string; functie: string; branche: keyof typeof BRANCHE; gestoptIn: string; terugNaar: string; reden: string; datum: string; door: string; bewaardTot: string }
 
 function useZoeken<T extends { naam: string }>(rijen: T[] | null, datum: (r: T) => string) {
@@ -142,10 +143,10 @@ function OnboardingLijst({ open }: { open: (id: number) => void }) {
       <Kop titel="Onboarding" uitleg="Iedereen die door de procedure is gekomen." z={z} />
       {fout && <div className="sv-fout">{fout}</div>}
       <table className="sv-tabel">
-        <thead><tr><th>Naam</th><th>Functie</th><th>Branche</th><th>Geaccepteerd</th><th>Interviewer</th><th aria-label="Openen" /></tr></thead>
+        <thead><tr><th>Naam</th><th>Functie</th><th>Branche</th><th>Geaccepteerd</th><th>Interviewer</th><th>In Medewerkers</th><th aria-label="Openen" /></tr></thead>
         <tbody>{z.zichtbaar.map((r) => (
           <tr key={r.id} className="klik" tabIndex={0} onClick={() => open(r.id)} onKeyDown={(e) => { if (e.key === "Enter") open(r.id); }}>
-            <td><b>{r.naam}</b></td><td>{r.functie}</td><td>{BRANCHE[r.branche].label}</td><td className="sv-grijs">{kortDatum(r.geaccepteerd)}</td><td className="sv-grijs">{r.interviewer}</td><td className="sv-grijs" style={{ textAlign: "right" }}>›</td>
+            <td><b>{r.naam}</b></td><td>{r.functie}</td><td>{BRANCHE[r.branche].label}</td><td className="sv-grijs">{kortDatum(r.geaccepteerd)}</td><td className="sv-grijs">{r.interviewer}</td><td className="sv-grijs">{r.medewerkerId ? "✓ Aangemaakt" : "Nog niet"}</td><td className="sv-grijs" style={{ textAlign: "right" }}>›</td>
           </tr>
         ))}</tbody>
       </table>

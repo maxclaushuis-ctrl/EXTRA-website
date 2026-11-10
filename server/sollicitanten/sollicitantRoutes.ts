@@ -26,7 +26,9 @@ import {
   magAccepteren, magOnboarden, checkUitIntake, beoordelingCompleet, afwijsreden, afwijsLabel,
   gestoptInLabel, terugzetLabel, geenGehoorTeller, isAfwas, ingangBranche,
 } from "@shared/sollicitantRegels";
+import { isV2, beoordelingV2Compleet, type BeoordelingV2 } from "@shared/intakeV2";
 import { afwijsmailAan, maakAfwijsmail, stuurAfwijsmail } from "./afwijsmail";
+import { intakeV2Aan, registerIntakeV2Routes, voortrajectVan, medewerkerVan, medewerkersVan, functieCtxVan } from "./intakeV2Routes";
 
 /** Kandidaatkaart 3 (nieuwe opmaak van het dossier in Kandidaten). In de testomgeving vanzelf aan, uit met KANDIDATEN_KAART3=0; elders alleen met KANDIDATEN_KAART3=1. */
 function kaart3Aan(): boolean {
@@ -114,7 +116,23 @@ async function afsprakenVan(ids: number[]) {
 function naam(c: Candidate) { return `${c.firstName} ${c.lastName}`.trim(); }
 function twvNodig(c: Candidate, d?: SollicitantDossier | null): boolean {
   const i = (d?.intake || {}) as Intake;
-  return !!c.needsTwv || i.nationaliteit === "TWV nodig";
+  return !!c.needsTwv || i.nationaliteit === "TWV nodig" || (isV2(i) && i.werkrecht === "twv_nodig");
+}
+
+/** Met welke versie van het formulier dit dossier werkt: wat is vastgelegd, of voor een nieuwe intake wat de schakelaar zegt. */
+function versieVan(d?: SollicitantDossier | null): 1 | 2 {
+  if (d && d.intakeStatus !== "niet_gestart") return d.intakeVersie === 2 ? 2 : 1;
+  return intakeV2Aan() ? 2 : 1;
+}
+/** De beoordeling hoort bij de versie van de intake: vier schuiven (versie 1) of drie met onderbouwing (versie 2). */
+function beoordelingKlaar(d: SollicitantDossier): string | null {
+  if (d.intakeVersie === 2) {
+    const b = d.beoordeling as BeoordelingV2;
+    if (!beoordelingV2Compleet(b)) return "Vul eerst alle drie de schuiven in.";
+    if (!(b.onderbouwing || "").trim()) return "Schrijf eerst in een of twee zinnen waar je beoordeling op rust.";
+    return null;
+  }
+  return beoordelingCompleet(d.beoordeling as Beoordeling) ? null : "Vul eerst alle vier de schuiven in.";
 }
 
 async function tellers(week?: { van: string; tot: string }) {
@@ -204,11 +222,13 @@ async function onboarding() {
   const cs = ids.length ? await db.select().from(candidates).where(inArray(candidates.id, ids)) : [];
   const zonder = (await db.select().from(candidates).where(eq(candidates.status, "aangenomen"))).filter((c) => !metDossier.has(c.id));
   const dm = new Map(dossiers.map((d) => [d.candidateId, d]));
+  const medewerkers = await medewerkersVan([...cs, ...zonder].map((c) => c.id));
   return [...cs, ...zonder].map((c) => {
     const d = dm.get(c.id);
     return {
       id: c.id, naam: naam(c), functie: functieNaam(c.functionType, isAfwas(c)), branche: brancheVan(c.functionType, d?.branche, isAfwas(c), ingangBranche(c.bronDetails)),
       geaccepteerd: d?.geaccepteerdAt || c.updatedAt, interviewer: (d?.geaccepteerdDoor || d?.intakeDoor || "").split(" ")[0],
+      medewerkerId: medewerkers.get(c.id) ?? null, metDossier: !!d, intakeVersie: d?.intakeVersie ?? null,
     };
   }).sort((a, b) => new Date(b.geaccepteerd).getTime() - new Date(a.geaccepteerd).getTime());
 }
@@ -250,6 +270,7 @@ async function kaart(id: number) {
   const [g] = await db.select().from(jobGesprekken).where(eq(jobGesprekken.candidateId, id));
   const afspraak = (await afsprakenVan([id])).get(id) || null;
   const gebeurtenissen = await db.select().from(sollicitantGebeurtenissen).where(eq(sollicitantGebeurtenissen.candidateId, id)).orderBy(desc(sollicitantGebeurtenissen.at));
+  const versie = versieVan(d);
   const tijdlijn = [
     ...gebeurtenissen.map((e) => ({ at: e.at, tekst: e.tekst })),
     ...(afspraak ? [{ at: afspraak.aangemaaktAt, tekst: `Gesprek gepland bij ${afspraak.interviewer}` }] : []),
@@ -277,7 +298,14 @@ async function kaart(id: number) {
       twijfelVan: d.twijfelVan, twijfelDoor: d.twijfelDoor, twijfelAt: d.twijfelAt, geaccepteerdDoor: d.geaccepteerdDoor, geaccepteerdAt: d.geaccepteerdAt,
       gearchiveerdUit: d.gearchiveerdUit, archiefReden: afwijsLabel(d.archiefReden, d.archiefRedenTekst), gearchiveerdDoor: d.gearchiveerdDoor,
       gearchiveerdAt: d.gearchiveerdAt, foto: d.foto, fotoOvergeslagen: d.fotoOvergeslagen, stapSinds: d.stapSinds,
+      intakeVersie: d.intakeVersie, intakeRevisie: d.intakeRevisie,
     } : null,
+    // Formulier versie 2: welke versie hier geldt en wat het voortraject al weet (alleen lezen).
+    intakeVersie: versie,
+    functieCtx: functieCtxVan(c),
+    voortraject: versie === 2 ? await voortrajectVan(c, g || null) : null,
+    medewerker: await medewerkerVan(c.id),
+    medewerkerKoppeling: intakeV2Aan(),
     job: g ? { velden: g.velden, twijfels: g.twijfels, status: g.status } : null,
     tijdlijn,
     afwijsmailAan: afwijsmailAan(),
@@ -359,13 +387,13 @@ async function actie(id: number, w: Wie, body: any) {
   switch (soort) {
     case "naar_check": {
       if (d.stap !== "beoordelen") throw new Fout(409, "Deze sollicitant staat niet op Beoordelen.");
-      if (!beoordelingCompleet(d.beoordeling as Beoordeling)) throw new Fout(400, "Vul eerst alle vier de schuiven in.");
+      { const mist = beoordelingKlaar(d); if (mist) throw new Fout(400, mist); }
       await verplaats(c, w, "ref_doc_check", {}, `Beoordeeld door ${w.voornaam}, naar ref. en doc. check`);
       return { stap: "ref_doc_check" };
     }
     case "twijfel": {
       if (d.stap !== "beoordelen" && d.stap !== "ref_doc_check") throw new Fout(409, "Twijfel kan na de beoordeling of bij de ref. en doc. check.");
-      if (d.stap === "beoordelen" && !beoordelingCompleet(d.beoordeling as Beoordeling)) throw new Fout(400, "Vul eerst alle vier de schuiven in.");
+      if (d.stap === "beoordelen") { const mist = beoordelingKlaar(d); if (mist) throw new Fout(400, mist); }
       await verplaats(c, w, "extra_check", { twijfelVan: d.stap, twijfelDoor: w.naam, twijfelAt: NU() }, `Twijfel door ${w.voornaam}, naar EXTRA check`);
       return { stap: "extra_check" };
     }
@@ -411,14 +439,14 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
   const veilig = (fn: (req: Request, res: Response) => Promise<unknown>) => async (req: Request, res: Response) => {
     try { await fn(req, res); }
     catch (e: any) {
-      if (e instanceof Fout) return res.status(e.status).json({ message: e.message });
+      if (e instanceof Fout) return res.status(e.status).json({ message: e.message, ...((e as any).extra || {}) });
       console.error("[Sollicitanten]", e?.message || e);
       res.status(500).json({ message: "Er ging iets mis. Probeer het opnieuw." });
     }
   };
 
   app.get(r("/status"), adminMiddleware, (_req, res) => {
-    res.json({ aan: sollicitantenAan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", kaart3: kaart3Aan(), groepen: groepenAan(), afwijsmail: afwijsmailAan() });
+    res.json({ aan: sollicitantenAan(), intakeV2: intakeV2Aan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", kaart3: kaart3Aan(), groepen: groepenAan(), afwijsmail: afwijsmailAan() });
   });
 
   app.get(r("/week"), adminMiddleware, alleenAan, veilig(async (req, res) => { res.json(await week(String(req.query.van || ""))); }));
@@ -444,6 +472,7 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
     if (!c) throw new Fout(404, "Sollicitant niet gevonden.");
     const d = await zorgVoorDossier(c);
     if (d.stap !== "gesprek_gepland") throw new Fout(409, "De intake is al afgerond.");
+    if (d.intakeVersie === 2 && d.intakeStatus !== "niet_gestart") throw new Fout(409, "Deze intake loopt in het nieuwe formulier. Open hem opnieuw.");
     const intake = req.body?.intake;
     if (!intake || typeof intake !== "object" || Array.isArray(intake)) throw new Fout(400, "Geen intake.");
     if (JSON.stringify(intake).length > 50000) throw new Fout(413, "Intake te groot.");
@@ -479,6 +508,7 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
     if (!c) throw new Fout(404, "Sollicitant niet gevonden.");
     const d = await zorgVoorDossier(c);
     if (d.stap !== "gesprek_gepland") throw new Fout(409, "De intake is al afgerond.");
+    if (d.intakeVersie === 2 && d.intakeStatus !== "niet_gestart") throw new Fout(409, "Deze intake loopt in het nieuwe formulier. Open hem opnieuw.");
     const w = await wie(req);
     const intake = (req.body?.intake && typeof req.body.intake === "object" ? req.body.intake : d.intake) as Intake;
     const nu = NU();
@@ -504,6 +534,7 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
     if (!c) throw new Fout(404, "Sollicitant niet gevonden.");
     const d = await zorgVoorDossier(c);
     if (d.stap !== "beoordelen") throw new Fout(409, "De beoordeling is al afgerond.");
+    if (d.intakeVersie === 2) throw new Fout(409, "Deze beoordeling hoort bij het nieuwe formulier. Open de kaart opnieuw.");
     const b: Beoordeling = {};
     for (const k of ["communicatief", "representatief", "extravert", "indruk"] as const) {
       const v = req.body?.beoordeling?.[k];
@@ -580,6 +611,12 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
     const m = maakAfwijsmail({ voornaam: c.firstName, functie: c.functionType, reden: reden.code, naGesprek, eigenTekst: typeof req.body?.mailTekst === "string" ? req.body.mailTekst : undefined });
     res.json({ ...m, kern: reden.mail, naar: c.email || null, aan: afwijsmailAan() && !!c.email, standaardGeenMail: !!reden.geenMail });
   }));
+
+  // Formulier versie 2 (shared/intakeV2.ts): eigen routes, versie 1 hierboven blijft ongewijzigd.
+  registerIntakeV2Routes(app, adminMiddleware, alleenAan, veilig, {
+    Fout: (status, tekst, extra) => Object.assign(new Fout(status, tekst), { extra }),
+    nummer, wie, kandidaat, zorgVoorDossier, dossierVan, werkBij, log, twvNodig,
+  });
 
   // Persoonsgegevens aanpassen
   app.put(r("/persoon/:id"), adminMiddleware, alleenAan, veilig(async (req, res) => {

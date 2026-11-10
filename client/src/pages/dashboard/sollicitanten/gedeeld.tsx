@@ -13,7 +13,7 @@ export async function api<T>(url: string, init?: { method?: string; body?: unkno
     body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((d as any)?.message || `HTTP ${r.status}`);
+  if (!r.ok) throw Object.assign(new Error((d as any)?.message || `HTTP ${r.status}`), { status: r.status, data: d });
   return d as T;
 }
 

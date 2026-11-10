@@ -749,6 +749,29 @@ const AANVULLINGEN: Aanvulling[] = [
       await db.execute(sql`CREATE INDEX IF NOT EXISTS kandidaat_matches_kandidaat_idx ON kandidaat_matches (candidate_id)`);
     },
   },
+  {
+    // Migratie 0034: zie migrations/manual/0034_intake_v2/ (sollicitatieformulier versie 2).
+    // Alleen toevoegen: twee kolommen met een standaardwaarde en een nieuwe tabel. Bestaande rijen blijven versie 1.
+    omschrijving: "sollicitant_dossiers.intake_versie en intake_revisie, tabel intake_antwoorden: formulier versie 2",
+    uitvoeren: async () => {
+      await db.execute(sql`ALTER TABLE sollicitant_dossiers ADD COLUMN IF NOT EXISTS intake_versie integer NOT NULL DEFAULT 1`);
+      await db.execute(sql`ALTER TABLE sollicitant_dossiers ADD COLUMN IF NOT EXISTS intake_revisie integer NOT NULL DEFAULT 0`);
+      await db.execute(sql`CREATE TABLE IF NOT EXISTS intake_antwoorden (
+  id            serial PRIMARY KEY,
+  candidate_id  integer NOT NULL,
+  versie        integer NOT NULL DEFAULT 2,
+  onderdeel     text NOT NULL DEFAULT 'intake',
+  vraag         text NOT NULL,
+  waarde        jsonb,
+  bron          text NOT NULL,
+  status        text NOT NULL,
+  door          text,
+  door_user_id  integer,
+  at            timestamp NOT NULL DEFAULT now()
+)`);
+      await db.execute(sql`CREATE INDEX IF NOT EXISTS intake_antwoorden_kandidaat_idx ON intake_antwoorden (candidate_id)`);
+    },
+  },
 ];
 
 /**

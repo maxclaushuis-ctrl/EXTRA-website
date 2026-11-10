@@ -29,6 +29,7 @@ en `sollicitant_gebeurtenissen` (migratie 0031, alleen nieuw). Tests:
 | --- | --- |
 | `SOLLICITANTEN_V2=1` | Zet het nieuwe menu en de nieuwe schermen aan. Zonder: het dashboard blijft zoals het was. In de testomgeving staat het vanzelf aan met `TESTOMGEVING=1`. |
 | `SOLLICITANTEN_AFWIJSMAIL=0` | Zet de afwijsmail uit. Afwijzen werkt dan gewoon, zonder mail. |
+| `INTAKE_V2` | Sollicitatieformulier versie 2 voor nieuwe intakes (zie `docs/INTAKE-V2.md`). In de testomgeving vanzelf aan, uit met `0`; elders alleen met `1`. Begonnen intakes houden hun eigen versie, dus terugschakelen kost geen gegevens. |
 
 Het oude sollicitatieformulier en het oude overzicht Medewerkers blijven
 bestaan; onderaan Gesprekken en Onboarding staat een link naar de oude weergave.

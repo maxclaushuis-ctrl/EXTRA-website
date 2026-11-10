@@ -2722,6 +2722,10 @@ export const sollicitantDossiers = pgTable("sollicitant_dossiers", {
   /** Uitgeknipte pasfoto op de branchekleur, als data-URL (jpeg, ongeveer 40 kB). */
   foto: text("foto"),
   fotoOvergeslagen: boolean("foto_overgeslagen").notNull().default(false),
+  /** Met welke versie van het formulier de intake is afgenomen (1 = ONDERDELEN, 2 = shared/intakeV2.ts). Migratie 0034. */
+  intakeVersie: integer("intake_versie").notNull().default(1),
+  /** Telt op bij elke bewaring van een intake versie 2: voorkomt dat twee mensen elkaar overschrijven. */
+  intakeRevisie: integer("intake_revisie").notNull().default(0),
   aangemaaktAt: timestamp("aangemaakt_at").defaultNow().notNull(),
   bijgewerktAt: timestamp("bijgewerkt_at").defaultNow().notNull(),
 }, (t) => ({
@@ -2741,6 +2745,26 @@ export const sollicitantGebeurtenissen = pgTable("sollicitant_gebeurtenissen", {
 }, (t) => ({
   kandidaatIdx: index("sollicitant_gebeurtenissen_kandidaat_idx").on(t.candidateId),
 }));
+
+// Intake versie 2: elk antwoord en elke correctie als eigen regel (alleen toevoegen, nooit wijzigen).
+// De actuele stand staat in sollicitant_dossiers.intake; hier staat hoe die tot stand kwam:
+// welke vraag, welke waarde, uit welke bron, door wie en wanneer. Migratie 0034.
+export const intakeAntwoorden = pgTable("intake_antwoorden", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  versie: integer("versie").notNull().default(2),
+  onderdeel: text("onderdeel").notNull().default("intake"),   // intake | beoordeling
+  vraag: text("vraag").notNull(),
+  waarde: jsonb("waarde"),
+  bron: text("bron").notNull(),                                // gesprek | job | cv | formulier | interviewer
+  status: text("status").notNull(),                            // overgenomen | bevestigd | aangepast | ingevuld | gewist
+  door: text("door"),
+  doorUserId: integer("door_user_id"),
+  at: timestamp("at").defaultNow().notNull(),
+}, (t) => ({
+  kandidaatIdx: index("intake_antwoorden_kandidaat_idx").on(t.candidateId),
+}));
+export type IntakeAntwoord = typeof intakeAntwoorden.$inferSelect;
 
 export type SollicitantDossier = typeof sollicitantDossiers.$inferSelect;
 export type SollicitantGebeurtenis = typeof sollicitantGebeurtenissen.$inferSelect;

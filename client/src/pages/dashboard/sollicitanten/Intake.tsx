@@ -421,7 +421,7 @@ async function knipUit(bron: HTMLCanvasElement, kleur: string): Promise<{ url: s
   }
 }
 
-function FotoMaker({ id, kleur, branche, klaar, zetKlaar, bestaand }: { id: number; kleur: string; branche: string; klaar: boolean; zetKlaar: (b: boolean) => void; bestaand: string | null }) {
+export function FotoMaker({ id, kleur, branche, klaar, zetKlaar, bestaand }: { id: number; kleur: string; branche: string; klaar: boolean; zetKlaar: (b: boolean) => void; bestaand: string | null }) {
   const [fase, setFase] = useState<"camera" | "genomen" | "bezig" | "klaar" | "overgeslagen" | "geencamera">(bestaand ? "klaar" : "camera");
   const [resultaat, setResultaat] = useState<string | null>(bestaand);
   const [melding2, setMelding2] = useState("");
@@ -493,7 +493,7 @@ function FotoMaker({ id, kleur, branche, klaar, zetKlaar, bestaand }: { id: numb
   );
 }
 
-const IV_CSS = `
+export const IV_CSS = `
 .iv{position:fixed;inset:0;z-index:2000;background:#F8F7F4;display:flex;flex-direction:column;color:#37352C;font-size:16px}
 .iv *{box-sizing:border-box}
 .iv-laden{margin:auto;color:#8A8478}

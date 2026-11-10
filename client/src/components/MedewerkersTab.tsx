@@ -17,6 +17,7 @@ import {
 import type { Employee, OnboardingLog, OnboardingTemplate, OnboardingBijlage } from '@shared/schema';
 import { D3Kop, D3Tegels, FunctieLabel, Persoon, StatusLabel, type StatusSoort } from '@/pages/dashboard/d3';
 import { telVaardigheden, type EmployeeMetVaardigheden } from '@shared/vaardigheden';
+import { MedewerkerProfiel } from '@/pages/dashboard/sollicitanten/MedewerkerProfiel';
 
 type TemplateLite = Pick<OnboardingTemplate, 'id' | 'naam' | 'taal' | 'functiegroep' | 'opdrachtgever'>;
 type TemplateMetBijlagen = OnboardingTemplate & {
@@ -52,7 +53,7 @@ export default function MedewerkersTab() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [profileTab, setProfileTab] = useState<'gegevens' | 'historie' | 'shifts'>('gegevens');
+  const [profileTab, setProfileTab] = useState<'gegevens' | 'gesprek' | 'historie' | 'shifts'>('gegevens');
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [sendConfirmTemplate, setSendConfirmTemplate] = useState<TemplateLite | null>(null);
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
@@ -858,8 +859,8 @@ function EmployeeDetail({
   employee: EmployeeWithLogs;
   editMode: boolean;
   setEditMode: (b: boolean) => void;
-  profileTab: 'gegevens' | 'historie' | 'shifts';
-  setProfileTab: (t: 'gegevens' | 'historie' | 'shifts') => void;
+  profileTab: 'gegevens' | 'gesprek' | 'historie' | 'shifts';
+  setProfileTab: (t: 'gegevens' | 'gesprek' | 'historie' | 'shifts') => void;
   onUpdate: (data: Partial<Employee>) => void;
   onDelete: () => void;
   onSendOnboarding: (template: TemplateLite) => void;
@@ -986,7 +987,8 @@ function EmployeeDetail({
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 -mx-6 px-6">
-        {(['gegevens', 'historie', 'shifts'] as const).map(t => (
+        {/* Het tabblad Gesprek is er alleen voor medewerkers die uit een sollicitatie komen (candidateId). */}
+        {(employee.candidateId ? (['gegevens', 'gesprek', 'historie', 'shifts'] as const) : (['gegevens', 'historie', 'shifts'] as const)).map(t => (
           <button
             key={t}
             onClick={() => setProfileTab(t)}
@@ -994,7 +996,7 @@ function EmployeeDetail({
               profileTab === t ? 'border-purple-600 text-purple-700' : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {t === 'gegevens' ? 'Gegevens' : t === 'historie' ? 'Onboarding historie' : 'Shifts / Historie'}
+            {t === 'gegevens' ? 'Gegevens' : t === 'gesprek' ? 'Profiel uit het gesprek' : t === 'historie' ? 'Onboarding historie' : 'Shifts / Historie'}
           </button>
         ))}
       </div>
@@ -1047,6 +1049,8 @@ function EmployeeDetail({
           )}
         </div>
       )}
+
+      {profileTab === 'gesprek' && <MedewerkerProfiel medewerkerId={employee.id} />}
 
       {profileTab === 'historie' && (
         <div className="py-4">

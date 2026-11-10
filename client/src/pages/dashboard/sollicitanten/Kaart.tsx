@@ -9,7 +9,9 @@ import {
   magOnboarden, motivatie, rasterTelling, referentieStatus, terugzetLabel, voortgangIndex, geenGehoorTeller,
   type ArchiefHerkomst, type Beoordeling, type Branche, type Check, type Intake, type Script, type Stap,
 } from "@shared/sollicitantRegels";
+import { isV2, type FunctieCtx, type IntakeV2, type Voortraject } from "@shared/intakeV2";
 import { JobGesprekPaneel } from "../JobBeheer";
+import { BeoordelingInvoerV2, BeoordelingLezenV2, ControlesKaart, Historie, IntakeSamenvattingV2, InzetKaart, KpiRijV2, MedewerkerKaart, WatZoekt, WeekpatroonKaart } from "./KaartV2";
 import { AfwijzenDialoog } from "./Afwijzen";
 import {
   BrancheChip, Chip, Dialoog, Foto, Kaartje, Knop, Voortgang, api, dagDatum, kortDatum, langDatum, melding, tijdstip, useData,
@@ -30,7 +32,15 @@ export interface KaartData {
     twijfelVan: string | null; twijfelDoor: string | null; twijfelAt: string | null; geaccepteerdDoor: string | null; geaccepteerdAt: string | null;
     gearchiveerdUit: string | null; archiefReden: string; gearchiveerdDoor: string | null; gearchiveerdAt: string | null;
     foto: string | null; fotoOvergeslagen: boolean; stapSinds: string;
+    /** Formulier versie waarmee de intake is afgenomen, en de teller tegen overschrijven (versie 2). */
+    intakeVersie?: number; intakeRevisie?: number;
   };
+  /** De versie die voor dit dossier geldt: de vastgelegde, of voor een nieuwe intake wat de schakelaar zegt. */
+  intakeVersie?: 1 | 2;
+  functieCtx?: FunctieCtx;
+  voortraject?: Voortraject | null;
+  medewerker?: { id: number; status: string } | null;
+  medewerkerKoppeling?: boolean;
   job: null | { velden: Record<string, unknown>; twijfels: string[]; status: string };
   tijdlijn: { at: string; tekst: string }[];
   afwijsmailAan: boolean;
@@ -48,6 +58,7 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
   const [bezig, setBezig] = useState(false);
   const [verzetten, setVerzetten] = useState(false);
   const [persoon, setPersoon] = useState(false);
+  const [onder, setOnder] = useState<null | "job" | "documenten" | "historie" | "contact">(null);
   if (fout) return <div className="sv-dossier"><button className="sv-terug" onClick={terug.doe}>← {terug.label}</button><div className="sv-fout">{fout}</div></div>;
   if (!data) return <div className="sv-dossier"><p className="sv-grijs">Laden...</p></div>;
   const k = data.kandidaat;
@@ -88,6 +99,9 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
   }
 
   const intake = (d?.intake || {}) as Intake;
+  // Formulier versie 2: eigen kaarten. Een dossier van versie 1 houdt de kaart die het had.
+  const v2 = d?.intakeVersie === 2 && isV2(d.intake) ? (d.intake as unknown as IntakeV2) : null;
+  const fctx = (data.functieCtx || { functie: k.functie, afwas: k.afwas }) as FunctieCtx;
   const ctl = (d?.controle || {}) as Check;
   const huidig = voortgangIndex(stap === "archief" ? ((d?.gearchiveerdUit as Stap) || "gesprek_gepland") : stap);
   const chip = stap === "extra_check" && d?.twijfelDoor
@@ -98,7 +112,12 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
         ? <Chip soort="fout">In het archief · {d?.archiefReden}{d?.gearchiveerdAt ? `, ${kortDatum(d.gearchiveerdAt)}` : ""}</Chip>
         : null;
 
-  const rechts = (
+  const rechts = v2 ? (
+    <div className="sv-kolom">
+      <WeekpatroonKaart intake={v2} />
+      <ControlesKaart data={data} />
+    </div>
+  ) : (
     <div className="sv-kolom">
       <BeschikbaarheidKaart raster={intake.raster} />
       <Persoonsgegevens data={data} aanpassen={() => setPersoon(true)} />
@@ -109,7 +128,7 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
   return (
     <div className="sv-dossier">
       <button className="sv-terug" onClick={terug.doe}>← {terug.label}</button>
-      <Kopkaart data={data} huidig={huidig} chip={chip} alles={stap === "onboarding"} />
+      <Kopkaart data={data} huidig={huidig} chip={chip} alles={stap === "onboarding"} zonderJob={!!v2} />
 
       {stap === "extra_check" && (
         <Kaartje className="sv-besluitkaart">
@@ -159,17 +178,28 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
         </div>
       </>}
 
-      <KpiRij intake={intake} script={data.script} />
+      {stap === "onboarding" && data.medewerkerKoppeling && <MedewerkerKaart data={data} bijgewerkt={opnieuw} />}
+
+      {v2 ? <KpiRijV2 intake={v2} f={fctx} cvUitleg={data.voortraject?.cv.uitleg} voornaam={k.voornaam} /> : <KpiRij intake={intake} script={data.script} />}
 
       <div className="sv-twee">
         <div className="sv-kolom">
-          {stap === "beoordelen" ? (
+          {v2 ? <>
+            {stap === "beoordelen" ? (
+              <BeoordelingInvoerV2 data={data} bezig={bezig}
+                afwijzen={() => setAfwijzen({})}
+                twijfel={() => actie("twijfel", {}, () => { melding("Op EXTRA check gezet. Klik op EXTRA check om de twijfelgevallen te zien."); naarLijst("refdoc"); })}
+                naarCheck={() => actie("naar_check", {}, () => { melding("Door naar de ref. en doc. check."); opnieuw(); })} />
+            ) : <BeoordelingLezenV2 data={data} />}
+            <WatZoekt intake={v2} voornaam={k.voornaam} />
+            <InzetKaart intake={v2} voornaam={k.voornaam} />
+          </> : stap === "beoordelen" ? (
             <BeoordelingInvoer data={data} bezig={bezig}
               afwijzen={() => setAfwijzen({})}
               twijfel={() => actie("twijfel", {}, () => { melding("Op EXTRA check gezet. Klik op EXTRA check om de twijfelgevallen te zien."); naarLijst("refdoc"); })}
               naarCheck={() => actie("naar_check", {}, () => { melding("Door naar de ref. en doc. check."); opnieuw(); })} />
           ) : <BeoordelingLezen data={data} />}
-          <UitDeIntake intake={intake} script={data.script} metReferentie={stap === "beoordelen"} />
+          {!v2 && <UitDeIntake intake={intake} script={data.script} metReferentie={stap === "beoordelen"} />}
           {(stap === "onboarding" || stap === "archief" || stap === "extra_check") && <>
             <ReferentieLezen ctl={ctl} />
             {stap === "extra_check" && !magOnboarden(ctl, k.twvNodig)
@@ -180,6 +210,25 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
         {rechts}
       </div>
 
+      {v2 && <>
+        <div className="sv2-links">
+          {data.job && <button className="sv-knop sv-knop-link" aria-expanded={onder === "job"} onClick={() => setOnder(onder === "job" ? null : "job")}>Gesprek met Job</button>}
+          <button className="sv-knop sv-knop-link" aria-expanded={onder === "documenten"} onClick={() => setOnder(onder === "documenten" ? null : "documenten")}>Documenten</button>
+          <button className="sv-knop sv-knop-link" aria-expanded={onder === "historie"} onClick={() => setOnder(onder === "historie" ? null : "historie")}>Historie</button>
+          <button className="sv-knop sv-knop-link" aria-expanded={onder === "contact"} onClick={() => setOnder(onder === "contact" ? null : "contact")}>Contactgegevens</button>
+        </div>
+        {onder === "job" && <Kaartje className="sv2-onder"><JobGesprekPaneel candidateId={k.id} kolom /></Kaartje>}
+        {onder === "documenten" && <div className="sv-onder">
+          <DocumentLezen data={data} ctl={ctl} />
+          <Kaartje titel="Cv">{k.heeftCv ? <div className="sv-rij"><CvKnoppen data={data} /></div> : <p className="sv-grijs">Geen cv ontvangen.</p>}</Kaartje>
+        </div>}
+        {onder === "historie" && <div className="sv-onder">
+          <Tijdlijn data={data} />
+          <Kaartje titel="Antwoorden en correcties"><Historie kandidaatId={k.id} /></Kaartje>
+        </div>}
+        {onder === "contact" && <div className="sv-onder"><Persoonsgegevens data={data} aanpassen={() => setPersoon(true)} /></div>}
+      </>}
+
       {afwijsDialoog}
       {persoon && <PersoonDialoog data={data} sluit={() => setPersoon(false)} klaar={() => { setPersoon(false); opnieuw(); }} />}
     </div>
@@ -188,7 +237,7 @@ export function SollicitantKaart({ id, terug, naarLijst, startIntake }: {
 
 // ─── Kop en KPI's ───────────────────────────────────────────────────────────
 
-function Kopkaart({ data, huidig, chip, alles }: { data: KaartData; huidig: number; chip: React.ReactNode; alles?: boolean }) {
+function Kopkaart({ data, huidig, chip, alles, zonderJob }: { data: KaartData; huidig: number; chip: React.ReactNode; alles?: boolean; zonderJob?: boolean }) {
   const k = data.kandidaat;
   const d = data.dossier;
   const [jobOpen, setJobOpen] = useState(false);
@@ -204,7 +253,7 @@ function Kopkaart({ data, huidig, chip, alles }: { data: KaartData; huidig: numb
           </div>
         </div>
         <div className="sv-rij">
-          {data.job && <Knop onClick={() => setJobOpen((o) => !o)}>{jobOpen ? "Gesprek met Job sluiten" : "Gesprek met Job"}</Knop>}
+          {data.job && !zonderJob && <Knop onClick={() => setJobOpen((o) => !o)}>{jobOpen ? "Gesprek met Job sluiten" : "Gesprek met Job"}</Knop>}
           {d?.intakeStatus === "afgerond" && <IntakeBekijken data={data} />}
           <CvKnoppen data={data} />
         </div>
@@ -222,7 +271,7 @@ function IntakeBekijken({ data }: { data: KaartData }) {
     <Knop onClick={() => setOpen(true)}>Intake bekijken →</Knop>
     {open && (
       <Dialoog titel={`Intake van ${data.kandidaat.voornaam}`} sluit={() => setOpen(false)} breed={760}>
-        <IntakeSamenvatting intake={i} />
+        {data.dossier?.intakeVersie === 2 && isV2(i) ? <IntakeSamenvattingV2 intake={i as unknown as IntakeV2} voornaam={data.kandidaat.voornaam} kandidaatId={data.kandidaat.id} /> : <IntakeSamenvatting intake={i} />}
         <div className="sv-rij" style={{ justifyContent: "flex-end", marginTop: 16 }}><Knop onClick={() => setOpen(false)}>Sluiten</Knop></div>
       </Dialoog>
     )}
