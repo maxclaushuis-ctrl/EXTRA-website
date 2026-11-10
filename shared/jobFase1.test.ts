@@ -140,5 +140,32 @@ for (const k of ["gestopt", "welkomTerug", "welkomTerugKort", "blijftGestopt", "
   }
 }
 
+// ─── Slordige vragen (test Max, 10 nov) ──────────────────────────────────────
+{
+  const bar: JobContext = { voornaam: "Daan", functie: "horecamedewerker", label: "events", nationalityZone: "NL", hasCv: false, stopV3: true };
+  let r = start(bar, "nl", NU);
+  // Barwerk spreekt voor zich: geen vraag wat iemand achter de bar deed
+  r = antwoord(r.state, bar, "Ik heb in een bar gewerkt als barman en op verschillende andere locaties zoals hockeyclubs");
+  test("Barman: geen functievraag, door naar de volgende vraag", r.state.laatsteOnderwerp !== "functievraag", String(r.state.laatsteOnderwerp));
+  // Een AI-lezing die bij een gewoon antwoord toch werkautorisatie invult, mag niets doen bij een Nederlandse kandidaat
+  const s0 = { ...r.state, laatsteOnderwerp: "functievraag" as const, velden: { ...r.state.velden, functievraag: undefined } };
+  const fout = verwerk(s0, bar, { tekst: "Drinken inschenken" }, { velden: { functievraag: "Drinken inschenken", werkautorisatie: "vrij", geldigTot: "2030" }, taal: "nl", twijfel: null, ack: "" }, later(2));
+  test("NL: werkautorisatie uit de AI telt niet", fout.state.velden.werkautorisatie === undefined && fout.state.velden.geldigTot === undefined);
+  test("NL: nooit de vraag tot wanneer het geldig is", fout.state.laatsteOnderwerp !== "geldigheid" && !fout.berichten.some((b) => b.tekst.includes(nl.geldigheid)), String(fout.state.laatsteOnderwerp));
+  test("NL: geen document meenemen", !fout.berichten.some((b) => b.tekst.includes(nl.documentMee)));
+  // Buiten de EU blijft de vraag naar de geldigheid wel
+  const buiten: JobContext = { ...bar, nationalityZone: "NON_EU" };
+  const s1 = { ...fout.state, laatsteOnderwerp: "werkautorisatie" as const, velden: { ...fout.state.velden } };
+  const w = verwerk(s1, buiten, { tekst: "Arbeid vrij toegestaan" }, { velden: { werkautorisatie: "vrij" }, taal: "nl", twijfel: null, ack: "" }, later(3));
+  test("Buiten de EU: na arbeid vrij volgt de geldigheid", w.state.laatsteOnderwerp === "geldigheid", String(w.state.laatsteOnderwerp));
+  // "?" is geen antwoord: dezelfde vraag komt terug
+  const v = verwerk(w.state, buiten, { tekst: "?" }, { velden: { geldigTot: "?" }, taal: "nl", twijfel: null, ack: "" }, later(4));
+  test("Een vraagteken: dezelfde vraag opnieuw, niets ingevuld", v.state.laatsteOnderwerp === "geldigheid" && v.state.velden.geldigTot === undefined && !v.berichten.some((b) => b.tekst.includes(nl.documentMee)));
+  // Bediening zonder barwerk krijgt de functievraag nog wel
+  let o = start(bar, "nl", NU);
+  o = antwoord(o.state, bar, "Twee jaar bediening in een restaurant");
+  test("Bediening: functievraag blijft", o.state.laatsteOnderwerp === "functievraag", String(o.state.laatsteOnderwerp));
+}
+
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

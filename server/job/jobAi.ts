@@ -26,8 +26,8 @@ const UITLEG_VELDEN = `
 - functievraag: het antwoord op de functiegerichte vervolgvraag (tekst)
 - specialisatieHint: true als de ervaring wijst op evenementen, banqueting, catering of bruiloften
 - specialisatie: "ja" of "nee", alleen als de kandidaat antwoordt op de vraag of evenementen en banqueting erbij mogen
-- werkautorisatie: alleen bij de vraag over het verblijfsdocument: "vrij" (arbeid vrij toegestaan, TWV niet vereist), "twv" (TWV vereist of niet toegestaan), "onbekend" (weet het niet) of "anders"
-- geldigTot: tot wanneer het verblijfsdocument geldig is (tekst)
+- werkautorisatie: ALLEEN als de laatste vraag over het verblijfsdocument ging, anders altijd weglaten: "vrij" (arbeid vrij toegestaan, TWV niet vereist), "twv" (TWV vereist of niet toegestaan), "onbekend" (weet het niet) of "anders"
+- geldigTot: tot wanneer het verblijfsdocument geldig is (tekst), ALLEEN als de laatste vraag over het verblijfsdocument of de geldigheid ging
 - diensten: "1-2", "3-4" of "5+" diensten per week
 - werkgebied: "tot 25 km", "tot 35 km", "tot 50 km" of een regio (tekst)
 - vervoer: fiets, auto, scooter, ov of iets anders (tekst)
@@ -56,7 +56,7 @@ Geef ook:
 - ack: een korte reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt, door iets concreets uit het antwoord te noemen, bijvoorbeeld "Twee jaar achter de bar, dat is mooi." of "Festivals, gezellig druk werk.". Geen vraag, geen beloftes, geen standaardzinnen zoals "Mooi, dank je!" of "Top, bedankt!". Bij een kort of keuze-antwoord (zoals "1 tot 2", "Ja", "Tot 35 km", "Direct" of een lijstje talen) laat je ack leeg. Herhaal nooit iets wat al eerder gezegd is. Laat ack ook leeg als er niets bijzonders in het antwoord staat.
 ${isHotelPad(ctx)
   ? `- vervolgvraag: alleen als de laatste vraag over ervaring ging en uit het antwoord NIET duidelijk is dat de kandidaat ervaring heeft als ${functieLabel(ctx.functie, "nl")} (bijvoorbeeld alleen "AD", "public areas", "linnenkamer" of ander werk bij housekeeping): één korte, vriendelijke vraag in het ${taal === "en" ? "Engels" : "Nederlands"} of de kandidaat ook als ${functieLabel(ctx.functie, "nl")} werkte, bijvoorbeeld "Heb je ook op de kamers gewerkt?". Vraag niet naar hotels of sterren, die vraagt Job zelf. Past het antwoord wel bij de functie, laat dan weg. Eindigt met een vraagteken.`
-  : `- vervolgvraag: alleen als de laatste vraag over ervaring ging en de kandidaat werkervaring noemt: één korte vervolgvraag in het ${taal === "en" ? "Engels" : "Nederlands"} over wat de kandidaat daar precies deed, passend bij die plek en bij de functie ${functieLabel(ctx.functie, "nl")}. Vraag niet naar iets wat daar niet voorkomt (bij festivals bijvoorbeeld niet naar diners of tafelbediening, wel naar bar, drankuitgifte of kassa). Eindigt met een vraagteken. Anders weglaten.`}
+  : `- vervolgvraag: alleen als de laatste vraag over ervaring ging en de kandidaat werkervaring noemt: één korte vervolgvraag in het ${taal === "en" ? "Engels" : "Nederlands"} over wat de kandidaat daar precies deed, passend bij die plek en bij de functie ${functieLabel(ctx.functie, "nl")}. Vraag niet naar iets wat daar niet voorkomt (bij festivals bijvoorbeeld niet naar diners of tafelbediening, wel naar bar, drankuitgifte of kassa). Noemt de kandidaat al een duidelijke functie die voor zich spreekt (zoals barman, barvrouw of bartender), laat dan weg. Eindigt met een vraagteken. Anders weglaten.`}
 
 Antwoord uitsluitend met JSON: {"velden": {...}, "taal": "...", "twijfel": null, "ack": "", "vervolgvraag": null}`;
 }

@@ -19,7 +19,7 @@ import { herkomstVoorFormulier } from "@/lib/herkomst";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
 import { ALLE_LANDNAMEN, LANDEN_SCHEIDING } from "@shared/landen";
 import { taalVanPad } from "@shared/taal";
-import { LABELS, OPEN_CODE, isLabel, type AanmeldLabel, type Paspoort } from "@shared/aanmeldLabels";
+import { LABELS, OPEN_CODE, isLabel, meerFunctiesMogelijk, type AanmeldLabel, type Paspoort } from "@shared/aanmeldLabels";
 import { LANDCODES, functieUitKort } from "./Aanmelden";
 
 type Taal = "nl" | "en";
@@ -42,7 +42,7 @@ const T = {
     ],
     stappen: [["Aanmelden", "1 minuut"], ["Vragen van Job", "via WhatsApp"], ["Kennismaking", "op kantoor"]],
     duur: "1 minuut", duurNa: "daarna verder via WhatsApp", andere: "Andere branche", kiesBranche: "Kies eerst een branche",
-    functieVraag: "Wat wil je doen?", open: "Weet ik nog niet, ik sta open voor alles",
+    functieVraag: "Wat wil je doen?", meerHint: "Kies er één of meer.", open: "Weet ik nog niet, ik sta open voor alles",
     naamVraag: "Hoe heet je?", voornaam: "Voornaam", achternaam: "Achternaam",
     bereikVraag: "Hoe bereiken we je?", mobiel: "Mobiel nummer", waAnders: "Mijn WhatsApp-nummer is anders", waNummer: "WhatsApp-nummer",
     waUitleg: "Job stuurt zijn berichten naar dit nummer. We bellen je op je mobiele nummer.", email: "E-mail",
@@ -82,7 +82,7 @@ const T = {
     ],
     stappen: [["Apply", "1 minute"], ["Questions from Job", "on WhatsApp"], ["Meeting", "at our office"]],
     duur: "1 minute", duurNa: "then continue on WhatsApp", andere: "Other sector", kiesBranche: "First choose a sector",
-    functieVraag: "What would you like to do?", open: "Not sure yet, I'm open to anything",
+    functieVraag: "What would you like to do?", meerHint: "Choose one or more.", open: "Not sure yet, I'm open to anything",
     naamVraag: "What's your name?", voornaam: "First name", achternaam: "Last name",
     bereikVraag: "How can we reach you?", mobiel: "Mobile number", waAnders: "My WhatsApp number is different", waNummer: "WhatsApp number",
     waUitleg: "Job sends his messages to this number. We call you on your mobile number.", email: "Email",
@@ -121,7 +121,8 @@ function uuid(): string {
 }
 
 interface Velden {
-  functie: string; voornaam: string; achternaam: string; dag: string; maand: string; jaar: string; paspoort: Paspoort | "";
+  /** De hoofdfunctie (de eerste keuze). Bij events staan alle keuzes in functies. */
+  functie: string; functies: string[]; voornaam: string; achternaam: string; dag: string; maand: string; jaar: string; paspoort: Paspoort | "";
   postcode: string; buitenland: boolean; woonland: string; landcode: string; mobiel: string; waAnders: boolean; waLandcode: string;
   waNummer: string; email: string; website: string;
 }
@@ -168,7 +169,7 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
   const [label, setLabel] = useState<AanmeldLabel | null>(begin.label);
   const [v, setV] = useState<Velden>(() => {
     const leeg: Velden = {
-      functie: begin.label && LABELS[begin.label].functies.some((f) => f.code === begin.functie) ? begin.functie : "", voornaam: "", achternaam: "", dag: "", maand: "", jaar: "",
+      functie: begin.label && LABELS[begin.label].functies.some((f) => f.code === begin.functie) ? begin.functie : "", functies: [], voornaam: "", achternaam: "", dag: "", maand: "", jaar: "",
       paspoort: "", postcode: "", buitenland: false, woonland: "", landcode: "+31", mobiel: "", waAnders: false, waLandcode: "+31", waNummer: "", email: "", website: "",
     };
     try {
@@ -182,6 +183,7 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
         if (begin.label && kort.functie) leeg.functie = codeUitKort(String(kort.functie), begin.label) || leeg.functie;
       }
     } catch { /* niets voor te vullen */ }
+    if (leeg.functie) leeg.functies = [leeg.functie];
     return leeg;
   });
   const [fouten, setFouten] = useState<Record<string, string>>({});
@@ -198,9 +200,19 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
     const weg = [k as string, ...(bij[k as string] || [])];
     setFouten((f) => { if (!weg.some((x) => f[x])) return f; const n = { ...f }; for (const x of weg) delete n[x]; return n; });
   };
+  /** Eén functie kiezen, of bij events aan- en uitvinken. "Weet ik nog niet" sluit de rest uit. */
+  function kiesFunctie(code: string) {
+    if (!meerFunctiesMogelijk(label)) { setV((o) => ({ ...o, functie: code, functies: [code] })); }
+    else setV((o) => {
+      const lijst = o.functies.includes(code) ? o.functies.filter((c) => c !== code)
+        : code === OPEN_CODE ? [OPEN_CODE] : [...o.functies.filter((c) => c !== OPEN_CODE), code];
+      return { ...o, functies: lijst, functie: lijst[0] || "" };
+    });
+    setFouten((f) => { if (!f.functie) return f; const n = { ...f }; delete n.functie; return n; });
+  }
   function kiesLabel(l: AanmeldLabel | null) {
     setLabel(l);
-    zet("functie", "");
+    setV((o) => ({ ...o, functie: "", functies: [] }));
     try { if (l) sessionStorage.setItem("extra-label", l); else sessionStorage.removeItem("extra-label"); } catch { /* geen opslag */ }
     try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch { /* geen venster */ }
   }
@@ -258,7 +270,7 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
       const r = await fetch("/api/aanmelding", {
         method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sleutel: sleutel.current, label, functie: v.functie, voornaam: v.voornaam.trim(), achternaam: v.achternaam.trim(), geboortedatum: geboortedatum(),
+          sleutel: sleutel.current, label, functie: v.functie, functies: meerFunctiesMogelijk(label) && v.functies.length > 1 ? v.functies : null, voornaam: v.voornaam.trim(), achternaam: v.achternaam.trim(), geboortedatum: geboortedatum(),
           paspoort: v.paspoort, postcode: v.buitenland ? null : v.postcode.trim(), woonland: v.buitenland ? v.woonland : null,
           landcode: v.landcode, mobiel: v.mobiel.trim(), whatsappAnders: v.waAnders, whatsappLandcode: v.waAnders ? v.waLandcode : null,
           whatsappNummer: v.waAnders ? v.waNummer.trim() : null, email: v.email.trim(), kanaal, taal, referralCode: begin.ref || null,
@@ -284,7 +296,7 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
         return;
       }
       meldAanmelding(taal);
-      const gekozen = v.functie === OPEN_CODE ? LABELS[label][taal === "en" ? "werkEn" : "werkNl"] : LABELS[label].functies.find((x) => x.code === v.functie)?.[taal] || "";
+      const gekozen = v.functie === OPEN_CODE || v.functies.length > 1 ? LABELS[label][taal === "en" ? "werkEn" : "werkNl"] : LABELS[label].functies.find((x) => x.code === v.functie)?.[taal] || "";
       try {
         sessionStorage.removeItem("extra_ref");
         sessionStorage.setItem("extra-aanmelding-ontvangen", JSON.stringify({ voornaam: v.voornaam.trim(), functie: gekozen, kanaal: d.kanaal, jobLink: d.jobLink, waNummer: d.waNummer }));
@@ -334,11 +346,13 @@ export default function AanmeldenNieuw({ test = false }: { test?: boolean }) {
 
               <fieldset className="af4-blok" data-veld="functie">
                 <legend className="af4-vraag">{t.functieVraag}</legend>
-                <div className="af4-tegels" role="radiogroup" aria-invalid={!!fouten.functie}>
-                  {LABELS[label].functies.map((f) => (
-                    <button key={f.code} type="button" role="radio" aria-checked={v.functie === f.code} className={v.functie === f.code ? "aan" : ""} onClick={() => zet("functie", f.code)}>{f[taal]}</button>
-                  ))}
-                  <button type="button" role="radio" aria-checked={v.functie === OPEN_CODE} className={`open${v.functie === OPEN_CODE ? " aan" : ""}`} onClick={() => zet("functie", OPEN_CODE)}>{t.open}</button>
+                {meerFunctiesMogelijk(label) && <p className="af4-hint">{t.meerHint}</p>}
+                <div className="af4-tegels" role={meerFunctiesMogelijk(label) ? "group" : "radiogroup"} aria-invalid={!!fouten.functie}>
+                  {LABELS[label].functies.map((f) => {
+                    const aan = meerFunctiesMogelijk(label) ? v.functies.includes(f.code) : v.functie === f.code;
+                    return <button key={f.code} type="button" role={meerFunctiesMogelijk(label) ? "checkbox" : "radio"} aria-checked={aan} className={aan ? "aan" : ""} onClick={() => kiesFunctie(f.code)}>{f[taal]}</button>;
+                  })}
+                  <button type="button" role={meerFunctiesMogelijk(label) ? "checkbox" : "radio"} aria-checked={v.functie === OPEN_CODE} className={`open${v.functie === OPEN_CODE ? " aan" : ""}`} onClick={() => kiesFunctie(OPEN_CODE)}>{t.open}</button>
                 </div>
                 <Fout tekst={fouten.functie} />
               </fieldset>
@@ -486,6 +500,7 @@ const CSS = `
 .d3.d3.d3 .af4 .af4-blok{border:0;margin:0 0 6px;padding:0;min-width:0}
 .d3.d3.d3 .af4 .af4-vraag{font-weight:800;font-size:18px;letter-spacing:-.01em;margin:14px 0 10px;padding:0;color:var(--espresso)}
 .d3.d3.d3 .af4 fieldset.af4-blok .af4-vraag{margin-top:0}
+.d3.d3.d3 .af4 .af4-hint{margin:-4px 0 10px;font-size:13px;color:#5F5B52}
 .d3.d3.d3 .af4 .af4-tegels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .d3.d3.d3 .af4 .af4-tegels button{min-height:52px;border-radius:12px;border:1px solid #DAD5CC;background:#fff;font:inherit;font-weight:700;font-size:14.5px;color:var(--espresso);cursor:pointer;padding:8px 12px;text-align:left;line-height:1.2}
 .d3.d3.d3 .af4 .af4-tegels button.aan{background:var(--accent);border-color:var(--espresso);box-shadow:inset 0 0 0 1px var(--espresso)}

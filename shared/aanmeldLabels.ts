@@ -60,6 +60,26 @@ export const LABELS: Record<AanmeldLabel, { nl: string; en: string; werkNl: stri
 export const OPEN_CODE = "open";
 const OPEN_TYPE: Record<AanmeldLabel, FunctionType> = { hotels: "horecamedewerker", events: "horecamedewerker", logistiek: "logistiek" };
 
+/** Labels waar je meer dan één functie mag aanvinken. De eerste keuze is de hoofdfunctie (daar gaan de vragen van Job over). */
+export const MEER_FUNCTIES: AanmeldLabel[] = ["events"];
+export function meerFunctiesMogelijk(label: AanmeldLabel | null | undefined): boolean {
+  return !!label && MEER_FUNCTIES.includes(label);
+}
+
+/**
+ * De gekozen functies, netjes: de eerste is de hoofdfunctie. Zonder lijst, of bij een
+ * label met één keuze, alleen de hoofdfunctie. Null als de lijst niet klopt (onbekende
+ * code, "Weet ik nog niet" samen met een functie, of de eerste is niet de hoofdfunctie).
+ */
+export function functieLijst(label: AanmeldLabel | null, functie: string, functies?: string[] | null): string[] | null {
+  if (!functies || !functies.length || !meerFunctiesMogelijk(label)) return [functie];
+  const uniek = Array.from(new Set(functies));
+  if (uniek[0] !== functie) return null;
+  if (uniek.includes(OPEN_CODE)) return uniek.length === 1 ? uniek : null;
+  const lijst = LABELS[label as AanmeldLabel].functies;
+  return uniek.every((c) => lijst.some((f) => f.code === c)) ? uniek : null;
+}
+
 /** Codes van het vorige formulier (één lijst voor iedereen); blijven werken. */
 const OUDE_CODES: Record<string, { functionType: FunctionType; afwas?: boolean; label: AanmeldLabel; nl: string; en: string }> = {
   bediening: { functionType: "horecamedewerker", label: "events", nl: "Bediening en bar", en: "Waiting staff and bar" },

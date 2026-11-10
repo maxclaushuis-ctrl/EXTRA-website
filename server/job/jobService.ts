@@ -209,7 +209,14 @@ function functieNaamVan(c: { functieEersteKeus?: string | null; bronDetails?: un
   const f = functieVan(c.functieEersteKeus, label);
   if (!f) return undefined;
   const klein = (x: string) => (/^[A-Z]{2}|^F&B/.test(x) ? x : x.charAt(0).toLowerCase() + x.slice(1));
-  return { nl: klein(f.nl), en: klein(f.en) };
+  // "aangemeld voor bar" leest raar: een lidwoord waar dat hoort.
+  const MET_LIDWOORD: Record<string, { nl: string; en: string }> = { bar: { nl: "de bar", en: "the bar" }, keuken: { nl: "de keuken", en: "the kitchen" }, afwas: { nl: "de afwas", en: "dishwashing" } };
+  return MET_LIDWOORD[c.functieEersteKeus] || { nl: klein(f.nl), en: klein(f.en) };
+}
+/** Meer dan één functie aangevinkt op het formulier (events). */
+function meerFunctiesGekozen(bron: unknown): boolean {
+  const f = bron && typeof bron === "object" ? (bron as Record<string, unknown>).functies : null;
+  return Array.isArray(f) && f.length > 1;
 }
 function ingangLabel(bron: unknown): AanmeldLabel | null {
   const b = bron && typeof bron === "object" ? (bron as Record<string, unknown>).branche : null;
@@ -229,6 +236,7 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
     hasCv: !!c.hasCv,
     afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,
     stopV3: v3("STOP"),
+    meerFuncties: meerFunctiesGekozen(c.bronDetails),
   };
 }
 
@@ -444,7 +452,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
     const eersteVraag = r.berichten[r.berichten.length - 1].tekst;
     const { startParameters } = await import("./jobSjablonen");
     const ok = await verstuurSjabloon(candidateId, waNummer(c), sjabloon, taal,
-      startParameters(sjabloon, c.firstName, functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(ctx.functie, taal), ctx.functie, taal),
+      startParameters(sjabloon, c.firstName, ctx.meerFuncties ? (taal === "en" ? "work at EXTRA" : "werk bij EXTRA") : functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(ctx.functie, taal), ctx.functie, taal),
       `${r.berichten[0].tekst}\n\n${eersteVraag}`);
     if (!ok) {
       await db.update(jobGesprekken).set({ kanaal: "web" }).where(eq(jobGesprekken.id, g.id));

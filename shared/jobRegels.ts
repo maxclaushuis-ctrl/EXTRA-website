@@ -110,6 +110,8 @@ export interface JobContext {
   afspraak?: { dag: string; tijd: string; wie: string };
   /** Job 3.0 fase 1: STOP pauzeert, terugkomen alleen bij een duidelijke wens (schakelaar JOB_V3_STOP). */
   stopV3?: boolean;
+  /** Meer dan één functie aangevinkt (events): het welkom noemt dan geen functie. */
+  meerFuncties?: boolean;
 }
 
 export interface JobState {
@@ -233,6 +235,7 @@ export function ervaringWerk(functie: string, taal: JobTaal): string {
 const T = {
   nl: {
     welkom: (v: string, f: string) => `Hi ${v},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor ${f}! Ik stel je een paar korte vragen.`,
+    welkomAlgemeen: (v: string) => `Hi ${v},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je interesse hebt om bij EXTRA te werken! Ik stel je een paar korte vragen.`,
     disclaimer: "Je praat met Job, een AI. Typ MENS voor een collega of ENGLISH om te wisselen.",
     ervaring: (functie: string) => `Vertel eens: hoeveel jaar ervaring heb je ${ervaringWerk(functie, "nl")} tot nu toe?`,
     hotels: "Bij welke hotels heb je gewerkt?",
@@ -300,6 +303,7 @@ const T = {
   },
   en: {
     welkom: (v: string, f: string) => `Hi ${v},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for ${f}! I have a few quick questions for you.`,
+    welkomAlgemeen: (v: string) => `Hi ${v},\n\nI'm Job, the AI recruiter at EXTRA. Great that you're interested in working at EXTRA! I have a few quick questions for you.`,
     disclaimer: "You're chatting with Job, an AI. Type HUMAN for a colleague or NEDERLANDS to switch.",
     ervaring: (functie: string) => `Tell me: how many years of experience do you have ${ervaringWerk(functie, "en")} so far?`,
     hotels: "Which hotels have you worked at?",
@@ -386,7 +390,7 @@ export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | nu
   } else if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) return "functievraag";
   if (ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) return "specialisatie";
   if (ctx.nationalityZone === "NON_EU" && !v.werkautorisatie) return "werkautorisatie";
-  if (v.werkautorisatie === "vrij" && v.geldigTot === undefined) return "geldigheid";
+  if (ctx.nationalityZone === "NON_EU" && v.werkautorisatie === "vrij" && v.geldigTot === undefined) return "geldigheid";
   if (!v.diensten) return "diensten";
   if (!v.werkgebied) return "werkgebied";
   if (!v.werkmoment) return "werkmoment";
@@ -509,7 +513,7 @@ export function start(ctx: JobContext, taal: JobTaal, nu: Date): Resultaat {
   return {
     state,
     berichten: [
-      { tekst: t.welkom(ctx.voornaam, ctx.functieNaam?.[taal] ?? functieLabel(ctx.functie, taal)) },
+      { tekst: ctx.meerFuncties ? t.welkomAlgemeen(ctx.voornaam) : t.welkom(ctx.voornaam, ctx.functieNaam?.[taal] ?? functieLabel(ctx.functie, taal)) },
       vraag(onderwerp, taal, ctx),
     ],
     acties: [],
@@ -527,6 +531,29 @@ export interface Lezing {
   ack: string;
   /** Alleen na de ervaringsvraag: een vervolgvraag die past bij waar de kandidaat werkte. */
   vervolgvraag?: string;
+}
+
+/**
+ * Velden die alleen als antwoord op hun eigen vraag mogen tellen. Een AI-lezing die bij een
+ * ander antwoord toch werkautorisatie of een geldigheid invult (gezien bij "Drinken inschenken"),
+ * mag het gesprek nooit naar vragen over een verblijfsdocument sturen.
+ */
+export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: JobContext): JobVelden {
+  const uit: JobVelden = { ...v };
+  if (ctx.nationalityZone !== "NON_EU") { delete uit.werkautorisatie; delete uit.geldigTot; }
+  else if (vorig !== "werkautorisatie" && vorig !== "geldigheid") delete uit.geldigTot;
+  if (vorig !== "specialisatie") delete uit.specialisatie;
+  if (vorig !== "cv") delete uit.cvParaat;
+  return uit;
+}
+
+/** Geen antwoord maar verwarring: Job stelt dezelfde vraag opnieuw. */
+const VERWARD = /^\s*(\?+|huh\?*|hè\?*|wat bedoel je\?*|wat\?+|sorry\?+|what do you mean\?*|what\?+)\s*$/i;
+
+const BARWERK = /\b(bar(man|mannen|vrouw|keeper|tender|tenders|medewerker|werk|dienst)|bartend(er|ing)?|achter de bar|behind the bar)\b/i;
+/** Bediening en bar: noemt de kandidaat zelf barwerk, dan is de functievraag overbodig. */
+export function barwerkDuidelijk(tekst: string, ctx: JobContext): boolean {
+  return ctx.functie === "horecamedewerker" && !isHotelPad(ctx) && BARWERK.test(tekst);
 }
 
 function samenvoegen(oud: JobVelden, nieuw: JobVelden): JobVelden {
@@ -785,7 +812,14 @@ function verwerkLos(
       const { nlOfEn: _weg, ...rest } = lezing.velden;
       lezing = { ...lezing, velden: rest };
     }
+    // Een "?" of "wat bedoel je" is geen antwoord: niets invullen, dezelfde vraag komt terug.
+    const verward = VERWARD.test(invoer.tekst || "");
+    lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx) };
     state.velden = samenvoegen(state.velden, lezing.velden);
+    // Barwerk spreekt voor zich: geen vraag meer wat iemand achter de bar deed.
+    if (vorigOnderwerp === "ervaring" && barwerkDuidelijk(invoer.tekst || "", ctx) && state.velden.functievraag === undefined) {
+      state.velden.functievraag = "-";
+    }
     if (lezing.twijfel && !state.twijfels.includes(lezing.twijfel)) state.twijfels.push(lezing.twijfel);
 
     // Taal: harde no-go
@@ -816,11 +850,11 @@ function verwerkLos(
       berichten.push({ tekst: t().geenErvaringOk, reactie: true });
     }
     // Een vraag die niet beantwoord kon worden, stelt Job niet eindeloos opnieuw.
-    if (vorigOnderwerp === "hotels" && !state.velden.hotels) state.velden.hotels = (invoer.tekst || "").trim().slice(0, 300) || "-";
-    if (vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
+    if (!verward && vorigOnderwerp === "hotels" && !state.velden.hotels) state.velden.hotels = (invoer.tekst || "").trim().slice(0, 300) || "-";
+    if (!verward && vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
       state.velden.functievraag = (invoer.tekst || "").trim() || "-";
     }
-    if (vorigOnderwerp === "geldigheid" && state.velden.geldigTot === undefined) {
+    if (!verward && vorigOnderwerp === "geldigheid" && state.velden.geldigTot === undefined) {
       state.velden.geldigTot = (invoer.tekst || "").trim() || "onbekend";
     }
     acties.push({ soort: "profiel", velden: state.velden });

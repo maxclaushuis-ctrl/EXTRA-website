@@ -19,7 +19,7 @@ import { candidates, employees, kandidaatMogelijkeMatch } from "@shared/schema";
 import { landvelden, ALLE_LANDNAMEN } from "@shared/landen";
 import { matchRedenen } from "@shared/kandidaatRegels";
 import { plaatsBijPostcode } from "./geocode";
-import { functieVan, zoneVanPaspoort } from "@shared/aanmeldLabels";
+import { functieLijst, functieVan, zoneVanPaspoort } from "@shared/aanmeldLabels";
 
 export type FormulierVersie = "huidig" | "test" | "nieuw";
 export function formulierVersie(): FormulierVersie {
@@ -64,6 +64,8 @@ const tekst = (max: number) => z.string().trim().max(max);
 export const aanmeldSchema = z.object({
   sleutel: z.string().uuid(),
   functie: z.string().trim().min(1).max(30),
+  /** Events: alle aangevinkte functies, de eerste is de hoofdfunctie. */
+  functies: z.array(z.string().trim().min(1).max(30)).max(12).optional().nullable(),
   label: z.enum(["hotels", "events", "logistiek"]).optional().nullable(),
   paspoort: z.enum(["nl", "eu", "buiten"]).optional().nullable(),
   voornaam: tekst(60).min(1),
@@ -91,7 +93,7 @@ export const aanmeldSchema = z.object({
 /** Controle op het formulier, ook los te testen. Geeft per veld een foutcode. */
 export function controleer(b: z.infer<typeof aanmeldSchema>): Record<string, string> {
   const f: Record<string, string> = {};
-  if (!functieVan(b.functie, b.label ?? null)) f.functie = "Kies een functie";
+  if (!functieVan(b.functie, b.label ?? null) || !functieLijst(b.label ?? null, b.functie, b.functies)) f.functie = "Kies een functie";
   if (!b.paspoort && !(b.nationaliteit && ALLE_LANDNAMEN.includes(b.nationaliteit) && !/^-+$/.test(b.nationaliteit))) f.paspoort = "Kies wat voor paspoort of ID-kaart je hebt";
   if (b.woonland) {
     if (!ALLE_LANDNAMEN.includes(b.woonland)) f.woonland = "Kies het land waar je nu woont";
@@ -178,6 +180,7 @@ export function registerAanmeldingRoutes(app: Express) {
       if (al) return res.json(await antwoord(al.id));
 
       const f = functieVan(b.functie, b.label ?? null)!;
+      const functies = functieLijst(b.label ?? null, b.functie, b.functies) || [b.functie];
       const phone = naarE164(b.landcode, b.mobiel);
       const wa = b.whatsappAnders ? naarE164(b.whatsappLandcode || b.landcode, b.whatsappNummer || "") : null;
       const postcode = b.woonland ? null : normaalPostcode(b.postcode || "");
@@ -204,6 +207,7 @@ export function registerAanmeldingRoutes(app: Express) {
           ingang: link.vacature ? "vacature" : linkKanaal ? "link" : "formulier", chip: b.bronChip || null, anders: b.bronAnders || null,
           utm_source: link.utm_source || null, utm_medium: link.utm_medium || null, utm_campaign: link.utm_campaign || null,
           jid: link.jid || null, vacature: link.vacature || null, branche: b.label || link.branche || f.label || null, herkomst: b.herkomst || null,
+          ...(functies.length > 1 ? { functies } : {}),
         },
         whatsappToestemmingOp: metWhatsapp ? nu : null, whatsappToestemmingVersie: metWhatsapp ? TOESTEMMING_VERSIE : null,
       } as any).returning();

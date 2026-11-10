@@ -223,7 +223,7 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
             <div className="k3-paneel-kop"><h2 id="k3-gegevens">Kandidaatgegevens</h2></div>
             <div className="k3-paneel-in">
               <Groep titel="Werk">
-                <Rij label="Functie" w={d.functie} />
+                <Rij label={d.functies ? "Functies" : "Functie"} w={d.functies ? d.functies.join(", ") : d.functie} bron={d.functies ? "formulier" : undefined} />
                 <Rij label="Ervaring" w={d.profiel.ervaring} bron={zelf} />
                 <Rij label="Diensten" w={d.profiel.diensten} bron={zelf} />
                 <Rij label="Werkgebied" w={d.profiel.werkgebied} bron={d.profiel.werkgebied ? "gesprek" : undefined} />

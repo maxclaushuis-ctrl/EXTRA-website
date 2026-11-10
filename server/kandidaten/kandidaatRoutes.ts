@@ -17,6 +17,7 @@ import {
 import { bolletje, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_ACTIE, MATCH_REDEN_TEKST, KLEUR_VOLGORDE, type Kleur } from "@shared/kandidaatRegels";
 import { brancheVan, functieNaam, isAfwas, ingangBranche, BRANCHE, leeftijd } from "@shared/sollicitantRegels";
 import type { JobVelden } from "@shared/jobRegels";
+import { functieVan, isLabel } from "@shared/aanmeldLabels";
 
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
 
@@ -81,6 +82,15 @@ async function overzicht(ik: number | null) {
   return { rijen, tellers: { perKleur, perBranche, aandacht: (perKleur.geel || 0) + (perKleur.rood || 0) }, planners };
 }
 
+/** Events: alle aangevinkte functies (alleen als het er meer dan één zijn), de eerste is de hoofdfunctie. */
+function gekozenFuncties(bron: unknown): string[] | null {
+  const b = bron && typeof bron === "object" ? (bron as Record<string, unknown>) : {};
+  const codes = Array.isArray(b.functies) ? (b.functies as unknown[]).filter((x): x is string => typeof x === "string") : [];
+  if (codes.length < 2) return null;
+  const label = isLabel(b.branche) ? b.branche : null;
+  return codes.map((code) => functieVan(code, label)?.nl || code);
+}
+
 /** Kandidaatkaart 3: nette bestandsnaam, soort voor de voorvertoning en wanneer het cv binnenkwam. */
 function cvBestand(c: Candidate, kanaal: string | null, berichten: { richting: string; bijlage: string | null; aangemaaktAt: Date }[]) {
   if (!c.hasCv || !c.cvFilename) return null;
@@ -136,6 +146,7 @@ async function dossier(id: number) {
       cv: c.hasCv ? (c.cvFilename || "") : null, uitJob: !!g,
     },
     cvBestand: cvBestand(c, g?.kanaal || null, berichten),
+    functies: gekozenFuncties(c.bronDetails),
     functieCode: c.functieEersteKeus || c.functionType,
     contact: {
       telefoon: c.phone, whatsapp: c.whatsappNummer, email: c.email, postcode: c.postcode, woonland: c.woonland,

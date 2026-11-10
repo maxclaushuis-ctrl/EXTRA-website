@@ -173,8 +173,11 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Daan: keuken via Hotels, dan de hotels", kk.state.laatsteOnderwerp === "hotels");
   const events: JobContext = { voornaam: "Sem", functie: "horecamedewerker", nationalityZone: "NL", hasCv: true, label: "events" };
   let ev = start(events, "nl", NU);
-  ev = antwoord(ev, events, "2 jaar achter de bar");
+  ev = antwoord(ev, events, "2 jaar in de bediening");
   test("Sem: Events houdt de eigen vervolgvraag", ev.state.laatsteOnderwerp === "functievraag");
+  let evBar = start(events, "nl", NU);
+  evBar = antwoord(evBar, events, "2 jaar achter de bar");
+  test("Sem: barwerk spreekt voor zich, geen vervolgvraag (Max, 10 nov)", evBar.state.laatsteOnderwerp !== "functievraag");
   test("Reserve: sterren", reserveLezing("3 of minder", "sterren").velden.sterren === "3" && reserveLezing("vier", "sterren").velden.sterren === "4" && reserveLezing("4 of 5", "sterren").velden.sterren === "5");
 }
 

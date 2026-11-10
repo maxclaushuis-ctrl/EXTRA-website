@@ -153,6 +153,7 @@ export interface DossierData {
   tijdlijn: { at: string; tekst: string; notitie: boolean }[];
   cvBestand?: { naam: string; soort: "pdf" | "afbeelding" | "word" | "anders"; at: string | null; via: string | null } | null;
   functieCode?: string;
+  functies?: string[] | null;
 }
 
 export const MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
