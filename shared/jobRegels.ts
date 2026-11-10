@@ -310,6 +310,12 @@ const T = {
     alGepland: (dag: string, tijd: string) => `Je kennismaking staat op ${dag} om ${tijd} op de Herengracht 372. Wil je een ander moment? Typ VERZETTEN. Een vraag voor een collega? Typ MENS.`,
     verzetten: "Geen probleem. Kies hieronder een nieuw moment; je oude afspraak vervalt zodra je een nieuwe kiest.",
     verzettenWa: (link: string) => `Geen probleem. Kies een nieuw moment via ${link}. Je oude afspraak vervalt zodra je een nieuwe kiest.`,
+    momentKnop: "Kies een moment",
+    geenMomentPast: "Geen probleem. Een collega van EXTRA neemt contact met je op om samen een moment te zoeken.",
+    momentBezet: "Dat moment is net door iemand anders gekozen. Kies hieronder een ander moment.",
+    geenMomentAfspraakBlijft: "Geen probleem, je huidige afspraak blijft staan. Een collega van EXTRA neemt contact met je op om samen een ander moment te zoeken.",
+    agendaWa: (link: string) => `Zet het in je agenda: ${link}`,
+    verzettenKnop: "Verzetten",
     wachtPlanner: "Een collega van EXTRA kijkt naar je aanmelding en neemt contact met je op. Wil je iets doorgeven? Typ het gerust, dan leest een collega mee.",
     gestopt: "Je krijgt geen berichten meer van ons over deze aanmelding. Wil je later toch verder, stuur dan gerust een bericht.",
     welkomTerug: "Fijn dat je er weer bent. Wil je verder met je aanmelding?",
@@ -384,6 +390,12 @@ const T = {
     alGepland: (dag: string, tijd: string) => `Your meeting is on ${dag} at ${tijd} at Herengracht 372. Want another moment? Type RESCHEDULE. A question for a colleague? Type HUMAN.`,
     verzetten: "No problem. Choose a new moment below; your old appointment is cancelled as soon as you pick a new one.",
     verzettenWa: (link: string) => `No problem. Choose a new moment via ${link}. Your old appointment is cancelled as soon as you pick a new one.`,
+    momentKnop: "Choose a moment",
+    geenMomentPast: "No problem. A colleague from EXTRA will contact you to find a moment together.",
+    momentBezet: "Someone else just picked that moment. Please choose another one below.",
+    geenMomentAfspraakBlijft: "No problem, your current appointment stays as it is. A colleague from EXTRA will contact you to find another moment together.",
+    agendaWa: (link: string) => `Add it to your calendar: ${link}`,
+    verzettenKnop: "Reschedule",
     wachtPlanner: "A colleague from EXTRA is looking at your application and will get in touch. Anything to add? Just type it and a colleague will read along.",
     gestopt: "You won't get any more messages from us about this application. Want to continue later after all? Just send a message.",
     welkomTerug: "Good to have you back. Do you want to continue with your application?",
@@ -1066,6 +1078,21 @@ export function planHerinneringNodig(s: JobState, nu: Date): boolean {
   const vanaf = s.herinneringen === 0 ? s.laatsteActiviteitAt : s.herinneringAt;
   const wacht = s.herinneringen === 0 ? EERSTE_HERINNERING_NA + 2 * 3600 * 1000 : TWEEDE_HERINNERING_NA;
   return !!vanaf && nu.getTime() - new Date(vanaf).getTime() >= wacht;
+}
+
+/**
+ * WhatsApp-planning: het antwoord als de kandidaat in de keuzelijst "Geen tijd die past"
+ * koos (een collega zoekt samen een moment), of een moment dat intussen bezet is (de lijst
+ * komt opnieuw). Een vrij moment boekt de service zelf.
+ */
+export function momentAntwoord(s: JobState, keuze: "geen" | "bezet", nu: Date, afspraakBlijft = false): Resultaat {
+  const state: JobState = { ...s, twijfels: [...s.twijfels], laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null };
+  if (keuze === "bezet") return { state, berichten: [{ tekst: T[s.taal].momentBezet, planning: true }], acties: [] };
+  // Bij verzetten blijft de oude afspraak staan tot er een nieuwe is.
+  const reden = afspraakBlijft ? "Kandidaat wil verzetten maar vond geen moment dat past." : "Kandidaat vond geen moment dat past.";
+  state.status = afspraakBlijft ? "gepland" : "planner";
+  if (!state.twijfels.includes(reden)) state.twijfels.push(reden);
+  return { state, berichten: [{ tekst: afspraakBlijft ? T[s.taal].geenMomentAfspraakBlijft : T[s.taal].geenMomentPast }], acties: [{ soort: "planner", reden }] };
 }
 
 export function planHerinnering(s: JobState, ctx: JobContext, nu: Date): Resultaat {

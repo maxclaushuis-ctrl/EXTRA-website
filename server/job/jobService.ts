@@ -27,12 +27,12 @@ import { db } from "../db";
 import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
 import { planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
-  ervaringWerk, cvAfrondingTekst, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
+  ervaringWerk, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type Onderwerp, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
-  afspraakHerinneringNodig, amsterdam, dagTekst, momentGeldig, STANDAARD_INTERVIEWERS, vrijeMomenten,
-  type Bezet, type Interviewer, type Moment,
+  afspraakHerinneringNodig, amsterdam, dagTekst, gekozenMoment, momentenLijst, momentGeldig, STANDAARD_INTERVIEWERS, vrijeMomenten,
+  type Bezet, type LijstSectie, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
 import { begrijpenAan, formulerenAan, lees } from "./jobAi";
 import { filterPrivacy, privacyMelding } from "@shared/jobPrivacy";
@@ -277,6 +277,12 @@ async function isTestkandidaat(candidateId: number): Promise<boolean> {
 
 /** Een bericht van Job naar WhatsApp: met knoppen als dat kan, anders als tekst. */
 async function stuurJobBericht(candidateId: number, telefoon: string, b: Uitgaand, token: string, taal: JobTaal): Promise<boolean> {
+  // Plannen gebeurt in WhatsApp zelf: een keuzelijst met vrije momenten. Lukt dat niet
+  // (geen vrije momenten of de lijst komt niet aan), dan de tekst met de planlink.
+  if (b.planning) {
+    const secties = momentenLijst(await momenten().catch(() => [] as Moment[]), taal);
+    if (secties.length && await verstuurWhatsappLijst(candidateId, telefoon, b.tekst, teksten(taal).momentKnop, secties)) return true;
+  }
   const knoppen = whatsappKnoppen(b);
   return verstuurWhatsappTekst(candidateId, telefoon, whatsappTekst(b, token, taal, !!knoppen), knoppen);
 }
@@ -300,6 +306,30 @@ async function verstuurWhatsappTekst(candidateId: number, telefoon: string, teks
     return r.ok;
   } catch (e: any) {
     console.warn("[Job] WhatsApp versturen mislukt:", e?.message || e);
+    return false;
+  }
+}
+
+async function verstuurWhatsappLijst(candidateId: number, telefoon: string, tekst: string, knop: string, secties: LijstSectie[]): Promise<boolean> {
+  try {
+    const waProvider = await import("../whatsapp/provider");
+    const waStorage = await import("../whatsapp/storage");
+    if (!waProvider.isSendConfigured()) return false;
+    if (await isTestkandidaat(candidateId)) { console.log(`[Job] kandidaat ${candidateId} is fictief (testdata), geen WhatsApp`); return false; }
+    const regels = secties.flatMap((s) => s.rijen.map((r) => `[${r.titel}]`)).join(" ");
+    const match = await waStorage.resolveAndUpsertConversation({ phoneNumber: telefoon, inbound: false, bodyPreview: tekst, at: new Date() });
+    const dbId = await waStorage.insertOutboundQueued({
+      direction: "outbound", fromNumber: "extra", toNumber: telefoon, messageType: "interactive",
+      body: `${tekst}\n\n${regels}`,
+      candidateId: match.candidateId ?? candidateId, prospectContactId: match.prospectContactId, matchCategory: match.category,
+      sentByUserId: null, rawPayload: { type: "interactive", lijst: secties, knop, text: { body: tekst }, to: telefoon, job: true },
+    } as any);
+    const r = await waProvider.sendList(telefoon, tekst, knop, secties);
+    await waStorage.updateOutboundResult(dbId, r.ok ? { waMessageId: r.waMessageId ?? null, status: "sent" } : { status: "failed", errorCode: r.errorCode ?? null, errorMessage: r.errorMessage ?? null });
+    if (!r.ok) console.warn(`[Job] keuzelijst naar kandidaat ${candidateId} mislukt: ${r.errorMessage}`);
+    return r.ok;
+  } catch (e: any) {
+    console.warn("[Job] keuzelijst versturen mislukt:", e?.message || e);
     return false;
   }
 }
@@ -550,6 +580,17 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
   if (!ctx) return { ok: false, status: s.status, berichten: [] };
   if (invoer.cvOntvangen) ctx = { ...ctx, hasCv: true };
 
+  // Een moment uit de WhatsApp-keuzelijst: meteen boeken, de bevestiging komt in WhatsApp.
+  let planKeuze: ReturnType<typeof gekozenMoment> = null;
+  if (tekst && g.kanaal === "whatsapp" && s.status === "plannen" && !invoer.cvOntvangen && !herkenCommando(tekst, s.laatsteOnderwerp)) {
+    planKeuze = gekozenMoment(tekst, await momenten());
+    if (planKeuze && typeof planKeuze === "object") {
+      const uit = await boek({ ...g, laatsteInkomendAt: nu, laatsteActiviteitAt: nu } as JobGesprek, planKeuze);
+      if (uit.ok) return { ok: true, status: "gepland", berichten: uit.berichten };
+      planKeuze = "bezet";
+    }
+  }
+
   const wachtOpKandidaat = ["bezig", "wacht_cv", "geen_reactie", "gestopt"].includes(s.status);
   const wasGestopt = s.status === "gestopt";
   let r: ReturnType<typeof verwerk>;
@@ -557,6 +598,8 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
     // Alleen gevoelige gegevens: niets uitlezen, de open vraag blijft staan.
     const herhaal = s.status === "bezig" && s.laatsteOnderwerp ? [vraag(s.laatsteOnderwerp, s.taal, ctx, s.velden)] : [];
     r = { state: { ...s, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null }, berichten: herhaal, acties: [] };
+  } else if (planKeuze === "geen" || planKeuze === "bezet") {
+    r = momentAntwoord(s, planKeuze, nu, planKeuze === "geen" && !!(await actieveAfspraak(g.candidateId)));
   } else {
     const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
     const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal, ctx.begrijpen ? await gesprekVoorAi(g.id, tekst) : undefined) : null;
@@ -659,9 +702,9 @@ export async function naarPlannen(candidateId: number): Promise<JobGesprek> {
 /**
  * Na Accepteren in Kandidaten: Job laat de kandidaat weten dat het cv is
  * bekeken en dat hij zelf een moment kan kiezen. In het webgesprek staat dan
- * de momentenkiezer; via WhatsApp gaat een bericht met de planlink (binnen 24
- * uur na het laatste bericht van de kandidaat een gewoon bericht, anders het
- * herinneringssjabloon). De mail met de afspraakknop stuurt de route zelf.
+ * de momentenkiezer; via WhatsApp binnen 24 uur na het laatste bericht van de
+ * kandidaat een keuzelijst met momenten (zonder vrije momenten de planlink),
+ * anders het herinneringssjabloon; op het antwoord daarop volgt de keuzelijst. De mail met de afspraakknop stuurt de route zelf.
  */
 export async function uitnodigingNaCheck(candidateId: number): Promise<void> {
   const g = await gesprekVanKandidaat(candidateId);
@@ -796,7 +839,12 @@ export async function boek(g: JobGesprek, m: { datum: string; tijd: string }): P
 
   const dag = dagTekst(vrij.datum, s.taal);
   const tekst = teksten(s.taal).gepland(dag, vrij.tijd, vrij.interviewer);
-  await bewaarEnVerstuur(g, s, [{ tekst }], nu);
+  const agendaLink = `${basisUrl()}/api/job/${encodeURIComponent(g.token)}/agenda.ics`;
+  // In WhatsApp: de bevestiging met de agendalink en een knop om te verzetten.
+  const bevestiging: Uitgaand = g.kanaal === "whatsapp"
+    ? { tekst: `${tekst}\n\n${teksten(s.taal).agendaWa(agendaLink)}`, keuzes: [teksten(s.taal).verzettenKnop] }
+    : { tekst };
+  await bewaarEnVerstuur(g, s, [bevestiging], nu);
 
   const c = await kandidaat(g.candidateId);
   if (c?.email) {
@@ -804,12 +852,12 @@ export async function boek(g: JobGesprek, m: { datum: string; tijd: string }): P
       voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal,
       dag, datum: vrij.datum, tijd: vrij.tijd, interviewer: vrij.interviewer,
       samenvatting: samenvatting(s.velden, { voornaam: c.firstName, functie: c.functionType, nationalityZone: null, hasCv: true }, s.taal),
-      agendaLink: `${basisUrl()}/api/job/${encodeURIComponent(g.token)}/agenda.ics`,
+      agendaLink,
       verzettenLink: gesprekLink(g.token, "&plannen=1"),
       gesprekLink: gesprekLink(g.token),
     }).catch(() => {});
   }
-  return { ok: true, datum: vrij.datum, tijd: vrij.tijd, interviewer: vrij.interviewer, dagTekst: dag, berichten: [{ tekst }] };
+  return { ok: true, datum: vrij.datum, tijd: vrij.tijd, interviewer: vrij.interviewer, dagTekst: dag, berichten: [{ tekst: bevestiging.tekst, keuzes: bevestiging.keuzes || null, extra: null }] };
 }
 
 // ─── Herinneringen ───────────────────────────────────────────────────────────

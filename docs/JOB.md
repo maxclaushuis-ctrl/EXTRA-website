@@ -135,6 +135,7 @@ uur iets stuurde, antwoordt Job met gewone berichten.
 - Bij het boeken: status `gepland`, `interview_date` en `interview_time` op de kandidaat, bevestigingsmail met agenda-bestand en verzetlink.
 - Nog geen moment gekozen na de uitnodiging: Job stuurt na een dag een herinnering (mail plus WhatsApp) en na nog twee dagen een tweede. Daarna kleurt de kandidaat geel in Kandidaten.
 - Verzetten: de oude afspraak krijgt status `verzet`, er wordt niets verwijderd.
+- Via WhatsApp blijft het plannen in WhatsApp: Job stuurt een keuzelijst ("Kies een moment") met de eerste vrije momenten, hoogstens drie per dag en negen in totaal, plus "Geen tijd die past". Een gekozen moment wordt meteen geboekt; de bevestiging komt in WhatsApp met een agendalink en een knop Verzetten. "Geen tijd die past" gaat naar een collega (status planner). Is een moment intussen weg, dan komt de lijst opnieuw. Zijn er geen vrije momenten of komt de lijst niet aan, dan stuurt Job zoals eerder de planlink.
 
 ## Wanneer een collega moet kijken
 

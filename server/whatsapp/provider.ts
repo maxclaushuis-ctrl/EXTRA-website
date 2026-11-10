@@ -172,6 +172,16 @@ export async function sendButtons(to: string, body: string, knoppen: string[]): 
   });
 }
 
+/** Stuur een keuzelijst via de actieve provider (zelfde Cloud API-vorm bij beide). */
+export async function sendList(to: string, body: string, knop: string, secties: { titel: string; rijen: { id: string; titel: string; beschrijving?: string }[] }[]): Promise<ProviderSendResult> {
+  if (activeProvider() === 'meta') {
+    return fromMetaResult(await metaClient.sendListMessage(to, body, knop, secties));
+  }
+  const p: any = metaClient.lijstPayload(to, body, knop, secties);
+  delete p.recipient_type;
+  return d360PostMessages(p);
+}
+
 /** Stuur een template-bericht via de actieve provider. */
 export async function sendTemplate(
   to: string,

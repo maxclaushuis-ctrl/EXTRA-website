@@ -182,3 +182,61 @@ export function agendaBestand(a: { datum: string; tijd: string; interviewer: str
     "END:VCALENDAR",
   ].join("\r\n");
 }
+
+// ─── WhatsApp: momenten kiezen in een keuzelijst ─────────────────────────────
+
+const DAG_KORT = { nl: ["ma", "di", "wo", "do", "vr", "za", "zo"], en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] };
+const MAAND_KORT = { nl: ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"], en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] };
+
+/** "do 12 nov 16:30": kort genoeg voor een regel in de WhatsApp-lijst (hooguit 24 tekens) en uniek. */
+export function momentTitel(m: { datum: string; tijd: string }, taal: "nl" | "en"): string {
+  const wd = weekdag(m.datum);
+  return `${DAG_KORT[taal][wd - 1]} ${Number(m.datum.slice(8, 10))} ${MAAND_KORT[taal][Number(m.datum.slice(5, 7)) - 1]} ${m.tijd}`;
+}
+
+export interface LijstSectie { titel: string; rijen: { id: string; titel: string; beschrijving?: string }[] }
+/** Meta: hoogstens 10 regels in totaal. Eén regel houden we vrij voor "Geen tijd die past". */
+export const MAX_LIJST_MOMENTEN = 9;
+export const GEEN_TIJD = { nl: "Geen tijd die past", en: "No time that suits" };
+
+/**
+ * De keuzelijst: de eerste vrije momenten, hoogstens drie per dag, per dag een kopje,
+ * en onderaan "Geen tijd die past". Dubbele tijden (twee interviewers) één keer.
+ */
+export function momentenLijst(momenten: Moment[], taal: "nl" | "en"): LijstSectie[] {
+  const uniek: Moment[] = [];
+  const gezien = new Set<string>();
+  for (const m of [...momenten].sort((a, b) => `${a.datum} ${a.tijd}`.localeCompare(`${b.datum} ${b.tijd}`))) {
+    const k = `${m.datum} ${m.tijd}`;
+    if (gezien.has(k)) continue;
+    if (uniek.filter((x) => x.datum === m.datum).length >= 3) continue;
+    gezien.add(k);
+    uniek.push(m);
+    if (uniek.length >= MAX_LIJST_MOMENTEN) break;
+  }
+  const secties: LijstSectie[] = [];
+  for (const m of uniek) {
+    const titel = dagTekst(m.datum, taal).slice(0, 24);
+    let s = secties.find((x) => x.titel === titel);
+    if (!s) { s = { titel, rijen: [] }; secties.push(s); }
+    s.rijen.push({ id: `moment:${m.datum}T${m.tijd}`, titel: momentTitel(m, taal), beschrijving: "Herengracht 372, Amsterdam" });
+  }
+  if (secties.length) secties.push({ titel: taal === "en" ? "Other" : "Anders", rijen: [{ id: "moment:geen", titel: GEEN_TIJD[taal] }] });
+  return secties;
+}
+
+const LIJST_REGEL = /^(ma|di|wo|do|vr|za|zo|mon|tue|wed|thu|fri|sat|sun) \d{1,2} [a-z]{3} \d{2}:\d{2}$/;
+
+/** Het gekozen moment uit het antwoord (de titel van de regel), of "geen", of null. */
+export function gekozenMoment(antwoord: string, momenten: Moment[]): { datum: string; tijd: string } | "geen" | "bezet" | null {
+  const a = (antwoord || "").trim().toLowerCase();
+  if (!a) return null;
+  if (a === GEEN_TIJD.nl.toLowerCase() || a === GEEN_TIJD.en.toLowerCase()) return "geen";
+  for (const t of ["nl", "en"] as const) {
+    const m = momenten.find((x) => momentTitel(x, t).toLowerCase() === a);
+    if (m) return { datum: m.datum, tijd: m.tijd };
+  }
+  // Wel een regel uit de lijst, maar het moment is niet meer vrij.
+  if (LIJST_REGEL.test(a)) return "bezet";
+  return null;
+}

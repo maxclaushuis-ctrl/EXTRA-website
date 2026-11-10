@@ -167,6 +167,34 @@ export async function sendButtonsMessage(to: string, body: string, knoppen: stri
   });
 }
 
+/**
+ * Stuur een keuzelijst (binnen het 24-uurs window). Meta: hooguit 10 regels in totaal,
+ * regeltitel hooguit 24 tekens, knoptekst hooguit 20. Het antwoord komt binnen als
+ * interactive.list_reply met de titel van de regel.
+ */
+export async function sendListMessage(to: string, body: string, knop: string, secties: { titel: string; rijen: { id: string; titel: string; beschrijving?: string }[] }[]): Promise<MetaSendResult> {
+  return postMessages(lijstPayload(to, body, knop, secties));
+}
+export function lijstPayload(to: string, body: string, knop: string, secties: { titel: string; rijen: { id: string; titel: string; beschrijving?: string }[] }[]) {
+  return {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'interactive',
+    interactive: {
+      type: 'list',
+      body: { text: body.slice(0, 1024) },
+      action: {
+        button: knop.slice(0, 20),
+        sections: secties.slice(0, 10).map((s) => ({
+          title: s.titel.slice(0, 24),
+          rows: s.rijen.map((r) => ({ id: r.id.slice(0, 200), title: r.titel.slice(0, 24), ...(r.beschrijving ? { description: r.beschrijving.slice(0, 72) } : {}) })),
+        })),
+      },
+    },
+  };
+}
+
 /** Stuur een (approved) template-bericht — verplicht buiten het 24-uurs window. */
 export async function sendTemplateMessage(
   to: string,
