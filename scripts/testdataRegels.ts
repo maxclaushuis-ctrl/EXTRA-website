@@ -292,3 +292,37 @@ export function testJobGesprekken(): TestJob[] {
     { email: e("Ruben", "de Boer"), status: "planner", herinneringen: 0, uur: 3, velden: { ervaring: "Nog nooit in een keuken gewerkt", ervaringNiveau: "geen" }, twijfels: ["Functie chef vraagt ervaring en die ontbreekt."] },
   ];
 }
+
+
+// ─── Tijdlijn voor kandidaten zonder gesprek met Job (testomgeving) ──────────
+
+const UUR_MS = 3600 * 1000;
+/** Zelfde tijden als Job zelf (shared/jobRegels.ts): 22 uur, dan 48 uur, dan nog 48 uur. */
+export const TIJDLIJN = { eerste: 22, tweede: 22 + 48, rood: 22 + 48 + 48 };
+
+export interface TijdlijnStand {
+  status: "bezig" | "geen_reactie";
+  herinneringen: number;
+  herinneringAt: Date | null;
+  laatsteActiviteitAt: Date;
+  /** Berichten van Job die volgens de tijdlijn al verstuurd zouden zijn. */
+  berichten: { soort: "start" | "eerste" | "tweede"; at: Date }[];
+}
+
+/**
+ * Hoe een gesprek met Job er nu uit zou zien als het bij de aanmelding was gestart en de
+ * kandidaat nooit had geantwoord. Null in het eerste halfuur (dan start Job net).
+ */
+export function tijdlijnStand(aangemeld: Date, nu: Date): TijdlijnStand | null {
+  const uren = (nu.getTime() - aangemeld.getTime()) / UUR_MS;
+  if (uren < 0.5) return null;
+  const op = (u: number) => new Date(aangemeld.getTime() + u * UUR_MS);
+  const start = op(1 / 60);
+  const berichten: TijdlijnStand["berichten"] = [{ soort: "start", at: start }];
+  if (uren < TIJDLIJN.eerste) return { status: "bezig", herinneringen: 0, herinneringAt: null, laatsteActiviteitAt: start, berichten };
+  berichten.push({ soort: "eerste", at: op(TIJDLIJN.eerste) });
+  if (uren < TIJDLIJN.tweede) return { status: "bezig", herinneringen: 1, herinneringAt: op(TIJDLIJN.eerste), laatsteActiviteitAt: start, berichten };
+  berichten.push({ soort: "tweede", at: op(TIJDLIJN.tweede) });
+  if (uren < TIJDLIJN.rood) return { status: "bezig", herinneringen: 2, herinneringAt: op(TIJDLIJN.tweede), laatsteActiviteitAt: start, berichten };
+  return { status: "geen_reactie", herinneringen: 3, herinneringAt: op(TIJDLIJN.rood), laatsteActiviteitAt: start, berichten };
+}

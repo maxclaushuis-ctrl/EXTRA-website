@@ -74,5 +74,18 @@ test("vier testaccounts op het testdomein", TESTACCOUNTS.length === 4 && TESTACC
   test("Job-gesprekken: elke toestand komt voor", ["geen_reactie", "bezig", "planner", "wacht_cv"].every((s) => js.some((j) => j.status === s)));
 }
 
+// Tijdlijn voor kandidaten zonder gesprek met Job
+{
+  const { tijdlijnStand } = await import("./testdataRegels");
+  const nu = new Date("2026-11-11T12:00:00Z");
+  const terug = (uur: number) => new Date(nu.getTime() - uur * 3600 * 1000);
+  test("tijdlijn: eerste halfuur nog niets", tijdlijnStand(terug(0.2), nu) === null);
+  test("tijdlijn: na 2 uur bezig, geen herinnering", (() => { const s = tijdlijnStand(terug(2), nu)!; return s.status === "bezig" && s.herinneringen === 0 && s.berichten.length === 1; })());
+  test("tijdlijn: na 1 dag de eerste herinnering", (() => { const s = tijdlijnStand(terug(30), nu)!; return s.herinneringen === 1 && s.berichten.length === 2; })());
+  test("tijdlijn: na 3 dagen de tweede herinnering", (() => { const s = tijdlijnStand(terug(80), nu)!; return s.herinneringen === 2 && s.status === "bezig"; })());
+  test("tijdlijn: na 5 dagen geen reactie (rood)", (() => { const s = tijdlijnStand(terug(5 * 24), nu)!; return s.status === "geen_reactie" && s.herinneringen === 3; })());
+  test("tijdlijn: na 202 dagen geen reactie (rood)", tijdlijnStand(terug(202 * 24), nu)!.status === "geen_reactie");
+}
+
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);
