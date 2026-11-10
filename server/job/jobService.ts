@@ -19,6 +19,7 @@
  *
  * Er wordt nooit iets verwijderd. Een verzette afspraak krijgt status 'verzet'.
  */
+import { matchAan } from "./cvAnalyse";
 import { functieVan, isLabel, type AanmeldLabel } from "@shared/aanmeldLabels";
 import { randomBytes } from "crypto";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
@@ -26,7 +27,7 @@ import { db } from "../db";
 import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
 import { planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
-  ervaringWerk, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
+  ervaringWerk, cvAfrondingTekst, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
@@ -236,6 +237,7 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
     hasCv: !!c.hasCv,
     afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,
     stopV3: v3("STOP"),
+    cvVragen: matchAan(),
     meerFuncties: meerFunctiesGekozen(c.bronDetails),
   };
 }
@@ -386,6 +388,9 @@ async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
         const { setOptInStatus } = await import("../whatsapp/optInService");
         await setOptInStatus("kandidaat", g.candidateId, "actief", "Kandidaat wil na STOP verder met Job");
       } catch (e: any) { console.warn("[Job] toestemming weer aanzetten mislukt:", e?.message); }
+    }
+    if (a.soort === "cv_aanvulling") {
+      import("./cvAnalyse").then((m) => m.startCvAnalyse(g.candidateId)).catch(() => {});
     }
     if (a.soort === "cv_bevestigd") {
       try { await storage.updateCandidate(g.candidateId, { hasCv: true, cvFilename: a.bijlage } as any); } catch (e: any) { console.warn("[Job] cv bijwerken mislukt:", e?.message); }
@@ -539,12 +544,61 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
 
 /** Het cv is binnen (site, link of WhatsApp). Loopt het gesprek nog, dan gaat Job verder. */
 export async function cvOntvangen(candidateId: number, bijlage?: string | null, kanaal?: "web" | "whatsapp"): Promise<VerwerkResultaat | null> {
-  // Job 3.0, fase 4: het cv uitlezen op de achtergrond (schakelaar JOB_V3_MATCH).
-  import("./cvAnalyse").then((m) => m.startCvAnalyse(candidateId)).catch(() => {});
+  // Job 3.0, fase 4: het cv uitlezen op de achtergrond (schakelaar JOB_V3_MATCH). Pas nadat het
+  // gesprek is bijgewerkt, zodat Job weet dat het slotbericht op het lezen wacht.
+  const lees = () => import("./cvAnalyse").then((m) => m.startCvAnalyse(candidateId)).catch(() => {});
+  let g = await gesprekVanKandidaat(candidateId);
+  // Stond er een cv-vraag open (bijvoorbeeld "heb je het ook als pdf?"), dan is dit nieuwe cv het antwoord.
+  if (g && (g.velden as any)?.cvVraag) {
+    const s = naarState(g);
+    const open = s.velden.cvVraag!;
+    s.velden.cvVragen = (s.velden.cvVragen || []).map((v) => (v.soort === open.soort && v.antwoord === undefined ? { ...v, antwoord: "nieuw cv gestuurd" } : v));
+    delete s.velden.cvVraag;
+    await bewaarState(g.id, s);
+    g = await gesprekVanKandidaat(candidateId);
+  }
+  if (!g || !["bezig", "wacht_cv", "geen_reactie", "cv_controle"].includes(g.status)) { lees(); return null; }
+  try { return await verwerkBericht(g, { cvOntvangen: true, bijlage, kanaal }); }
+  finally { lees(); }
+}
+
+/**
+ * Job 3.0, fase 4: het cv is gelezen. Wacht het slotbericht daarop, dan stelt Job
+ * eerst hoogstens twee cv-vragen (shared/cvVragen.ts) en anders, of daarna, het slotbericht.
+ */
+export async function naCvAnalyse(candidateId: number): Promise<void> {
   const g = await gesprekVanKandidaat(candidateId);
-  if (!g) return null;
-  if (!["bezig", "wacht_cv", "geen_reactie", "cv_controle"].includes(g.status)) return null;
-  return verwerkBericht(g, { cvOntvangen: true, bijlage, kanaal });
+  if (!g) return;
+  const s = naarState(g);
+  const v = s.velden;
+  if (!v.cvAfronding || v.cvVraag) return;
+  const nu = new Date();
+  if (!["planner", "cv_controle"].includes(s.status)) { delete v.cvAfronding; await bewaarState(g.id, s); return; }
+  const c = await kandidaat(candidateId);
+  if (!c) return;
+  const { cvVraagVoor } = await import("@shared/cvVragen");
+  const { modelVoor } = await import("@shared/kandidaatMatch");
+  const { laatsteAnalyses } = await import("./cvAnalyse");
+  const a = (await laatsteAnalyses([candidateId])).get(candidateId);
+  const gesteld = (v.cvVragen || []).map((x) => x.soort);
+  const vraag = a ? cvVraagVoor({
+    status: a.status, model: modelVoor(c.functieEersteKeus, c.functionType, (c.bronDetails as any)?.branche ?? null),
+    periodes: (a.periodes || []) as any, certificaten: (a.certificaten || []) as string[],
+    gesprek: { ervaringNiveau: v.ervaringNiveau ?? null }, gesteld, peil: nu,
+  }) : null;
+  let tekst: string;
+  if (vraag) {
+    const vr = vraag[s.taal];
+    v.cvVraag = { soort: vraag.soort, tekst: vr };
+    v.cvVragen = [...(v.cvVragen || []), { soort: vraag.soort, vraag: vr }];
+    tekst = gesteld.length === 0 && vraag.soort !== "leesbaar" ? teksten(s.taal).cvVraagEerste(vr) : vr;
+  } else {
+    tekst = cvAfrondingTekst(v.cvAfronding, c.firstName, s.taal);
+    delete v.cvAfronding;
+  }
+  s.laatsteActiviteitAt = nu.toISOString();
+  await bewaarState(g.id, s);
+  await bewaarEnVerstuur(g, s, [{ tekst }], nu);
 }
 
 /**

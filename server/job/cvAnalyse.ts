@@ -49,13 +49,14 @@ export async function tekstUitBestand(buffer: Buffer, bestand: string): Promise<
   return null;
 }
 
-function prompt(model: FunctieModel, gesprekErvaring: string | null, peil: Date): string {
+function prompt(model: FunctieModel, gesprekErvaring: string | null, peil: Date, aanvullingen: { vraag: string; antwoord?: string }[] = []): string {
   return `Je leest een afgeschermd cv voor uitzendbureau EXTRA in Amsterdam. Persoonsgegevens zijn al vervangen door [naam], [telefoon] en dergelijke.
 De kandidaat meldde zich aan voor: ${model.naam}.
 Kerntaken van deze functie, genummerd: ${model.kerntaken.map((k, i) => `${i} = ${k}`).join("; ")}.
 Telt als verwante ervaring: ${model.verwant}.
 Peildatum: ${peil.toISOString().slice(0, 7)}.
 ${gesprekErvaring ? `In het gesprek met Job zei de kandidaat over ervaring: "${gesprekErvaring.slice(0, 300)}"` : "Uit het gesprek is nog niets over ervaring bekend."}
+${aanvullingen.filter((a) => a.antwoord).length ? `Na het lezen van het cv vroeg Job nog (tel de antwoorden mee: voeg kerntaken toe aan de periode waar het over gaat, zet einde op "heden" als de kandidaat daar nog werkt, voeg een periode of certificaat toe als de kandidaat dat noemt; verzin niets):\n${aanvullingen.filter((a) => a.antwoord).map((a) => `- Vraag: ${a.vraag}\n  Antwoord: "${String(a.antwoord).slice(0, 300)}"`).join("\n")}` : ""}
 
 Haal per werkperiode uit het cv:
 - functie en werkgever zoals in het cv
@@ -70,7 +71,7 @@ Verzin niets. Wat niet in het cv staat, laat je weg. Seizoen-, stage- en uitzend
 Antwoord uitsluitend met JSON: {"periodes": [...], "certificaten": [...], "gesprek": null}`;
 }
 
-async function leesMetAi(tekst: string, model: FunctieModel, gesprekErvaring: string | null, peil: Date): Promise<{ periodes: Periode[]; certificaten: string[] } | "geen_ai"> {
+async function leesMetAi(tekst: string, model: FunctieModel, gesprekErvaring: string | null, peil: Date, aanvullingen: { vraag: string; antwoord?: string }[] = []): Promise<{ periodes: Periode[]; certificaten: string[] } | "geen_ai"> {
   if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL && !process.env.AI_INTEGRATIONS_OPENAI_API_KEY) return "geen_ai";
   const OpenAI = (await import("openai")).default;
   const client = new OpenAI({ baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL, apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "unused" });
@@ -79,7 +80,7 @@ async function leesMetAi(tekst: string, model: FunctieModel, gesprekErvaring: st
   try {
     const r: any = await client.chat.completions.create({
       model: "gpt-4o-mini", temperature: 0, max_tokens: 1500, response_format: { type: "json_object" },
-      messages: [{ role: "system", content: prompt(model, gesprekErvaring, peil) }, { role: "user", content: tekst }],
+      messages: [{ role: "system", content: prompt(model, gesprekErvaring, peil, aanvullingen) }, { role: "user", content: tekst }],
     } as any, { signal: stop.signal, maxRetries: 1 } as any);
     const inhoud: string = r?.choices?.[0]?.message?.content || "";
     const json = inhoud.slice(inhoud.indexOf("{"), inhoud.lastIndexOf("}") + 1);
@@ -112,7 +113,7 @@ export async function analyseerCv(candidateId: number): Promise<CvAnalyse | null
     const af = afschermen(ruw, { voornaam: c.firstName, achternaam: c.lastName, email: c.email, telefoon: c.phone, postcode: c.postcode });
     if (!af.ok) return bewaar({ status: af.reden === "leeg" ? "geen_tekst" : "afschermen", tekens: ruw.length });
     const peil = new Date();
-    const uit = await leesMetAi(af.tekst, model, velden.ervaring || null, peil);
+    const uit = await leesMetAi(af.tekst, model, velden.ervaring || null, peil, velden.cvVragen || []);
     if (uit === "geen_ai") return bewaar({ status: "geen_ai", tekens: af.tekst.length });
     const a = await bewaar({ status: "klaar", tekens: af.tekst.length, periodes: uit.periodes, certificaten: uit.certificaten, model: "gpt-4o-mini" });
     // Momentopname van de match, voor de geschiedenis en de consistentie
@@ -132,7 +133,11 @@ export async function analyseerCv(candidateId: number): Promise<CvAnalyse | null
 export function startCvAnalyse(candidateId: number): void {
   if (!matchAan() || bezig.has(candidateId)) return;
   bezig.add(candidateId);
-  analyseerCv(candidateId).catch((e) => console.warn("[Cv-analyse] mislukt:", e?.message || e)).finally(() => bezig.delete(candidateId));
+  analyseerCv(candidateId).catch((e) => console.warn("[Cv-analyse] mislukt:", e?.message || e)).finally(() => {
+    bezig.delete(candidateId);
+    // Wacht Job op het lezen, dan nu de cv-vraag of het slotbericht (ook als het lezen mislukte).
+    import("./jobService").then((m) => m.naCvAnalyse(candidateId)).catch((e) => console.warn("[Cv-analyse] vervolg in het gesprek mislukt:", e?.message || e));
+  });
 }
 export function analyseBezig(candidateId: number): boolean { return bezig.has(candidateId); }
 

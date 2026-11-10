@@ -94,6 +94,14 @@ export interface JobVelden {
    */
   herinneringenUit?: boolean;
   bestandVraag?: string;
+  /**
+   * Job 3.0 fase 4, cv-vragen (stuurvelden):
+   * cvAfronding = het slotbericht wacht tot het cv is gelezen ("planner" of "cv_controle");
+   * cvVraag = de cv-vraag die nu openstaat; cvVragen = gestelde cv-vragen met het antwoord (hoogstens twee).
+   */
+  cvAfronding?: "planner" | "cv_controle";
+  cvVraag?: { soort: string; tekst: string };
+  cvVragen?: { soort: string; vraag: string; antwoord?: string }[];
 }
 
 /** Wat Job vooraf weet uit de aanmelding. */
@@ -112,6 +120,8 @@ export interface JobContext {
   stopV3?: boolean;
   /** Meer dan één functie aangevinkt (events): het welkom noemt dan geen functie. */
   meerFuncties?: boolean;
+  /** Job 3.0 fase 4: na het cv eerst lezen, dan hoogstens twee cv-vragen (schakelaar JOB_V3_MATCH). */
+  cvVragen?: boolean;
 }
 
 export interface JobState {
@@ -148,7 +158,9 @@ export type Actie =
   /** Na STOP wil de kandidaat duidelijk verder: WhatsApp-toestemming weer aan. */
   | { soort: "hervat" }
   /** Het bestand dat tijdens de vragen binnenkwam is volgens de kandidaat zijn cv. */
-  | { soort: "cv_bevestigd"; bijlage: string };
+  | { soort: "cv_bevestigd"; bijlage: string }
+  /** Antwoord op een cv-vraag: het cv opnieuw lezen met de aanvulling. */
+  | { soort: "cv_aanvulling" };
 
 export interface Resultaat {
   state: JobState;
@@ -263,6 +275,9 @@ const T = {
     cvUploadWa: (link: string) => `Top! Stuur je cv hier in WhatsApp als pdf of foto, of upload het via ${link}`,
     cvLater: "Geen probleem! Ik heb je een mail gestuurd met een knop om je cv te uploaden. Zodra het binnen is, kun je meteen een kennismaking plannen.",
     cvOntvangen: "Fantastisch, je cv is binnen!",
+    cvBekijken: "Ik kijk er even naar.",
+    cvVraagEerste: (vraag: string) => `Ik heb je cv bekeken, dank je. Een vraag daarover: ${vraag}`,
+    cvVraagDank: "Dank je, dat helpt.",
     screeningKlaar: "De eerste screening is klaar.",
     cvControle: (v: string) => `Dank je, ${v}! Een collega bekijkt nu je cv. Is alles in orde, dan krijg je van mij een bericht om zelf een moment te kiezen voor je kennismaking op kantoor.`,
     cvControleWacht: "Een collega bekijkt je cv, je hoort snel van ons. Liever iemand spreken? Typ MENS.",
@@ -331,6 +346,9 @@ const T = {
     cvUploadWa: (link: string) => `Great! Send your CV here in WhatsApp as a PDF or photo, or upload it via ${link}`,
     cvLater: "No problem! I've sent you an email with a button to upload your CV. As soon as it's in, you can book a short meeting at our office.",
     cvOntvangen: "Fantastic, your CV is in!",
+    cvBekijken: "Let me take a quick look.",
+    cvVraagEerste: (vraag: string) => `I've looked at your CV, thanks. A question about it: ${vraag}`,
+    cvVraagDank: "Thanks, that helps.",
     screeningKlaar: "The first screening is done.",
     cvControle: (v: string) => `Thanks, ${v}! A colleague is now looking at your CV. If everything is fine, I'll send you a message to choose a moment for a short meeting at our office.`,
     cvControleWacht: "A colleague is looking at your CV, you'll hear from us soon. Rather talk to someone? Type HUMAN.",
@@ -785,6 +803,18 @@ function verwerkLos(
     return { state, berichten, acties };
   }
 
+  // Antwoord op een cv-vraag (fase 4): bewaren, het cv opnieuw lezen met de aanvulling.
+  if (state.velden.cvVraag && invoer.tekst && !invoer.cvOntvangen) {
+    const open = state.velden.cvVraag;
+    if (VERWARD.test(invoer.tekst)) { berichten.push({ tekst: open.tekst }); return { state, berichten, acties }; }
+    state.velden.cvVragen = (state.velden.cvVragen || []).map((v) => (v.soort === open.soort && v.antwoord === undefined ? { ...v, antwoord: invoer.tekst!.trim().slice(0, 500) } : v));
+    delete state.velden.cvVraag;
+    berichten.push({ tekst: t().cvVraagDank });
+    acties.push({ soort: "profiel", velden: state.velden });
+    acties.push({ soort: "cv_aanvulling" });
+    return { state, berichten, acties };
+  }
+
   if (state.status === "planner") {
     berichten.push({ tekst: t().wachtPlanner });
     return { state, berichten, acties };
@@ -894,10 +924,13 @@ function verwerkLos(
 
   const redenen = plannerRedenen(state.velden, ctx, state.twijfels);
   const cvNet = !!invoer.cvOntvangen;
+  // Fase 4: eerst het cv lezen; het slotbericht (of een cv-vraag) volgt als dat klaar is.
+  const uitstellen = cvNet && !!ctx.cvVragen;
   if (redenen.length > 0) {
     state.status = "planner";
     if (cvNet) berichten.push({ tekst: t().cvOntvangen });
-    berichten.push({ tekst: t().planner(ctx.voornaam) });
+    if (uitstellen) { state.velden.cvAfronding = "planner"; berichten.push({ tekst: t().cvBekijken }); }
+    else berichten.push({ tekst: t().planner(ctx.voornaam) });
     acties.push({ soort: "planner", reden: redenen.join(" ") });
     return { state, berichten, acties };
   }
@@ -908,9 +941,15 @@ function verwerkLos(
   state.herinneringen = 0;
   state.herinneringAt = null;
   if (cvNet) berichten.push({ tekst: t().cvOntvangen });
-  berichten.push({ tekst: t().cvControle(ctx.voornaam) });
+  if (uitstellen) { state.velden.cvAfronding = "cv_controle"; berichten.push({ tekst: t().cvBekijken }); }
+  else berichten.push({ tekst: t().cvControle(ctx.voornaam) });
   acties.push({ soort: "planner", reden: "Cv controleren, daarna uitnodigen." });
   return { state, berichten, acties };
+}
+
+/** Het uitgestelde slotbericht na het lezen van het cv. */
+export function cvAfrondingTekst(soort: "planner" | "cv_controle", voornaam: string, taal: JobTaal): string {
+  return soort === "planner" ? T[taal].planner(voornaam) : T[taal].cvControle(voornaam);
 }
 
 // ─── Herinneringen (C2, B2) ──────────────────────────────────────────────────

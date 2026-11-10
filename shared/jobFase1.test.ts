@@ -4,7 +4,7 @@
  * Run met:  npx tsx shared/jobFase1.test.ts
  */
 import {
-  start, verwerk, herkenCommando, herinneringNodig, planHerinneringNodig, bestandTijdensVragen, spraakBericht, teksten,
+  start, verwerk, herkenCommando, cvAfrondingTekst, herinneringNodig, planHerinneringNodig, bestandTijdensVragen, spraakBericht, teksten,
   type JobContext, type JobState, type Resultaat,
 } from "./jobRegels";
 import { reserveLezing } from "./jobLezen";
@@ -176,6 +176,25 @@ for (const k of ["gestopt", "welkomTerug", "welkomTerugKort", "blijftGestopt", "
   const h = verwerk(r.state, keuken, { tekst: "Ik heb nog niet in een hotel gewerkt" }, { velden: { hotels: "geen", ervaring: "Ik heb nog niet in een hotel gewerkt", ervaringNiveau: "geen" }, taal: "nl", twijfel: null, ack: "" }, later(2));
   test("Hotelantwoord laat de ervaring staan", h.state.velden.ervaring === "9 jaar in keukens, als souschef" && h.state.velden.ervaringNiveau === "ervaren", JSON.stringify(h.state.velden));
   test("Geen twijfel 'geen ervaring' door het hotelantwoord", !h.acties.some((a: any) => a.soort === "twijfel" && /ervaring/i.test(a.reden || "")) && h.state.status !== "planner", h.state.status);
+}
+
+// ─── Cv-vragen: slotbericht wacht op het lezen, antwoord gaat terug naar de analyse ─
+{
+  const c: JobContext = { voornaam: "Kevin", functie: "chef", nationalityZone: "NL", hasCv: false, stopV3: true, cvVragen: true };
+  const s0: JobState = { ...start(c, "nl", NU).state, status: "wacht_cv", laatsteOnderwerp: null,
+    velden: { ervaring: "2 jaar kok", ervaringNiveau: "ervaren", functievraag: "-", diensten: "3-4", werkgebied: "tot 25 km", werkmoment: "flexibel", startdatum: "direct", werkvorm: "hoofdbaan", cvParaat: "ja" } };
+  const r = verwerk(s0, c, { cvOntvangen: true }, null, later(1));
+  test("Cv binnen: eerst 'ik kijk er even naar', nog geen slotbericht", r.berichten.some((b) => b.tekst.includes(nl.cvBekijken)) && !r.berichten.some((b) => b.tekst.includes("Een collega bekijkt nu je cv")), r.berichten.map((b) => b.tekst).join(" | "));
+  test("Slotbericht staat klaar", r.state.velden.cvAfronding === "cv_controle" && r.state.status === "cv_controle");
+  const metVraag = { ...r.state, velden: { ...r.state.velden, cvVraag: { soort: "werkzaamheden", tekst: "Welke werkzaamheden deed je bij Restaurant De Haven vooral?" }, cvVragen: [{ soort: "werkzaamheden", vraag: "Welke werkzaamheden deed je bij Restaurant De Haven vooral?" }] } };
+  const a = verwerk(metVraag, c, { tekst: "Zelfstandig op de grill" }, null, later(2));
+  test("Antwoord op de cv-vraag: bewaard, bedankt, opnieuw lezen", a.state.velden.cvVragen?.[0].antwoord === "Zelfstandig op de grill" && !a.state.velden.cvVraag && a.acties.some((x) => x.soort === "cv_aanvulling") && a.berichten[0].tekst.includes(nl.cvVraagDank), JSON.stringify(a.state.velden.cvVragen));
+  test("Na het antwoord nog geen 'collega bekijkt je cv'", !a.berichten.some((b) => b.tekst === nl.cvControleWacht));
+  const q = verwerk(metVraag, c, { tekst: "?" }, null, later(2));
+  test("Een vraagteken: dezelfde cv-vraag opnieuw", q.berichten[0].tekst.includes("Restaurant De Haven") && !!q.state.velden.cvVraag);
+  const zonder = verwerk(s0, { ...c, cvVragen: false }, { cvOntvangen: true }, null, later(1));
+  test("Schakelaar uit: slotbericht meteen, zoals voorheen", zonder.berichten.some((b) => b.tekst.includes("Een collega bekijkt nu je cv")) && !zonder.state.velden.cvAfronding);
+  test("Slotbericht na de vragen", cvAfrondingTekst("cv_controle", "Kevin", "nl").includes("Een collega bekijkt nu je cv"));
 }
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
