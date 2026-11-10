@@ -45,6 +45,8 @@ export interface KandidaatInvoer {
   matchOpen: null | { aangemaaktOp: Date | string; redenen: string[] };
   /** Moment van uitnodigen (Accepteren); anders de laatste activiteit van Job bij "plannen". */
   uitgenodigdAt?: Date | string | null;
+  /** De ervaringseis volgens het gelezen cv (kandidaatmatch): "voldaan", "niet_voldaan", "onbekend" of "geen". */
+  cvEis?: string | null;
 }
 
 export interface Bolletje {
@@ -99,6 +101,9 @@ export function bolletje(c: KandidaatInvoer, nu: Date): Bolletje {
     const twijfels = j.twijfels || [];
     if (c.nationalityZone === "NON_EU" && v.werkautorisatie && v.werkautorisatie !== "vrij") {
       gele.push({ reden: "werkautorisatie", tekst: v.werkautorisatie === "twv" ? "Twijfel: TWV vereist" : "Twijfel: werkautorisatie onduidelijk", sinds: jobSinds });
+    } else if (FUNCTIES_MET_ERVARING.includes(c.functie) && v.ervaringNiveau === "geen" && c.cvEis === "voldaan" && c.hasCv) {
+      // Het gesprek zegt geen ervaring, het cv laat de gevraagde ervaring wel zien: geen twijfel, het cv beoordelen.
+      gele.push({ reden: "cv", tekst: "Cv controleren", sinds: jobSinds });
     } else if (FUNCTIES_MET_ERVARING.includes(c.functie) && v.ervaringNiveau === "geen") {
       gele.push({ reden: "ervaring", tekst: `Twijfel: geen ervaring voor ${c.functie === "chef" ? "de keuken" : "front office"}`, sinds: jobSinds });
     } else if (twijfels.some((t) => /MENS|collega|gebeld/i.test(t))) {

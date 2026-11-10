@@ -3,7 +3,7 @@
  * vervallen vragen en de bewijscheck. Fictieve kandidaten, geen AI (de lezing is vast).
  * Run met:  npx tsx shared/jobBegrijpen.test.ts
  */
-import { start, verwerk, teksten, MAX_DOORVRAGEN_PER_VELD, type JobContext, type Lezing } from "./jobRegels";
+import { start, verwerk, teksten, vervolgOpErvaring, MAX_DOORVRAGEN_PER_VELD, type JobContext, type Lezing } from "./jobRegels";
 import { bewijsCheck, herformuleringGoed, valideerLezing } from "./jobLezen";
 
 let geslaagd = 0;
@@ -75,6 +75,25 @@ test("Zonder vraagteken: afgewezen", !herformuleringGoed("werkgebied", "Vertel m
 test("Met link: afgewezen", !herformuleringGoed("startdatum", "Wanneer kun je beginnen? Zie www.doehetextra.nl?"));
 test("Te lang: afgewezen", !herformuleringGoed("werkmoment", `Wanneer kun je werken ${"heel ".repeat(60)}?`));
 test("Sterren alleen met het woord sterren", herformuleringGoed("sterren", "Hoeveel sterren had het hotel aan de Amstel?") && !herformuleringGoed("sterren", "Was het een duur hotel?"));
+
+// Het gesprek van Max (10 nov, 11:15): 9 jaar keuken, daarna een doorvraag, en dan
+// "Ik heb nog niet in een hotel gewerkt". Dat mocht de ervaring niet overschrijven.
+{
+  let k = start(keuken, "nl", NU);
+  k = verwerk(k.state, keuken, { tekst: "Ik heb 9 jaar keukenervaring" }, L({ velden: { ervaring: "9 jaar keukenervaring", ervaringNiveau: "ervaren" } }), NU);
+  k = verwerk(k.state, keuken, { tekst: "Ik heb voornamelijk gewerkt in restaurants" }, L({ velden: {}, doorvraag: { tekst: "In wat voor keukens heb je vooral gewerkt?", voor: "ervaring" } }), NU);
+  test("Max: doorvraag op ervaring", k.state.laatsteOnderwerp === "ervaring");
+  k = verwerk(k.state, keuken, { tekst: "Ik heb nog niet in een hotel gewerkt" }, L({ velden: { ervaring: "Ik heb nog niet in een hotel gewerkt", ervaringNiveau: "geen" } }), NU);
+  test("Max: hotelantwoord laat de 9 jaar staan", k.state.velden.ervaring === "9 jaar keukenervaring", String(k.state.velden.ervaring));
+  test("Max: niveau blijft ervaren, geen twijfel over ervaring", k.state.velden.ervaringNiveau === "ervaren" && k.state.status !== "planner");
+  test("Max: wel genoteerd als geen hotelervaring, dus geen sterrenvraag", k.state.velden.geenHotel === true && k.state.laatsteOnderwerp !== "sterren");
+}
+test("Vervolg: nieuw antwoord komt erbij", vervolgOpErvaring({ ervaring: "vooral à la carte" }, { ervaring: "9 jaar keuken" }, "ervaring", "vooral à la carte").velden.ervaring === "9 jaar keuken. vooral à la carte");
+test("Vervolg: samenvatting van de AI met het oude erin wint", vervolgOpErvaring({ ervaring: "9 jaar keuken, vooral à la carte" }, { ervaring: "9 jaar keuken" }, "ervaring", "x").velden.ervaring === "9 jaar keuken, vooral à la carte");
+const afw = vervolgOpErvaring({ ervaringNiveau: "geen" }, { ervaring: "3 jaar keuken", ervaringNiveau: "ervaren" }, "ervaring", "eigenlijk alleen afwas");
+test("Vervolg: ervaren gaat niet stil omlaag, wel een twijfel", afw.velden.ervaringNiveau === undefined && !!afw.twijfel?.includes("alleen afwas"));
+test("Vervolg: eerste antwoord ongemoeid", vervolgOpErvaring({ ervaring: "geen", ervaringNiveau: "geen" }, {}, "ervaring", "geen").velden.ervaringNiveau === "geen");
+test("Vervolg: bij een andere vraag niets anders", vervolgOpErvaring({ diensten: "3-4" } as any, { ervaring: "x" }, "diensten", "3 tot 4").velden.diensten === "3-4");
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

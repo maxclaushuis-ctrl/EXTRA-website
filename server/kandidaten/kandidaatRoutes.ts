@@ -36,7 +36,7 @@ async function wie(req: Request) {
 
 const DIENSTEN: Record<string, string> = { "1-2": "1 tot 2 per week", "3-4": "3 tot 4 per week", "5+": "5 of meer per week" };
 
-function invoer(c: Candidate, g: any | undefined, match: any | undefined, uitgenodigdAt?: Date | null) {
+function invoer(c: Candidate, g: any | undefined, match: any | undefined, uitgenodigdAt?: Date | null, cvEis?: string | null) {
   return {
     status: c.status, interviewDate: c.interviewDate ? String(c.interviewDate) : null, createdAt: c.createdAt,
     birthDate: c.birthDate ? String(c.birthDate) : null, woonland: c.woonland ?? null,
@@ -44,6 +44,7 @@ function invoer(c: Candidate, g: any | undefined, match: any | undefined, uitgen
     job: g ? { status: g.status, herinneringen: g.herinneringen, herinneringAt: g.herinneringAt, laatsteActiviteitAt: g.laatsteActiviteitAt, bijgewerktAt: g.bijgewerktAt, velden: (g.velden || {}) as JobVelden, twijfels: g.twijfels || [] } : null,
     matchOpen: match ? { aangemaaktOp: match.aangemaaktOp, redenen: match.redenen } : null,
     uitgenodigdAt: uitgenodigdAt ?? null,
+    cvEis: cvEis ?? null,
   };
 }
 
@@ -74,9 +75,9 @@ async function overzicht(ik: number | null) {
   const { cs, gm, mm, um, pm } = await lopende();
   const am = await laatsteAnalyses(cs.map((c) => c.id));
   const rijen = cs.filter((c) => inKandidaten({ status: c.status, interviewDate: c.interviewDate ? String(c.interviewDate) : null })).map((c) => {
-    const inv = invoer(c, gm.get(c.id), mm.get(c.id), um.get(c.id));
-    const b = bolletje(inv, nu);
     const m = matchUit(c, am.get(c.id), gm.get(c.id)?.velden as JobVelden | undefined, nu);
+    const inv = invoer(c, gm.get(c.id), mm.get(c.id), um.get(c.id), m.kaart?.eis.status ?? null);
+    const b = bolletje(inv, nu);
     const ind = indeling(inv, nu, m.kaart?.eis.status ?? null);
     const planner = c.plannerUserId ? pm.get(c.plannerUserId) : null;
     return {
@@ -124,7 +125,8 @@ async function dossier(id: number) {
   const matches = await db.select().from(kandidaatMogelijkeMatch).where(and(eq(kandidaatMogelijkeMatch.candidateId, id), eq(kandidaatMogelijkeMatch.status, "open")));
   const [uitgenodigd] = await db.select({ at: sollicitantGebeurtenissen.at }).from(sollicitantGebeurtenissen)
     .where(and(eq(sollicitantGebeurtenissen.candidateId, id), eq(sollicitantGebeurtenissen.soort, "uitgenodigd"))).orderBy(desc(sollicitantGebeurtenissen.at)).limit(1);
-  const b = bolletje(invoer(c, g, matches[0], uitgenodigd?.at), nu);
+  const matchBlok = matchUit(c, (await laatsteAnalyses([c.id])).get(c.id), (g?.velden || {}) as JobVelden);
+  const b = bolletje(invoer(c, g, matches[0], uitgenodigd?.at, matchBlok.kaart?.eis.status ?? null), nu);
   const [planner] = c.plannerUserId ? await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName }).from(users).where(eq(users.id, c.plannerUserId)) : [];
   const matchDetails = await Promise.all(matches.map(async (m) => {
     if (m.soort === "medewerker") {
@@ -160,7 +162,7 @@ async function dossier(id: number) {
       cv: c.hasCv ? (c.cvFilename || "") : null, uitJob: !!g,
     },
     cvBestand: cvBestand(c, g?.kanaal || null, berichten),
-    match: matchUit(c, (await laatsteAnalyses([c.id])).get(c.id), v),
+    match: matchBlok,
     functies: gekozenFuncties(c.bronDetails),
     functieCode: c.functieEersteKeus || c.functionType,
     contact: {

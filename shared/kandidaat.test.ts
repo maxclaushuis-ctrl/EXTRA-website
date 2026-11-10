@@ -64,6 +64,9 @@ const cvKlaar = indeling(basis({ hasCv: true, job: job({ status: "cv_controle" }
 test("groep: cv controleren zonder twijfel is klaar voor beoordeling (groen)", cvKlaar.groep === "beoordelen" && cvKlaar.punt === "groen" && cvKlaar.tekst === "Gesprek af, cv binnen" && cvKlaar.stap === "Cv beoordelen");
 test("groep: planner met cv en zonder twijfels ook groen", indeling(basis({ hasCv: true, job: job({ status: "planner" }) }), nu).groep === "beoordelen");
 const chef = basis({ functie: "chef", hasCv: true, job: job({ status: "planner", velden: { ervaringNiveau: "geen" } as any, twijfels: ["Geen ervaring"] }) });
+test("bolletje: chef zonder ervaring volgens gesprek, cv haalt de eis: cv controleren", bolletje({ ...chef, cvEis: "voldaan" }, nu).reden === "cv" && bolletje({ ...chef, cvEis: "voldaan" }, nu).tekst === "Cv controleren");
+test("bolletje: cv haalt de eis niet: twijfel blijft", bolletje({ ...chef, cvEis: "onbekend" }, nu).reden === "ervaring");
+test("groep: via cvEis in de invoer ook groen", indeling({ ...chef, cvEis: "voldaan" }, nu).groep === "beoordelen");
 test("groep: twijfel over ervaring blijft actie zonder cv-bewijs", indeling(chef, nu).groep === "actie" && indeling(chef, nu).tekst === "Geen ervaring voor de keuken" && indeling(chef, nu).stap === "Ervaring beoordelen");
 const chefCv = indeling(chef, nu, "voldaan");
 test("groep: cv laat de gevraagde ervaring zien, dan groen", chefCv.groep === "beoordelen" && chefCv.sub === "Cv laat de gevraagde ervaring zien");

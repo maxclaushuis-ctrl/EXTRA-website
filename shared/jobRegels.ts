@@ -617,6 +617,43 @@ export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: 
   return uit;
 }
 
+const OVER_HOTEL = /\b(hotels?|hostels?|resorts?)\b/i;
+const ONTKENNING = /\b(niet|nooit|geen|not|never|no|haven'?t|hasn'?t)\b/i;
+
+/**
+ * Een tweede antwoord bij de ervaring (na een doorvraag of verduidelijking). De ervaring
+ * uit het eerste antwoord ("9 jaar keukenervaring") blijft staan:
+ * - Gaat het antwoord over hotels ("ik heb nog niet in een hotel gewerkt"), dan is het
+ *   hotelinformatie: ervaring en ervaringsniveau blijven onaangeroerd.
+ * - Anders komt het antwoord erbij in plaats van eroverheen.
+ * - Het niveau "ervaren" gaat niet stilletjes omlaag; wijkt het af, dan een twijfel voor de beoordelaar.
+ */
+export function vervolgOpErvaring(nieuw: JobVelden, bekend: JobVelden, vorig: Onderwerp | null, tekst: string): { velden: JobVelden; twijfel?: string } {
+  if (vorig !== "ervaring" || !bekend.ervaring) return { velden: nieuw };
+  const uit: JobVelden = { ...nieuw };
+  if (OVER_HOTEL.test(tekst)) {
+    delete uit.ervaring;
+    delete uit.ervaringNiveau;
+    if (ONTKENNING.test(tekst)) { if (!bekend.hotels || bekend.hotels === "-") uit.hotels = "nog niet in een hotel gewerkt"; uit.geenHotel = true; }
+    else if (!bekend.hotels) uit.hotels = tekst.trim().slice(0, 300);
+    return { velden: uit };
+  }
+  if (uit.ervaring) {
+    const oud = bekend.ervaring.trim();
+    const nw = uit.ervaring.trim();
+    // De AI vat vaak alles samen (oud plus nieuw): dan die samenvatting; anders erbij.
+    uit.ervaring = nw.toLowerCase().includes(oud.toLowerCase()) ? nw.slice(0, 2000)
+      : oud.toLowerCase().includes(nw.toLowerCase()) ? oud
+      : `${oud.replace(/[.\s]+$/, "")}. ${nw}`.slice(0, 2000);
+  }
+  let twijfel: string | undefined;
+  if (bekend.ervaringNiveau === "ervaren" && uit.ervaringNiveau && uit.ervaringNiveau !== "ervaren") {
+    twijfel = `Vervolgantwoord over ervaring wijkt af van het eerste antwoord: "${tekst.trim().replace(/\s+/g, " ").slice(0, 120)}"`;
+    delete uit.ervaringNiveau;
+  }
+  return { velden: uit, twijfel };
+}
+
 /** Antwoord op de hotelvraag dat zegt: nog niet in een hotel gewerkt. */
 const GEEN_HOTEL = /^\s*(nee|no|nope|geen|nooit|never|nergens)\b|nog (niet|nooit)|niet in (een )?hotel|geen hotel|nooit in (een )?hotel|not in a hotel|no hotels?\b|never (worked )?in a hotel|haven'?t worked in a hotel|not yet/i;
 
@@ -921,6 +958,11 @@ function verwerkLos(
     // Een "?" of "wat bedoel je" is geen antwoord: niets invullen, dezelfde vraag komt terug.
     const verward = VERWARD.test(invoer.tekst || "");
     lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx, state.velden) };
+    if (!verward) {
+      const vo = vervolgOpErvaring(lezing.velden, state.velden, vorigOnderwerp, invoer.tekst || "");
+      lezing = { ...lezing, velden: vo.velden };
+      if (vo.twijfel && !state.twijfels.includes(vo.twijfel)) state.twijfels.push(vo.twijfel);
+    }
     state.velden = samenvoegen(state.velden, lezing.velden);
     // Fase 2: vragen die door dit antwoord vervallen (sterren zonder hotelervaring en dergelijke).
     if (ctx.begrijpen) for (const o of lezing.nvt || []) vervalt(state.velden, o);
