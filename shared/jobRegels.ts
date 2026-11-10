@@ -106,6 +106,8 @@ export interface JobVelden {
    * cvVraag = de cv-vraag die nu openstaat; cvVragen = gestelde cv-vragen met het antwoord (hoogstens twee).
    */
   cvAfronding?: "planner" | "cv_controle";
+  /** Fase 2: hoe vaak Job per veld doorvroeg. */
+  doorvragen?: Partial<Record<Onderwerp, number>>;
   cvVraag?: { soort: string; tekst: string };
   cvVragen?: { soort: string; vraag: string; antwoord?: string }[];
 }
@@ -128,6 +130,8 @@ export interface JobContext {
   meerFuncties?: boolean;
   /** Job 3.0 fase 4: na het cv eerst lezen, dan hoogstens twee cv-vragen (schakelaar JOB_V3_MATCH). */
   cvVragen?: boolean;
+  /** Job 3.0 fase 2: begrijpen, doorvragen en vervallen vragen (schakelaar JOB_V3_BEGRIJPEN). */
+  begrijpen?: boolean;
 }
 
 export interface JobState {
@@ -564,7 +568,21 @@ export interface Lezing {
   ack: string;
   /** Alleen na de ervaringsvraag: een vervolgvraag die past bij waar de kandidaat werkte. */
   vervolgvraag?: string;
+  /**
+   * Fase 2, begrijpen: een vervolgvraag die logisch aansluit op het antwoord, om een invulveld
+   * goed te krijgen (bijvoorbeeld bij een kok die alleen afwaservaring noemt).
+   */
+  doorvraag?: { tekst: string; voor: Onderwerp };
+  /** Fase 2: vragen die door dit antwoord niet meer van toepassing zijn (zoals sterren zonder hotelervaring). */
+  nvt?: Onderwerp[];
 }
+
+/** Velden waar Job op mag doorvragen, en welke vragen door een antwoord kunnen vervallen. */
+export const DOORVRAAG_VOOR: Onderwerp[] = ["ervaring", "functievraag", "hotels", "sterren", "restaurant", "werkgebied", "werkmoment", "startdatum", "werkvorm", "diensten"];
+export const KAN_VERVALLEN: Onderwerp[] = ["hotels", "sterren", "restaurant", "functievraag", "specialisatie"];
+/** Hoogstens zoveel doorvragen per veld en in totaal: het gesprek wordt nooit eindeloos. */
+export const MAX_DOORVRAGEN_PER_VELD = 2;
+export const MAX_DOORVRAGEN_TOTAAL = 5;
 
 /**
  * Velden die alleen als antwoord op hun eigen vraag mogen tellen. Een AI-lezing die bij een
@@ -592,6 +610,15 @@ const GEEN_HOTEL = /^\s*(nee|no|nope|geen|nooit|never|nergens)\b|nog (niet|nooit
 
 /** Alleen ander werk genoemd (restaurant, café, catering...) en geen hotel. */
 const ANDER_WERK = /\b(restaurants?|caf[eé]s?|eetcaf[eé]|brasserie|bistro|bar|bars|catering|cateraar|lunchroom|kantine|strandtent|snackbar|pizzeria|festivals?|evenementen|events?|zzp|zelfstandig|kantoren|ziekenhuis|zorg|winkel|supermarkt)\b/i;
+/** Fase 2: een vraag die door het antwoord niet meer van toepassing is. */
+function vervalt(v: JobVelden, o: Onderwerp): void {
+  if (!KAN_VERVALLEN.includes(o)) return;
+  if (o === "hotels" || o === "sterren") { if (!v.hotels) v.hotels = "nog niet in een hotel gewerkt"; v.geenHotel = true; }
+  if (o === "restaurant" && !v.restaurantSoort) v.restaurantSoort = "-";
+  if (o === "functievraag" && v.functievraag === undefined) v.functievraag = "-";
+  if (o === "specialisatie") delete v.specialisatieHint;
+}
+
 /** Noemt de tekst restaurantwerk (en geen hotel)? */
 export function restaurantGenoemd(tekst: string): boolean {
   return /\b(restaurants?|brasserie|bistro|eetcaf[eé]|pizzeria|trattoria)\b/i.test(tekst) && !/hotel/i.test(tekst);
@@ -883,6 +910,8 @@ function verwerkLos(
     const verward = VERWARD.test(invoer.tekst || "");
     lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx, state.velden) };
     state.velden = samenvoegen(state.velden, lezing.velden);
+    // Fase 2: vragen die door dit antwoord vervallen (sterren zonder hotelervaring en dergelijke).
+    if (ctx.begrijpen) for (const o of lezing.nvt || []) vervalt(state.velden, o);
     // Barwerk spreekt voor zich: geen vraag meer wat iemand achter de bar deed.
     if (vorigOnderwerp === "ervaring" && barwerkDuidelijk(invoer.tekst || "", ctx) && state.velden.functievraag === undefined) {
       state.velden.functievraag = "-";
@@ -933,6 +962,24 @@ function verwerkLos(
       state.velden.geldigTot = (invoer.tekst || "").trim() || "onbekend";
     }
     acties.push({ soort: "profiel", velden: state.velden });
+  }
+
+  // Fase 2: een logische vervolgvraag op dit antwoord, om het invulveld goed te krijgen.
+  const dv = ctx.begrijpen && lezing && !VERWARD.test(invoer.tekst || "") ? lezing.doorvraag : undefined;
+  if (dv && DOORVRAAG_VOOR.includes(dv.voor)) {
+    const teller = { ...(state.velden.doorvragen || {}) };
+    const totaal = Object.values(teller).reduce((a, b) => a + (b || 0), 0);
+    if ((teller[dv.voor] || 0) < MAX_DOORVRAGEN_PER_VELD && totaal < MAX_DOORVRAGEN_TOTAAL) {
+      teller[dv.voor] = (teller[dv.voor] || 0) + 1;
+      state.velden.doorvragen = teller;
+      // Het antwoord op de doorvraag hoort bij dat veld: een eerder noodantwoord wordt weer open.
+      if (dv.voor === "hotels" && state.velden.hotels && !state.velden.geenHotel) delete state.velden.hotels;
+      if (dv.voor === "functievraag") delete state.velden.functievraag;
+      state.status = "bezig";
+      state.laatsteOnderwerp = dv.voor;
+      berichten.push({ tekst: dv.tekst });
+      return { state, berichten, acties };
+    }
   }
 
   // Volgende stap

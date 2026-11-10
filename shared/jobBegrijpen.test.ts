@@ -1,0 +1,72 @@
+/**
+ * Huistests Job 3.0 fase 2, begrijpen: doorvragen die aansluiten op het antwoord,
+ * vervallen vragen en de bewijscheck. Fictieve kandidaten, geen AI (de lezing is vast).
+ * Run met:  npx tsx shared/jobBegrijpen.test.ts
+ */
+import { start, verwerk, teksten, MAX_DOORVRAGEN_PER_VELD, type JobContext, type Lezing } from "./jobRegels";
+import { bewijsCheck, valideerLezing } from "./jobLezen";
+
+let geslaagd = 0;
+let gefaald = 0;
+function test(naam: string, ok: boolean, uitleg = "") {
+  if (ok) { geslaagd++; console.log(`✓ ${naam}`); } else { gefaald++; console.log(`✗ ${naam}${uitleg ? ` (${uitleg})` : ""}`); }
+}
+const NU = new Date("2026-11-10T11:47:00Z");
+const nl = teksten("nl");
+const L = (x: Partial<Lezing>): Lezing => ({ velden: {}, taal: "nl", twijfel: null, ack: "", ...x });
+const keuken: JobContext = { voornaam: "Max", functie: "chef", label: "hotels", nationalityZone: "NL", hasCv: false, stopV3: true, begrijpen: true };
+
+// Het gesprek uit de test van Max (10 nov, 11:47), nu met begrijpen
+let r = start(keuken, "nl", NU);
+r = verwerk(r.state, keuken, { tekst: "Ik ben afwasser geweest en busboy" }, L({
+  velden: { ervaring: "Afwasser en busboy", ervaringNiveau: "starter" },
+  twijfel: "Aangemeld voor de keuken, ervaring alleen als afwasser en busboy",
+  doorvraag: { tekst: "Heb je naast het afwassen ook meegeholpen met koken of voorbereiden?", voor: "ervaring" },
+}), NU);
+test("Kok met alleen afwaservaring: Job vraagt door op koken", r.berichten.some((b) => b.tekst.includes("meegeholpen met koken")) && r.state.laatsteOnderwerp === "ervaring", r.berichten.map((b) => b.tekst).join(" | "));
+test("Twijfel voor de beoordelaar bewaard", r.state.twijfels.some((t) => t.includes("afwasser")));
+r = verwerk(r.state, keuken, { tekst: "Ja soms groenten snijden, maar nooit zelf gekookt" }, L({ velden: { ervaring: "Afwasser en busboy; soms groenten gesneden, nooit zelf gekookt", ervaringNiveau: "starter" }, ack: "Groenten snijden, goed om te weten." }), NU);
+test("Antwoord op de doorvraag werkt de ervaring bij", r.state.velden.ervaring?.includes("groenten") === true);
+test("Daarna de hotelvraag", r.state.laatsteOnderwerp === "hotels", String(r.state.laatsteOnderwerp));
+r = verwerk(r.state, keuken, { tekst: "Mee bij snackbars" }, L({ velden: { hotels: "geen, snackbars" }, nvt: ["sterren"] }), NU);
+test("Snackbars: geen sterrenvraag", r.state.laatsteOnderwerp !== "sterren" && !r.berichten.some((b) => b.tekst === nl.sterren), String(r.state.laatsteOnderwerp));
+
+// Hoogstens twee doorvragen per veld
+{
+  let s = start(keuken, "nl", NU).state;
+  const dv = L({ velden: {}, doorvraag: { tekst: "Wat deed je daar precies?", voor: "ervaring" } });
+  let laatste = verwerk(s, keuken, { tekst: "in de horeca" }, dv, NU);
+  for (let i = 1; i < MAX_DOORVRAGEN_PER_VELD; i++) laatste = verwerk(laatste.state, keuken, { tekst: "van alles" }, dv, NU);
+  const derde = verwerk(laatste.state, keuken, { tekst: "dingen" }, { ...dv, velden: { ervaring: "dingen" } }, NU);
+  test(`Na ${MAX_DOORVRAGEN_PER_VELD} doorvragen gaat Job verder`, !derde.berichten.some((b) => b.tekst === "Wat deed je daar precies?"), derde.berichten.map((b) => b.tekst).join(" | "));
+}
+// Schakelaar uit: geen doorvraag
+{
+  const uit = { ...keuken, begrijpen: false };
+  const x = verwerk(start(uit, "nl", NU).state, uit, { tekst: "afwasser" }, L({ velden: { ervaring: "afwasser" }, doorvraag: { tekst: "Heb je ook gekookt?", voor: "ervaring" } }), NU);
+  test("Schakelaar uit: doorvraag genegeerd", !x.berichten.some((b) => b.tekst === "Heb je ook gekookt?"));
+}
+// Een "?" is geen reden voor een doorvraag
+{
+  const s = start(keuken, "nl", NU).state;
+  const x = verwerk(s, keuken, { tekst: "?" }, L({ doorvraag: { tekst: "Hoe bedoel je?", voor: "ervaring" } }), NU);
+  test("Vraagteken: dezelfde vraag opnieuw, geen doorvraag", !x.berichten.some((b) => b.tekst === "Hoe bedoel je?"));
+}
+
+// Controle van de AI-uitvoer
+const v = valideerLezing({ velden: {}, doorvraag: { tekst: "Wat deed je daar", voor: "ervaring" }, nvt: ["sterren", "diensten", "x"] });
+test("Doorvraag zonder vraagteken valt weg", !v.doorvraag);
+test("Alleen geldige vervallen vragen", JSON.stringify(v.nvt) === '["sterren"]');
+test("Doorvraag voor een onbekend veld valt weg", !valideerLezing({ doorvraag: { tekst: "Hoe oud ben je?", voor: "leeftijd" } }).doorvraag);
+test("Goede doorvraag blijft", valideerLezing({ doorvraag: { tekst: "Hoe ver wil je reizen?", voor: "werkgebied" } }).doorvraag?.voor === "werkgebied");
+
+// Bewijscheck
+const b1 = bewijsCheck({ hotels: "Hilton", ervaringNiveau: "geen" }, { hotels: "Hilton" }, "Ik heb nog niet in een hotel gewerkt", "hotels");
+test("Hotel dat niet in het antwoord staat: valt weg; niveau zonder bewijs bij een andere vraag ook", b1.hotels === undefined && b1.ervaringNiveau === undefined, JSON.stringify(b1));
+const b2 = bewijsCheck({ werkgebied: "tot 25 km", diensten: "3-4" }, { diensten: "3 of 4 diensten" }, "Tot 25 km, en 3 of 4 diensten per week", "werkgebied");
+test("Rijk antwoord: veld van de vraag en veld met citaat blijven", b2.werkgebied === "tot 25 km" && b2.diensten === "3-4", JSON.stringify(b2));
+const b3 = bewijsCheck({ diensten: "5+" }, {}, "Ik wil fulltime werken", "werkgebied");
+test("Veld zonder citaat bij een andere vraag valt weg", b3.diensten === undefined);
+
+console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
+process.exit(gefaald > 0 ? 1 : 0);

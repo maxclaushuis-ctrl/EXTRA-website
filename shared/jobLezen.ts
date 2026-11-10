@@ -11,6 +11,7 @@
  *    Grover dan de AI, maar het gesprek loopt altijd door.
  */
 import type { Diensten, JobTaal, JobVelden, Lezing, Onderwerp, Werkautorisatie } from "./jobRegels";
+import { DOORVRAAG_VOOR, KAN_VERVALLEN } from "./jobRegels";
 
 const DIENSTEN: Diensten[] = ["1-2", "3-4", "5+"];
 const AUTORISATIE: Werkautorisatie[] = ["vrij", "twv", "onbekend", "anders"];
@@ -53,7 +54,41 @@ export function valideerLezing(ruw: any): Lezing {
   if (ack.includes("?") || /^(mooi|top|super|fijn|oké|ok|bedankt)[,!. ]*(dank je|bedankt|dankjewel)?[!. ]*$/i.test(ack.trim())) ack = "";
   const vv = tekstOf(ruw?.vervolgvraag, 200) || "";
   const vervolgvraag = vv.trim().endsWith("?") ? vv.trim() : undefined;
-  return { velden, taal, twijfel, ack, ...(vervolgvraag ? { vervolgvraag } : {}) };
+  // Fase 2: een doorvraag is één korte vraag voor een bekend invulveld.
+  const dvTekst = tekstOf(ruw?.doorvraag?.tekst, 220) || "";
+  const dvVoor = ruw?.doorvraag?.voor;
+  const doorvraag = dvTekst.endsWith("?") && (DOORVRAAG_VOOR as string[]).includes(dvVoor) && (dvTekst.match(/\?/g) || []).length <= 2
+    ? { tekst: dvTekst, voor: dvVoor as Onderwerp } : undefined;
+  const nvt = (Array.isArray(ruw?.nvt) ? ruw.nvt : []).filter((o: unknown) => (KAN_VERVALLEN as string[]).includes(o as string)) as Onderwerp[];
+  return { velden, taal, twijfel, ack, ...(vervolgvraag ? { vervolgvraag } : {}), ...(doorvraag ? { doorvraag } : {}), ...(nvt.length ? { nvt } : {}) };
+}
+
+// ─── Fase 2: bewijscheck ─────────────────────────────────────────────────────
+
+/** Welk veld hoort bij welke vraag; een veld zonder bewijs telt alleen als antwoord op zijn eigen vraag. */
+const VELD_VAN: Partial<Record<keyof JobVelden, Onderwerp>> = {
+  ervaring: "ervaring", ervaringNiveau: "ervaring", functievraag: "functievraag", hotels: "hotels", sterren: "sterren",
+  diensten: "diensten", werkgebied: "werkgebied", werkmoment: "werkmoment", startdatum: "startdatum", werkvorm: "werkvorm",
+  werkautorisatie: "werkautorisatie", geldigTot: "geldigheid", specialisatie: "specialisatie", cvParaat: "cv",
+};
+const schoon = (x: string) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Laat alleen velden door die het antwoord echt draagt: met een citaat dat in het antwoord staat,
+ * of als antwoord op hun eigen vraag. Zo vult de AI geen velden in op basis van een bijzin of een gok.
+ */
+export function bewijsCheck(velden: JobVelden, bewijs: unknown, antwoord: string, onderwerp: Onderwerp | null): JobVelden {
+  const b = bewijs && typeof bewijs === "object" ? (bewijs as Record<string, unknown>) : {};
+  const tekst = schoon(antwoord);
+  const uit: JobVelden = {};
+  for (const [k, w] of Object.entries(velden) as [keyof JobVelden, unknown][]) {
+    const eigen = VELD_VAN[k];
+    const citaat = typeof b[k] === "string" ? schoon(String(b[k])) : "";
+    const gedragen = citaat.length >= 2 && tekst.includes(citaat);
+    // Met citaat: alleen als het citaat echt in het antwoord staat. Zonder citaat: alleen als antwoord op de eigen vraag.
+    if (citaat ? gedragen : !eigen || eigen === onderwerp) (uit as any)[k] = w;
+  }
+  return uit;
 }
 
 // ─── Reserve: regels zonder AI ───────────────────────────────────────────────

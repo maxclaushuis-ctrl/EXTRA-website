@@ -34,7 +34,7 @@ import {
   afspraakHerinneringNodig, amsterdam, dagTekst, momentGeldig, STANDAARD_INTERVIEWERS, vrijeMomenten,
   type Bezet, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
-import { lees } from "./jobAi";
+import { begrijpenAan, lees } from "./jobAi";
 import { filterPrivacy, privacyMelding } from "@shared/jobPrivacy";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
@@ -238,6 +238,7 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
     afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,
     stopV3: v3("STOP"),
     cvVragen: matchAan(),
+    begrijpen: begrijpenAan(),
     meerFuncties: meerFunctiesGekozen(c.bronDetails),
   };
 }
@@ -483,6 +484,18 @@ export interface VerwerkResultaat {
 }
 
 /** Verwerkt een bericht van de kandidaat (web of WhatsApp) en geeft de antwoorden van Job terug. */
+/** Fase 2: het gesprek tot nu toe voor de AI (laatste berichten, het nieuwe antwoord niet meegerekend). */
+async function gesprekVoorAi(gesprekId: number, nieuw: string): Promise<{ laatsteVraag: string; geschiedenis: string }> {
+  const rijen = await db.select({ richting: jobBerichten.richting, tekst: jobBerichten.tekst }).from(jobBerichten)
+    .where(eq(jobBerichten.gesprekId, gesprekId)).orderBy(desc(jobBerichten.id)).limit(16);
+  const lijst = rijen.reverse();
+  // Het zojuist opgeslagen antwoord staat er mogelijk al in: niet dubbel.
+  if (lijst.length && lijst[lijst.length - 1].richting === "in" && lijst[lijst.length - 1].tekst.trim() === nieuw.trim()) lijst.pop();
+  const laatsteVraag = [...lijst].reverse().find((r) => r.richting === "uit")?.tekst || "";
+  const geschiedenis = lijst.map((r) => `${r.richting === "uit" ? "Job" : "Kandidaat"}: ${r.tekst.replace(/\s+/g, " ").slice(0, 300)}`).join("\n");
+  return { laatsteVraag: laatsteVraag.slice(0, 400), geschiedenis };
+}
+
 export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cvOntvangen?: boolean; bijlage?: string | null; kanaal?: "web" | "whatsapp" }): Promise<VerwerkResultaat> {
   const nu = new Date();
   let s = naarState(g);
@@ -523,7 +536,7 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
     r = { state: { ...s, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null }, berichten: herhaal, acties: [] };
   } else {
     const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
-    const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal) : null;
+    const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal, ctx.begrijpen ? await gesprekVoorAi(g.id, tekst) : undefined) : null;
     r = verwerk(s, ctx, { tekst, cvOntvangen: invoer.cvOntvangen }, lezing, nu);
   }
   if (privacy) r = { ...r, berichten: [{ tekst: privacyMelding(r.state.taal) }, ...r.berichten] };

@@ -14,7 +14,8 @@
  */
 import type { JobContext, JobTaal, JobVelden, Lezing, Onderwerp } from "@shared/jobRegels";
 import { functieLabel, isHotelPad } from "@shared/jobRegels";
-import { reserveLezing, valideerLezing } from "@shared/jobLezen";
+import { bewijsCheck, reserveLezing, valideerLezing } from "@shared/jobLezen";
+import { modelVoor } from "@shared/kandidaatMatch";
 
 export function aiBeschikbaar(): boolean {
   return !!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || !!process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
@@ -61,10 +62,70 @@ ${isHotelPad(ctx)
 Antwoord uitsluitend met JSON: {"velden": {...}, "taal": "...", "twijfel": null, "ack": "", "vervolgvraag": null}`;
 }
 
+/** Wat de interviewer van elk invulveld wil weten (fase 2). */
+const VELD_DOEL: Partial<Record<Onderwerp, string>> = {
+  ervaring: "ervaring: wat de kandidaat precies deed, hoe lang en waar, en of dat past bij de functie",
+  functievraag: "functievraag: wat de kandidaat in die functie zelf deed (de kerntaken)",
+  hotels: "hotels: in welke hotels de kandidaat werkte (alleen hotelfuncties)",
+  sterren: "sterren: hoeveel sterren het beste hotel had (alleen als de kandidaat in een hotel werkte)",
+  restaurant: "restaurant: wat voor restaurant het was (fine dining, à la carte, lunch of café)",
+  specialisatie: "specialisatie: of evenementen en banqueting erbij mogen",
+  werkautorisatie: "werkautorisatie: wat er op het verblijfsdocument staat over werken",
+  geldigheid: "geldigheid: tot wanneer het verblijfsdocument geldig is",
+  diensten: "diensten: hoeveel diensten per week (1 tot 2, 3 tot 4, 5 of meer)",
+  werkgebied: "werkgebied: hoe ver de kandidaat wil reizen of in welke regio",
+  werkmoment: "werkmoment: wanneer de kandidaat kan werken (doordeweeks, avond en weekend, flexibel)",
+  startdatum: "startdatum: wanneer de kandidaat kan beginnen",
+  werkvorm: "werkvorm: naast de studie, naast ander werk of als hoofdbaan",
+  cv: "cv: of de kandidaat een cv paraat heeft",
+};
+
+/**
+ * Fase 2, begrijpen: de AI leest het antwoord in de context van het hele gesprek, vult alleen
+ * velden die het antwoord echt draagt (met citaat) en mag één logische vervolgvraag voorstellen.
+ * Welke velden nodig zijn en in welke volgorde, blijft bij de vaste regels.
+ */
+export function begrijpPrompt(onderwerp: Onderwerp | null, ctx: JobContext, bekend: JobVelden, taal: JobTaal, laatsteVraag: string, geschiedenis: string): string {
+  const model = modelVoor(ctx.functie, ctx.functie, ctx.label ?? null);
+  const open = (Object.keys(VELD_DOEL) as Onderwerp[]).map((o) => `- ${VELD_DOEL[o]}`).join("\n");
+  return `Je bent Job, de AI-recruiter van uitzendbureau EXTRA in Amsterdam. Je voert een kort WhatsApp-gesprek met ${ctx.voornaam}, die zich aanmeldde voor ${ctx.functieNaam?.nl || functieLabel(ctx.functie, "nl")}${ctx.label ? ` (label ${ctx.label})` : ""}.
+Het doel: een interviewer moet straks betrouwbare antwoorden hebben op de invulvelden. Het gesprek moet logisch en menselijk zijn: je reageert op wat de kandidaat echt zegt.
+
+Wat de functie vraagt (${model.naam}, ${model.soort === "vereist" ? "ervaring vereist" : model.soort === "gewenst" ? "ervaring gewenst" : "starters welkom"}): kerntaken ${model.kerntaken.join(", ")}; telt als verwant: ${model.verwant}${model.soort === "vereist" ? `; eis: ${model.eisTekst}` : ""}.
+
+Invulvelden en wat de interviewer wil weten:
+${open}
+
+Wat al bekend is: ${JSON.stringify(bekend)}
+Het gesprek tot nu toe (oudste eerst):
+${geschiedenis || "(nog niets)"}
+
+De laatste vraag van Job (over: ${onderwerp ?? "onbekend"}) was: "${laatsteVraag}"
+Hieronder volgt het antwoord van de kandidaat.
+
+Geef terug:
+- velden: alleen wat het antwoord echt zegt. Velden:${UITLEG_VELDEN}
+  Bij ervaring: geef een volledige samenvatting, inclusief wat al bekend was. ervaringNiveau is ten opzichte van de functie waarvoor de kandidaat zich aanmeldde: wie zich als kok aanmeldt en alleen afwaservaring heeft, is voor koken een "starter", niet "ervaren".
+- bewijs: per ingevuld veld het letterlijke stukje uit het antwoord waar het op staat.
+- doorvraag: alleen als het antwoord de vraag niet duidelijk beantwoordt, of als de ervaring niet duidelijk past bij de functie (bijvoorbeeld kok met alleen afwaservaring, of "in de bediening" zonder te zeggen wat): één korte, vriendelijke vraag die logisch aansluit op wat de kandidaat net zei, om het invulveld wel goed te krijgen. {"tekst": "...?", "voor": "<invulveld>"}. Voorbeelden: na "afwasser en busboy" bij een aanmelding voor de keuken: "Heb je naast het afwassen ook meegeholpen met koken of voorbereiden?"; na "ergens in de buurt": "Hoe ver wil je ongeveer reizen vanaf je huis?". Is het antwoord duidelijk genoeg, dan null. Herhaal nooit een vraag die al gesteld is en vraag nooit iets wat al bekend is.
+- nvt: vragen die door dit antwoord niet meer van toepassing zijn, uit: hotels, sterren, restaurant, functievraag, specialisatie. Werkte de kandidaat nooit in een hotel (bijvoorbeeld alleen in snackbars of restaurants), dan ["sterren"]. Vraag nooit naar hotelsterren bij iemand zonder hotelervaring.
+- taal: "nl", "en" of "anders"
+- twijfel: alleen iets waar een collega naar moet kijken (kort, Nederlands), anders null. Past de ervaring niet bij de functie, zeg dat hier feitelijk (bijvoorbeeld "Aangemeld voor de keuken, ervaring alleen als afwasser en busboy").
+- ack: een korte, natuurlijke reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt. Geen vraag, geen overdreven lof ("indrukwekkend"), geen standaardzin. Bij een kort of keuze-antwoord leeg. Leeg als er een doorvraag is die zelf al reageert.
+
+Verzin niets. Antwoord uitsluitend met JSON: {"velden": {...}, "bewijs": {...}, "taal": "...", "twijfel": null, "ack": "", "doorvraag": null, "nvt": []}`;
+}
+
+/** Fase 2 aan? In de testomgeving vanzelf, uit met JOB_V3_BEGRIJPEN=0; elders alleen met 1. */
+export function begrijpenAan(): boolean {
+  const w = process.env.JOB_V3_BEGRIJPEN;
+  return w === "1" || (process.env.TESTOMGEVING === "1" && w !== "0");
+}
+
 /** Hoe lang Job hooguit op de AI wacht (Job 3.0, fase 1). */
 export const AI_TIJDSLIMIET_MS = 12_000;
 
-export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx: JobContext, bekend: JobVelden, taal: JobTaal): Promise<Lezing | null> {
+export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx: JobContext, bekend: JobVelden, taal: JobTaal, gesprek?: { laatsteVraag: string; geschiedenis: string }): Promise<Lezing | null> {
   if (!aiBeschikbaar()) return null;
   try {
     const OpenAI = (await import("openai")).default;
@@ -73,11 +134,11 @@ export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx:
       apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "unused",
     });
     const args: any = {
-      model: "gpt-4o-mini",
+      model: process.env.JOB_AI_MODEL || "gpt-4o-mini",
       temperature: 0,
-      max_tokens: 500,
+      max_tokens: gesprek ? 700 : 500,
       messages: [
-        { role: "system", content: prompt(onderwerp, ctx, bekend, taal) },
+        { role: "system", content: gesprek ? begrijpPrompt(onderwerp, ctx, bekend, taal, gesprek.laatsteVraag, gesprek.geschiedenis) : prompt(onderwerp, ctx, bekend, taal) },
         { role: "user", content: tekst.slice(0, 2000) },
       ],
     };
@@ -101,7 +162,10 @@ export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx:
     const inhoud: string = completion?.choices?.[0]?.message?.content || "";
     const json = inhoud.slice(inhoud.indexOf("{"), inhoud.lastIndexOf("}") + 1);
     if (!json) return null;
-    return valideerLezing(JSON.parse(json));
+    const ruw = JSON.parse(json);
+    const l = valideerLezing(ruw);
+    // Fase 2: alleen velden die het antwoord echt draagt.
+    return gesprek ? { ...l, velden: bewijsCheck(l.velden, ruw?.bewijs, tekst, onderwerp) } : l;
   } catch (e: any) {
     console.warn("[Job] AI niet bereikbaar, reserve-lezer gebruikt:", e?.message || e);
     return null;
@@ -112,15 +176,19 @@ export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx:
  * Leest een antwoord: eerst de AI, anders de reserve-lezer. Wat de AI mist bij
  * een keuzevraag (bijvoorbeeld "3 of 4"), vult de reserve-lezer aan.
  */
-export async function lees(tekst: string, onderwerp: Onderwerp | null, ctx: JobContext, bekend: JobVelden, taal: JobTaal): Promise<Lezing> {
+export async function lees(tekst: string, onderwerp: Onderwerp | null, ctx: JobContext, bekend: JobVelden, taal: JobTaal, gesprek?: { laatsteVraag: string; geschiedenis: string }): Promise<Lezing> {
   const reserve = reserveLezing(tekst, onderwerp);
-  const ai = await leesMetAi(tekst, onderwerp, ctx, bekend, taal);
+  const ai = await leesMetAi(tekst, onderwerp, ctx, bekend, taal, ctx.begrijpen ? gesprek : undefined);
   if (!ai) return reserve;
+  // Een doorvraag van de AI: de reserve-lezer mag het open veld dan niet alsnog met de ruwe tekst vullen.
+  const reserveVelden = ai.doorvraag ? Object.fromEntries(Object.entries(reserve.velden).filter(([k]) => k !== ai.doorvraag!.voor && !(ai.doorvraag!.voor === "hotels" && k === "hotels"))) : reserve.velden;
   return {
-    velden: { ...reserve.velden, ...ai.velden },
+    velden: { ...reserveVelden, ...ai.velden },
     taal: ai.taal ?? reserve.taal,
     twijfel: ai.twijfel,
     ack: ai.ack,
     ...(ai.vervolgvraag && onderwerp === "ervaring" ? { vervolgvraag: ai.vervolgvraag } : {}),
+    ...(ai.doorvraag ? { doorvraag: ai.doorvraag } : {}),
+    ...(ai.nvt ? { nvt: ai.nvt } : {}),
   };
 }
