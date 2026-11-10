@@ -577,6 +577,14 @@ export function alleenBijEigenVraag(v: JobVelden, vorig: Onderwerp | null, ctx: 
 /** Antwoord op de hotelvraag dat zegt: nog niet in een hotel gewerkt. */
 const GEEN_HOTEL = /^\s*(nee|no|nope|geen|nooit|never|nergens)\b|nog (niet|nooit)|niet in (een )?hotel|geen hotel|nooit in (een )?hotel|not in a hotel|no hotels?\b|never (worked )?in a hotel|haven'?t worked in a hotel|not yet/i;
 
+/** Alleen ander werk genoemd (restaurant, café, catering...) en geen hotel. */
+const ANDER_WERK = /\b(restaurants?|caf[eé]s?|eetcaf[eé]|brasserie|bistro|bar|bars|catering|cateraar|lunchroom|kantine|strandtent|snackbar|pizzeria|festivals?|evenementen|events?|zzp|zelfstandig|kantoren|ziekenhuis|zorg|winkel|supermarkt)\b/i;
+/** Zegt het antwoord op de hotelvraag dat iemand (nog) niet in een hotel werkte? */
+export function geenHotelervaring(tekst: string): boolean {
+  if (GEEN_HOTEL.test(tekst)) return true;
+  return ANDER_WERK.test(tekst) && !/hotel|hostel|resort/i.test(tekst);
+}
+
 /** Geen antwoord maar verwarring: Job stelt dezelfde vraag opnieuw. */
 const VERWARD = /^\s*(\?+|huh\?*|hè\?*|wat bedoel je\?*|wat\?+|sorry\?+|what do you mean\?*|what\?+)\s*$/i;
 
@@ -893,7 +901,7 @@ function verwerkLos(
     }
     // Een vraag die niet beantwoord kon worden, stelt Job niet eindeloos opnieuw.
     // Nog nooit in een hotel gewerkt: dan ook niet vragen naar de sterren van "het beste hotel".
-    if (!verward && vorigOnderwerp === "hotels" && GEEN_HOTEL.test(invoer.tekst || "")) {
+    if (!verward && vorigOnderwerp === "hotels" && geenHotelervaring(invoer.tekst || "")) {
       state.velden.hotels = "nog niet in een hotel gewerkt";
       state.velden.geenHotel = true;
     }

@@ -202,12 +202,14 @@ for (const k of ["gestopt", "welkomTerug", "welkomTerugKort", "blijftGestopt", "
   const c: JobContext = { voornaam: "Max", functie: "chef", label: "hotels", nationalityZone: "NL", hasCv: false, stopV3: true };
   let r = start(c, "nl", NU);
   r = antwoord(r.state, c, "9 jaar in keukens");
-  for (const t of ["Ik heb nog niet in een hotel gewerkt", "Nee", "Geen hotels, alleen restaurants", "I haven't worked in a hotel"]) {
+  for (const t of ["Ik heb nog niet in een hotel gewerkt", "Nee", "Geen hotels, alleen restaurants", "I haven't worked in a hotel", "Ik heb alleen in restaurants gewerkt", "Bij restaurant De Haven en een eetcafé", "Only in restaurants"]) {
     const x = antwoord(r.state, c, t, 2);
     test(`Na "${t}": geen sterrenvraag`, x.state.laatsteOnderwerp !== "sterren" && x.state.velden.geenHotel === true, String(x.state.laatsteOnderwerp));
   }
   const wel = antwoord(r.state, c, "Bij het Amrath en Marriott", 2);
   test("Wel in hotels gewerkt: de sterrenvraag blijft", wel.state.laatsteOnderwerp === "sterren", String(wel.state.laatsteOnderwerp));
+  const beide = antwoord(r.state, c, "In het restaurant van Hotel Okura", 2);
+  test("Restaurant in een hotel: de sterrenvraag blijft", beide.state.laatsteOnderwerp === "sterren", String(beide.state.laatsteOnderwerp));
 }
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
