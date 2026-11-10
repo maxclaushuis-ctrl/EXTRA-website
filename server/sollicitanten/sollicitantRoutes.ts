@@ -34,6 +34,12 @@ function kaart3Aan(): boolean {
   return w === "1" || (process.env.TESTOMGEVING === "1" && w !== "0");
 }
 
+/** Kandidaten in groepen (wie is er aan zet). Testomgeving aan tenzij =0, elders alleen met =1. */
+function groepenAan(): boolean {
+  const w = process.env.KANDIDATEN_GROEPEN;
+  return w === "1" || (process.env.TESTOMGEVING === "1" && w !== "0");
+}
+
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
 
 export function sollicitantenAan(): boolean {
@@ -412,7 +418,7 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
   };
 
   app.get(r("/status"), adminMiddleware, (_req, res) => {
-    res.json({ aan: sollicitantenAan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", kaart3: kaart3Aan(), afwijsmail: afwijsmailAan() });
+    res.json({ aan: sollicitantenAan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", kaart3: kaart3Aan(), groepen: groepenAan(), afwijsmail: afwijsmailAan() });
   });
 
   app.get(r("/week"), adminMiddleware, alleenAan, veilig(async (req, res) => { res.json(await week(String(req.query.van || ""))); }));

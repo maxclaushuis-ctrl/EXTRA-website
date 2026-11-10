@@ -2,7 +2,7 @@
  * Huistests: Kandidaten 3.0 (shared/kandidaatRegels.ts) en het tellen van open vragen van Job.
  * Run met:  npx tsx shared/kandidaat.test.ts
  */
-import { bolletje, inKandidaten, sindsTekst, plannerLabel, vergelijk, matchRedenen, type KandidaatInvoer } from "./kandidaatRegels";
+import { bolletje, inKandidaten, sindsTekst, plannerLabel, vergelijk, matchRedenen, indeling, vergelijkGroep, GROEPEN, STAP, type KandidaatInvoer } from "./kandidaatRegels";
 import { openOnderwerpen } from "./jobRegels";
 
 let geslaagd = 0;
@@ -57,6 +57,34 @@ test("volgorde: geel voor rood, langst wachtend eerst", vergelijk({ kleur: "geel
 test("match: telefoon en e-mail", matchRedenen({ phone: "+31600000001", email: "A@x.nl" }, { phone: "+31 6 00000001", email: "a@x.nl " }).join() === "telefoon,email");
 test("match: naam en geboortedatum", matchRedenen({ firstName: "Zoë", lastName: "de Vries", birthDate: "2001-02-03" }, { firstName: "Zoe", lastName: "De Vries", birthDate: "2001-02-03" }).join() === "naam_geboortedatum");
 test("match: andere persoon", matchRedenen({ firstName: "Zoë", lastName: "de Vries", birthDate: "2001-02-03", phone: "+31600000001" }, { firstName: "Zoë", lastName: "de Vries", birthDate: "2001-02-04", phone: "+31600000002" }).length === 0);
+
+// ─── Groepen: wie is er aan zet ───
+const dub = { aangemaaktOp: uurTerug(1), redenen: ["telefoon"] };
+const cvKlaar = indeling(basis({ hasCv: true, job: job({ status: "cv_controle" }) }), nu);
+test("groep: cv controleren zonder twijfel is klaar voor beoordeling (groen)", cvKlaar.groep === "beoordelen" && cvKlaar.punt === "groen" && cvKlaar.tekst === "Gesprek af, cv binnen" && cvKlaar.stap === "Cv beoordelen");
+test("groep: planner met cv en zonder twijfels ook groen", indeling(basis({ hasCv: true, job: job({ status: "planner" }) }), nu).groep === "beoordelen");
+const chef = basis({ functie: "chef", hasCv: true, job: job({ status: "planner", velden: { ervaringNiveau: "geen" } as any, twijfels: ["Geen ervaring"] }) });
+test("groep: twijfel over ervaring blijft actie zonder cv-bewijs", indeling(chef, nu).groep === "actie" && indeling(chef, nu).tekst === "Geen ervaring voor de keuken" && indeling(chef, nu).stap === "Ervaring beoordelen");
+const chefCv = indeling(chef, nu, "voldaan");
+test("groep: cv laat de gevraagde ervaring zien, dan groen", chefCv.groep === "beoordelen" && chefCv.sub === "Cv laat de gevraagde ervaring zien");
+test("groep: cv-eis voldaan zonder cv telt niet", indeling({ ...chef, hasCv: false }, nu, "voldaan").groep === "actie");
+test("groep: cv plus een andere twijfel is actie", indeling(basis({ hasCv: true, birthDate: "2010-06-01", job: job({ status: "cv_controle" }) }), nu).groep === "actie");
+const nj = indeling(basis(), nu);
+test("groep: geen gesprek met Job heet Job niet gestart, stap Job starten", nj.groep === "actie" && nj.tekst === "Job niet gestart" && nj.stap === "Job starten" && nj.sub !== null);
+test("groep: TWV zonder het woord Twijfel", indeling(basis({ nationalityZone: "NON_EU", job: job({ status: "planner", velden: { werkautorisatie: "twv" } as any }) }), nu).tekst === "TWV vereist");
+const gRood = indeling(basis({ job: job({ status: "geen_reactie", herinneringen: 3 }) }), nu);
+test("groep: geen reactie is rood met stap bellen", gRood.groep === "geen_reactie" && gRood.punt === "rood" && gRood.stap === STAP.geen_reactie && !/geen reactie op 2/.test(gRood.tekst));
+const h2 = indeling(basis({ job: job({ herinneringen: 2, herinneringAt: uurTerug(2) }) }), nu);
+test("groep: tweede herinnering is lopend, oranje, met uitleg", h2.groep === "lopend" && h2.punt === "oranje2" && h2.sub === "2e herinnering verstuurd" && h2.stap === null);
+test("groep: in gesprek met Job is lopend en grijs", indeling(basis({ job: job() }), nu).punt === "grijs" && indeling(basis({ job: job() }), nu).groep === "lopend");
+const dubLopend = indeling(basis({ matchOpen: dub, job: job() }), nu);
+test("groep: dubbel dossier is een label, de status blijft de fase", dubLopend.dubbel && !/dubbel/i.test(dubLopend.tekst));
+test("groep: dubbel zonder andere actie gaat naar actie met stap vergelijken", dubLopend.groep === "actie" && dubLopend.stap === "Dossiers vergelijken");
+const dubKlaar = indeling(basis({ matchOpen: dub, hasCv: true, job: job({ status: "cv_controle" }) }), nu);
+test("groep: dubbel en klaar blijft groen, stap vergelijken", dubKlaar.groep === "beoordelen" && dubKlaar.stap === "Dossiers vergelijken");
+test("groep: dubbel bij een twijfel houdt de twijfel als status", indeling(basis({ matchOpen: dub, birthDate: "2010-06-01", job: job() }), nu).tekst === "Jonger dan 17");
+test("groep: volgorde groen, geel, rood, lopend", [["lopend", 1], ["beoordelen", 2], ["geen_reactie", 3], ["actie", 4]].map(([g, h]) => ({ groep: g as any, sinds: new Date(uurTerug(h as number)) })).sort(vergelijkGroep).map((x) => x.groep).join() === "beoordelen,actie,geen_reactie,lopend");
+test("groep: titels zonder gedachtestreepjes", Object.values(GROEPEN).every((g) => !/[\u2013\u2014]/.test(g.titel + g.hint)) && Object.values(STAP).every((t) => !/[\u2013\u2014]/.test(t!)));
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

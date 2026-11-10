@@ -6,7 +6,7 @@
  */
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { BRANCHE, BRANCHES, type Branche } from "@shared/sollicitantRegels";
-import { KLEUREN, KLEUR_VOLGORDE, type Kleur } from "@shared/kandidaatRegels";
+import { KLEUREN, KLEUR_VOLGORDE, GROEPEN, GROEP_VOLGORDE, PUNT_KLEUR, vergelijkGroep, type Groep, type Kleur, type Punt } from "@shared/kandidaatRegels";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { CSS, Dialoog, Knop, Leeg, Meldingen, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
 import { Dossier3, K3CSS } from "./Kaart3";
@@ -16,10 +16,11 @@ interface Rij {
   id: number; naam: string; functie: string; functieCode: string; branche: Branche; kleur: Kleur; cijfer: string | null;
   status: string; sinds: string; sindsTekst: string; planner: string; plannerId: number | null; mijn: boolean; aangemeld: string;
   match?: { score: number | null; toestand: string; voorlopig: boolean } | null;
+  groep?: Groep; punt?: Punt; groepTekst?: string; groepSub?: string | null; stap?: string | null; dubbel?: boolean;
 }
 interface Overzicht { rijen: Rij[]; tellers: { perKleur: Record<Kleur, number>; perBranche: Record<string, number>; aandacht: number }; planners: { id: number; naam: string }[] }
-interface Filter { kleuren: Kleur[]; functie: string; planner: string; datum: string }
-const STANDAARD: Filter = { kleuren: ["geel", "rood"], functie: "", planner: "", datum: "" };
+interface Filter { kleuren: Kleur[]; groepen: Groep[]; functie: string; planner: string; datum: string }
+const STANDAARD: Filter = { kleuren: ["geel", "rood"], groepen: [], functie: "", planner: "", datum: "" };
 const SLEUTEL = "extra-kandidaten-filter";
 
 function leesFilter(): Filter {
@@ -37,8 +38,10 @@ const FUNCTIE_OPTIES = [["horecamedewerker", "Bediening en bar"], ["bediening", 
 
 export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naarArchief: () => void; naarWhatsapp: () => void; oudeWeergave: () => void }) {
   const { data, fout, opnieuw } = useData<Overzicht>("/api/admin/kandidaten/overzicht");
-  const { data: status, fout: statusFout } = useData<{ kaart3?: boolean }>("/api/sollicitanten/status");
+  const { data: status, fout: statusFout } = useData<{ kaart3?: boolean; groepen?: boolean }>("/api/sollicitanten/status");
   const kaart3 = !!status?.kaart3;
+  // Groepen (wie is er aan zet): de status gebruikt groepen in plaats van kleuren.
+  const groepen = !!status?.groepen && !!data?.rijen.every((r) => !!r.groep);
   const [branche, setBranche] = useState<Branche | "alle">("alle");
   const [zoek, setZoek] = useState("");
   const [filter, setFilter] = useState<Filter>(leesFilter);
@@ -50,13 +53,16 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
   const pas = (f: Filter, rijen: Rij[]) => {
     const nu = Date.now();
     return rijen.filter((r) => (branche === "alle" || r.branche === branche)
-      && (!f.kleuren.length || f.kleuren.includes(r.kleur))
+      && (groepen ? (!f.groepen.length || f.groepen.includes(r.groep!)) : (!f.kleuren.length || f.kleuren.includes(r.kleur)))
       && (!f.functie || r.functieCode === f.functie)
       && (!f.planner || (f.planner === "geen" ? !r.plannerId : f.planner === "mij" ? r.mijn : String(r.plannerId) === f.planner))
       && (!f.datum || nu - new Date(r.aangemeld).getTime() <= Number(f.datum) * 86400000)
       && (!zoek.trim() || [r.naam].some((x) => x.toLowerCase().includes(zoek.trim().toLowerCase()))));
   };
-  const lijst = useMemo(() => (data ? pas(filter, data.rijen) : []), [data, filter, branche, zoek]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lijst = useMemo(() => {
+    const l = data ? pas(filter, data.rijen) : [];
+    return groepen ? [...l].sort((a, b) => vergelijkGroep({ groep: a.groep!, sinds: new Date(a.sinds) }, { groep: b.groep!, sinds: new Date(b.sinds) })) : l;
+  }, [data, filter, branche, zoek, groepen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (open) {
     const ids = lijst.map((r) => r.id);
@@ -65,7 +71,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
     return (
       <div className="sv" style={{ borderRadius: 18 }}>
         <style>{CSS}{KCSS}{kaart3 ? K3CSS : ""}</style>
-        <D id={open} ids={ids.includes(open) ? ids : [open, ...ids]} context={`${branche === "alle" ? "Alle" : BRANCHE[branche].label}${filter.kleuren.length ? ` · ${filter.kleuren.map((k) => KLEUREN[k].label.toLowerCase()).join(", ")}` : ""}`}
+        <D id={open} ids={ids.includes(open) ? ids : [open, ...ids]} context={`${branche === "alle" ? "Alle" : BRANCHE[branche].label}${groepen ? (filter.groepen.length ? ` · ${filter.groepen.map((g) => GROEPEN[g].titel.toLowerCase()).join(", ")}` : "") : filter.kleuren.length ? ` · ${filter.kleuren.map((k) => KLEUREN[k].label.toLowerCase()).join(", ")}` : ""}`}
           naar={(id) => setOpen(id)} terug={() => { setOpen(null); opnieuw(); }} naarWhatsapp={naarWhatsapp} />
         <Meldingen />
       </div>
@@ -74,6 +80,9 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
 
   const telBranche = (b: Branche | "alle") => (data ? (b === "alle" ? data.tellers.perBranche.alle : data.tellers.perBranche[b]) : 0);
   const conceptN = concept && data ? pas(concept, data.rijen).length : 0;
+  const perGroep = (g: Groep) => (data ? data.rijen.filter((r) => r.groep === g).length : 0);
+  const nKlaar = perGroep("beoordelen"), nActie = perGroep("actie") + perGroep("geen_reactie");
+  const filterAan = (groepen ? filter.groepen.length : filter.kleuren.length) || filter.functie || filter.planner || filter.datum;
   return (
     <div className="sv" style={{ borderRadius: 18 }}>
       <style>{CSS}{KCSS}</style>
@@ -81,7 +90,9 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
         <div className="sv-tussen">
           <div>
             <h1>Kandidaten</h1>
-            <p className="sv-sub">{data ? `${data.tellers.aandacht} ${data.tellers.aandacht === 1 ? "kandidaat vraagt" : "kandidaten vragen"} je aandacht` : "Laden..."}</p>
+            <p className="sv-sub">{!data || (!status && !statusFout) ? "Laden..." : groepen
+              ? `${nKlaar} klaar voor beoordeling, ${nActie} ${nActie === 1 ? "vraagt" : "vragen"} een actie`
+              : `${data.tellers.aandacht} ${data.tellers.aandacht === 1 ? "kandidaat vraagt" : "kandidaten vragen"} je aandacht`}</p>
           </div>
         </div>
         <div className="sv-tabs" style={{ marginTop: 18 }}>
@@ -91,11 +102,17 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
           <span style={{ flex: 1 }} />
           <input type="search" placeholder="Zoek kandidaat" value={zoek} onChange={(e) => setZoek(e.target.value)} style={{ width: 240, height: 40 }} aria-label="Zoek kandidaat" />
           <div style={{ position: "relative" }}>
-            <button className="sv-knop" style={concept ? { borderColor: "#37352C" } : undefined} onClick={() => setConcept(concept ? null : filter)} aria-expanded={!!concept}>Filter{filter.kleuren.length || filter.functie || filter.planner || filter.datum ? " ●" : ""}</button>
+            <button className="sv-knop" style={concept ? { borderColor: "#37352C" } : undefined} onClick={() => setConcept(concept ? null : filter)} aria-expanded={!!concept}>Filter{filterAan ? " ●" : ""}</button>
             {concept && data && (
               <div className="k-filter" role="dialog" aria-label="Filter">
                 <p className="sv-lbl">STATUS</p>
-                {KLEUR_VOLGORDE.map((k) => (
+                {groepen && GROEP_VOLGORDE.map((g) => (
+                  <label key={g} className="k-filterrij">
+                    <input type="checkbox" checked={concept.groepen.includes(g)} onChange={(e) => setConcept({ ...concept, groepen: e.target.checked ? [...concept.groepen, g] : concept.groepen.filter((x) => x !== g) })} />
+                    <span className="k-punt" style={{ background: GROEPEN[g].kleur }} /><span style={{ flex: 1 }}>{GROEPEN[g].titel}</span><span className="sv-grijs">{perGroep(g)}</span>
+                  </label>
+                ))}
+                {!groepen && KLEUR_VOLGORDE.map((k) => (
                   <label key={k} className="k-filterrij">
                     <input type="checkbox" checked={concept.kleuren.includes(k)} onChange={(e) => setConcept({ ...concept, kleuren: e.target.checked ? [...concept.kleuren, k] : concept.kleuren.filter((x) => x !== k) })} />
                     <Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} /><span style={{ flex: 1 }}>{KLEUREN[k].label}</span><span className="sv-grijs">{data.tellers.perKleur[k] || 0}</span>
@@ -108,7 +125,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
                 <label className="sv-veld"><span>Aanmelddatum</span>
                   <select value={concept.datum} onChange={(e) => setConcept({ ...concept, datum: e.target.value })}><option value="">Alle</option><option value="1">Vandaag</option><option value="7">Laatste 7 dagen</option><option value="30">Laatste 30 dagen</option></select></label>
                 <div className="sv-tussen" style={{ alignItems: "center", marginTop: 6 }}>
-                  <button className="sv-knop sv-knop-link" onClick={() => setConcept({ kleuren: [], functie: "", planner: "", datum: "" })}>Wis filters</button>
+                  <button className="sv-knop sv-knop-link" onClick={() => setConcept({ kleuren: [], groepen: [], functie: "", planner: "", datum: "" })}>Wis filters</button>
                   <Knop soort="donker" style={{ height: 36 }} onClick={() => { setFilter(concept); setConcept(null); }}>Toon {conceptN} kandidaten</Knop>
                 </div>
               </div>
@@ -116,23 +133,49 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
           </div>
           <button className="sv-knop" onClick={naarArchief}>Archief</button>
         </div>
-        <div className="sv-legenda">{KLEUR_VOLGORDE.map((k) => <span key={k}><Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} />{KLEUREN[k].label}</span>)}</div>
+        {!groepen && status && (<div className="sv-legenda">{KLEUR_VOLGORDE.map((k) => <span key={k}><Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} />{KLEUREN[k].label}</span>)}</div>)}
         {fout && <div className="sv-fout">Laden mislukt. Probeer het opnieuw. <button className="sv-knop sv-knop-link" onClick={opnieuw}>Opnieuw</button></div>}
-        <table className="sv-tabel">
-          <thead><tr><th>Kandidaat</th><th>Status</th><th className="k-breed">Match</th><th className="k-breed">Sinds</th><th className="k-breed">Planner</th><th aria-label="Openen" style={{ width: 30 }} /></tr></thead>
-          <tbody>{lijst.map((r) => (
-            <tr key={r.id} className="klik" tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
-              <td><div className="sv-rij" style={{ flexWrap: "nowrap" }}><Stip kleur={r.kleur} cijfer={r.cijfer} /><div><b style={{ fontSize: 15 }}>{r.naam}</b><div className="sv-klein">{r.functie}</div></div></div></td>
-              <td style={{ whiteSpace: "normal" }}>{r.status}<div className="k-smal sv-klein">{r.sindsTekst} · {r.planner}</div></td>
-              <td className="k-breed"><MatchKort m={r.match} /></td>
-              <td className="k-breed sv-grijs">{r.sindsTekst}</td>
-              <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>
-              <td style={{ color: "#B3AEA3" }}>›</td>
-            </tr>
-          ))}</tbody>
-        </table>
+        {groepen ? (
+          <table className="sv-tabel k-groepen">
+            <thead><tr><th style={{ width: "19%" }}>Kandidaat</th><th style={{ width: "21%" }}>Status</th><th className="k-breed" style={{ width: "15%" }}>Volgende stap</th><th className="k-breed" style={{ width: "15%" }}>Match</th><th className="k-breed" style={{ width: "9%" }}>Sinds</th><th className="k-breed" style={{ width: "15%" }}>Planner</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
+            <tbody>{GROEP_VOLGORDE.map((g) => {
+              const rijen = lijst.filter((r) => r.groep === g);
+              if (!rijen.length) return null;
+              return (
+                <Fragment key={g}>
+                  <tr className="k-groepkop"><td colSpan={7}><div><span className="k-punt" style={{ background: GROEPEN[g].kleur }} /><b>{GROEPEN[g].titel}</b><span className="sv-grijs">{rijen.length}</span><span className="k-hint">{GROEPEN[g].hint}</span></div></td></tr>
+                  {rijen.map((r) => (
+                    <tr key={r.id} className={`klik${g === "lopend" ? " k-stil" : ""}`} tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
+                      <td><b className="k-naam">{r.naam}</b><div className="sv-klein k-functie">{r.functie}{r.dubbel && <span className="k-label" title="Er is een ander dossier dat op deze persoon lijkt">Mogelijk dubbel</span>}</div></td>
+                      <td style={{ whiteSpace: "normal" }}><div className="k-status"><span className="k-punt" style={{ background: PUNT_KLEUR[r.punt!] }} aria-hidden="true" /><div>{r.groepTekst}{r.groepSub && <div className="sv-klein">{r.groepSub}</div>}<div className="k-smal sv-klein">{[r.stap, r.sindsTekst].filter(Boolean).join(", ")}</div></div></div></td>
+                      <td className="k-breed k-stap">{r.stap || ""}</td>
+                      <td className="k-breed"><MatchKort m={r.match} /></td>
+                      <td className="k-breed sv-grijs">{r.sindsTekst}</td>
+                      <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>
+                      <td style={{ color: "#B3AEA3" }}>›</td>
+                    </tr>
+                  ))}
+                </Fragment>
+              );
+            })}</tbody>
+          </table>
+        ) : status || statusFout ? (
+          <table className="sv-tabel">
+            <thead><tr><th>Kandidaat</th><th>Status</th><th className="k-breed">Match</th><th className="k-breed">Sinds</th><th className="k-breed">Planner</th><th aria-label="Openen" style={{ width: 30 }} /></tr></thead>
+            <tbody>{lijst.map((r) => (
+              <tr key={r.id} className="klik" tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
+                <td><div className="sv-rij" style={{ flexWrap: "nowrap" }}><Stip kleur={r.kleur} cijfer={r.cijfer} /><div><b style={{ fontSize: 15 }}>{r.naam}</b><div className="sv-klein">{r.functie}</div></div></div></td>
+                <td style={{ whiteSpace: "normal" }}>{r.status}<div className="k-smal sv-klein">{r.sindsTekst} · {r.planner}</div></td>
+                <td className="k-breed"><MatchKort m={r.match} /></td>
+                <td className="k-breed sv-grijs">{r.sindsTekst}</td>
+                <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>
+                <td style={{ color: "#B3AEA3" }}>›</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        ) : null}
         {data && !lijst.length && (
-          <Leeg>{zoek ? `Geen kandidaat gevonden voor '${zoek}'.` : filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
+          <Leeg>{zoek ? `Geen kandidaat gevonden voor '${zoek}'.` : !groepen && filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
             ? <>Niemand vraagt nu je aandacht. <button className="sv-knop sv-knop-link" onClick={() => setFilter({ ...filter, kleuren: [] })}>Toon alle lopende kandidaten</button></>
             : branche !== "alle" ? `Geen lopende kandidaten in ${BRANCHE[branche].label}.` : "Geen kandidaten met dit filter."}</Leeg>
         )}
@@ -439,11 +482,28 @@ const KCSS = `
 .sv .k-bericht.in{align-self:flex-end;background:#E3F0E5;color:#1F3B26;border-radius:14px 4px 14px 14px}
 .sv .k-systeem{align-self:center;background:#EFEAE2;border-radius:99px;padding:2px 10px;font-size:12px;color:#5C594F}
 .sv .k-smal{display:none}
+.sv .k-groepen{table-layout:fixed}
+.sv .k-groepen td{vertical-align:middle;padding-top:10px;padding-bottom:10px;height:auto;min-height:54px}
+.sv .k-groepen td:first-child{white-space:normal}
+.sv .k-groepen td.k-breed{overflow:hidden;text-overflow:ellipsis}
+.sv .k-groepkop td{padding:18px 16px 8px;background:#fff;border-bottom:1px solid #E9E6E0;cursor:default}
+.sv .k-groepkop:first-child td{padding-top:10px}
+.sv .k-groepkop div{display:flex;align-items:baseline;gap:9px;font-size:14px}
+.sv .k-groepkop .k-punt{margin:0;align-self:center}
+.sv .k-hint{margin-left:auto;color:#7A766D;font-size:12.5px}
+.sv .k-punt{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+.sv .k-status{display:flex;align-items:flex-start;gap:9px}
+.sv .k-status .k-punt{margin-top:6px}
+.sv .k-naam{font-size:15px;font-weight:600}
+.sv .k-functie{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;margin-top:1px}
+.sv .k-label{display:inline-block;padding:0 7px;border:1px solid #E4E0D8;border-radius:6px;font-size:11.5px;font-weight:500;color:#55524A;vertical-align:1px;white-space:nowrap;line-height:18px}
+.sv .k-stap{color:#55524A;white-space:normal!important;line-height:1.35}
+.sv .k-stil td{color:#55524A}
 .sv .k-match-kort{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .sv .k-meter{width:40px;height:6px;border-radius:6px;background:#EDEAE4;overflow:hidden;display:inline-block}
 .sv .k-meter i{display:block;height:100%;background:#37352C;border-radius:6px}
 @media (max-width:1023px){.sv .k-twee{grid-template-columns:1fr}}
-@media (max-width:640px){.sv .k-breed{display:none}.sv .k-smal{display:block}.sv .k-profiel{grid-template-columns:1fr}.sv .k-filter{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;border-radius:16px 16px 0 0}}
+@media (max-width:640px){.sv .k-groepen{table-layout:auto}.sv .k-hint{display:none}.sv .k-breed{display:none}.sv .k-smal{display:block}.sv .k-profiel{grid-template-columns:1fr}.sv .k-filter{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;border-radius:16px 16px 0 0}}
 `;
 
 /** Staat Kandidaten 3.0 aan? Pas opvragen na het inloggen als admin (zie useSollicitantenV2). */

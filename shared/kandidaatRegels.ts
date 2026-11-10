@@ -177,6 +177,83 @@ export function vergelijk(a: { kleur: Kleur; sinds: Date }, b: { kleur: Kleur; s
   return KLEUR_VOLGORDE.indexOf(a.kleur) - KLEUR_VOLGORDE.indexOf(b.kleur) || a.sinds.getTime() - b.sinds.getTime();
 }
 
+// ─── Groepen: wie is er aan zet (Kandidaten, schakelaar KANDIDATEN_GROEPEN) ──
+
+/**
+ * Het overzicht in groepen. Kleur betekent: wie is er aan zet.
+ * - beoordelen (groen): gesprek af, cv binnen, geen twijfel; open het dossier om te beslissen.
+ * - actie (geel): eerst iets uitzoeken.
+ * - geen_reactie (rood): geen antwoord na twee herinneringen.
+ * - lopend: wacht op de kandidaat (oranje na een herinnering, anders grijs).
+ * Een mogelijk dubbel dossier is een label, geen status. Afgeleid uit het bolletje,
+ * niets opgeslagen.
+ */
+export type Groep = "beoordelen" | "actie" | "geen_reactie" | "lopend";
+export const GROEP_VOLGORDE: Groep[] = ["beoordelen", "actie", "geen_reactie", "lopend"];
+export const GROEPEN: Record<Groep, { titel: string; hint: string; kleur: string }> = {
+  beoordelen: { titel: "Klaar voor beoordeling", hint: "Alles binnen, open het dossier om te beslissen", kleur: "#5E8C3A" },
+  actie: { titel: "Actie nodig", hint: "Eerst iets uitzoeken", kleur: "#D9B526" },
+  geen_reactie: { titel: "Geen reactie", hint: "Na 2 herinneringen", kleur: "#C2412D" },
+  lopend: { titel: "Lopend", hint: "Wacht op de kandidaat, geen actie", kleur: "#B3AFA6" },
+};
+export type Punt = "groen" | "geel" | "rood" | "oranje2" | "oranje1" | "grijs";
+export const PUNT_KLEUR: Record<Punt, string> = { groen: "#5E8C3A", geel: "#D9B526", rood: "#C2412D", oranje2: "#D9761C", oranje1: "#E9A15A", grijs: "#B3AFA6" };
+
+export interface Indeling { groep: Groep; punt: Punt; tekst: string; sub: string | null; stap: string | null; dubbel: boolean }
+
+/** Kort: wat er moet gebeuren. */
+export const STAP: Partial<Record<RedenCode, string>> = {
+  match: "Dossiers vergelijken",
+  werkautorisatie: "Werkautorisatie nagaan",
+  ervaring: "Ervaring beoordelen",
+  mens: "Terugbellen",
+  cv: "Cv beoordelen",
+  twijfel: "Navragen of bellen",
+  jong: "Beoordelen volgens beleid",
+  buitenland: "Verhuisdatum beoordelen",
+  gestopt: "Afsluiten",
+  geen_job: "Job starten",
+  uitgenodigd_lang: "Bellen of zelf inplannen",
+  geen_reactie: "Bellen of laten rusten",
+};
+
+const schoon = (t: string) => { const x = t.replace(/^Twijfel:\s*/i, ""); return x.charAt(0).toUpperCase() + x.slice(1); };
+
+/**
+ * @param cvEis de ervaringseis volgens het gelezen cv ("voldaan", "niet_voldaan", "onbekend",
+ * "geen"). Laat het cv zien dat de gevraagde ervaring er is, dan vervalt de twijfel over ervaring.
+ */
+export function indeling(c: KandidaatInvoer, nu: Date, cvEis?: string | null): Indeling {
+  const dubbel = !!c.matchOpen;
+  const b = bolletje({ ...c, matchOpen: null }, nu);
+  let uit: Indeling;
+  if (b.kleur === "geel") {
+    const redenen = b.gele.map((g) => g.reden);
+    const ervaringWeg = cvEis === "voldaan" && c.hasCv;
+    const rest = b.gele.filter((g) => g.reden !== "cv" && !(g.reden === "ervaring" && ervaringWeg));
+    if (!rest.length) {
+      uit = { groep: "beoordelen", punt: "groen", tekst: "Gesprek af, cv binnen", sub: redenen.includes("ervaring") ? "Cv laat de gevraagde ervaring zien" : null, stap: STAP.cv!, dubbel };
+    } else {
+      const r = rest[0];
+      uit = { groep: "actie", punt: "geel", tekst: r.reden === "geen_job" ? "Job niet gestart" : schoon(r.tekst), sub: r.reden === "geen_job" ? "Geen gesprek na de aanmelding" : null, stap: STAP[r.reden] || null, dubbel };
+    }
+  } else if (b.kleur === "rood") {
+    uit = { groep: "geen_reactie", punt: "rood", tekst: schoon(b.tekst.replace(/, geen reactie op 2 herinneringen$/, "")), sub: null, stap: STAP.geen_reactie!, dubbel };
+  } else if (b.kleur === "oranje2" || b.kleur === "oranje1") {
+    uit = { groep: "lopend", punt: b.kleur, tekst: b.tekst, sub: b.kleur === "oranje2" ? "2e herinnering verstuurd" : "1e herinnering verstuurd", stap: null, dubbel };
+  } else {
+    uit = { groep: "lopend", punt: "grijs", tekst: b.tekst, sub: null, stap: null, dubbel };
+  }
+  // Een mogelijk dubbel dossier is wel iets om uit te zoeken: wie verder niets hoeft, staat bij Actie nodig.
+  if (dubbel && uit.groep === "beoordelen") uit.stap = STAP.match!;
+  if (dubbel && uit.groep === "lopend") uit = { ...uit, groep: "actie", punt: "geel", stap: STAP.match! };
+  return uit;
+}
+
+export function vergelijkGroep(a: { groep: Groep; sinds: Date }, b: { groep: Groep; sinds: Date }): number {
+  return GROEP_VOLGORDE.indexOf(a.groep) - GROEP_VOLGORDE.indexOf(b.groep) || a.sinds.getTime() - b.sinds.getTime();
+}
+
 // ─── Mogelijke dubbele personen (bouwplan sectie 5) ─────────────────────────
 
 export function normaalNaam(s: string | null | undefined): string {

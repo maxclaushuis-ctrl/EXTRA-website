@@ -14,7 +14,7 @@ import {
   candidates, jobGesprekken, jobBerichten, kandidaatMogelijkeMatch, sollicitantGebeurtenissen, users, employees,
   type Candidate,
 } from "@shared/schema";
-import { bolletje, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_ACTIE, MATCH_REDEN_TEKST, KLEUR_VOLGORDE, type Kleur } from "@shared/kandidaatRegels";
+import { bolletje, indeling, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_ACTIE, MATCH_REDEN_TEKST, KLEUR_VOLGORDE, type Kleur } from "@shared/kandidaatRegels";
 import { brancheVan, functieNaam, isAfwas, ingangBranche, BRANCHE, leeftijd } from "@shared/sollicitantRegels";
 import type { JobVelden } from "@shared/jobRegels";
 import { functieVan, isLabel } from "@shared/aanmeldLabels";
@@ -74,14 +74,18 @@ async function overzicht(ik: number | null) {
   const { cs, gm, mm, um, pm } = await lopende();
   const am = await laatsteAnalyses(cs.map((c) => c.id));
   const rijen = cs.filter((c) => inKandidaten({ status: c.status, interviewDate: c.interviewDate ? String(c.interviewDate) : null })).map((c) => {
-    const b = bolletje(invoer(c, gm.get(c.id), mm.get(c.id), um.get(c.id)), nu);
+    const inv = invoer(c, gm.get(c.id), mm.get(c.id), um.get(c.id));
+    const b = bolletje(inv, nu);
+    const m = matchUit(c, am.get(c.id), gm.get(c.id)?.velden as JobVelden | undefined, nu);
+    const ind = indeling(inv, nu, m.kaart?.eis.status ?? null);
     const planner = c.plannerUserId ? pm.get(c.plannerUserId) : null;
     return {
       id: c.id, naam: `${c.firstName} ${c.lastName}`.trim(), functie: functieNaam(c.functionType, isAfwas(c)), functieCode: c.functieEersteKeus || c.functionType,
       branche: brancheVan(c.functionType, null, isAfwas(c), ingangBranche(c.bronDetails)),
       kleur: b.kleur, cijfer: b.cijfer || null, status: b.tekst, sinds: b.sinds, sindsTekst: sindsTekst(b.sinds, nu),
       planner: plannerLabel(planner || null), plannerId: c.plannerUserId || null, mijn: !!ik && c.plannerUserId === ik, aangemeld: c.createdAt,
-      match: kortMatch(matchUit(c, am.get(c.id), gm.get(c.id)?.velden as JobVelden | undefined, nu)),
+      match: kortMatch(m),
+      groep: ind.groep, punt: ind.punt, groepTekst: ind.tekst, groepSub: ind.sub, stap: ind.stap, dubbel: ind.dubbel,
     };
   }).sort((a, b) => vergelijk({ kleur: a.kleur as Kleur, sinds: new Date(a.sinds) }, { kleur: b.kleur as Kleur, sinds: new Date(b.sinds) }));
   const perKleur = Object.fromEntries(KLEUR_VOLGORDE.map((k) => [k, rijen.filter((r) => r.kleur === k).length]));
