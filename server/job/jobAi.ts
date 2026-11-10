@@ -52,7 +52,7 @@ Haal uit het antwoord alle velden die erin staan, ook velden waar niet naar gevr
 Velden:${UITLEG_VELDEN}
 
 Geef ook:
-- taal: "nl" als de kandidaat Nederlands schrijft, "en" bij Engels, "anders" bij een andere taal
+- taal: de taal van dit bericht zelf: "nl" bij Nederlands, "en" bij Engels, "anders" bij een andere taal, null als het bericht te kort of neutraal is om dat te zeggen (ok, ja, yes, een naam, een plaats, een getal, een knop). De gesprekstaal is nu ${taal === "en" ? "Engels" : "Nederlands"}; Job spreekt alleen Nederlands en Engels
 - twijfel: alleen als het antwoord iets bevat waar een collega naar moet kijken (bijvoorbeeld een vergunning die verlopen is, of iets wat niet klopt). Kort, in het Nederlands. Anders null.
 - ack: een korte reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt, door iets concreets uit het antwoord te noemen, bijvoorbeeld "Twee jaar achter de bar, dat is mooi." of "Festivals, gezellig druk werk.". Geen vraag, geen beloftes, geen standaardzinnen zoals "Mooi, dank je!" of "Top, bedankt!". Bij een kort of keuze-antwoord (zoals "1 tot 2", "Ja", "Tot 35 km", "Direct" of een lijstje talen) laat je ack leeg. Herhaal nooit iets wat al eerder gezegd is. Laat ack ook leeg als er niets bijzonders in het antwoord staat.
 ${isHotelPad(ctx)
@@ -109,7 +109,7 @@ Geef terug:
 - bewijs: per ingevuld veld het letterlijke stukje uit het antwoord waar het op staat.
 - doorvraag: alleen als het antwoord de vraag niet duidelijk beantwoordt, of als de ervaring niet duidelijk past bij de functie (bijvoorbeeld kok met alleen afwaservaring, of "in de bediening" zonder te zeggen wat): één korte, vriendelijke vraag die logisch aansluit op wat de kandidaat net zei, om het invulveld wel goed te krijgen. {"tekst": "...?", "voor": "<invulveld>"}. Voorbeelden: na "afwasser en busboy" bij een aanmelding voor de keuken: "Heb je naast het afwassen ook meegeholpen met koken of voorbereiden?"; na "ergens in de buurt": "Hoe ver wil je ongeveer reizen vanaf je huis?". Is het antwoord duidelijk genoeg, dan null. Herhaal nooit een vraag die al gesteld is en vraag nooit iets wat al bekend is.
 - nvt: vragen die door dit antwoord niet meer van toepassing zijn, uit: hotels, sterren, restaurant, functievraag, specialisatie. Werkte de kandidaat nooit in een hotel (bijvoorbeeld alleen in snackbars of restaurants), dan ["sterren"]. Vraag nooit naar hotelsterren bij iemand zonder hotelervaring.
-- taal: "nl", "en" of "anders"
+- taal: de taal van dit bericht zelf: "nl", "en", "anders" (een andere taal) of null als het te kort of neutraal is (ok, ja, yes, een naam, een plaats, een getal, een knop). De gesprekstaal is nu ${taal === "en" ? "Engels" : "Nederlands"}; Job spreekt alleen Nederlands en Engels
 - twijfel: alleen iets waar een collega naar moet kijken (kort, Nederlands), anders null. Past de ervaring niet bij de functie, zeg dat hier feitelijk (bijvoorbeeld "Aangemeld voor de keuken, ervaring alleen als afwasser en busboy").
 - ack: een korte, natuurlijke reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt. Geen vraag, geen overdreven lof ("indrukwekkend"), geen standaardzin. Bij een kort of keuze-antwoord leeg. Leeg als er een doorvraag is die zelf al reageert.
 

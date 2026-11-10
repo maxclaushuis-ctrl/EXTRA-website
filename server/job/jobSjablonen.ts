@@ -172,6 +172,30 @@ export async function sjabloonNaam(soort: SjabloonSoort): Promise<string> {
   return "";
 }
 
+/**
+ * Het sjabloon per taal (taalopdracht, 10 nov 2026): een Secret gaat voor; anders het
+ * nieuwste eigen sjabloon dat Meta in deze taal heeft goedgekeurd. Is er in die taal
+ * niets goedgekeurd, dan het Nederlandse, met terugval: true (Job logt dat).
+ * Null: geen sjabloon (Job valt terug op het webgesprek of de mail).
+ */
+export async function sjabloonVoor(soort: SjabloonSoort, taal: "nl" | "en"): Promise<{ naam: string; taal: "nl" | "en"; terugval: boolean } | null> {
+  const env = { start: process.env.JOB_WA_SJABLOON_START, herinnering: process.env.JOB_WA_SJABLOON_HERINNERING, afspraak: process.env.JOB_WA_SJABLOON_AFSPRAAK }[soort];
+  if (env && env.trim()) return { naam: env.trim(), taal, terugval: false };
+  if (!metaActief()) return null;
+  const s = await standBijMeta().catch(() => null);
+  if (!s?.ok) return null;
+  return kiesSjabloon(soort, taal, s.lijst);
+}
+
+/** Puur: de keuze uit de lijst van Meta (getest in jobSjablonen.test.ts). */
+export function kiesSjabloon(soort: SjabloonSoort, taal: "nl" | "en", lijst: { naam: string; taal: string; status: string }[]): { naam: string; taal: "nl" | "en"; terugval: boolean } | null {
+  const volgorde = soort === "start" ? [NAMEN.start, START_V2, START_OUD] : [NAMEN[soort]];
+  const goed = (naam: string, tl: string) => lijst.some((t) => t.naam === naam && t.taal === tl && t.status === "APPROVED");
+  for (const naam of volgorde) if (goed(naam, taal)) return { naam, taal, terugval: false };
+  if (taal !== "nl") for (const naam of volgorde) if (goed(naam, "nl")) return { naam, taal: "nl", terugval: true };
+  return null;
+}
+
 /** Dient de sjablonen in die nog niet bij Meta staan. Bestaande laat het staan. */
 export async function dienIn(): Promise<{ ingediend: string[]; bestond: string[]; fouten: string[] }> {
   const uit = { ingediend: [] as string[], bestond: [] as string[], fouten: [] as string[] };

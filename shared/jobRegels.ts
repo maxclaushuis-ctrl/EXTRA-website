@@ -21,6 +21,7 @@
  *    controleert eerst een collega het cv. Na Accepteren in Kandidaten
  *    kiest de kandidaat zelf een moment.
  */
+import { taalWissel } from "./jobTaal";
 
 export type JobTaal = "nl" | "en";
 
@@ -91,6 +92,9 @@ export interface JobVelden {
   talen?: string;
   /** false = spreekt geen Nederlands en geen Engels: harde no-go voor de planner. */
   nlOfEn?: boolean;
+  /** Taal (shared/jobTaal.ts): aantal automatische wissels en keren dat Job zei alleen NL en EN te spreken. */
+  taalWissels?: number;
+  andereTaal?: number;
   cvParaat?: "ja" | "nee";
   zoekt?: string;
   /**
@@ -307,6 +311,7 @@ const T = {
     documentMee: "Fijn. Neem het document mee naar het gesprek, dan kijkt een collega het samen met je na.",
     mens: "Prima, ik geef het door aan een collega van EXTRA. Die neemt zo snel mogelijk contact met je op.",
     wisselNl: "Prima, we gaan verder in het Nederlands.",
+    alleenNlEn: "Ik spreek Nederlands en Engels. Zullen we verder gaan in het Nederlands?",
     gepland: (dag: string, tijd: string, wie: string) => `Gepland! ${dag} om ${tijd} op de Herengracht 372, met ${wie}. Neem je paspoort of ID-kaart mee.`,
     alGepland: (dag: string, tijd: string) => `Je kennismaking staat op ${dag} om ${tijd} op de Herengracht 372. Wil je een ander moment? Typ VERZETTEN. Een vraag voor een collega? Typ MENS.`,
     verzetten: "Geen probleem. Kies hieronder een nieuw moment; je oude afspraak vervalt zodra je een nieuwe kiest.",
@@ -388,6 +393,7 @@ const T = {
     documentMee: "Great. Bring the document to the meeting, and a colleague will check it with you.",
     mens: "Sure, I'll pass this on to a colleague from EXTRA. They'll get in touch as soon as possible.",
     wisselNl: "Sure, we'll continue in English.",
+    alleenNlEn: "Sorry, I speak Dutch and English. Let's continue in English.",
     gepland: (dag: string, tijd: string, wie: string) => `Booked! ${dag} at ${tijd} at Herengracht 372, with ${wie}. Bring your passport or ID card.`,
     alGepland: (dag: string, tijd: string) => `Your meeting is on ${dag} at ${tijd} at Herengracht 372. Want another moment? Type RESCHEDULE. A question for a colleague? Type HUMAN.`,
     verzetten: "No problem. Choose a new moment below; your old appointment is cancelled as soon as you pick a new one.",
@@ -945,9 +951,28 @@ function verwerkLos(
   // Antwoord uitlezen
   const vorigOnderwerp = state.laatsteOnderwerp;
   if (lezing) {
-    if (lezing.taal === "en" && state.taal === "nl" && !state.velden.ervaring && vorigOnderwerp === "ervaring") {
-      // Eerste antwoord in het Engels: Job gaat mee (C2, Maria).
-      state.taal = "en";
+    // Taal (shared/jobTaal.ts): wisselen bij een duidelijke zin in de andere taal, hooguit één keer
+    // automatisch; een knop, een kort antwoord, een naam of een getal wisselt nooit.
+    const antwoord = (invoer.tekst || "").trim().toLowerCase();
+    const keuzes = vorigOnderwerp ? (["nl", "en"] as const).flatMap((tl) => vraag(vorigOnderwerp, tl, ctx, state.velden).keuzes || []).map((k) => k.toLowerCase()) : [];
+    const wissel = taalWissel({ huidig: state.taal, tekst: invoer.tekst || "", aiTaal: lezing.taal, keuze: keuzes.includes(antwoord), wissels: state.velden.taalWissels || 0, andereTaal: state.velden.andereTaal || 0 });
+    if (wissel.soort === "wissel") {
+      state.taal = wissel.taal;
+      state.velden.taalWissels = (state.velden.taalWissels || 0) + 1;
+      // De korte reactie van de AI stond nog in de oude taal.
+      lezing = { ...lezing, ack: "" };
+    }
+    if (wissel.soort === "andere_taal") {
+      state.velden.andereTaal = wissel.keer;
+      if (wissel.keer === 1) {
+        // Eerste keer een andere taal: in het Engels uitleggen en de vraag opnieuw, niets invullen.
+        state.taal = "en";
+        berichten.push({ tekst: T.en.alleenNlEn });
+        if (vorigOnderwerp) berichten.push(vraag(vorigOnderwerp, "en", ctx, state.velden));
+        return { state, berichten, acties };
+      }
+      // Blijft iemand in een andere taal schrijven: de bestaande regel (geen Nederlands en geen Engels).
+      lezing = { ...lezing, taal: "anders", velden: { ...lezing.velden, nlOfEn: false } };
     }
     const oudeAutorisatie = state.velden.werkautorisatie;
     // Een no-go op taal alleen als het antwoord zelf geen Nederlands of Engels is

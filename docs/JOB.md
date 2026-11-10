@@ -127,6 +127,24 @@ en of de verify token en app secret gezet zijn zien. Stappen voor de koppeling:
 Binnen een gesprek heeft Job geen sjabloon nodig: zolang de kandidaat binnen 24
 uur iets stuurde, antwoordt Job met gewone berichten.
 
+## Taal
+
+Regels in `shared/jobTaal.ts` (getest in `shared/jobTaal.test.ts`).
+
+Starttaal: paspoort of ID-kaart (of nationaliteit) plus landnummer.
+
+| Paspoort | Nummer +31 | Buitenlands nummer |
+|---|---|---|
+| Nederlands | nl | nl |
+| Ander EU-land of buiten de EU | taal van het formulier | en |
+| Niet bekend | nl | en |
+
+Het nummer wordt eerst naar E.164 gezet (06 wordt +316, 0031 wordt +31); in de database verandert niets. Welke landnummers als Nederlands tellen, staat in het Secret `JOB_NL_LANDCODES` (standaard `31`, meerdere gescheiden door komma's).
+
+Het openingsbericht en de herinneringen gaan met de taalcode van het gesprek. Is een sjabloon in het Engels (nog) niet goedgekeurd, dan gaat de Nederlandse versie en staat er een regel in de log; bij de start loopt het gesprek dan in het Nederlands.
+
+Wisselen: alleen bij een duidelijke zin in de andere taal (minstens drie woorden, namen en plaatsen tellen niet), niet bij ok, ja, een getal of een knop. Hooguit één automatische wissel per gesprek; ENGLISH of NEDERLANDS typen kan altijd. Een andere taal (Pools, Spaans): Job antwoordt in het Engels dat hij Nederlands en Engels spreekt en stelt de vraag opnieuw; blijft iemand in die taal schrijven, dan geldt de bestaande regel (naar een collega). De taal staat bij het gesprek (`job_gesprekken.taal`), in het dossier ("Taal gesprek") en in de melding voor de planner.
+
 ## Inplannen
 
 - Een half uur per gesprek, vanaf morgen, twee weken vooruit, nooit binnen 12 uur.

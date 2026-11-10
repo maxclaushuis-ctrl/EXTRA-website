@@ -167,7 +167,7 @@ async function dossier(id: number) {
     functieCode: c.functieEersteKeus || c.functionType,
     contact: {
       telefoon: c.phone, whatsapp: c.whatsappNummer, email: c.email, postcode: c.postcode, woonland: c.woonland,
-      whatsappStatus: c.whatsappOptInStatus, toestemmingOp: c.whatsappToestemmingOp, gesprekstaal: c.gesprekstaal,
+      whatsappStatus: c.whatsappOptInStatus, toestemmingOp: c.whatsappToestemmingOp, gesprekstaal: g?.taal || c.gesprekstaal, // de taal waarin het gesprek met Job nu loopt
     },
     job: g ? {
       status: g.status, kanaal: g.kanaal, token: g.token, gestart: g.gestartAt,

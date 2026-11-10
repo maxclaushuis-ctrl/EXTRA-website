@@ -37,6 +37,7 @@ import {
 import { begrijpenAan, formulerenAan, lees } from "./jobAi";
 import { filterPrivacy, privacyMelding, type PrivacyUitkomst } from "@shared/jobPrivacy";
 import { Bundelaar, type Deel } from "@shared/jobBundel";
+import { landcodes, starttaal } from "@shared/jobTaal";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
@@ -372,6 +373,15 @@ async function verstuurSjabloon(candidateId: number, telefoon: string, naam: str
   }
 }
 
+/** Een sjabloon in de gesprekstaal; niet goedgekeurd in het Engels, dan het Nederlandse (gelogd). */
+async function verstuurSjabloonInTaal(candidateId: number, telefoon: string, soort: "herinnering" | "afspraak", taal: JobTaal, parameters: string[], tekstVoorInbox: string): Promise<boolean> {
+  const { sjabloonVoor } = await import("./jobSjablonen");
+  const k = await sjabloonVoor(soort, taal).catch(() => null);
+  if (!k) return false;
+  if (k.terugval) console.warn(`[Job] ${soort}sjabloon ${k.naam} is niet goedgekeurd in het Engels; Nederlandse versie verstuurd (kandidaat ${candidateId})`);
+  return verstuurSjabloon(candidateId, telefoon, k.naam, k.taal, parameters, tekstVoorInbox);
+}
+
 /** Binnen 24 uur na het laatste bericht van de kandidaat mag Job vrij antwoorden (regel van Meta). */
 function binnenVenster(s: JobState, nu: Date): boolean {
   return !!s.laatsteInkomendAt && nu.getTime() - new Date(s.laatsteInkomendAt).getTime() < 23.5 * 60 * 60 * 1000;
@@ -419,11 +429,18 @@ export async function whatsappBinnen(g: JobGesprek, tekst: string, knop: boolean
   bundelaar.voegToe(g.id, { tekst, knop });
 }
 
+/** De regel voor de recruiter: "Taal gesprek: Nederlands" of "Taal gesprek: Engels". */
+export function taalRegel(taal: string | null | undefined): string {
+  return `Taal gesprek: ${taal === "en" ? "Engels" : "Nederlands"}`;
+}
+
 // ─── Acties: planner, cv-mail, profiel ───────────────────────────────────────
 
 async function meldPlanner(candidateId: number, reden: string) {
   const c = await kandidaat(candidateId);
   const naam = c ? `${c.firstName} ${c.lastName}` : `kandidaat ${candidateId}`;
+  const g = await gesprekVanKandidaat(candidateId);
+  if (g) reden = `${reden} ${taalRegel(g.taal)}.`;
   try {
     await storage.createAdminNotification({
       type: "job_planner",
@@ -498,13 +515,21 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
   if (bestaand) return bestaand;
   const c = await kandidaat(candidateId);
   if (!c) return null;
-  const taal: JobTaal = opties.taal || (/english|engels/i.test(c.language || "") && !/nederlands|dutch/i.test(c.language || "") ? "en" : "nl");
+  // Starttaal (shared/jobTaal.ts): paspoort of nationaliteit plus landnummer, bij twijfel de taal van het formulier.
+  const formulierTaal: JobTaal | null = opties.taal || (c.gesprekstaal === "en" || c.gesprekstaal === "nl" ? c.gesprekstaal : null);
+  let taal: JobTaal = starttaal({ nummer: waNummer(c) || c.phone, paspoort: c.nationalityZone, formulierTaal, codes: landcodes(process.env.JOB_NL_LANDCODES) });
+  const { sjabloonVoor } = await import("./jobSjablonen");
+  const keuze = opties.voorkeur !== "web" && !!waNummer(c) && c.whatsappOptInStatus === "actief" ? await sjabloonVoor("start", taal).catch(() => null) : null;
+  if (keuze?.terugval) {
+    console.warn(`[Job] startsjabloon ${keuze.naam} is niet goedgekeurd in het ${taal === "en" ? "Engels" : "Nederlands"}; Job begint in het Nederlands (kandidaat ${candidateId})`);
+    taal = "nl";
+  }
+  const sjabloon = keuze?.naam || "";
   const ctx = (await context(candidateId, taal))!;
   const nu = new Date();
   const r = start(ctx, taal, nu);
 
-  const sjabloon = (await SJABLONEN()).start;
-  const viaWhatsapp = opties.voorkeur !== "web" && !!waNummer(c) && c.whatsappOptInStatus === "actief" && !!sjabloon && (await whatsappKlaar());
+  const viaWhatsapp = !!sjabloon && (await whatsappKlaar());
 
   let g: JobGesprek;
   try {
@@ -537,7 +562,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
     stuurStartmail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal, link: gesprekLink(g.token) }).catch(() => {});
   }
   try {
-    await storage.createCandidateAuditLog({ candidateId, action: "updated", changedByUserId: null, changeData: { description: `Job gestart via ${g.kanaal}` }, ipAddress: null } as any);
+    await storage.createCandidateAuditLog({ candidateId, action: "updated", changedByUserId: null, changeData: { description: `Job gestart via ${g.kanaal}, taal gesprek: ${taal === "en" ? "Engels" : "Nederlands"}` }, ipAddress: null } as any);
   } catch { /* geen ramp */ }
   return g;
 }
@@ -765,7 +790,7 @@ export async function uitnodigingNaCheck(candidateId: number): Promise<void> {
   await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
   if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
     if (binnenVenster(s, new Date())) await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);
-    else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], b.tekst);
+    else await verstuurSjabloonInTaal(c.id, waNummer(c), "herinnering", s.taal, [c.firstName], b.tekst);
   }
 }
 
@@ -938,7 +963,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     if (g.kanaal === "whatsapp" && c.phone && c.whatsappOptInStatus === "actief") {
       const tekst = r.berichten[0].tekst;
       if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), r.berichten[0], g.token, s.taal);
-      else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], tekst);
+      else await verstuurSjabloonInTaal(c.id, waNummer(c), "herinnering", s.taal, [c.firstName], tekst);
     }
     if (c.email && soort === "eerste") {
       const waNr = await (await import("./jobSjablonen")).jobNummer();
@@ -961,7 +986,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
     if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
       if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);
-      else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).herinnering, s.taal, [c.firstName], b.tekst);
+      else await verstuurSjabloonInTaal(c.id, waNummer(c), "herinnering", s.taal, [c.firstName], b.tekst);
     }
     if (c.email) {
       const { stuurUitnodigingsmail } = await import("./jobMails");
@@ -983,7 +1008,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst, keuzes: t.afspraakKeuzes, kanaal: g.kanaal });
     if (c.phone && c.whatsappOptInStatus === "actief" && g.kanaal === "whatsapp") {
       if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), { tekst, keuzes: t.afspraakKeuzes }, g.token, s.taal);
-      else await verstuurSjabloon(c.id, waNummer(c), (await SJABLONEN()).afspraak, s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
+      else await verstuurSjabloonInTaal(c.id, waNummer(c), "afspraak", s.taal, [c.firstName, a.tijd, a.interviewer], tekst);
     }
   }
   return { herinneringen: aantal, rood, afspraken };
