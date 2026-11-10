@@ -9,6 +9,7 @@ import { BRANCHE, BRANCHES, type Branche } from "@shared/sollicitantRegels";
 import { KLEUREN, KLEUR_VOLGORDE, type Kleur } from "@shared/kandidaatRegels";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { CSS, Dialoog, Knop, Leeg, Meldingen, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
+import { Dossier3, K3CSS } from "./Kaart3";
 
 interface Rij {
   id: number; naam: string; functie: string; functieCode: string; branche: Branche; kleur: Kleur; cijfer: string | null;
@@ -24,7 +25,7 @@ function leesFilter(): Filter {
   return STANDAARD;
 }
 
-function Stip({ kleur, cijfer, maat = 20 }: { kleur: Kleur; cijfer?: string | null; maat?: number }) {
+export function Stip({ kleur, cijfer, maat = 20 }: { kleur: Kleur; cijfer?: string | null; maat?: number }) {
   return (
     <span aria-label={KLEUREN[kleur].label} title={KLEUREN[kleur].label} style={{ width: maat, height: maat, borderRadius: "50%", background: KLEUREN[kleur].kleur, color: kleur === "geel" ? "#5A4A00" : "#fff", fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{cijfer || ""}</span>
   );
@@ -34,6 +35,8 @@ const FUNCTIE_OPTIES = [["horecamedewerker", "Bediening en bar"], ["bediening", 
 
 export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naarArchief: () => void; naarWhatsapp: () => void; oudeWeergave: () => void }) {
   const { data, fout, opnieuw } = useData<Overzicht>("/api/admin/kandidaten/overzicht");
+  const { data: status, fout: statusFout } = useData<{ kaart3?: boolean }>("/api/sollicitanten/status");
+  const kaart3 = !!status?.kaart3;
   const [branche, setBranche] = useState<Branche | "alle">("alle");
   const [zoek, setZoek] = useState("");
   const [filter, setFilter] = useState<Filter>(leesFilter);
@@ -55,10 +58,12 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
 
   if (open) {
     const ids = lijst.map((r) => r.id);
+    if (!status && !statusFout) return <div className="sv" style={{ borderRadius: 18 }}><style>{CSS}</style><p className="sv-grijs" style={{ padding: 24 }}>Laden...</p></div>;
+    const D = kaart3 ? Dossier3 : Dossier;
     return (
       <div className="sv" style={{ borderRadius: 18 }}>
-        <style>{CSS}{KCSS}</style>
-        <Dossier id={open} ids={ids.includes(open) ? ids : [open, ...ids]} context={`${branche === "alle" ? "Alle" : BRANCHE[branche].label}${filter.kleuren.length ? ` · ${filter.kleuren.map((k) => KLEUREN[k].label.toLowerCase()).join(", ")}` : ""}`}
+        <style>{CSS}{KCSS}{kaart3 ? K3CSS : ""}</style>
+        <D id={open} ids={ids.includes(open) ? ids : [open, ...ids]} context={`${branche === "alle" ? "Alle" : BRANCHE[branche].label}${filter.kleuren.length ? ` · ${filter.kleuren.map((k) => KLEUREN[k].label.toLowerCase()).join(", ")}` : ""}`}
           naar={(id) => setOpen(id)} terug={() => { setOpen(null); opnieuw(); }} naarWhatsapp={naarWhatsapp} />
         <Meldingen />
       </div>
@@ -137,7 +142,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
 
 // ─── Dossier (bord H) ───────────────────────────────────────────────────────
 
-interface DossierData {
+export interface DossierData {
   id: number; voornaam: string; naam: string; status: string; functie: string; branche: Branche; leeftijd: number | null; plaats: string | null; aangemeld: string; bron: string | null;
   bolletje: { kleur: Kleur; cijfer: string | null; tekst: string; reden: string; sinds: string; sindsTekst: string; gele: { reden: string; tekst: string; titel: string; actie: string }[] };
   planner: { id: number; label: string } | null;
@@ -146,10 +151,12 @@ interface DossierData {
   contact: { telefoon: string | null; whatsapp: string | null; email: string | null; postcode: string | null; woonland: string | null; whatsappStatus: string; toestemmingOp: string | null; gesprekstaal: string | null };
   job: null | { status: string; kanaal: string; token: string; gestart: string; berichten: { richting: string; tekst: string; at: string; bijlage: boolean }[] };
   tijdlijn: { at: string; tekst: string; notitie: boolean }[];
+  cvBestand?: { naam: string; soort: "pdf" | "afbeelding" | "word" | "anders"; at: string | null; via: string | null } | null;
+  functieCode?: string;
 }
 
-const MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
-function wanneer(x: string): string {
+export const MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+export function wanneer(x: string): string {
   const d = new Date(x), nu = new Date();
   const dag = d.toDateString() === nu.toDateString() ? "vandaag" : new Date(nu.getTime() - 86400000).toDateString() === d.toDateString() ? "gisteren" : kortDatum(x);
   return `${dag} ${tijdstip(x)}`;
@@ -329,7 +336,7 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; 
   );
 }
 
-function uitleg(d: DossierData, reden: string): string {
+export function uitleg(d: DossierData, reden: string): string {
   const v = d.voornaam;
   switch (reden) {
     case "werkautorisatie": return `${v} heeft de nationaliteit ${d.profiel.nationaliteit || "van buiten de EU"}. Werkautorisatie volgens Job: ${({ twv: "TWV vereist", onbekend: "weet het niet", anders: "ander antwoord" } as Record<string, string>)[d.profiel.werkautorisatie || ""] || "onbekend"}.`;
@@ -360,7 +367,7 @@ function Uitklap({ titel, samenvatting, open, wissel, children }: { titel: strin
   );
 }
 
-function Inplannen({ id, voornaam, sluit, klaar }: { id: number; voornaam: string; sluit: () => void; klaar: () => void }) {
+export function Inplannen({ id, voornaam, sluit, klaar }: { id: number; voornaam: string; sluit: () => void; klaar: () => void }) {
   const { data, fout } = useData<{ datum: string; tijd: string }[]>("/api/admin/kandidaten/momenten");
   const [keuze, setKeuze] = useState<{ datum: string; tijd: string } | null>(null);
   const [bezig, setBezig] = useState(false);

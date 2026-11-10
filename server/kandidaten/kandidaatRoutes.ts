@@ -81,6 +81,17 @@ async function overzicht(ik: number | null) {
   return { rijen, tellers: { perKleur, perBranche, aandacht: (perKleur.geel || 0) + (perKleur.rood || 0) }, planners };
 }
 
+/** Kandidaatkaart 3: nette bestandsnaam, soort voor de voorvertoning en wanneer het cv binnenkwam. */
+function cvBestand(c: Candidate, kanaal: string | null, berichten: { richting: string; bijlage: string | null; aangemaaktAt: Date }[]) {
+  if (!c.hasCv || !c.cvFilename) return null;
+  const bestand = String(c.cvFilename).split("/").pop() || "cv";
+  const naam = bestand.replace(/^\d{10,}[-_]/, "").replace(/^[0-9a-f]{8}-[0-9a-f-]{27,}[-_]/i, "") || "cv";
+  const ext = (naam.split(".").pop() || "").toLowerCase();
+  const soort = ext === "pdf" ? "pdf" : ["jpg", "jpeg", "png", "webp", "heic"].includes(ext) ? "afbeelding" : ["doc", "docx"].includes(ext) ? "word" : "anders";
+  const binnen = [...berichten].reverse().find((b) => b.richting === "in" && b.bijlage);
+  return { naam, soort, at: binnen ? binnen.aangemaaktAt : null, via: binnen ? (kanaal === "whatsapp" ? "WhatsApp" : "het webgesprek") : null };
+}
+
 async function dossier(id: number) {
   const [c] = await db.select().from(candidates).where(eq(candidates.id, id));
   if (!c) return null;
@@ -124,6 +135,8 @@ async function dossier(id: number) {
       nationaliteit: c.nationality, talen: v.talen || c.language || null, werkautorisatie: v.werkautorisatie || null,
       cv: c.hasCv ? (c.cvFilename || "") : null, uitJob: !!g,
     },
+    cvBestand: cvBestand(c, g?.kanaal || null, berichten),
+    functieCode: c.functieEersteKeus || c.functionType,
     contact: {
       telefoon: c.phone, whatsapp: c.whatsappNummer, email: c.email, postcode: c.postcode, woonland: c.woonland,
       whatsappStatus: c.whatsappOptInStatus, toestemmingOp: c.whatsappToestemmingOp, gesprekstaal: c.gesprekstaal,

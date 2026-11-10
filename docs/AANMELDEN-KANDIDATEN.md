@@ -25,6 +25,7 @@ bestaande kandidaten) en de nieuwe tabel `kandidaat_mogelijke_match`.
 | --- | --- |
 | `AANMELDFORMULIER` | `huidig` (standaard): iedereen ziet het huidige formulier. `test`: het nieuwe alleen met `?formulier=nieuw`. `nieuw`: iedereen. In de testomgeving staat hij vanzelf op `nieuw`. |
 | `KANDIDATEN_V2=1` | Het nieuwe Kandidaten-scherm. Onderaan staat een link naar de oude weergave. In de testomgeving vanzelf aan. |
+| `KANDIDATEN_KAART3` | Kandidaatkaart 3: het dossier in de huisstijl van het brandboek (kandidaatmatch, aandachtspunten, gegevens met bron, cv-voorbeeld, gesprek met Job alleen lezen). In de testomgeving vanzelf aan, uit met `0`. Elders alleen met `1`. Het blok Kandidaatmatch toont nog geen score: die komt met de cv-analyse (Job 3.0, fase 4). |
 | `JOB_ENABLED=1` | Nodig voor het nieuwe formulier: zonder Job vraagt niemand de rest. Zonder Job toont de bedankpagina "We nemen snel contact met je op." |
 | `JOB_WA_NUMMER` | Het WhatsApp-nummer van Job (E.164). Voor de knop "Open WhatsApp" op de bedankpagina en "Verder via WhatsApp" in de herinneringsmail. Zonder: alleen de weblink. |
 
@@ -66,4 +67,5 @@ WhatsApp-sjablonen goedgekeurd zijn.
 
 - `AANMELDFORMULIER` op `huidig` of weghalen: iedereen ziet weer het huidige formulier.
 - `KANDIDATEN_V2` weghalen: het oude Kandidaten-scherm.
+- `KANDIDATEN_KAART3=0`: het vorige dossier in Kandidaten, zonder publicatie van nieuwe code.
 - `migrations/manual/0032_aanmelden_kandidaten/down.sql` alleen met de hand en met akkoord van Max. Keur in Replit nooit een publicatie goed waarin DROP of delete staat.

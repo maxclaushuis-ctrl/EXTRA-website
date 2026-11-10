@@ -28,6 +28,12 @@ import {
 } from "@shared/sollicitantRegels";
 import { afwijsmailAan, maakAfwijsmail, stuurAfwijsmail } from "./afwijsmail";
 
+/** Kandidaatkaart 3 (nieuwe opmaak van het dossier in Kandidaten). In de testomgeving vanzelf aan, uit met KANDIDATEN_KAART3=0; elders alleen met KANDIDATEN_KAART3=1. */
+function kaart3Aan(): boolean {
+  const w = process.env.KANDIDATEN_KAART3;
+  return w === "1" || (process.env.TESTOMGEVING === "1" && w !== "0");
+}
+
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
 
 export function sollicitantenAan(): boolean {
@@ -406,7 +412,7 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
   };
 
   app.get(r("/status"), adminMiddleware, (_req, res) => {
-    res.json({ aan: sollicitantenAan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", afwijsmail: afwijsmailAan() });
+    res.json({ aan: sollicitantenAan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", kaart3: kaart3Aan(), afwijsmail: afwijsmailAan() });
   });
 
   app.get(r("/week"), adminMiddleware, alleenAan, veilig(async (req, res) => { res.json(await week(String(req.query.van || ""))); }));
