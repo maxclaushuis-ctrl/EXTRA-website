@@ -34,5 +34,11 @@ test("Getikte knop die al kort is blijft gelijk", keuzeUitNummer("5 of meer", nl
 test("Nummer werkt nog", keuzeUitNummer("2", nl.werkgebiedKeuzes) === "Tot 35 km");
 test("Vrije tekst blijft vrije tekst", keuzeUitNummer("Amsterdam en Haarlem", nl.werkgebiedKeuzes) === "Amsterdam en Haarlem");
 
+// Cv in WhatsApp: geen link naar het webgesprek, niet om een foto vragen (alleen pdf of Word)
+for (const [t, naam] of [[nl, "nl"], [en, "en"]] as const) {
+  test(`Cv-vraag WhatsApp zonder link (${naam})`, !/https?:\/\//.test(t.cvUploadWa) && !/https?:\/\//.test(t.cvLaterWa));
+  test(`Cv-teksten noemen pdf en Word, geen foto (${naam})`, [t.cvUpload, t.cvUploadWa, t.cvLaterWa].every((x) => /pdf/i.test(x) && /word/i.test(x) && !/foto|photo/i.test(x)));
+}
+
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

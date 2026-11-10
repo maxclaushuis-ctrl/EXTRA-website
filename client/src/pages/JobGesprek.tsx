@@ -31,7 +31,7 @@ const T = {
     typ: "Typ je antwoord",
     stuur: "Stuur",
     cvKies: "Upload je cv",
-    cvAnder: "pdf, Word of foto, max. 10 MB",
+    cvAnder: "pdf of Word, max. 10 MB",
     cvBezig: "Je cv wordt verstuurd",
     planKop: "Kies een moment",
     planUitleg: "Herengracht 372, Amsterdam. Je ziet alleen momenten waarop een collega vrij is.",
@@ -57,7 +57,7 @@ const T = {
     typ: "Type your answer",
     stuur: "Send",
     cvKies: "Upload your CV",
-    cvAnder: "PDF, Word or photo, max. 10 MB",
+    cvAnder: "PDF or Word, max. 10 MB",
     cvBezig: "Your CV is being sent",
     planKop: "Choose a moment",
     planUitleg: "Herengracht 372, Amsterdam. You only see moments when a colleague is free.",
@@ -318,7 +318,7 @@ export default function JobGesprek() {
 
             {cvGevraagd && !bezig && (
               <div className="jg-blok">
-                <input ref={bestand} type="file" accept=".pdf,.doc,.docx,image/jpeg,image/png" onChange={uploadCv} hidden />
+                <input ref={bestand} type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={uploadCv} hidden />
                 <button type="button" className="jg-knop" onClick={() => bestand.current?.click()}>{t.cvKies}</button>
                 <p style={{ margin: "8px 0 0" }}>{t.cvAnder}</p>
               </div>

@@ -259,7 +259,8 @@ async function bewaarInkomend(g: JobGesprek, tekst: string, bijlage?: string | n
 export function whatsappTekst(b: Uitgaand, token: string, taal: JobTaal, metKnoppen = false): string {
   const t = teksten(taal);
   let tekst = b.tekst;
-  if (b.cvUpload) tekst = b.tekst === t.cvUpload ? t.cvUploadWa(gesprekLink(token, "&cv=1")) : `${b.tekst}\n${gesprekLink(token, "&cv=1")}`;
+  // Het cv komt in WhatsApp zelf binnen (pdf of Word via de paperclip), zonder link naar het webgesprek.
+  if (b.cvUpload) tekst = b.tekst === t.cvUpload ? t.cvUploadWa : b.tekst === t.cvLater ? t.cvLaterWa : b.tekst;
   if (b.planning) {
     if (b.tekst === t.plannen) tekst = t.plannenWa(gesprekLink(token, "&plannen=1"));
     else if (b.tekst === t.verzetten) tekst = t.verzettenWa(gesprekLink(token, "&plannen=1"));
