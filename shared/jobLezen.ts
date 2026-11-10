@@ -63,6 +63,33 @@ export function valideerLezing(ruw: any): Lezing {
   return { velden, taal, twijfel, ack, ...(vervolgvraag ? { vervolgvraag } : {}), ...(doorvraag ? { doorvraag } : {}), ...(nvt.length ? { nvt } : {}) };
 }
 
+// ─── Vragen herformuleren: controle ──────────────────────────────────────────
+
+/** Woorden die in een herformuleerde vraag moeten terugkomen, zodat hij over hetzelfde invulveld blijft gaan. */
+const ONDERWERP_WOORDEN: Partial<Record<Onderwerp, RegExp>> = {
+  diensten: /dienst|shift|week|dagen per|days a week/i,
+  werkgebied: /reis|regio|km|afstand|ver |waar|travel|area|region|distance|far/i,
+  werkmoment: /wanneer|dag|avond|weekend|tijd|uren|when|evening|hours|days/i,
+  startdatum: /begin|start|beschikbaar|wanneer|available|when/i,
+  werkvorm: /studie|studeer|naast|hoofdbaan|ander werk|baan|study|studies|main job|other job|alongside/i,
+  hotels: /hotel/i,
+  sterren: /ster|star/i,
+  restaurant: /restaurant/i,
+  specialisatie: /event|banquet|evenement/i,
+};
+
+/**
+ * Mag de herformuleerde vraag de standaardvraag vervangen? Eén korte vraag, eindigt met een
+ * vraagteken, geen link of belofte, en hij gaat aantoonbaar over hetzelfde onderwerp.
+ */
+export function herformuleringGoed(onderwerp: Onderwerp, tekst: string | null | undefined): boolean {
+  const t = (tekst || "").trim();
+  if (t.length < 8 || t.length > 220 || !t.endsWith("?") || (t.match(/\?/g) || []).length > 2) return false;
+  if (/https?:|www\.|beloof|garantie|zeker weten dat|promise|guarantee/i.test(t)) return false;
+  const woorden = ONDERWERP_WOORDEN[onderwerp];
+  return woorden ? woorden.test(t) : true;
+}
+
 // ─── Fase 2: bewijscheck ─────────────────────────────────────────────────────
 
 /** Welk veld hoort bij welke vraag; een veld zonder bewijs telt alleen als antwoord op zijn eigen vraag. */

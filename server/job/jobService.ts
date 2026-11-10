@@ -28,13 +28,13 @@ import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
 import { planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
   ervaringWerk, cvAfrondingTekst, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
-  type Actie, type JobContext, type JobState, type JobStatus, type JobTaal, type Uitgaand,
+  type Actie, type JobContext, type Onderwerp, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
   afspraakHerinneringNodig, amsterdam, dagTekst, momentGeldig, STANDAARD_INTERVIEWERS, vrijeMomenten,
   type Bezet, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
-import { begrijpenAan, lees } from "./jobAi";
+import { begrijpenAan, formulerenAan, lees } from "./jobAi";
 import { filterPrivacy, privacyMelding } from "@shared/jobPrivacy";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
@@ -484,6 +484,29 @@ export interface VerwerkResultaat {
 }
 
 /** Verwerkt een bericht van de kandidaat (web of WhatsApp) en geeft de antwoorden van Job terug. */
+/** Vragen die altijd letterlijk blijven: werken in Nederland (wettelijk gevoelig) en het cv (met uploadlink). */
+const ALTIJD_LETTERLIJK: Onderwerp[] = ["werkautorisatie", "geldigheid", "cv"];
+
+/**
+ * Standaardvraag herformuleren zodat hij aansluit op het antwoord. Alleen de vraag aan het eind van
+ * het laatste bericht; de reactie ervoor en de knoppen blijven. Lukt het niet, dan blijft de standaardvraag.
+ */
+async function herformuleer(r: ReturnType<typeof verwerk>, gesprekId: number, ctx: JobContext, antwoord: string, reactie: string): Promise<ReturnType<typeof verwerk>> {
+  const o = r.state.laatsteOnderwerp;
+  if (r.state.status !== "bezig" || !o || ALTIJD_LETTERLIJK.includes(o) || !r.berichten.length) return r;
+  const laatste = r.berichten[r.berichten.length - 1];
+  const standaard = vraag(o, r.state.taal, ctx, r.state.velden);
+  if (!laatste.tekst.endsWith(standaard.tekst) || laatste.cvUpload) return r;  // een doorvraag of iets anders: laten staan
+  const { formuleerVraag } = await import("./jobAi");
+  const g = await gesprekVoorAi(gesprekId, antwoord);
+  const nieuw = await formuleerVraag(standaard.tekst, o, standaard.keuzes, ctx, r.state.taal, g, antwoord, reactie);
+  if (!nieuw) return r;
+  const voor = laatste.tekst.slice(0, laatste.tekst.length - standaard.tekst.length);
+  const berichten = [...r.berichten];
+  berichten[berichten.length - 1] = { ...laatste, tekst: `${voor}${nieuw}` };
+  return { ...r, berichten };
+}
+
 /** Fase 2: het gesprek tot nu toe voor de AI (laatste berichten, het nieuwe antwoord niet meegerekend). */
 async function gesprekVoorAi(gesprekId: number, nieuw: string): Promise<{ laatsteVraag: string; geschiedenis: string }> {
   const rijen = await db.select({ richting: jobBerichten.richting, tekst: jobBerichten.tekst }).from(jobBerichten)
@@ -538,6 +561,7 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
     const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
     const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal, ctx.begrijpen ? await gesprekVoorAi(g.id, tekst) : undefined) : null;
     r = verwerk(s, ctx, { tekst, cvOntvangen: invoer.cvOntvangen }, lezing, nu);
+    if (leesbaar && formulerenAan()) r = await herformuleer(r, g.id, ctx, tekst, lezing?.ack || "");
   }
   if (privacy) r = { ...r, berichten: [{ tekst: privacyMelding(r.state.taal) }, ...r.berichten] };
   s = r.state;

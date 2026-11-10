@@ -4,7 +4,7 @@
  * Run met:  npx tsx shared/jobBegrijpen.test.ts
  */
 import { start, verwerk, teksten, MAX_DOORVRAGEN_PER_VELD, type JobContext, type Lezing } from "./jobRegels";
-import { bewijsCheck, valideerLezing } from "./jobLezen";
+import { bewijsCheck, herformuleringGoed, valideerLezing } from "./jobLezen";
 
 let geslaagd = 0;
 let gefaald = 0;
@@ -67,6 +67,14 @@ const b2 = bewijsCheck({ werkgebied: "tot 25 km", diensten: "3-4" }, { diensten:
 test("Rijk antwoord: veld van de vraag en veld met citaat blijven", b2.werkgebied === "tot 25 km" && b2.diensten === "3-4", JSON.stringify(b2));
 const b3 = bewijsCheck({ diensten: "5+" }, {}, "Ik wil fulltime werken", "werkgebied");
 test("Veld zonder citaat bij een andere vraag valt weg", b3.diensten === undefined);
+
+// Herformuleren: alleen als de vraag over hetzelfde blijft gaan
+test("Herformulering diensten goed", herformuleringGoed("diensten", "Fijn dat je ervaring hebt. Hoeveel diensten per week zou je willen draaien?"));
+test("Herformulering die van onderwerp wisselt: afgewezen", !herformuleringGoed("diensten", "Hoe ver wil je reizen?"));
+test("Zonder vraagteken: afgewezen", !herformuleringGoed("werkgebied", "Vertel me hoe ver je wilt reizen"));
+test("Met link: afgewezen", !herformuleringGoed("startdatum", "Wanneer kun je beginnen? Zie www.doehetextra.nl?"));
+test("Te lang: afgewezen", !herformuleringGoed("werkmoment", `Wanneer kun je werken ${"heel ".repeat(60)}?`));
+test("Sterren alleen met het woord sterren", herformuleringGoed("sterren", "Hoeveel sterren had het hotel aan de Amstel?") && !herformuleringGoed("sterren", "Was het een duur hotel?"));
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

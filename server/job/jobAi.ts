@@ -14,7 +14,7 @@
  */
 import type { JobContext, JobTaal, JobVelden, Lezing, Onderwerp } from "@shared/jobRegels";
 import { functieLabel, isHotelPad } from "@shared/jobRegels";
-import { bewijsCheck, reserveLezing, valideerLezing } from "@shared/jobLezen";
+import { bewijsCheck, herformuleringGoed, reserveLezing, valideerLezing } from "@shared/jobLezen";
 import { modelVoor } from "@shared/kandidaatMatch";
 
 export function aiBeschikbaar(): boolean {
@@ -114,6 +114,50 @@ Geef terug:
 - ack: een korte, natuurlijke reactie in het ${taal === "en" ? "Engels" : "Nederlands"} (hooguit 8 woorden) die laat merken dat je het antwoord echt gelezen hebt. Geen vraag, geen overdreven lof ("indrukwekkend"), geen standaardzin. Bij een kort of keuze-antwoord leeg. Leeg als er een doorvraag is die zelf al reageert.
 
 Verzin niets. Antwoord uitsluitend met JSON: {"velden": {...}, "bewijs": {...}, "taal": "...", "twijfel": null, "ack": "", "doorvraag": null, "nvt": []}`;
+}
+
+/** Standaardvragen herformuleren aan? In de testomgeving vanzelf, uit met JOB_V3_FORMULEREN=0; elders alleen met 1. */
+export function formulerenAan(): boolean {
+  const w = process.env.JOB_V3_FORMULEREN;
+  return w === "1" || (process.env.TESTOMGEVING === "1" && w !== "0");
+}
+
+/**
+ * Herformuleert een standaardvraag zodat hij aansluit op wat de kandidaat net zei. Zelfde invulveld,
+ * zelfde knoppen. Lukt het niet binnen 6 seconden of klopt de uitkomst niet, dan null (de standaardvraag blijft).
+ */
+export async function formuleerVraag(standaard: string, onderwerp: Onderwerp, keuzes: string[] | undefined, ctx: JobContext, taal: JobTaal,
+  gesprek: { geschiedenis: string }, antwoord: string, reactie: string): Promise<string | null> {
+  if (!aiBeschikbaar()) return null;
+  const stop = new AbortController();
+  const wekker = setTimeout(() => stop.abort(), 6000);
+  try {
+    const OpenAI = (await import("openai")).default;
+    const client = new OpenAI({ baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL, apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "unused" });
+    const systeem = `Je bent Job, de AI-recruiter van uitzendbureau EXTRA in Amsterdam, in een WhatsApp-gesprek met ${ctx.voornaam} (aanmelding: ${ctx.functieNaam?.nl || functieLabel(ctx.functie, "nl")}).
+Herformuleer de volgende vraag zodat hij natuurlijk aansluit op het laatste antwoord van de kandidaat.
+- Vraag precies naar hetzelfde als de oorspronkelijke vraag (${VELD_DOEL[onderwerp] || onderwerp}), niet naar iets anders.
+- Eén vraag, hooguit 25 woorden, eindigt met een vraagteken, in het ${taal === "en" ? "Engels" : "Nederlands"}, je-vorm, vriendelijk en gewoon.
+- Herhaal de reactie niet${reactie ? ` (Job zegt al: "${reactie}")` : ""} en vraag niets wat al bekend is. Geen beloftes, geen links, geen emoji.
+${keuzes?.length ? `- De kandidaat krijgt daaronder deze knoppen: ${keuzes.join(", ")}. De vraag moet daarbij passen.` : ""}
+Het gesprek tot nu toe:
+${gesprek.geschiedenis || "(nog niets)"}
+Kandidaat: ${antwoord.slice(0, 300)}
+
+Oorspronkelijke vraag: "${standaard}"
+Antwoord uitsluitend met JSON: {"vraag": "..."}`;
+    const r: any = await client.chat.completions.create({
+      model: process.env.JOB_AI_MODEL || "gpt-4o-mini", temperature: 0.3, max_tokens: 120, response_format: { type: "json_object" },
+      messages: [{ role: "system", content: systeem }],
+    } as any, { signal: stop.signal, maxRetries: 0 } as any);
+    const inhoud: string = r?.choices?.[0]?.message?.content || "";
+    const json = inhoud.slice(inhoud.indexOf("{"), inhoud.lastIndexOf("}") + 1);
+    const vraag = json ? String(JSON.parse(json)?.vraag || "").trim() : "";
+    return herformuleringGoed(onderwerp, vraag) ? vraag : null;
+  } catch (e: any) {
+    console.warn("[Job] herformuleren niet gelukt, standaardvraag gebruikt:", e?.message || e);
+    return null;
+  } finally { clearTimeout(wekker); }
 }
 
 /** Fase 2 aan? In de testomgeving vanzelf, uit met JOB_V3_BEGRIJPEN=0; elders alleen met 1. */
