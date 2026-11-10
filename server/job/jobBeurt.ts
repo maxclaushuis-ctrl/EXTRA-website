@@ -322,29 +322,47 @@ function grensStop(state: JobState, beurt: Beurt, taal: JobTaal, ai: AiUitkomst 
   return { r: { state: s, berichten: [{ tekst: T[taal].stopGedrag }], acties: [{ soort: "planner", reden }] }, beurt, gebruikt: null, bron: "ai", ai };
 }
 
-/** De echte AI-koppeling (dezelfde als de rest van Job), met een tijdslimiet. */
-export function echteAi(model = process.env.JOB_AI_MODEL || "gpt-4o-mini", limietMs = 15_000): AiAanroep | null {
+/**
+ * De echte AI-koppeling (dezelfde als de rest van Job), met een tijdslimiet. Bij een
+ * snelheidslimiet (429) of een tijdelijke fout wacht hij kort en probeert het opnieuw,
+ * binnen de tijdslimiet. Lukt het niet, dan null (Job valt gecontroleerd terug).
+ */
+export function echteAi(model = process.env.JOB_AI_MODEL || "gpt-4o-mini", limietMs = 15_000, stil = false): AiAanroep | null {
   if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL && !process.env.AI_INTEGRATIONS_OPENAI_API_KEY) return null;
   return async (systeem, bericht) => {
     const start = Date.now();
-    const stop = new AbortController();
-    const wekker = setTimeout(() => stop.abort(), limietMs);
-    try {
-      const OpenAI = (await import("openai")).default;
-      const client = new OpenAI({ baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL, apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "unused" });
-      const nieuw = /^(gpt-5|o\d)/.test(model);
-      const args: any = {
-        model,
-        messages: [{ role: "system", content: systeem }, { role: "user", content: bericht.slice(0, 2000) }],
-        response_format: { type: "json_object" },
-        ...(nieuw ? { max_completion_tokens: 2000 } : { temperature: 0.2, max_tokens: 700 }),
-      };
-      const c: any = await client.chat.completions.create(args, { signal: stop.signal, maxRetries: 0 } as any);
-      return { inhoud: c?.choices?.[0]?.message?.content || "", ms: Date.now() - start, model, tokens: c?.usage ? { in: c.usage.prompt_tokens, uit: c.usage.completion_tokens } : undefined };
-    } catch (e: any) {
-      console.warn(`[Job] AI-beurt mislukt (${model}):`, e?.message || e);
-      return null;
-    } finally { clearTimeout(wekker); }
+    const OpenAI = (await import("openai")).default;
+    const client = new OpenAI({ baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL, apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "unused" });
+    const nieuw = /^(gpt-5|o\d)/.test(model);
+    const args: any = {
+      model,
+      messages: [{ role: "system", content: systeem }, { role: "user", content: bericht.slice(0, 2000) }],
+      response_format: { type: "json_object" },
+      ...(nieuw ? { max_completion_tokens: 2000 } : { temperature: 0.2, max_tokens: 700 }),
+    };
+    let laatsteFout = "";
+    for (let poging = 0; poging < 6; poging++) {
+      const over = limietMs - (Date.now() - start);
+      if (over < 1500) break;
+      const stop = new AbortController();
+      const wekker = setTimeout(() => stop.abort(), over);
+      try {
+        const c: any = await client.chat.completions.create(args, { signal: stop.signal, maxRetries: 0 } as any);
+        return { inhoud: c?.choices?.[0]?.message?.content || "", ms: Date.now() - start, model, tokens: c?.usage ? { in: c.usage.prompt_tokens, uit: c.usage.completion_tokens } : undefined };
+      } catch (e: any) {
+        laatsteFout = e?.message || String(e);
+        const status = e?.status ?? e?.response?.status;
+        if (stop.signal.aborted || !(status === 429 || status >= 500)) break;
+        // Wachten zoals de server vraagt (retry-after), anders oplopend: 1, 2, 4 seconden...
+        const h = e?.headers;
+        const ra = Number(typeof h?.get === "function" ? h.get("retry-after") : h?.["retry-after"]);
+        const wacht = Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : 1000 * 2 ** poging, Math.max(0, limietMs - (Date.now() - start) - 1500));
+        if (wacht <= 0) break;
+        await new Promise((r) => setTimeout(r, wacht));
+      } finally { clearTimeout(wekker); }
+    }
+    if (!stil) console.warn(`[Job] AI-beurt mislukt (${model}):`, laatsteFout);
+    return null;
   };
 }
 

@@ -120,20 +120,26 @@ async function inGroepen<T, U>(lijst: T[], n: number, f: (x: T) => Promise<U>): 
 }
 
 async function main() {
+  console.log("Gesprekstest gestart. Dit duurt even; per gesprek verschijnt een regel.");
   const modellen = (process.argv[2] || process.env.JOB_TEST_MODELLEN || process.env.JOB_AI_MODEL || "gpt-4o-mini").split(",").map((m) => m.trim()).filter(Boolean);
   const rechterModel = process.env.JOB_TEST_RECHTER === "0" ? null : process.env.JOB_TEST_RECHTER || "gpt-4o";
   const filter = (process.env.JOB_TEST_FILTER || "").toLowerCase();
   const gesprekken = GESPREKKEN.filter((g) => !filter || g.naam.toLowerCase().includes(filter));
   if (!echteAi()) { console.error("Geen AI-koppeling gevonden. Draai dit in de testomgeving op Replit (AI_INTEGRATIONS_OPENAI_* in de Secrets)."); process.exit(1); }
-  const rechter = rechterModel ? echteAi(rechterModel, 60_000) : null;
+  const rechter = rechterModel ? echteAi(rechterModel, 120_000, true) : null;
+  const parallel = Math.max(1, Number(process.env.JOB_TEST_PARALLEL || 1));
   const verslag: string[] = [`Gesprekstest Job 4, ${new Date().toISOString()}`, `Modellen: ${modellen.join(", ")}; rechter: ${rechterModel || "uit"}; gesprekken: ${gesprekken.length}`, ""];
   const samenvatting: string[] = [];
 
   for (const model of modellen) {
-    const ai = echteAi(model)!;
-    const uitslagen = await inGroepen(gesprekken, 3, async (g) => {
+    // Ruime tijdslimiet en stil: bij de snelheidslimiet van de AI wacht de test en probeert opnieuw.
+    const ai = echteAi(model, 90_000, true)!;
+    let klaar = 0;
+    const uitslagen = await inGroepen(gesprekken, parallel, async (g) => {
       const u = await voerUit(g, ai, model);
       if (rechter) u.rechter = await beoordeel(u, rechter);
+      klaar++;
+      console.log(`  [${model}] ${klaar}/${gesprekken.length} ${u.ok ? "✓" : "✗"} ${u.naam}`);
       return u;
     });
     const ms = uitslagen.flatMap((u) => u.beurten.map((b) => b.ms)).filter((x) => x > 0).sort((a, b) => a - b);
