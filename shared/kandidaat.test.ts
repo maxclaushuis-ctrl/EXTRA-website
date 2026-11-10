@@ -45,11 +45,11 @@ test("eerste herinnering: oranje 1", bolletje(basis({ job: job({ herinneringen: 
 test("nu in gesprek", bolletje(basis({ job: job({ laatsteActiviteitAt: new Date(nu.getTime() - 120000).toISOString() }) }), nu).tekst === "Nu in gesprek met Job");
 test("uitgenodigd, binnen 48 uur: oranje", bolletje(basis({ status: "gepland", job: job({ status: "plannen", laatsteActiviteitAt: uurTerug(10) }) }), nu).reden === "uitgenodigd");
 test("uitgenodigd, na 48 uur: geel", bolletje(basis({ status: "gepland", job: job({ status: "plannen", laatsteActiviteitAt: uurTerug(60) }) }), nu).reden === "uitgenodigd_lang");
-test("cv nog niet binnen", bolletje(basis({ job: job({ status: "wacht_cv", herinneringen: 1, velden: { ervaring: "x", functievraag: "x", diensten: "1-2", werkgebied: "x", talen: "NL", cvParaat: "nee" } as any }) }), nu).tekst === "Cv nog niet binnen");
+test("cv nog niet binnen", bolletje(basis({ job: job({ status: "wacht_cv", herinneringen: 1, velden: { ervaring: "x", functievraag: "x", diensten: "1-2", werkgebied: "x", werkmoment: "flexibel", startdatum: "direct", werkvorm: "hoofdbaan", talen: "NL", cvParaat: "nee" } as any }) }), nu).tekst === "Cv nog niet binnen");
 
-test("open onderwerpen: leeg gesprek", openOnderwerpen({}, { voornaam: "", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false }).vragen === 5);
-test("open onderwerpen: buiten de EU een vraag meer", openOnderwerpen({}, { voornaam: "", functie: "logistiek", nationalityZone: "NON_EU", hasCv: true }).vragen === 7);
-test("open onderwerpen: alleen cv", (() => { const o = openOnderwerpen({ ervaring: "x", functievraag: "x", diensten: "1-2", werkgebied: "x", talen: "NL" } as any, { voornaam: "", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false }); return o.vragen === 0 && o.cv; })());
+test("open onderwerpen: leeg gesprek", openOnderwerpen({}, { voornaam: "", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false }).vragen === 7);
+test("open onderwerpen: buiten de EU een vraag meer", openOnderwerpen({}, { voornaam: "", functie: "logistiek", nationalityZone: "NON_EU", hasCv: true }).vragen === 9);
+test("open onderwerpen: alleen cv", (() => { const o = openOnderwerpen({ ervaring: "x", functievraag: "x", diensten: "1-2", werkgebied: "x", werkmoment: "flexibel", startdatum: "direct", werkvorm: "hoofdbaan", talen: "NL" } as any, { voornaam: "", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false }); return o.vragen === 0 && o.cv; })());
 
 test("sinds", sindsTekst(uurTerug(0.05), nu) === "3 min" && sindsTekst(uurTerug(3), nu) === "3 uur" && sindsTekst(uurTerug(30), nu) === "1 dag" && sindsTekst(uurTerug(60), nu) === "2 dagen");
 test("planner", plannerLabel({ firstName: "Eva", lastName: "Jansen" }) === "Eva J." && plannerLabel(null) === "Niet toegewezen");

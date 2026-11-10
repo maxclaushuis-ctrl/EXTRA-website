@@ -87,6 +87,13 @@ export interface JobVelden {
   nlOfEn?: boolean;
   cvParaat?: "ja" | "nee";
   zoekt?: string;
+  /**
+   * Job 3.0 fase 1, stuurvelden (geen antwoorden van de kandidaat):
+   * herinneringenUit = na STOP en terugkomen gaan automatische herinneringen niet vanzelf weer aan;
+   * bestandVraag = pad van een bestand dat tijdens de vragen binnenkwam, Job vroeg of het het cv is.
+   */
+  herinneringenUit?: boolean;
+  bestandVraag?: string;
 }
 
 /** Wat Job vooraf weet uit de aanmelding. */
@@ -101,6 +108,8 @@ export interface JobContext {
   label?: "hotels" | "events" | "logistiek";
   /** Alleen als er een kennismaking gepland staat, in de taal van het gesprek. */
   afspraak?: { dag: string; tijd: string; wie: string };
+  /** Job 3.0 fase 1: STOP pauzeert, terugkomen alleen bij een duidelijke wens (schakelaar JOB_V3_STOP). */
+  stopV3?: boolean;
 }
 
 export interface JobState {
@@ -133,7 +142,11 @@ export type Actie =
   | { soort: "cv_mail" }
   | { soort: "profiel"; velden: JobVelden }
   | { soort: "verzetten" }
-  | { soort: "bevestigd" };
+  | { soort: "bevestigd" }
+  /** Na STOP wil de kandidaat duidelijk verder: WhatsApp-toestemming weer aan. */
+  | { soort: "hervat" }
+  /** Het bestand dat tijdens de vragen binnenkwam is volgens de kandidaat zijn cv. */
+  | { soort: "cv_bevestigd"; bijlage: string };
 
 export interface Resultaat {
   state: JobState;
@@ -267,7 +280,15 @@ const T = {
     verzetten: "Geen probleem. Kies hieronder een nieuw moment; je oude afspraak vervalt zodra je een nieuwe kiest.",
     verzettenWa: (link: string) => `Geen probleem. Kies een nieuw moment via ${link}. Je oude afspraak vervalt zodra je een nieuwe kiest.`,
     wachtPlanner: "Een collega van EXTRA kijkt naar je aanmelding en neemt contact met je op. Wil je iets doorgeven? Typ het gerust, dan leest een collega mee.",
-    gestopt: "Je krijgt geen berichten meer van Job. Toch verder? Stuur gerust een bericht.",
+    gestopt: "Je krijgt geen berichten meer van ons over deze aanmelding. Wil je later toch verder, stuur dan gerust een bericht.",
+    welkomTerug: "Fijn dat je er weer bent. Wil je verder met je aanmelding?",
+    welkomTerugKeuzes: ["Ja, verder", "Nee"],
+    welkomTerugKort: "Fijn dat je er weer bent!",
+    blijftGestopt: "Helemaal goed, je hoort niets meer van ons over deze aanmelding.",
+    spraak: "Spraakberichten kan ik helaas niet beluisteren. Wil je je antwoord even typen?",
+    bestandVraag: "Dank je, ik heb je bestand ontvangen. Is dit je cv?",
+    bestandKeuzes: ["Ja, mijn cv", "Nee"],
+    cvBinnenKort: "Top, je cv is binnen.",
     herinnering1: (v: string) => `Hoi ${v}, je was bijna klaar. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen. Zullen we verder?`,
     herinnering2: (v: string) => `Hoi ${v}, je aanmelding bij EXTRA staat nog open. Wil je verder? Stuur gerust een bericht, ik ga verder waar we gebleven waren.`,
     herinneringKeuzes: ["Verder", "Liever bellen"],
@@ -326,7 +347,15 @@ const T = {
     verzetten: "No problem. Choose a new moment below; your old appointment is cancelled as soon as you pick a new one.",
     verzettenWa: (link: string) => `No problem. Choose a new moment via ${link}. Your old appointment is cancelled as soon as you pick a new one.`,
     wachtPlanner: "A colleague from EXTRA is looking at your application and will get in touch. Anything to add? Just type it and a colleague will read along.",
-    gestopt: "You won't get any more messages from Job. Want to continue after all? Just send a message.",
+    gestopt: "You won't get any more messages from us about this application. Want to continue later after all? Just send a message.",
+    welkomTerug: "Good to have you back. Do you want to continue with your application?",
+    welkomTerugKeuzes: ["Yes, continue", "No"],
+    welkomTerugKort: "Good to have you back!",
+    blijftGestopt: "All good, you won't hear from us again about this application.",
+    spraak: "I can't listen to voice messages, unfortunately. Could you type your answer?",
+    bestandVraag: "Thanks, I've received your file. Is this your CV?",
+    bestandKeuzes: ["Yes, my CV", "No"],
+    cvBinnenKort: "Great, your CV is in.",
     herinnering1: (v: string) => `Hi ${v}, you were almost done. A few more quick questions, then you can book a meeting right away. Shall we continue?`,
     herinnering2: (v: string) => `Hi ${v}, your application at EXTRA is still open. Want to continue? Just send a message and I'll pick up where we left off.`,
     herinneringKeuzes: ["Continue", "Call me instead"],
@@ -542,6 +571,91 @@ export function verwerk(
   return { ...r, berichten: uit };
 }
 
+/** Welke keuze (index) het antwoord is, ongeacht hoofdletters en leestekens; anders -1. */
+function welkeKeuze(tekst: string | null | undefined, keuzes: string[]): number {
+  const n = (x: string) => x.trim().toLowerCase().replace(/[.!?,]+/g, "").replace(/\s+/g, " ");
+  const s = n(tekst || "");
+  return s ? keuzes.findIndex((k) => n(k) === s) : -1;
+}
+
+const WIL_VERDER = /^(ja|yes|yep|jazeker|graag|ja graag|ok|oke|oké|okay|prima|goed|verder|ga verder|doorgaan|continue|go on|start|opnieuw|weer verder)\b/i;
+/** Een duidelijke wens midden in een zin ("Sorry, was druk. Ik wil toch verder"). */
+const WIL_VERDER_ZIN = /\b(ik wil (toch |graag |nog )*(verder|door|doorgaan)|toch verder|wil (graag )?verder|ga (graag )?verder|i (still )?want to continue|i'?d like to continue|let'?s continue|continue after all|still interested|(toch|nog)( wel| steeds| altijd)* interesse|heb (toch |nog |wel )*interesse)\b/i;
+const WIL_NIET = /^(nee|no|nope|nee dank( je| u)?|no thanks|niet meer|laat maar|stop)\b/i;
+
+/**
+ * Na STOP schrijft de kandidaat zelf (Job 3.0, hoofdstuk 7):
+ * - antwoord op de knoppen "Ja, verder" of "Nee";
+ * - een antwoord op de open vraag of een duidelijke wens: verder waar het was,
+ *   automatische herinneringen blijven uit;
+ * - iets anders: Job reageert en vraagt of de kandidaat verder wil, maar hervat niets.
+ * Geeft null als het gesprek gewoon verder moet (het antwoord wordt dan normaal verwerkt).
+ */
+function naStop(state: JobState, ctx: JobContext, tekst: string | null | undefined, lezing: Lezing | null): Resultaat | null {
+  const t = T[state.taal];
+  const s = (tekst || "").trim();
+  const knop = welkeKeuze(s, [...T.nl.welkomTerugKeuzes, ...T.en.welkomTerugKeuzes]);
+  const hervat = () => {
+    state.status = "bezig";
+    state.velden.herinneringenUit = true;
+  };
+  const wilVerder = knop === 0 || knop === 2 || (knop < 0 && ((WIL_VERDER.test(s) && s.split(/\s+/).length <= 4) || WIL_VERDER_ZIN.test(s)));
+  const antwoord = knop < 0 && beantwoordtOpenVraag(state, ctx, lezing, s);
+  if (knop === 1 || knop === 3 || (knop < 0 && WIL_NIET.test(s) && !wilVerder && !antwoord)) {
+    return { state, berichten: [{ tekst: t.blijftGestopt }], acties: [] };
+  }
+  if (wilVerder) {
+    hervat();
+    const onderwerp = state.laatsteOnderwerp || volgendeOnderwerp(state.velden, ctx);
+    // Alle vragen waren al beantwoord: verder via de gewone stap (cv of planner).
+    if (!onderwerp) return null;
+    state.laatsteOnderwerp = onderwerp;
+    return { state, berichten: [{ tekst: t.welkomTerugKort, reactie: true }, vraag(onderwerp, state.taal, ctx, state.velden)], acties: [{ soort: "hervat" }] };
+  }
+  if (antwoord) {
+    hervat();
+    return null;
+  }
+  return { state, berichten: [{ tekst: t.welkomTerug, keuzes: t.welkomTerugKeuzes }], acties: [] };
+}
+
+const GROET_OF_VRAAG = /^(hallo|hoi|hey|hi|hello|dag|goedemorgen|goedemiddag|goedenavond|good (morning|afternoon|evening)|wie is dit|who is this)\b|\?\s*$/i;
+
+/** Vult deze lezing de vraag die openstond toen de kandidaat STOP stuurde? */
+function beantwoordtOpenVraag(state: JobState, ctx: JobContext, lezing: Lezing | null, tekst?: string | null): boolean {
+  if (!lezing || !state.laatsteOnderwerp || lezing.twijfel) return false;
+  // Een groet of een eigen vraag is geen antwoord, ook al neemt een open vraag (zoals hotels) elke tekst aan.
+  if (GROET_OF_VRAAG.test((tekst || "").trim())) return false;
+  if (!Object.keys(lezing.velden || {}).length) return false;
+  const na = volgendeOnderwerp(samenvoegen(state.velden, lezing.velden), ctx);
+  return na !== state.laatsteOnderwerp;
+}
+
+/**
+ * Een bestand kwam binnen terwijl Job nog vragen stelde (Job 3.0, fase 1): het
+ * telt niet vanzelf als cv. Job vraagt het één keer; het antwoord verwerkt verwerk().
+ */
+export function bestandTijdensVragen(vorige: JobState, bijlage: string, nu: Date): Resultaat {
+  const state: JobState = {
+    ...vorige,
+    velden: { ...vorige.velden, bestandVraag: bijlage },
+    laatsteInkomendAt: nu.toISOString(),
+    laatsteActiviteitAt: nu.toISOString(),
+    herinneringen: 0,
+    herinneringAt: null,
+  };
+  if (state.status === "geen_reactie") state.status = "bezig";
+  const t = T[state.taal];
+  return { state, berichten: [{ tekst: t.bestandVraag, keuzes: t.bestandKeuzes }], acties: [] };
+}
+
+/** Een spraakbericht: Job kan het niet beluisteren en vraagt om te typen; de open vraag blijft staan. */
+export function spraakBericht(vorige: JobState, nu: Date): Resultaat {
+  const state: JobState = { ...vorige, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null };
+  if (state.status === "geen_reactie") state.status = "bezig";
+  return { state, berichten: [{ tekst: T[state.taal].spraak }], acties: [] };
+}
+
 function verwerkLos(
   vorige: JobState,
   ctx: JobContext,
@@ -562,9 +676,31 @@ function verwerkLos(
   const acties: Actie[] = [];
   const t = () => T[state.taal];
 
-  if (state.status === "gestopt") {
-    // Wie na STOP weer schrijft, gaat verder waar hij was.
+  if (state.status === "gestopt" && ctx.stopV3) {
+    const na = naStop(state, ctx, invoer.tekst, lezing);
+    if (na) return na;
+    if (state.status !== "gestopt") acties.push({ soort: "hervat" });
+  } else if (state.status === "gestopt") {
+    // Oud gedrag (schakelaar uit): wie na STOP weer schrijft, gaat verder waar hij was.
     state.status = "bezig";
+  }
+
+  // Een bestand kwam tijdens de vragen binnen en Job vroeg of het het cv is.
+  if (state.velden.bestandVraag) {
+    const bijlage = state.velden.bestandVraag;
+    delete state.velden.bestandVraag;
+    const keuze = welkeKeuze(invoer.tekst, [...T.nl.bestandKeuzes, ...T.en.bestandKeuzes]);
+    if (keuze === 0 || keuze === 2) {
+      acties.push({ soort: "cv_bevestigd", bijlage });
+      ctx = { ...ctx, hasCv: true };
+      berichten.push({ tekst: t().cvBinnenKort, reactie: true });
+      lezing = null;
+    } else if (keuze === 1 || keuze === 3) {
+      lezing = null;
+    } else {
+      const noot = "Kandidaat stuurde tijdens de vragen een bestand en zei niet of het het cv is.";
+      if (!state.twijfels.includes(noot)) state.twijfels.push(noot);
+    }
   }
 
   const commando = herkenCommando(invoer.tekst, vorige.laatsteOnderwerp);
@@ -748,6 +884,7 @@ export type Herinnering = "eerste" | "tweede" | "rood";
 /** Welke herinnering is nu aan de beurt? Alleen voor gesprekken die op de kandidaat wachten. */
 export function herinneringNodig(s: JobState, nu: Date): Herinnering | null {
   if (s.status !== "bezig" && s.status !== "wacht_cv") return null;
+  if (s.velden?.herinneringenUit) return null;
   const sinds = (iso: string | null) => (iso ? nu.getTime() - new Date(iso).getTime() : 0);
   if (s.herinneringen === 0 && sinds(s.laatsteActiviteitAt) >= EERSTE_HERINNERING_NA) return "eerste";
   if (s.herinneringen === 1 && sinds(s.herinneringAt) >= TWEEDE_HERINNERING_NA) return "tweede";
@@ -760,7 +897,7 @@ export function herinneringNodig(s: JobState, nu: Date): Herinnering | null {
  * tweede na nog eens 48 uur. Daarna niets meer; Kandidaten kleurt het geel.
  */
 export function planHerinneringNodig(s: JobState, nu: Date): boolean {
-  if (s.status !== "plannen" || s.herinneringen >= 2) return false;
+  if (s.status !== "plannen" || s.herinneringen >= 2 || s.velden?.herinneringenUit) return false;
   const vanaf = s.herinneringen === 0 ? s.laatsteActiviteitAt : s.herinneringAt;
   const wacht = s.herinneringen === 0 ? EERSTE_HERINNERING_NA + 2 * 3600 * 1000 : TWEEDE_HERINNERING_NA;
   return !!vanaf && nu.getTime() - new Date(vanaf).getTime() >= wacht;

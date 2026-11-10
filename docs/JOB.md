@@ -34,6 +34,17 @@ testomgeving" (6 november 2026).
 | `JOB_WA_NUMMER` | Optioneel. Het nummer voor de wa.me-links in de mails. Zonder deze Secret haalt Job het nummer zelf op bij Meta. |
 | `JOB_WA_SJABLOON_START`, `_HERINNERING`, `_AFSPRAAK` | Optioneel. Alleen nodig als een sjabloon een andere naam heeft dan `job_start_v3`, `job_herinnering` of `job_afspraak`. Zonder deze Secrets gebruikt Job vanzelf het sjabloon zodra Meta het heeft goedgekeurd. |
 
+### Job 3.0, fase 1 (staan standaard aan)
+
+Elke stap kan los uit door het Secret op `0` te zetten; dan geldt weer het oude gedrag.
+
+| Secret | Wat het doet |
+| --- | --- |
+| `JOB_V3_PRIVACY` | BSN, IBAN, paspoort- of ID-nummers en adressen in een bericht worden vervangen door `[verwijderd]` voordat Job het bewaart of aan de AI geeft. Job vraagt zulke gegevens niet via de chat te sturen. Let op: de gewone WhatsApp-inbox bewaart het oorspronkelijke bericht nog wel. |
+| `JOB_V3_STOP` | Na STOP stuurt Job één bevestiging en pauzeert alles. Schrijft de kandidaat later zelf, dan gaat Job alleen verder bij een duidelijke wens (of een antwoord op de open vraag); anders vraagt hij of de kandidaat verder wil. Bij verder gaat de WhatsApp-toestemming weer aan, maar automatische herinneringen blijven uit. |
+| `JOB_V3_BIJLAGEN` | Een spraakbericht: Job vraagt om te typen. Een foto of document telt alleen als cv bij de cv-vraag; tijdens de andere vragen vraagt Job eerst "Is dit je cv?". |
+| `JOB_V3_TIMEOUT` | Job wacht hooguit 12 seconden op de AI; daarna leest de reserve-lezer het antwoord. |
+
 Zonder goedgekeurd startsjabloon praat Job via het webgesprek en krijgt de
 kandidaat de link per mail. Zonder herinneringssjabloon gaat de herinnering
 alleen per mail.
@@ -152,5 +163,8 @@ gaat verder waar hij was.
 
 - Job uitzetten: `JOB_ENABLED` uit de Secrets halen en opnieuw publiceren. Lopende
   webgesprekken blijven bereikbaar; er gaan geen herinneringen meer uit.
+- Een stap van Job 3.0 terugdraaien: zet `JOB_V3_PRIVACY`, `JOB_V3_STOP`,
+  `JOB_V3_BIJLAGEN` of `JOB_V3_TIMEOUT` op `0` en publiceer opnieuw. Er is
+  geen schemawijziging; gegevens blijven staan.
 - De tabellen laten staan. `migrations/manual/0030_job/down.sql` verwijdert ze,
   maar alleen met de hand en met akkoord van Max.

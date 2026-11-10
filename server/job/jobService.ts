@@ -25,7 +25,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
-import { planHerinneringNodig, planHerinnering,
+import { planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
   ervaringWerk, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
@@ -34,6 +34,7 @@ import {
   type Bezet, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
 import { lees } from "./jobAi";
+import { filterPrivacy, privacyMelding } from "@shared/jobPrivacy";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
@@ -41,6 +42,14 @@ import { stuurBevestigingsmail, stuurHerinneringsmail, stuurStartmail, stuurCvMa
 
 export function jobAan(): boolean {
   return process.env.JOB_ENABLED === "1";
+}
+/**
+ * Job 3.0 fase 1: elke stap heeft een eigen schakelaar en staat standaard aan.
+ * Terugdraaien zonder nieuwe publicatie: zet het Secret op 0, bijvoorbeeld
+ * JOB_V3_PRIVACY=0, JOB_V3_STOP=0, JOB_V3_BIJLAGEN=0 of JOB_V3_TIMEOUT=0.
+ */
+export function v3(stap: "PRIVACY" | "STOP" | "BIJLAGEN" | "TIMEOUT"): boolean {
+  return process.env[`JOB_V3_${stap}`] !== "0";
 }
 export function testomgeving(): boolean {
   return process.env.TESTOMGEVING === "1";
@@ -164,6 +173,14 @@ export async function gesprekVoorNummer(nummer: string, candidateId: number | nu
         .where(and(inArray(jobGesprekken.candidateId, ids), sql`${jobGesprekken.status} <> 'gestopt'`))
         .orderBy(desc(jobGesprekken.laatsteActiviteitAt)).limit(1);
       if (g) return g;
+      // Job 3.0: wie na STOP terugschrijft, komt bij zijn gestopte gesprek uit, ook als
+      // de WhatsApp-matcher een andere kandidaat met hetzelfde nummer koos.
+      if (v3("STOP")) {
+        const [gestopt] = await db.select().from(jobGesprekken)
+          .where(inArray(jobGesprekken.candidateId, ids))
+          .orderBy(desc(jobGesprekken.laatsteActiviteitAt)).limit(1);
+        if (gestopt) return gestopt;
+      }
     }
   }
   return candidateId ? gesprekVanKandidaat(candidateId) : null;
@@ -211,6 +228,7 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
     nationalityZone: (c.nationalityZone as any) || null,
     hasCv: !!c.hasCv,
     afspraak: a ? { dag: dagTekst(String(a.datum), taal), tijd: a.tijd, wie: a.interviewer } : undefined,
+    stopV3: v3("STOP"),
   };
 }
 
@@ -221,8 +239,8 @@ function waNummer(c: { phone: string | null; whatsappNummer?: string | null }): 
 
 // ─── Berichten opslaan en versturen ──────────────────────────────────────────
 
-async function bewaarInkomend(g: JobGesprek, tekst: string, bijlage?: string | null, kanaal?: string) {
-  await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "in", tekst, bijlage: bijlage || null, kanaal: kanaal || g.kanaal });
+async function bewaarInkomend(g: JobGesprek, tekst: string, bijlage?: string | null, kanaal?: string, extra?: string | null) {
+  await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "in", tekst, bijlage: bijlage || null, kanaal: kanaal || g.kanaal, extra: extra || null });
 }
 
 /** Tekst voor WhatsApp: links voor cv en planning erbij; keuzes genummerd als er geen knoppen komen. */
@@ -304,7 +322,11 @@ function binnenVenster(s: JobState, nu: Date): boolean {
   return !!s.laatsteInkomendAt && nu.getTime() - new Date(s.laatsteInkomendAt).getTime() < 23.5 * 60 * 60 * 1000;
 }
 
-async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[], nu: Date) {
+/**
+ * ookNaStop: de kandidaat schreef zelf na STOP. Job mag dan antwoorden (binnen
+ * het venster van 24 uur), ook al staat de WhatsApp-toestemming nog op opt_out.
+ */
+async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[], nu: Date, ookNaStop = false) {
   const c = g.kanaal === "whatsapp" ? await kandidaat(g.candidateId) : null;
   for (const b of berichten) {
     if (!b.tekst) continue;
@@ -312,7 +334,8 @@ async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[
       gesprekId: g.id, richting: "uit", tekst: b.tekst, keuzes: b.keuzes || null,
       extra: b.planning ? "planning" : b.cvUpload ? "cv_upload" : null, kanaal: g.kanaal,
     });
-    if (c?.phone && c.whatsappOptInStatus === "actief" && binnenVenster(s, nu)) {
+    const magSturen = c?.whatsappOptInStatus === "actief" || (ookNaStop && c?.whatsappOptInStatus === "opt_out");
+    if (c?.phone && magSturen && binnenVenster(s, nu)) {
       await stuurJobBericht(g.candidateId, waNummer(c), b, g.token, s.taal);
     }
   }
@@ -348,6 +371,18 @@ async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
       if (Object.keys(velden).length) {
         try { await storage.updateCandidate(g.candidateId, velden as any); } catch (e: any) { console.warn("[Job] profiel bijwerken mislukt:", e?.message); }
       }
+    }
+    if (a.soort === "hervat") {
+      // De kandidaat wil na STOP duidelijk verder: WhatsApp-toestemming weer aan, met reden.
+      try {
+        const { setOptInStatus } = await import("../whatsapp/optInService");
+        await setOptInStatus("kandidaat", g.candidateId, "actief", "Kandidaat wil na STOP verder met Job");
+      } catch (e: any) { console.warn("[Job] toestemming weer aanzetten mislukt:", e?.message); }
+    }
+    if (a.soort === "cv_bevestigd") {
+      try { await storage.updateCandidate(g.candidateId, { hasCv: true, cvFilename: a.bijlage } as any); } catch (e: any) { console.warn("[Job] cv bijwerken mislukt:", e?.message); }
+      await db.update(jobBerichten).set({ extra: null })
+        .where(and(eq(jobBerichten.gesprekId, g.id), eq(jobBerichten.extra, "bestand"), eq(jobBerichten.bijlage, a.bijlage)));
     }
     if (a.soort === "bevestigd") {
       // Vinkje "Kandidaat heeft bevestigd" in het weekoverzicht van Sollicitanten.
@@ -439,6 +474,16 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
   let s = naarState(g);
   // Een genummerd antwoord op WhatsApp ("2") wordt de tekst van die keuze.
   let tekst = (invoer.tekst || "").slice(0, 2000);
+  // Job 3.0: BSN, IBAN, documentnummers en adressen komen niet in de opslag van Job en niet bij de AI.
+  let privacy: ReturnType<typeof filterPrivacy> | null = null;
+  if (tekst && v3("PRIVACY")) {
+    const f = filterPrivacy(tekst);
+    if (f.gevonden.length) {
+      privacy = f;
+      tekst = f.tekst;
+      console.log(`[Job] privacyfilter: ${f.gevonden.join(", ")} weggelaten (gesprek ${g.id})`);
+    }
+  }
   if (tekst) {
     const [vorig] = await db.select().from(jobBerichten)
       .where(and(eq(jobBerichten.gesprekId, g.id), eq(jobBerichten.richting, "uit")))
@@ -456,15 +501,24 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; cv
   if (invoer.cvOntvangen) ctx = { ...ctx, hasCv: true };
 
   const wachtOpKandidaat = ["bezig", "wacht_cv", "geen_reactie", "gestopt"].includes(s.status);
-  const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
-  const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal) : null;
-  const r = verwerk(s, ctx, { tekst, cvOntvangen: invoer.cvOntvangen }, lezing, nu);
+  const wasGestopt = s.status === "gestopt";
+  let r: ReturnType<typeof verwerk>;
+  if (privacy?.leeg) {
+    // Alleen gevoelige gegevens: niets uitlezen, de open vraag blijft staan.
+    const herhaal = s.status === "bezig" && s.laatsteOnderwerp ? [vraag(s.laatsteOnderwerp, s.taal, ctx, s.velden)] : [];
+    r = { state: { ...s, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null }, berichten: herhaal, acties: [] };
+  } else {
+    const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
+    const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal) : null;
+    r = verwerk(s, ctx, { tekst, cvOntvangen: invoer.cvOntvangen }, lezing, nu);
+  }
+  if (privacy) r = { ...r, berichten: [{ tekst: privacyMelding(r.state.taal) }, ...r.berichten] };
   s = r.state;
 
   const klaar = ["plannen", "planner", "gepland"].includes(s.status) && !g.afgerondAt;
   await bewaarState(g.id, s, klaar ? { afgerondAt: nu } : {});
   await voerUit(g, s, r.acties);
-  await bewaarEnVerstuur(g, s, r.berichten, nu);
+  await bewaarEnVerstuur(g, s, r.berichten, nu, wasGestopt && !!tekst && !!ctx.stopV3);
 
   // Twijfel of geen planner nodig: de bevestigingsmail met "een collega bekijkt je aanmelding" volgt alleen bij planner.
   return {
@@ -520,12 +574,58 @@ export async function uitnodigingNaCheck(candidateId: number): Promise<void> {
   }
 }
 
-/** STOP via WhatsApp of de afmeldlink in de mail: geen berichten meer van Job. */
-export async function stopGesprek(candidateId: number) {
+/**
+ * STOP via WhatsApp of de afmeldlink in de mail: geen berichten meer van Job.
+ * Job 3.0: na STOP via WhatsApp stuurt Job één bevestiging (een antwoord op het
+ * bericht van de kandidaat zelf, dus binnen het venster van 24 uur).
+ */
+export async function stopGesprek(candidateId: number, bron: "whatsapp" | "web" | "mail" = "web") {
   const g = await gesprekVanKandidaat(candidateId);
-  if (!g || g.status === "gepland") return;
-  const s = { ...naarState(g), status: "gestopt" as JobStatus };
+  if (!g || g.status === "gepland" || g.status === "gestopt") return;
+  const nu = new Date();
+  const s: JobState = { ...naarState(g), status: "gestopt" as JobStatus, ...(bron === "whatsapp" ? { laatsteInkomendAt: nu.toISOString() } : {}) };
   await bewaarState(g.id, s);
+  if (bron !== "whatsapp" || !v3("STOP")) return;
+  await bewaarInkomend(g, "STOP", null, "whatsapp");
+  const tekst = teksten(s.taal).gestopt;
+  await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst, kanaal: "whatsapp" });
+  const c = await kandidaat(candidateId);
+  if (c && waNummer(c)) await verstuurWhatsappTekst(candidateId, waNummer(c), tekst);
+}
+
+/**
+ * Een spraakbericht via WhatsApp (Job 3.0): Job vraagt vriendelijk om te typen.
+ * Geeft false als Job niet reageert (geen lopend gesprek of schakelaar uit).
+ */
+export async function spraakOntvangen(candidateId: number): Promise<boolean> {
+  if (!v3("BIJLAGEN")) return false;
+  const g = await gesprekVanKandidaat(candidateId);
+  if (!g || !["bezig", "wacht_cv", "geen_reactie"].includes(g.status)) return false;
+  const nu = new Date();
+  await bewaarInkomend(g, g.taal === "en" ? "[Voice message]" : "[Spraakbericht]", null, "whatsapp");
+  const r = spraakBericht(naarState(g), nu);
+  await bewaarState(g.id, r.state);
+  await bewaarEnVerstuur({ ...g, kanaal: "whatsapp" }, r.state, r.berichten, nu);
+  return true;
+}
+
+/**
+ * Een foto of document via WhatsApp. Job 3.0: alleen als Job om het cv vroeg
+ * (of het gesprek al op cv-controle staat) telt het als cv. Komt het tijdens de
+ * andere vragen binnen, dan vraagt Job één keer of het het cv is.
+ * Geeft "cv" (de route werkt de kandidaat bij), "gevraagd" of null (Job doet niets).
+ */
+export async function bijlageOntvangen(candidateId: number, bijlage: string): Promise<"cv" | "gevraagd" | null> {
+  const g = await gesprekVanKandidaat(candidateId);
+  if (!g || !["bezig", "wacht_cv", "geen_reactie", "cv_controle"].includes(g.status)) return null;
+  const cvVraag = g.status === "wacht_cv" || g.status === "cv_controle" || g.laatsteOnderwerp === "cv";
+  if (!v3("BIJLAGEN") || cvVraag) return "cv";
+  const nu = new Date();
+  await bewaarInkomend(g, g.taal === "en" ? "File sent" : "Bestand gestuurd", bijlage, "whatsapp", "bestand");
+  const r = bestandTijdensVragen(naarState(g), bijlage, nu);
+  await bewaarState(g.id, r.state);
+  await bewaarEnVerstuur({ ...g, kanaal: "whatsapp" }, r.state, r.berichten, nu);
+  return "gevraagd";
 }
 
 // ─── Inplannen ───────────────────────────────────────────────────────────────

@@ -376,6 +376,12 @@ export async function processIncomingPayload(
                 });
               }
 
+              // Job 3.0: een spraakbericht van een kandidaat met een lopend gesprek; Job vraagt om te typen.
+              if (type === 'audio' && jobInbound && match.candidateId) {
+                await jobInbound({ phoneNumber: normalizedFrom, candidateId: match.candidateId, type, body: body_ })
+                  .catch((e: any) => { console.error(`${logPrefix} Job (spraak) error:`, e?.message); return false; });
+              }
+
               // Job: een document of foto kan het cv zijn.
               if (opgeslagenMedia && jobInbound && match.candidateId && (type === 'document' || type === 'image')) {
                 await jobInbound({ phoneNumber: normalizedFrom, candidateId: match.candidateId, type, body: body_, media: opgeslagenMedia })

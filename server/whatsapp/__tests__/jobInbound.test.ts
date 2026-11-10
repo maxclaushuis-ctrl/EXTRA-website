@@ -8,6 +8,7 @@
  *  - Een kandidaat zonder gesprek met Job merkt niets: de auto-reply blijft.
  *  - Een knop uit een sjabloon ("Ik kom") komt als tekst bij Job aan.
  *  - Een document gaat als cv naar Job; STOP zet Job stil.
+ *  - Een spraakbericht gaat naar Job (Job 3.0), die vraagt om te typen.
  */
 import { processIncomingPayload, antwoordVoorJob, type InboundProcessorDeps, type JobInboundArgs } from '../inboundProcessor';
 import { normalizePhone } from '../phone';
@@ -79,6 +80,17 @@ async function main() {
     await wacht();
     test('STOP: opt-out én Job stil', log.stop === 1 && log.job.length === 1 && log.job[0].type === 'stop');
     test('STOP: geen auto-reply', log.autoReply === 0);
+  }
+  {
+    const { d, log } = deps(true);
+    await processIncomingPayload(payload({ type: 'audio', audio: { id: 'MEDIA2', mime_type: 'audio/ogg' } }), d);
+    test('spraakbericht gaat als audio naar Job (Job vraagt om te typen)', log.job.length === 1 && log.job[0].type === 'audio' && !log.job[0].media);
+    test('spraakbericht: geen auto-reply', log.autoReply === 0);
+  }
+  {
+    const { d, log } = deps(false);
+    await processIncomingPayload(payload({ type: 'audio', audio: { id: 'MEDIA3', mime_type: 'audio/ogg' } }), d);
+    test('spraakbericht zonder gesprek met Job: niets verandert', log.job.length === 1 && log.autoReply === 0);
   }
   test('antwoordVoorJob: tekst', antwoordVoorJob('text', 'hoi', {}) === 'hoi');
   test('antwoordVoorJob: interactieve knop', antwoordVoorJob('interactive', '', { interactive: { button_reply: { title: 'Verzetten' } } }) === 'Verzetten');

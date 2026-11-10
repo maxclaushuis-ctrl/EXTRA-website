@@ -8538,7 +8538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gesprekRijen = await db.select({
         candidateId: jobGesprekken.candidateId, status: jobGesprekken.status, laatsteOnderwerp: jobGesprekken.laatsteOnderwerp, gestartAt: jobGesprekken.gestartAt,
         eersteAntwoordAt: sql<string | null>`(select min(b.aangemaakt_at) from job_berichten b where b.gesprek_id = ${jobGesprekken.id} and b.richting = 'in')`,
-        cvAt: sql<string | null>`(select min(b.aangemaakt_at) from job_berichten b where b.gesprek_id = ${jobGesprekken.id} and b.richting = 'in' and (b.bijlage is not null or b.tekst in ('Cv gestuurd', 'CV sent')))`,
+        cvAt: sql<string | null>`(select min(b.aangemaakt_at) from job_berichten b where b.gesprek_id = ${jobGesprekken.id} and b.richting = 'in' and ((b.bijlage is not null and coalesce(b.extra, '') <> 'bestand') or b.tekst in ('Cv gestuurd', 'CV sent')))`,
       }).from(jobGesprekken);
 
       const filterFrom = from ? new Date(from as string) : null;
@@ -12988,13 +12988,19 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
       if (!g) return false;
       const candidateId = g.candidateId;
       if (args.type === 'stop') {
-        await job.stopGesprek(candidateId);
+        await job.stopGesprek(candidateId, 'whatsapp');
         return true;
       }
+      // Job 3.0: een spraakbericht kan Job niet beluisteren; hij vraagt om te typen.
+      if (args.type === 'audio') return await job.spraakOntvangen(candidateId);
       if (args.media) {
-        if (!['bezig', 'wacht_cv', 'geen_reactie', 'cv_controle'].includes(g.status)) return false;
-        await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: args.media.objectPath } as any);
-        await job.cvOntvangen(candidateId, args.media.objectPath, 'whatsapp');
+        // Job 3.0: alleen bij de cv-vraag telt een bestand als cv; tijdens de andere vragen vraagt Job het eerst.
+        const uitkomst = await job.bijlageOntvangen(candidateId, args.media.objectPath);
+        if (!uitkomst) return false;
+        if (uitkomst === 'cv') {
+          await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: args.media.objectPath } as any);
+          await job.cvOntvangen(candidateId, args.media.objectPath, 'whatsapp');
+        }
         return true;
       }
       if (args.type !== 'text' || !args.body) return false;

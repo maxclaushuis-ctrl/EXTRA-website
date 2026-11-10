@@ -61,6 +61,9 @@ ${isHotelPad(ctx)
 Antwoord uitsluitend met JSON: {"velden": {...}, "taal": "...", "twijfel": null, "ack": "", "vervolgvraag": null}`;
 }
 
+/** Hoe lang Job hooguit op de AI wacht (Job 3.0, fase 1). */
+export const AI_TIJDSLIMIET_MS = 12_000;
+
 export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx: JobContext, bekend: JobVelden, taal: JobTaal): Promise<Lezing | null> {
   if (!aiBeschikbaar()) return null;
   try {
@@ -78,11 +81,22 @@ export async function leesMetAi(tekst: string, onderwerp: Onderwerp | null, ctx:
         { role: "user", content: tekst.slice(0, 2000) },
       ],
     };
+    // Job 3.0: na 12 seconden (beide pogingen samen) neemt de reserve-lezer het over,
+    // zodat de kandidaat nooit lang op een antwoord wacht. Uit met JOB_V3_TIMEOUT=0.
+    const metLimiet = process.env.JOB_V3_TIMEOUT !== "0";
+    const stop = new AbortController();
+    const wekker = metLimiet ? setTimeout(() => stop.abort(), AI_TIJDSLIMIET_MS) : null;
+    const opties: any = metLimiet ? { signal: stop.signal, maxRetries: 0 } : undefined;
     let completion: any;
     try {
-      completion = await client.chat.completions.create({ ...args, response_format: { type: "json_object" } });
-    } catch {
-      completion = await client.chat.completions.create(args);
+      try {
+        completion = await client.chat.completions.create({ ...args, response_format: { type: "json_object" } }, opties);
+      } catch (e) {
+        if (stop.signal.aborted) throw e;
+        completion = await client.chat.completions.create(args, opties);
+      }
+    } finally {
+      if (wekker) clearTimeout(wekker);
     }
     const inhoud: string = completion?.choices?.[0]?.message?.content || "";
     const json = inhoud.slice(inhoud.indexOf("{"), inhoud.lastIndexOf("}") + 1);
