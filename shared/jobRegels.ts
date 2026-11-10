@@ -44,6 +44,7 @@ export type Onderwerp =
   | "werkgebied"
   | "hotels"       // hotelfuncties: bij welke hotels (akkoord Max 9 nov 2026)
   | "sterren"      // hotelfuncties: hoeveel sterren had het beste hotel
+  | "restaurant"   // keuken en bediening via Hotels, alleen restaurantervaring: wat voor restaurant (akkoord Max 10 nov 2026)
   | "werkmoment"
   | "startdatum"
   | "werkvorm"     // naast studie, naast ander werk of hoofdbaan (akkoord Max 9 nov 2026)
@@ -76,6 +77,9 @@ export interface JobVelden {
   sterren?: Sterren;
   /** Hotelfuncties: de kandidaat werkte nog niet in een hotel; dan geen vraag naar sterren. */
   geenHotel?: boolean;
+  /** Keuken en bediening via Hotels: de ervaring lag in restaurants; dan vraagt Job wat voor restaurant. */
+  restaurantWerk?: boolean;
+  restaurantSoort?: string;
   /** Hotelfuncties: verduidelijkende vraag van de AI als de ervaring niet duidelijk bij de functie past. */
   verduidelijking?: string;
   /** Wanneer iemand kan werken (knoppen in het gesprek). */
@@ -253,6 +257,9 @@ const T = {
     disclaimer: "Je praat met Job, een AI. Typ MENS voor een collega of ENGLISH om te wisselen.",
     ervaring: (functie: string) => `Vertel eens: hoeveel jaar ervaring heb je ${ervaringWerk(functie, "nl")} tot nu toe?`,
     hotels: "Bij welke hotels heb je gewerkt?",
+    hotelsOfRestaurants: "Waar heb je gewerkt? Noem gerust de restaurants of hotels.",
+    restaurant: "Wat voor restaurant was dat?",
+    restaurantKeuzes: ["Fine dining", "À la carte", "Lunch of café"],
     sterren: "Hoeveel sterren had het beste hotel waar je werkte?",
     sterrenKeuzes: ["3 of minder", "4 sterren", "5 sterren"],
     specialisatie: "Dan zet ik evenementen en banqueting erbij als specialisatie. Goed?",
@@ -324,6 +331,9 @@ const T = {
     disclaimer: "You're chatting with Job, an AI. Type HUMAN for a colleague or NEDERLANDS to switch.",
     ervaring: (functie: string) => `Tell me: how many years of experience do you have ${ervaringWerk(functie, "en")} so far?`,
     hotels: "Which hotels have you worked at?",
+    hotelsOfRestaurants: "Where did you work? Feel free to name the restaurants or hotels.",
+    restaurant: "What kind of restaurant was it?",
+    restaurantKeuzes: ["Fine dining", "À la carte", "Lunch or café"],
     sterren: "How many stars did the best hotel you worked at have?",
     sterrenKeuzes: ["3 or fewer", "4 stars", "5 stars"],
     specialisatie: "Shall I add events and banqueting as a specialisation?",
@@ -406,6 +416,7 @@ export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | nu
       if (v.verduidelijking && v.functievraag === undefined) return "functievraag";
       if (!v.hotels) return "hotels";
       if (!v.sterren && !v.geenHotel) return "sterren";
+      if (v.geenHotel && v.restaurantWerk && !v.restaurantSoort) return "restaurant";
     }
   } else if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) return "functievraag";
   if (ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) return "specialisatie";
@@ -433,7 +444,8 @@ export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, veld
     case "geldigheid": return { tekst: t.geldigheid };
     case "diensten": return { tekst: t.diensten, keuzes: t.dienstenKeuzes };
     case "werkgebied": return { tekst: t.werkgebied, keuzes: t.werkgebiedKeuzes };
-    case "hotels": return { tekst: t.hotels };
+    case "hotels": return { tekst: restaurantGenoemd(velden?.ervaring || "") ? t.hotelsOfRestaurants : t.hotels };
+    case "restaurant": return { tekst: t.restaurant, keuzes: t.restaurantKeuzes };
     case "sterren": return { tekst: t.sterren, keuzes: t.sterrenKeuzes };
     case "werkmoment": return { tekst: t.werkmoment, keuzes: t.werkmomentKeuzes };
     case "startdatum": return { tekst: t.startdatum, keuzes: t.startdatumKeuzes };
@@ -462,6 +474,7 @@ export function openOnderwerpen(v: JobVelden, ctx: JobContext): { vragen: number
     else if (o === "werkgebied") kopie.werkgebied = "x";
     else if (o === "hotels") kopie.hotels = "x";
     else if (o === "sterren") kopie.sterren = "4";
+    else if (o === "restaurant") kopie.restaurantSoort = "x";
     else if (o === "werkmoment") kopie.werkmoment = "flexibel";
     else if (o === "startdatum") kopie.startdatum = "direct";
     else if (o === "werkvorm") kopie.werkvorm = "hoofdbaan";
@@ -579,6 +592,10 @@ const GEEN_HOTEL = /^\s*(nee|no|nope|geen|nooit|never|nergens)\b|nog (niet|nooit
 
 /** Alleen ander werk genoemd (restaurant, café, catering...) en geen hotel. */
 const ANDER_WERK = /\b(restaurants?|caf[eé]s?|eetcaf[eé]|brasserie|bistro|bar|bars|catering|cateraar|lunchroom|kantine|strandtent|snackbar|pizzeria|festivals?|evenementen|events?|zzp|zelfstandig|kantoren|ziekenhuis|zorg|winkel|supermarkt)\b/i;
+/** Noemt de tekst restaurantwerk (en geen hotel)? */
+export function restaurantGenoemd(tekst: string): boolean {
+  return /\b(restaurants?|brasserie|bistro|eetcaf[eé]|pizzeria|trattoria)\b/i.test(tekst) && !/hotel/i.test(tekst);
+}
 /** Zegt het antwoord op de hotelvraag dat iemand (nog) niet in een hotel werkte? */
 export function geenHotelervaring(tekst: string): boolean {
   if (GEEN_HOTEL.test(tekst)) return true;
@@ -904,7 +921,10 @@ function verwerkLos(
     if (!verward && vorigOnderwerp === "hotels" && geenHotelervaring(invoer.tekst || "")) {
       state.velden.hotels = "nog niet in een hotel gewerkt";
       state.velden.geenHotel = true;
+      // Keuken of bediening en restaurantervaring: Job vraagt wat voor restaurant, in plaats van de sterren.
+      if ((ctx.functie === "chef" || ctx.functie === "horecamedewerker") && restaurantGenoemd(invoer.tekst || "")) state.velden.restaurantWerk = true;
     }
+    if (!verward && vorigOnderwerp === "restaurant" && !state.velden.restaurantSoort) state.velden.restaurantSoort = (invoer.tekst || "").trim().slice(0, 100) || "-";
     if (!verward && vorigOnderwerp === "hotels" && !state.velden.hotels) state.velden.hotels = (invoer.tekst || "").trim().slice(0, 300) || "-";
     if (!verward && vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
       state.velden.functievraag = (invoer.tekst || "").trim() || "-";

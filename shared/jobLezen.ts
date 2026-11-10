@@ -174,6 +174,9 @@ export function reserveLezing(tekst: string, onderwerp: Onderwerp | null): Lezin
     case "hotels":
       velden.hotels = s.slice(0, 300);
       break;
+    case "restaurant":
+      velden.restaurantSoort = s.slice(0, 100);
+      break;
     case "sterren": {
       const st = sterren(s);
       if (st) velden.sterren = st;

@@ -212,5 +212,27 @@ for (const k of ["gestopt", "welkomTerug", "welkomTerugKort", "blijftGestopt", "
   test("Restaurant in een hotel: de sterrenvraag blijft", beide.state.laatsteOnderwerp === "sterren", String(beide.state.laatsteOnderwerp));
 }
 
+// ─── Keuken via Hotels met restaurantervaring: de vraag past zich aan (Max, 10 nov) ─
+{
+  const c: JobContext = { voornaam: "Max", functie: "chef", label: "hotels", nationalityZone: "NL", hasCv: false, stopV3: true };
+  let r = start(c, "nl", NU);
+  r = antwoord(r.state, c, "Ik heb 9 jaar keukenervaring");
+  test("Keuken via Hotels: de hotelvraag", r.berichten.some((b) => b.tekst.includes(nl.hotels)), r.berichten.map((b) => b.tekst).join(" | "));
+  const x = antwoord(r.state, c, "Ik heb alleen in restaurants gewerkt", 2);
+  test("Alleen restaurants: geen sterren maar wat voor restaurant", x.state.laatsteOnderwerp === "restaurant" && x.berichten.some((b) => b.tekst === nl.restaurant && JSON.stringify(b.keuzes) === JSON.stringify(nl.restaurantKeuzes)), String(x.state.laatsteOnderwerp));
+  const y = antwoord(x.state, c, "Fine dining", 3);
+  test("Na het soort restaurant door naar de volgende vraag", y.state.velden.restaurantSoort === "Fine dining" && y.state.laatsteOnderwerp !== "restaurant" && y.state.laatsteOnderwerp !== "sterren", String(y.state.laatsteOnderwerp));
+  // Noemt de ervaring al restaurants, dan vraagt Job meteen breder
+  let z = start(c, "nl", NU);
+  z = antwoord(z.state, c, "9 jaar in restaurants, als souschef");
+  test("Ervaring in restaurants: 'Waar heb je gewerkt?' in plaats van alleen hotels", z.berichten.some((b) => b.tekst.includes(nl.hotelsOfRestaurants)), z.berichten.map((b) => b.tekst).join(" | "));
+  // Housekeeping zonder hotelervaring krijgt geen restaurantvraag
+  const hk: JobContext = { ...c, functie: "housekeeping" };
+  let h = start(hk, "nl", NU);
+  h = antwoord(h.state, hk, "2 jaar schoonmaak");
+  const h2 = antwoord(h.state, hk, "Alleen in restaurants schoongemaakt", 2);
+  test("Housekeeping: geen restaurantvraag en geen sterren", h2.state.laatsteOnderwerp !== "restaurant" && h2.state.laatsteOnderwerp !== "sterren", String(h2.state.laatsteOnderwerp));
+}
+
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);
