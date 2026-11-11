@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { BRANCHE, DAGDELEN, DAGEN, DAGEN_KORT, DISC, type Cel, type DiscLetter, type Raster } from "@shared/sollicitantRegels";
 import {
   AANKONDIGING, APP_UITLEG, BINDING, CONTACT, ERVARING_DUUR, EXTRAATJE, HOOFDSTUKKEN, KANALEN, KEUZEFACTOREN, KLEDING, KLEUR_WERK,
-  LAAT_THUIS, LASTMINUTE, LOCATIES, MAX_KEUZES, PATROON, PRIORITEITEN, PROFIEL_STATUS, SAMENWERKEN, START_HULP, TAAKNIVEAUS,
+  CERTIFICATEN, LAAT_THUIS, LASTMINUTE, LOCATIES, MAX_KEUZES, PATROON, PRIORITEITEN, PROFIEL_STATUS, SAMENWERKEN, START_HULP, TAAKNIVEAUS,
   TAALNIVEAUS, TALEN_MEER, TALEN_VAST, UITBETALING, VERVOER, WERKRECHT,
   datumInWoorden, ervaringsvraag, extraTakenVoor, functievragen, gelijk, isV2, kledingTekst, openPunten, rasterTelling3, samenvattingRegels, startIntake,
   takenVoor, voorbereiding, werkvoorkeuren,
@@ -595,7 +595,7 @@ function Werkvoorkeuren({ i, zet, voornaam }: Deel) {
   const wissel = (l: DiscLetter) => zetWp({ kleuren: kleuren.includes(l) ? kleuren.filter((x) => x !== l) : kleuren.length < 2 ? [...kleuren, l] : kleuren, status: wp.status || "voorlopig" });
   return <>
     <Vraag nr={1} tekst="Wat helpt jou om op een nieuwe plek lekker te starten?" hint="Tik aan wat je hoort. Wie duidelijke uitleg fijn vindt, is daarmee niet minder zelfstandig.">
-      <Chips opties={START_HULP} waarde={i.start_hulp || []} zet={(w) => zet({ start_hulp: w })} />
+      <Chips opties={[...START_HULP, ...(i.start_hulp || []).filter((x) => !START_HULP.includes(x))]} waarde={i.start_hulp || []} zet={(w) => zet({ start_hulp: w })} />
       <Tekst label="Toelichting" waarde={i.start_toelichting} zet={(t) => zet({ start_toelichting: t })} plek="In de woorden van de kandidaat" />
     </Vraag>
     <Vraag nr={2} tekst="Werk je liever op vertrouwde plekken, of vind je afwisseling juist leuk?">
@@ -668,14 +668,24 @@ function Praktisch({ i, zet, data, f, vb, afnemer, ...rest }: Deel & { afnemer: 
         <Keuze naam="Werkkleding" opties={KLEDING} waarde={i.kleding} zet={(w) => zet({ kleding: w })} />
       </Vraag>
     )}
-    <Vraag nr={++nr} tekst="Heb je certificaten die voor het werk tellen?" optie hint="Bijvoorbeeld EHBO, BHV, HACCP, VCA of een heftruckcertificaat. Met de datum tot wanneer het geldig is.">
-      {cert.map((c, n) => (
-        <div className="i2-rij" key={n}>
-          <input className="iv-invoer" style={{ marginTop: 0 }} value={c.naam} onChange={(e) => zet({ certificaten: cert.map((x, y) => (y === n ? { ...x, naam: e.target.value } : x)) })} placeholder="Certificaat" aria-label="Certificaat" />
-          <input className="iv-invoer" style={{ marginTop: 0, maxWidth: 190 }} type="date" value={c.geldig_tot || ""} onChange={(e) => zet({ certificaten: cert.map((x, y) => (y === n ? { ...x, geldig_tot: e.target.value } : x)) })} aria-label="Geldig tot" />
-          <button className="i2-weg" onClick={() => zet({ certificaten: cert.filter((_, y) => y !== n) })} aria-label="Certificaat weghalen">×</button>
-        </div>
-      ))}
+    <Vraag nr={++nr} tekst="Heb je certificaten die voor het werk tellen?" optie hint="Kies uit de lijst, of kies Anders en typ de naam. Met de datum tot wanneer het geldig is.">
+      {cert.map((c, n) => {
+        const zetC = (patch: Partial<typeof c>) => zet({ certificaten: cert.map((x, y) => (y === n ? { ...x, ...patch } : x)) });
+        const keuze = CERTIFICATEN.includes(c.naam) && !c.anders ? c.naam : c.anders || c.naam ? "anders" : "";
+        return (
+          <div className="i2-rij" key={n}>
+            <select className="iv-invoer" style={{ marginTop: 0 }} value={keuze} aria-label="Certificaat"
+              onChange={(e) => (e.target.value === "anders" ? zetC({ naam: CERTIFICATEN.includes(c.naam) ? "" : c.naam, anders: true }) : zetC({ naam: e.target.value, anders: undefined }))}>
+              <option value="">Kies een certificaat</option>
+              {CERTIFICATEN.map((o) => <option key={o} value={o}>{o}</option>)}
+              <option value="anders">Anders</option>
+            </select>
+            {keuze === "anders" && <input className="iv-invoer" style={{ marginTop: 0 }} value={c.naam} onChange={(e) => zetC({ naam: e.target.value })} placeholder="Naam van het certificaat" aria-label="Naam van het certificaat" />}
+            <input className="iv-invoer" style={{ marginTop: 0, maxWidth: 190 }} type="date" value={c.geldig_tot || ""} onChange={(e) => zetC({ geldig_tot: e.target.value })} aria-label="Geldig tot" />
+            <button className="i2-weg" onClick={() => zet({ certificaten: cert.filter((_, y) => y !== n) })} aria-label="Certificaat weghalen">×</button>
+          </div>
+        );
+      })}
       <button className="i2-plus" onClick={() => zet({ certificaten: [...cert, { naam: "" }] })}>+ Certificaat toevoegen</button>
     </Vraag>
 

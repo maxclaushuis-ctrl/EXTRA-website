@@ -71,7 +71,10 @@ export const KEUZEFACTOREN = ["Uurloon", "Werktijden", "Reistijd", "Werkzaamhede
 export const BINDING = ["Waardering", "Duidelijke afspraken", "Een vertrouwd team", "Goede begeleiding", "Verantwoordelijkheid"];
 export const MAX_KEUZES = 2;
 
-export const START_HULP = ["Duidelijke uitleg vooraf", "Meelopen met een collega", "Een vast aanspreekpunt", "Zelf rustig rondkijken", "Meteen aan de slag"];
+/** Besluit Max 11 nov: de eerste drie staan er in elk geval in. Oude keuzes in bestaande dossiers blijven staan. */
+export const START_HULP = ["Een duidelijke briefing", "Een vast aanspreekpunt", "Samen met iemand anders van EXTRA", "Eerst meelopen met een ervaren collega", "Zelf rustig de werkplek verkennen", "Meteen zelfstandig aan de slag"];
+/** Vaste lijst certificaten (besluit Max 11 nov), met "Anders" voor wat er niet in staat. */
+export const CERTIFICATEN = ["Heftruckcertificaat", "Reachtruckcertificaat", "VCA", "HACCP", "BHV", "EHBO", "Sociale Hygiëne"];
 export const LOCATIES = [{ code: "vast", label: "Liefst vertrouwde plekken" }, { code: "afwisseling", label: "Juist afwisseling" }, { code: "geen_voorkeur", label: "Geen voorkeur" }] as const;
 export const SAMENWERKEN = [{ code: "team", label: "Liefst in een team" }, { code: "zelfstandig", label: "Liefst zelfstandig" }, { code: "beide", label: "Allebei prima" }] as const;
 export const CONTACT = [{ code: "regelmatig", label: "Regelmatig even inchecken" }, { code: "wanneer_nodig", label: "Vooral wanneer nodig" }, { code: "geen_voorkeur", label: "Geen voorkeur" }] as const;
@@ -178,7 +181,8 @@ export interface IntakeV2 {
   rijbewijs?: "ja" | "nee" | null;
   voertuig?: "ja" | "nee" | null;
   kleding?: "aanwezig" | "regelen" | "bespreken" | null;
-  certificaten?: { naam: string; geldig_tot?: string }[];
+  /** naam uit CERTIFICATEN, of vrije tekst bij anders: true. */
+  certificaten?: { naam: string; geldig_tot?: string; anders?: boolean }[];
   id_gezien?: "Gezien" | "Niet gezien";
   werkrecht?: "geen_twv" | "twv_nodig" | "nog_controleren";
   acties?: Actie[];
@@ -336,10 +340,27 @@ export function functievragen(f: FunctieCtx): string[] {
   return uit.slice(0, 2);
 }
 
-/** Functies waarbij werkkleding besproken wordt. */
+/**
+ * Werkkleding per functie (besluit Max 11 nov). Banqueting valt onder bediening.
+ * Afwas en functies zonder afspraak: geen vraag.
+ */
+export const KLEDING_PER_FUNCTIE = {
+  bediening: "Wit hemd, zwarte pantalon en nette zwarte schoenen",
+  housekeeping: "Zwarte broek, zwart T-shirt en zwarte schoenen zonder logo's",
+  frontoffice: "Witte blouse, zwarte pantalon en nette zwarte schoenen",
+  keuken: "Koksbuis, koksbroek, veiligheidsschoenen en een messenset",
+  logistiek: "Veiligheidsschoenen",
+} as const;
 export function kledingTekst(f: FunctieCtx): string | null {
-  if (f.functie === "horecamedewerker" && !f.afwas) return "Wit hemd, zwarte pantalon en nette zwarte schoenen";
-  if (f.functie === "logistiek") return "Veiligheidsschoenen";
+  if (f.afwas) return null;
+  if (f.functie === "logistiek") return KLEDING_PER_FUNCTIE.logistiek;
+  const m = modelVoor(f.eersteKeus, f.functie, f.label).sleutel;
+  if (m === "housekeeping") return KLEDING_PER_FUNCTIE.housekeeping;
+  if (m === "frontoffice") return KLEDING_PER_FUNCTIE.frontoffice;
+  if (m === "kok") return KLEDING_PER_FUNCTIE.keuken;
+  if (m === "afwas") return null;
+  if (m === "orderpicken" || m === "heftruck") return KLEDING_PER_FUNCTIE.logistiek;
+  if (f.functie === "horecamedewerker" || m === "bediening" || m === "events") return KLEDING_PER_FUNCTIE.bediening;
   return null;
 }
 

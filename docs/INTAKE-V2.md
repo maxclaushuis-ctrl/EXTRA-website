@@ -241,26 +241,28 @@ niet. Intakes van versie 2 toont de oude code dan niet goed; zet daarom liever d
 schakelaar uit dan de code terug. `migrations/manual/0034_intake_v2/down.sql` is
 niet nodig en staat uitgeschakeld.
 
-## Besluiten voor Max
+## Besluiten (Max, 11 november 2026)
 
-1. **Onderbouwing verplicht?** Nu kun je pas door naar de controles of naar
-   Twijfel als de drie schuiven en de onderbouwing zijn ingevuld.
-2. **Medewerker aanmaken: knop of vanzelf?** Nu een knop in Onboarding. Vanzelf
-   bij accepteren kan ook.
-3. **Wanneer is iemand inzetbaar?** Nu: als de medewerker op actief staat. Is dat
-   de regel, of hoort er iets bij (contract getekend, eerste dienst gepland)?
-4. **Planbord.** De knop stuurt niets naar Planbord, net als de bestaande route
-   zonder webhook. Moet het profiel daar later heen?
-5. **Antwoordkeuzes bij "Wat helpt jou om lekker te starten?"** Vijf hulpkeuzes
-   die ik heb voorgesteld (uitleg vooraf, meelopen, vast aanspreekpunt, zelf
-   rondkijken, meteen aan de slag). Aanpassen kan in `START_HULP`.
-6. **Werkkleding per functie.** Alleen bij bediening (wit hemd, zwarte pantalon,
-   zwarte schoenen, uit versie 1) en logistiek (veiligheidsschoenen). Klopt dat,
-   en wat geldt voor housekeeping en keuken?
-7. **Certificaten.** Vrije invoer met datum. Wil je een vaste lijst?
-8. **Later op inspelen.** De opvolgmomenten (bijvoorbeeld na vier weken de uren
-   nalopen) zijn een voorstel. Wil je ze zo, en moeten ze later taken worden?
-9. **Bewaartermijn.** De historie per antwoord volgt nu het dossier. Bij de
-   AVG-opschoning moet `intake_antwoorden` meegenomen worden.
-10. **Events en logistiek.** De basis en de functievragen zijn er; taken komen
-    uit het functiemodel. Loop de taken per functie na met iemand van de vloer.
+Versie 2 is akkoord. Hij wordt de standaard via de schakelaar (`INTAKE_V2=1` in
+productie), zonder codewijziging; versie 1 blijft in de code zodat terug altijd kan.
+
+| Nr | Onderwerp | Besluit | Stand |
+| --- | --- | --- | --- |
+| 1 | Onderbouwing | Verplicht | Zo gebouwd |
+| 2 | Medewerker aanmaken | Met een knop in Onboarding | Zo gebouwd |
+| 3 | Inzetbaar en doorzetten | Bij Onboarding: onboardingmail en doorzetten naar Planboard via de bestaande webhook | Uitwerking volgt na akkoord op het voorstel |
+| 4 | Profiel naar Planbord | Pas als alles definitief is | Uitwerking volgt |
+| 5 | Wat helpt bij de start | Een duidelijke briefing, een vast aanspreekpunt, samen met iemand anders van EXTRA, plus drie herschreven keuzes (`START_HULP`) | Gebouwd |
+| 6 | Werkkleding | Per functie, zie `KLEDING_PER_FUNCTIE`; banqueting zoals bediening | Gebouwd |
+| 7 | Certificaten | Vaste lijst (`CERTIFICATEN`) met Anders | Gebouwd |
+| 8 | Later op inspelen | Een melding om in te checken, op basis van het aantal diensten | Voorstel volgt |
+| 9 | Bewaartermijn | Historie volgt het dossier | Akkoord, zie hieronder |
+| 10 | Events en logistiek | Taken per functie nalopen met iemand van de vloer | Gebeurt |
+
+**AVG-opschoning.** De historie per antwoord staat in `intake_antwoorden`. Wie de
+AVG-opschoning van sollicitantdossiers bouwt of aanpast, moet deze tabel meenemen
+(rijen met hetzelfde `candidate_id`). Er staat geen automatische opschoning aan.
+
+**Oude keuzes.** Dossiers met een oude startkeuze of een vrij getypt certificaat
+blijven ongewijzigd; het formulier toont die waarde gewoon (als extra keuze of als
+Anders).

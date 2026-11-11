@@ -3,7 +3,7 @@
  * Run met:  npx tsx shared/intakeV2.test.ts
  */
 import {
-  HOOFDSTUKKEN, SCHUIVEN_V2, PRIORITEITEN, KEUZEFACTOREN, BINDING, isV2, takenVoor, extraTakenVoor, functievragen, kledingTekst,
+  HOOFDSTUKKEN, SCHUIVEN_V2, PRIORITEITEN, KEUZEFACTOREN, BINDING, isV2, takenVoor, extraTakenVoor, functievragen, kledingTekst, START_HULP, CERTIFICATEN,
   voorbereiding, ervaringsvraag, startIntake, openPunten, rasterTelling3, urenTekst, weekpatroon, patroonKort, samenvattingRegels,
   werkvoorkeuren, werkprofielKaart, plannerskaart, laterInspelen, kpis, beoordelingV2Compleet, valideerBeoordelingV2, wijzigingen,
   valideerIntakeV2, medewerkerProfiel, checkUitIntakeV2, referentieOpen, keuzes, inzetStatus, gelijk, datumInWoorden, VRAGEN, type IntakeV2, type Voortraject,
@@ -47,7 +47,14 @@ const logistiek = { functie: "logistiek", eersteKeus: "orderpicker", label: "log
   test("meer functies: hoogstens twee vragen, een per functie", functievragen(meer).join("|") === "Wat waren jouw taken tijdens een drukke dienst?|Wat maakte en serveerde je meestal achter de bar?", functievragen(meer).join("|"));
   test("functie: barista en cocktails alleen als extra bij bediening", extraTakenVoor(bediening).includes("Cocktails maken") && !extraTakenVoor(hk).includes("Cocktails maken") && !takenVoor(bediening).includes("Cocktails maken"));
   test("motivatie: vijf bindingsfactoren uit de opdracht", BINDING.length === 5);
-  test("functie: kleding alleen waar het speelt", !!kledingTekst(bediening) && kledingTekst(hk) === null && kledingTekst(logistiek) === "Veiligheidsschoenen");
+  test("functie: kleding alleen waar het speelt", !!kledingTekst(bediening) && kledingTekst(logistiek) === "Veiligheidsschoenen" && kledingTekst({ functie: "horecamedewerker", eersteKeus: "afwas", afwas: true }) === null);
+  test("kleding: housekeeping zwart zonder logo's", kledingTekst(hk) === "Zwarte broek, zwart T-shirt en zwarte schoenen zonder logo's");
+  test("kleding: front office witte blouse", kledingTekst({ functie: "frontoffice", eersteKeus: "frontoffice", label: "hotels" }) === "Witte blouse, zwarte pantalon en nette zwarte schoenen");
+  test("kleding: keuken met messenset", kledingTekst({ functie: "chef", eersteKeus: "keuken", label: "hotels" }) === "Koksbuis, koksbroek, veiligheidsschoenen en een messenset");
+  test("kleding: banqueting is bediening", kledingTekst({ functie: "horecamedewerker", eersteKeus: "banqueting", label: "events" }) === kledingTekst(bediening));
+  test("kleding: events en runner als bediening", kledingTekst(events) === kledingTekst(bediening));
+  test("start: de drie keuzes van Max staan erin", ["Een duidelijke briefing", "Een vast aanspreekpunt", "Samen met iemand anders van EXTRA"].every((x) => START_HULP.includes(x)));
+  test("certificaten: vaste lijst", CERTIFICATEN.includes("Reachtruckcertificaat") && CERTIFICATEN.includes("Sociale Hygiëne"));
 }
 
 // Voorbereiding: alleen echte gegevens, met bron; ontbrekend blijft onbekend
