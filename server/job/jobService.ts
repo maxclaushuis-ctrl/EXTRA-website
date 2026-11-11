@@ -36,6 +36,7 @@ import {
 } from "@shared/jobPlanning";
 import { begrijpenAan, formulerenAan, lees } from "./jobAi";
 import { filterPrivacy, privacyMelding, type PrivacyUitkomst } from "@shared/jobPrivacy";
+import { geenDubbelBericht, zonderHerhaling } from "@shared/jobHerhaling";
 import { Bundelaar, type Deel } from "@shared/jobBundel";
 import { landcodes, starttaal } from "@shared/jobTaal";
 import { beurtAan, echteAi, verwerkBeurt } from "./jobBeurt";
@@ -685,9 +686,15 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
     console.log(`[Job] beurt gesprek ${g.id}: ${uit.bron}${uit.beurt ? ` ${uit.beurt.soorten.join("+")} velden=${Object.keys(uit.beurt.velden).join(",") || "-"}` : ""}${uit.gebruikt ? ` reactie=${uit.gebruikt.reactie} vraag=${uit.gebruikt.vraag} kennis=${uit.gebruikt.kennis ?? "-"}` : ""}${uit.ai ? ` ${uit.ai.model} ${uit.ai.ms}ms` : ""}`);
   } else {
     const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
-    const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal, ctx.begrijpen ? await gesprekVoorAi(g.id, tekst) : undefined) : null;
+    const gesprek = tekst ? await gesprekVoorAi(g.id, tekst) : null;
+    const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal, ctx.begrijpen && gesprek ? gesprek : undefined) : null;
     r = verwerk(s, ctx, { tekst, cvOntvangen: invoer.cvOntvangen }, lezing, nu);
     if (leesbaar && formulerenAan()) r = await herformuleer(r, g.id, ctx, tekst, lezing?.ack || "");
+    // Ook in deze versie van Job: nooit dezelfde vraag opnieuw met dezelfde woorden (shared/jobHerhaling.ts).
+    if (tekst && gesprek && !invoer.cvOntvangen) {
+      r = zonderHerhaling(s, r, ctx, tekst, nu, { laatsteVraag: gesprek.laatsteVraag, doorvraag: lezing?.doorvraag?.tekst ?? null });
+      r = { ...r, berichten: geenDubbelBericht(r.berichten, gesprek.laatsteVraag, r.state.taal) };
+    }
   }
   if (privacy) r = { ...r, berichten: [{ tekst: privacyMelding(r.state.taal) }, ...r.berichten] };
   s = r.state;

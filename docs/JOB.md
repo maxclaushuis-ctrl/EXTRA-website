@@ -132,6 +132,19 @@ uur iets stuurde, antwoordt Job met gewone berichten.
 
 `npm run job:gesprekstest` (in de testomgeving, de AI-sleutel staat in de Secrets) voert de vaste testgesprekken uit `scripts/jobGesprekken.ts` volledig uit via dezelfde weg als echte berichten, zonder database, WhatsApp of mail. Per gesprek wordt gecontroleerd wat er is opgeslagen, wat er nooit opgeslagen mag worden, welke vragen wel of niet gesteld zijn, het aantal vragen, de taal en de reactie op lastige berichten; een tweede AI (rechter, standaard `gpt-4o`, uit met `JOB_TEST_RECHTER=0`) beoordeelt per beurt of Job aansluit. Modellen vergelijken: `npm run job:gesprekstest -- gpt-4o-mini,gpt-4.1-mini`. Het volledige verslag staat daarna in `job-gesprekstest.txt`.
 
+## Nooit dezelfde vraag opnieuw
+
+Na elk bericht van de kandidaat controleert `shared/jobHerhaling.ts` wat Job gaat sturen, in beide versies van Job en zonder de AI:
+
+| Regel | Voorbeeld |
+| --- | --- |
+| Een duidelijk nee sluit de vraag af | "Ik heb niet gewerkt bij hotels": geen hotelvraag en geen sterrenvraag meer. Een hotelschool telt niet als hotel |
+| Weet het niet: onbekend en verder | "Geen idee": Job zegt dat het bij de kennismaking terugkomt en gaat door |
+| Een vraag hooguit twee keer | De tweede keer altijd met andere woorden en een uitweg, zoals een knop Nog niet. Daarna onbekend en verder |
+| Nooit twee keer hetzelfde bericht | Ook na de vragen: de wachtzinnen wisselen af met een korte andere versie |
+
+Werkautorisatie en de geldigheid worden niet anders gesteld; blijft het antwoord onduidelijk, dan staat er "weet ik niet" en controleert een collega dat voordat er gepland wordt. Stelt de kandidaat zelf een vraag, dan antwoordt Job en stelt hij zijn vraag terug; dat mag hooguit drie keer achter elkaar. De test (`shared/jobHerhaling.test.ts`) speelt ruim 3000 gesprekken na voor alle functies, paspoorten en beide versies.
+
 ## Taal
 
 Regels in `shared/jobTaal.ts` (getest in `shared/jobTaal.test.ts`).

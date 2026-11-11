@@ -51,7 +51,7 @@
     "intake:test": "tsx shared/intakeV2.test.ts",
     "intake:ketentest": "tsx scripts/intake-ketentest.ts",
     "kpi:test": "tsx shared/kpiJob.test.ts",
-    "job:test": "tsx shared/job.test.ts && tsx shared/jobWhatsapp.test.ts && tsx shared/jobPlanningLijst.test.ts && tsx shared/jobBundel.test.ts && tsx shared/jobTaal.test.ts && tsx shared/jobPrivacy.test.ts && tsx shared/jobFase1.test.ts && tsx shared/jobBegrijpen.test.ts && tsx server/whatsapp/__tests__/jobInbound.test.ts && tsx server/job/__tests__/jobSjablonen.test.ts && tsx server/job/__tests__/jobBeurt.test.ts",
+    "job:test": "tsx shared/job.test.ts && tsx shared/jobWhatsapp.test.ts && tsx shared/jobPlanningLijst.test.ts && tsx shared/jobBundel.test.ts && tsx shared/jobTaal.test.ts && tsx shared/jobPrivacy.test.ts && tsx shared/jobFase1.test.ts && tsx shared/jobBegrijpen.test.ts && tsx server/whatsapp/__tests__/jobInbound.test.ts && tsx server/job/__tests__/jobSjablonen.test.ts && tsx server/job/__tests__/jobBeurt.test.ts && tsx shared/jobHerhaling.test.ts",
     "testdata:vullen": "tsx scripts/testdata-vullen.ts",
     "job:gesprekstest": "tsx scripts/job-gesprekstest.ts",
     "testdata:tijdlijn": "tsx scripts/testdata-tijdlijn.ts",

@@ -106,7 +106,7 @@ export function alsLezing(b: Beurt): Lezing {
 // ─── Controle vóór verzending ────────────────────────────────────────────────
 
 const STANDAARD_OPENERS = /^(top|fantastisch|super|geweldig|perfect|mooi zo|prima|fijn|great|awesome|perfect|fantastic|wonderful|excellent)\b[!,. ]/i;
-const OPVULLING = /goed om te weten|fijn om te horen|bedankt voor (je|het)|dank (je|u) voor (je|het)|good to know|thanks for (your|the|sharing)|nice to hear/i;
+const OPVULLING = /goed om te weten|fijn om te horen|bedankt voor (je|het|de)|dank (je|u )?voor (je|het|de)|klinkt goed|mooie ervaring|good to know|thanks for (your|the|sharing|clarifying)|nice to hear|sounds (good|great)/i;
 const BELOFTE = /https?:|www\.|aangenomen|garantie|gegarandeerd|beloof|zeker weten|\bje krijgt\b|€|\beuro\b|\d+[.,]\d{2}|per uur|hired|guarantee|promise|you will get|per hour/i;
 
 function zinnen(t: string): number {

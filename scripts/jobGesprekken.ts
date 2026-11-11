@@ -177,4 +177,13 @@ export const GESPREKKEN: Gesprek[] = [
     // De klacht krijgt een antwoord (waarom deze vragen) en wordt geen gegeven.
     verwacht: { nooit: [{ veld: "ervaring", bevat: /formulier|waarom/i }], reactie: [{ na: /formulier gedaan/i, moet: /welk werk bij je past|collega/i }] },
   },
+  {
+    // De test van Max (11 nov, 12:00): drie keer "Bij welke hotels heb je gewerkt?" na een nee.
+    naam: "Keuken: niet in hotels gewerkt", eerdereFout: true, ctx: nlCtx("chef"), taal: "nl",
+    antwoorden: {
+      ervaring: "Tijdens mijn studie op de hotelschool heb ik een aantal maanden praktijkles gehad in de keuken hier heb ik de basis geleerd en daarna heb ik in totaal drie jaar werkervaring. 1.5 jaar bij republiek Bloemendaal op het strand en daarna 1.5 jaar in de keuken bij bar barolo",
+      hotels: ["Ik heb niet in hotels gewerkt maar gewoon praktijkles op school van de hotelschool", "Ik heb niet gewerkt bij hotels", "Nee"],
+    },
+    verwacht: { nietGevraagd: ["sterren"], velden: { ervaringNiveau: /ervaren/ }, reactie: [{ na: /niet in hotels gewerkt/i, nietMoet: /welke hotels|which hotels/i }] },
+  },
 ];

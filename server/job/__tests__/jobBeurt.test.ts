@@ -109,12 +109,12 @@ async function main() {
   s = start(hk, "nl", NU).state;
   u = await beurt(s, hk, "Wat bedoel je?", null);
   test("Terugval: een vraag wordt geen ervaring", !u.r.state.velden.ervaring && u.bron === "terugval");
-  test("Terugval: Job zegt dat hij het niet begreep en vraagt opnieuw", tekst(u.r).startsWith(BEURT_TEKSTEN.nl.nietBegrepen) && tekst(u.r).includes(vraag("ervaring", "nl", hk).tekst), tekst(u.r));
+  test("Terugval: Job vraagt het opnieuw, met andere woorden", tekst(u.r) === "Ik vraag het even anders. Heb je al eens in de housekeeping gewerkt, en zo ja, hoe lang ongeveer?" && u.r.state.laatsteOnderwerp === "ervaring", tekst(u.r));
   u = await beurt(s, hk, "Twee jaar housekeeping in een hotel", null);
   test("Terugval: een duidelijk antwoord gaat gewoon door", !!u.r.state.velden.ervaring);
   s = { ...start(hk, "nl", NU).state, velden: { ervaring: "2 jaar", ervaringNiveau: "ervaren", hotels: "NH", sterren: "4" }, laatsteOnderwerp: "diensten" };
   u = await beurt(s, hk, "geen idee eigenlijk", null);
-  test("Terugval: keuzevraag zonder herkenbaar antwoord blijft open", !u.r.state.velden.diensten && u.r.state.laatsteOnderwerp === "diensten");
+  test("Terugval: geen idee is onbekend, Job gaat verder", !u.r.state.velden.diensten && u.r.state.velden.onbekend?.includes("diensten") === true && u.r.state.laatsteOnderwerp === "werkgebied" && tekst(u.r).startsWith(BEURT_TEKSTEN.nl.onbekendVerder), tekst(u.r));
   u = await beurt(s, hk, "x", { kapot: true });
   test("Onbruikbaar AI-antwoord: niets opgeslagen, de vraag blijft", !u.r.state.velden.diensten && u.r.state.laatsteOnderwerp === "diensten");
 

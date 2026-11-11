@@ -692,7 +692,7 @@ const GEEN_HOTEL = /^\s*(nee|no|nope|geen|nooit|never|nergens)\b|nog (niet|nooit
 /** Alleen ander werk genoemd (restaurant, café, catering...) en geen hotel. */
 const ANDER_WERK = /\b(restaurants?|caf[eé]s?|eetcaf[eé]|brasserie|bistro|bar|bars|catering|cateraar|lunchroom|kantine|strandtent|snackbar|pizzeria|festivals?|evenementen|events?|zzp|zelfstandig|kantoren|ziekenhuis|zorg|winkel|supermarkt)\b/i;
 /** Fase 2: een vraag die door het antwoord niet meer van toepassing is. */
-function vervalt(v: JobVelden, o: Onderwerp): void {
+export function vervalt(v: JobVelden, o: Onderwerp): void {
   if (!KAN_VERVALLEN.includes(o)) return;
   if (o === "hotels" || o === "sterren") { if (!v.hotels) v.hotels = "nog niet in een hotel gewerkt"; v.geenHotel = true; }
   if (o === "restaurant" && !v.restaurantSoort) v.restaurantSoort = "-";
@@ -702,7 +702,8 @@ function vervalt(v: JobVelden, o: Onderwerp): void {
 
 /** Noemt de tekst restaurantwerk (en geen hotel)? */
 export function restaurantGenoemd(tekst: string): boolean {
-  return /\b(restaurants?|brasserie|bistro|eetcaf[eé]|pizzeria|trattoria)\b/i.test(tekst) && !/hotel/i.test(tekst);
+  // Een hotelschool of hotelopleiding is geen hotel: alleen het woord hotel zelf telt.
+  return /\b(restaurants?|brasserie|bistro|eetcaf[eé]|pizzeria|trattoria|strandtent|strand|caf[eé]s?|bar|bars|catering|lunchroom)\b/i.test(tekst) && !/\b(hotels?|hostels?|resorts?)\b/i.test(tekst);
 }
 /** Zegt het antwoord op de hotelvraag dat iemand (nog) niet in een hotel werkte? */
 export function geenHotelervaring(tekst: string): boolean {

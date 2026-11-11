@@ -25,6 +25,7 @@ import {
 import { reserveLezing } from "@shared/jobLezen";
 import { alsLezing, reactieGoed, stelSamen, valideerBeurt, type Beurt, type Samenstelling } from "@shared/jobBeurt";
 import { kennisOverzicht } from "@shared/jobKennis";
+import { VELD_VAN_ONDERWERP, geenDubbelBericht, veldGevuld as veldGevuldDeel, zonderHerhaling } from "@shared/jobHerhaling";
 import { modelVoor } from "@shared/kandidaatMatch";
 import { VELD_DOEL } from "./jobAi";
 
@@ -37,7 +38,6 @@ export function beurtAan(): boolean {
 export interface AiUitkomst { inhoud: string; ms: number; model: string; tokens?: { in: number; uit: number } }
 export type AiAanroep = (systeem: string, bericht: string) => Promise<AiUitkomst | null>;
 
-const MAX_POGINGEN = 3;
 const BEZIG = ["bezig", "wacht_cv", "geen_reactie", "gestopt"];
 
 const T = {
@@ -127,6 +127,7 @@ ${kennisOverzicht()}
 - grens: alleen bij grensoverschrijdend gedrag van de kandidaat zelf, gericht aan Job, EXTRA of een medewerker, en alleen als je zeker bent: {"regel": "G1" (concrete dreiging met geweld of schade) | "G2" (seksuele intimidatie) | "G3" (discriminatie of haat) | "G4" (gerichte, ernstige belediging), "bewijs": "letterlijk stukje"}. Voorbeelden G4: "Hou je bek met je vragen, idioot", "kankerbedrijf". Geen grens: een losse krachtterm ("kut, ik ben mijn cv kwijt"), frustratie ("DIT DUURT TE LANG"), kritiek ("jullie organisatie is slecht"), een citaat van iemand anders ("mijn baas noemde me een idioot"). Zet bij een grens ook "frustratie" in soort als dat past.
 - taal: de taal van dit bericht zelf: "nl", "en", "anders" of null als het te kort of neutraal is (ok, ja, een naam, een plaats, een getal).
 - nvt: vragen die door dit bericht niet meer van toepassing zijn, uit: hotels, sterren, restaurant, functievraag, specialisatie (bijvoorbeeld ["hotels","sterren"] als de kandidaat nooit in een hotel werkte).
+  Een nee is een antwoord. Zegt de kandidaat dat iets niet van toepassing is ("ik heb niet in hotels gewerkt", "nee", "nog niet", "geen"), dan is soort "antwoord" en zet je die vraag in nvt. Een hotelschool of hotelopleiding is geen werk in een hotel. Stel een vraag die beantwoord is nooit opnieuw.
 - twijfel: alleen iets waar een collega naar moet kijken (kort, Nederlands), anders null. Past de ervaring niet bij de functie, zeg dat hier feitelijk.
 - reactie: een korte, natuurlijke reactie in het ${taal} op wat de kandidaat zei, hooguit één zin, geen vraag. Verplicht bij frustratie (kort erkennen) en bij een correctie (bevestigen). Anders alleen als die iets concreets toevoegt; meestal leeg. Geen opvulzinnen als "goed om te weten" of "bedankt voor je antwoord". Nooit beginnen met "Top", "Fantastisch", "Super", "Mooi", "Prima", "Dank je" of vergelijkbaar; geen lof, geen beloftes, geen feiten over EXTRA (die komen uit de kennisbank).`;
 
@@ -149,7 +150,7 @@ ${openTekst}
 ${regels}
 - doorvragen: als het antwoord op de ervaringsvraag niet laat zien of de ervaring de kerntaken van deze functie betreft (bijvoorbeeld "Ik maak al jaren schoon" bij housekeeping: in hotelkamers, kantoren of bij mensen thuis?), of als een ander antwoord te vaag is voor de beoordeling: het veld, anders null. Eén keer per veld is meestal genoeg. Vraag nooit naar iets wat al bekend is.
 - vraag en volgende: de vraag die Job hierna stelt, in het ${taal}, één korte zin die eindigt met een vraagteken, je-vorm, warm en direct, aansluitend op wat de kandidaat zei.
-  * Beantwoordt het bericht de open vraag niet (vraag, verwarring, onduidelijk, frustratie): stel dezelfde vraag opnieuw, eenvoudiger of met een korte uitleg of voorbeeld. volgende = ${state.laatsteOnderwerp ?? "het open veld"}.
+  * Beantwoordt het bericht de open vraag niet (vraag, verwarring, onduidelijk, frustratie): stel dezelfde vraag opnieuw, maar altijd met andere woorden dan de vorige keer, eenvoudiger of met een voorbeeld. volgende = ${state.laatsteOnderwerp ?? "het open veld"}.
   * Te vaag (doorvragen): één concrete doorvraag. volgende = dat veld.
   * Anders: de eerstvolgende vraag uit de lijst die na dit bericht nog open is; sla over wat het bericht al beantwoordde. volgende = dat veld, of "klaar" als er niets meer open is.
 Antwoord uitsluitend met JSON: {"soort": [], "velden": {}, "bewijs": {}, "kennis": null, "vraagKandidaat": null, "grens": null, "taal": null, "twijfel": null, "reactie": "", "doorvragen": null, "vraag": "", "volgende": ""}`;
@@ -180,20 +181,9 @@ function terugvalLezing(tekst: string, onderwerp: Onderwerp | null): Lezing {
   return { ...r, ack: "" };
 }
 
-const VELD_VAN_ONDERWERP: Partial<Record<Onderwerp, keyof JobVelden>> = {
-  ervaring: "ervaring", functievraag: "functievraag", hotels: "hotels", sterren: "sterren", restaurant: "restaurantSoort", specialisatie: "specialisatie",
-  werkautorisatie: "werkautorisatie", geldigheid: "geldigTot", diensten: "diensten", werkgebied: "werkgebied", werkmoment: "werkmoment",
-  startdatum: "startdatum", werkvorm: "werkvorm", cv: "cvParaat",
-};
-
 /** Is het veld van deze vraag na dit antwoord gevuld (of al bekend)? */
 function veldGevuld(o: Onderwerp, nieuw: JobVelden, bekend: JobVelden): boolean {
-  const v = { ...bekend, ...nieuw };
-  const k = VELD_VAN_ONDERWERP[o];
-  if (!k) return true;
-  // Een vervallen vraag (geen hotelervaring) telt ook als beantwoord.
-  if ((o === "sterren" || o === "hotels") && (nieuw.geenHotel || bekend.geenHotel)) return true;
-  return v[k] !== undefined && v[k] !== null && v[k] !== "";
+  return veldGevuldDeel(o, { ...bekend, ...nieuw });
 }
 
 function standaardVraag(s: JobState, ctx: JobContext): string | null {
@@ -232,7 +222,8 @@ export async function verwerkBeurt(i: { state: JobState; ctx: JobContext; tekst:
 
   // 2. Na het gesprek (cv-controle, planner, plannen, gepland): begrijpen, geen vaste zin op alles.
   if (modus === "na") {
-    const r = verwerk(s0, ctx, { tekst }, null, i.nu);
+    const r0 = verwerk(s0, ctx, { tekst }, null, i.nu);
+    const r = { ...r0, berichten: geenDubbelBericht(r0.berichten, i.laatsteVraag, r0.state.taal) };
     if (!beurt) return { r, beurt, gebruikt: null, bron: "terugval", ai };
     if (beurt.soorten.includes("mens")) return { r: verwerk(s0, ctx, { tekst: taal === "en" ? "HUMAN" : "MENS" }, null, i.nu), beurt, gebruikt: null, bron: "ai", ai };
     if (beurt.grens) return grensStop(r.state, beurt, taal, ai);
@@ -248,7 +239,7 @@ export async function verwerkBeurt(i: { state: JobState; ctx: JobContext; tekst:
       return { r: { ...r, berichten: al ? [] : [{ tekst: t.graagGedaan }] }, beurt, gebruikt: { reactie: false, vraag: false, kennis: null }, bron: "ai", ai };
     }
     const sam = stelSamen({ beurt, regels: r.berichten, onderwerp: null, standaard: null, taal });
-    return { r: { ...r, berichten: sam.berichten }, beurt, gebruikt: sam.gebruikt, bron: "ai", ai };
+    return { r: { ...r, berichten: geenDubbelBericht(sam.berichten, i.laatsteVraag, r.state.taal) }, beurt, gebruikt: sam.gebruikt, bron: "ai", ai };
   }
 
   // 3. Tijdens de vragen
@@ -296,32 +287,16 @@ export async function verwerkBeurt(i: { state: JobState; ctx: JobContext; tekst:
     const notitie = `Vraag van de kandidaat: ${beurt.vraagKandidaat || tekst.slice(0, 200)}`;
     if (!state.twijfels.includes(notitie)) state.twijfels.push(notitie);
   }
-  // Blijft het antwoord onduidelijk: na drie keer staat de vraag als onbekend en gaat Job verder.
-  let naarOnbekend = false;
-  const onduidelijk = lezing.geenAntwoord && (zonderVeld || !beurt || beurt.soorten.some((x) => x === "onduidelijk" || x === "verwarring")) && !beurt?.kennis;
-  if (onduidelijk && onderwerp) {
-    const p = { ...(state.velden.pogingen || {}) };
-    p[onderwerp] = (p[onderwerp] || 0) + 1;
-    state.velden.pogingen = p;
-    if (p[onderwerp]! >= MAX_POGINGEN) {
-      // Het veld blijft leeg ("Niet bekend" in het dossier); de kennismaking vult het aan.
-      // geenAntwoord blijft staan: niets opslaan; de regels slaan de onbekende vraag over.
-      state.velden.onbekend = [...(state.velden.onbekend || []), onderwerp];
-      lezing = { ...lezing, velden: {} };
-      naarOnbekend = true;
-    }
-  }
-
   const r = verwerk(state, ctx, { tekst }, lezing, i.nu);
   const std = standaardVraag(r.state, ctx);
   // Frustratie wordt altijd kort erkend; komt de reactie van de AI niet door de controle, dan een vaste korte zin.
   if (beurt && beurt.soorten.includes("frustratie") && !beurt.kennis && !reactieGoed(beurt.reactie, r.state.taal)) beurt = { ...beurt, reactie: T[r.state.taal].frustratie };
   const sam = stelSamen({ beurt, regels: r.berichten, onderwerp: r.state.status === "bezig" || r.state.status === "wacht_cv" ? r.state.laatsteOnderwerp : null, standaard: std, taal: r.state.taal });
-  let berichten = sam.berichten;
-  // Terugval zonder AI bij een onduidelijk antwoord: zeg dat Job het niet begreep.
-  if (naarOnbekend && berichten.length) berichten = [{ ...berichten[0], tekst: `${T[r.state.taal].onbekendVerder} ${berichten[0].tekst}` }, ...berichten.slice(1)];
-  else if (!beurt && lezing.geenAntwoord && berichten.length) berichten = [{ ...berichten[0], tekst: `${T[r.state.taal].nietBegrepen} ${berichten[0].tekst}` }, ...berichten.slice(1)];
-  return { r: { ...r, berichten }, beurt, gebruikt: sam.gebruikt, bron: beurt ? "ai" : "terugval", ai };
+  // Nooit dezelfde vraag opnieuw met dezelfde woorden, en hooguit twee keer (shared/jobHerhaling.ts).
+  // Een eigen vraag van de kandidaat is geen herhaling: Job antwoordt en stelt zijn vraag terug.
+  const eigenVraag = !!beurt?.kennis;
+  const bewaakt = zonderHerhaling(s0, { ...r, berichten: sam.berichten }, ctx, tekst, i.nu, { laatsteVraag: i.laatsteVraag, kennis: eigenVraag, doorvraag: lezing.doorvraag?.tekst ?? null, behoudVoor: !!beurt?.soorten.includes("frustratie") });
+  return { r: bewaakt, beurt, gebruikt: sam.gebruikt, bron: beurt ? "ai" : "terugval", ai };
 }
 
 function grensStop(state: JobState, beurt: Beurt, taal: JobTaal, ai: AiUitkomst | null): BeurtUitkomst {
