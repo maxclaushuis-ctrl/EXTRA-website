@@ -35,3 +35,54 @@
 .logo-roze{display:block;width:clamp(260px,46vw,760px);aspect-ratio:660/170;background:var(--accent);-webkit-mask:url(/d3/logo-w.svg) left center/contain no-repeat;mask:url(/d3/logo-w.svg) left center/contain no-repeat}
 .slogan2{margin:0;font-weight:700;letter-spacing:-.045em;line-height:1;color:var(--accent);white-space:nowrap}
 .slogan2 span{display:inline-block}
+
+/* Vitam: per locatie in het klantportaal */
+.lc-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.62fr);gap:28px;align-items:start}
+.lc-portaal{background:var(--wit);border:1px solid var(--lijn);border-radius:24px;overflow:hidden;box-shadow:0 40px 70px -40px rgba(55,53,44,.35)}
+.lc-portaal header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--lijn)}
+.lc-portaal header b{display:block;font-size:16px}
+.lc-portaal header span{font-size:13px;color:var(--tekst-2)}
+.lc-knop{border:1px solid var(--lijn);border-radius:10px;padding:7px 12px;font-weight:650;color:var(--espresso)!important}
+.lc-kpi{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--lijn)}
+.lc-kpi div{padding:14px 22px}
+.lc-kpi div+div{border-left:1px solid var(--lijn)}
+.lc-kpi small{display:block;font-size:12px;color:var(--tekst-2)}
+.lc-kpi b{display:block;font-size:26px;letter-spacing:-.04em;margin-top:2px}
+.lc-portaal table{width:100%;border-collapse:collapse;font-size:13.5px}
+.lc-portaal th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tekst-2);font-weight:650;padding:11px 14px;background:var(--offwhite)}
+.lc-portaal th:first-child,.lc-portaal td:first-child{padding-left:22px}
+.lc-portaal td{padding:12px 14px;border-top:1px solid var(--lijn);white-space:nowrap}
+.lc-naam{font-weight:700}
+.lc-bez{display:flex;align-items:center;gap:8px}
+.lc-bez b{font-size:13.5px;min-width:36px}
+.lc-bez small{font-size:12px;color:var(--tekst-2)}
+.lc-bar{display:block;width:70px;height:7px;border-radius:99px;background:#ECE8E1;overflow:hidden}
+.lc-bar i{display:block;height:100%;width:var(--w);background:var(--espresso);border-radius:99px}
+.lc-ster{color:#C9A227}
+.lc-portaal footer{padding:11px 22px;font-size:12.5px;color:var(--tekst-2);border-top:1px solid var(--lijn)}
+.lc-rechts{display:grid;gap:22px}
+.lc-facturen{position:relative;height:250px}
+.lc-fac{position:absolute;left:0;right:0;background:var(--wit);border:1px solid var(--lijn);border-radius:18px;box-shadow:0 24px 40px -28px rgba(55,53,44,.45)}
+.lc-fac.f3{top:0;transform:translate(26px,0) rotate(4deg);height:200px;padding:14px 18px;opacity:.75}
+.lc-fac.f2{top:14px;transform:translate(13px,0) rotate(2deg);height:200px;padding:14px 18px;opacity:.9}
+.lc-fac.f2 span,.lc-fac.f3 span{font-size:12.5px;font-weight:700;color:var(--tekst-2)}
+.lc-fac.f1{top:30px;padding:18px 20px;display:flex;flex-direction:column;gap:4px;border-top:6px solid var(--accent)}
+.lc-fac-kop{display:flex;justify-content:space-between;align-items:center}
+.lc-fac-kop b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--tekst-2)}
+.lc-fac strong{font-size:22px;letter-spacing:-.03em;margin-top:6px}
+.lc-per{font-size:13px;color:var(--tekst-2)}
+.lc-fac dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:10px 0 6px;font-size:14px}
+.lc-fac dt{color:var(--tekst-2)}.lc-fac dd{margin:0;font-weight:700;text-align:right}
+.lc-pdf{font-size:12.5px;font-weight:650;border-top:1px solid var(--lijn);padding-top:9px}
+.lc-vier{list-style:none;margin:0;padding:0;display:grid;gap:0;border-top:2px solid var(--espresso)}
+.lc-vier li{padding:12px 0;border-bottom:1px solid var(--lijn)}
+.lc-vier b{display:block;font-size:16.5px;letter-spacing:-.02em}
+.lc-vier span{display:block;font-size:13.5px;color:var(--tekst-2);margin-top:2px}
+@media (max-width:1000px){
+  .lc-grid{grid-template-columns:1fr}
+  .lc-portaal{overflow-x:auto}
+  .lc-kpi{grid-template-columns:repeat(2,1fr)}
+  .lc-kpi div:nth-child(3){border-left:0}
+  .lc-kpi div:nth-child(n+3){border-top:1px solid var(--lijn)}
+  .lc-portaal table{min-width:640px}
+}

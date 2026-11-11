@@ -23,7 +23,7 @@ var DECK = {
   kleur: "#F8F7F4",
   logo: "/pitchdeck/vitam/logo-vitam.png",
   branche: "hotels",
-  slides: ["cover","situatie","uitdagingen","werving","proces","campagnes","job","binden","inzicht","schaal","compliance","inspectie","wtta","wtta-eisen","referenties","klanten","vervolg"]
+  slides: ["cover","situatie","uitdagingen","werving","proces","campagnes","job","binden","inzicht","schaal","compliance","inspectie","locaties","wtta","wtta-eisen","referenties","klanten","vervolg"]
 };
 </script>
 </head>
@@ -318,6 +318,47 @@ var DECK = {
         <p><span class="st letop">Over 21 dagen</span><span><b>B. Haddou</b> · verblijfsdocument verloopt. Nieuw document is opgevraagd.</span></p>
       </div>
       <footer>Fictieve namen. Voorbeeld van het klantportaal.</footer>
+    </div>
+  </div>
+  <span class="pd-nr" data-nr></span>
+</section>
+<!-- ============ locaties ============ -->
+<section class="slide wit" data-slide="locaties" data-titel="Per locatie in het klantportaal" id="locaties">
+  <div class="w">
+    <div class="pd-kop"><div><span class="eyebrow">Klantportaal per locatie</span><h2>Elke locatie apart. <span class="serif">In één overzicht.</span></h2></div>
+      <p>Bij zo'n 300 locaties wil je per locatie weten wat er gebeurt en wat het kost. In het klantportaal zie je per locatie de bezetting, de beoordeling, de diensten en de uren. En elke locatie krijgt een eigen factuur.</p></div>
+    <div class="lc-grid">
+      <div class="lc-portaal anim" aria-label="Voorbeeld van het overzicht per locatie in het klantportaal">
+        <header><div><b>Rapportage per locatie</b><span>November 2026 · alle locaties</span></div><span class="lc-knop">Excel</span></header>
+        <div class="lc-kpi">
+          <div><small>Diensten</small><b>154</b></div>
+          <div><small>Gewerkte uren</small><b>1.149 u</b></div>
+          <div><small>Bezetting</small><b>97%</b></div>
+          <div><small>Beoordeling</small><b>8,8</b></div>
+        </div>
+        <table><thead><tr><th>Locatie</th><th>Diensten</th><th>Uren</th><th>Bezetting</th><th>Beoordeling</th><th>Factuur</th></tr></thead>
+          <tbody><tr><td class="lc-naam">Locatie Amsterdam</td><td>48</td><td>362 u</td><td><div class="lc-bez"><span class="lc-bar"><i style="--w:98%"></i></span><b>98%</b><small>47/48</small></div></td><td><span class="lc-ster">★</span> 8,9</td><td><span class="st goed">Factuur verstuurd</span></td></tr><tr><td class="lc-naam">Locatie Utrecht</td><td>36</td><td>270 u</td><td><div class="lc-bez"><span class="lc-bar"><i style="--w:97%"></i></span><b>97%</b><small>35/36</small></div></td><td><span class="lc-ster">★</span> 9,1</td><td><span class="st goed">Factuur verstuurd</span></td></tr><tr><td class="lc-naam">Locatie Amersfoort</td><td>22</td><td>158 u</td><td><div class="lc-bez"><span class="lc-bar"><i style="--w:100%"></i></span><b>100%</b><small>22/22</small></div></td><td><span class="lc-ster">★</span> 8,7</td><td><span class="st goed">Factuur verstuurd</span></td></tr><tr><td class="lc-naam">Locatie Eindhoven</td><td>30</td><td>228 u</td><td><div class="lc-bez"><span class="lc-bar"><i style="--w:93%"></i></span><b>93%</b><small>28/30</small></div></td><td><span class="lc-ster">★</span> 8,4</td><td><span class="st goed">Factuur verstuurd</span></td></tr><tr><td class="lc-naam">Locatie Den Bosch</td><td>18</td><td>131 u</td><td><div class="lc-bez"><span class="lc-bar"><i style="--w:100%"></i></span><b>100%</b><small>18/18</small></div></td><td><span class="lc-ster">★</span> 9,0</td><td><span class="st goed">Factuur verstuurd</span></td></tr></tbody></table>
+        <footer>Fictieve locaties en cijfers. Voorbeeld van het klantportaal.</footer>
+      </div>
+      <div class="lc-rechts">
+        <div class="lc-facturen anim" aria-label="Voorbeeld: een factuur per locatie">
+          <div class="lc-fac f3"><span>Locatie Amersfoort</span></div>
+          <div class="lc-fac f2"><span>Locatie Utrecht</span></div>
+          <div class="lc-fac f1">
+            <div class="lc-fac-kop"><b>Factuur</b><span class="st goed">Verstuurd</span></div>
+            <strong>Locatie Amsterdam</strong>
+            <span class="lc-per">November 2026</span>
+            <dl><dt>Diensten</dt><dd>48</dd><dt>Uren</dt><dd>362 u</dd></dl>
+            <span class="lc-pdf">PDF en urenspecificatie</span>
+          </div>
+        </div>
+        <ul class="lc-vier">
+          <li class="anim"><b>Een factuur per locatie</b><span>Met de uren en diensten van die locatie erbij</span></li>
+          <li class="anim"><b>Bezetting per locatie</b><span>Gevraagd tegenover gevuld, per periode</span></li>
+          <li class="anim"><b>Gemiddelde beoordeling</b><span>Na elke dienst beoordeeld door de locatie</span></li>
+          <li class="anim"><b>Diensten en uren</b><span>Gepland en gewerkt, ook naar Excel</span></li>
+        </ul>
+      </div>
     </div>
   </div>
   <span class="pd-nr" data-nr></span>
