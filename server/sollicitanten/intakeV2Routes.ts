@@ -22,7 +22,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
-  candidates, employees, intakeAntwoorden, sollicitantDossiers,
+  candidates, employees, intakeAntwoorden, onboardingTemplates, sollicitantDossiers,
   type Candidate, type SollicitantDossier,
 } from "@shared/schema";
 import { functieNaam, isAfwas, ingangBranche, referentieStatus, type Check } from "@shared/sollicitantRegels";
@@ -33,6 +33,7 @@ import {
 import type { JobVelden } from "@shared/jobRegels";
 import type { Periode } from "@shared/kandidaatMatch";
 import { laatsteAnalyses, matchUit } from "../job/cvAnalyse";
+import { functiegroepVoor, planbordPayload, uitkomstTekst, type StapUitkomst } from "@shared/onboardingDoorzetten";
 
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
 interface Wie { id: number | null; naam: string; voornaam: string }
@@ -273,9 +274,36 @@ export function registerIntakeV2Routes(
   }));
 
   /**
-   * Van Onboarding naar het medewerkersdossier. Maakt de medewerker één keer aan, met dezelfde
-   * velden als de bestaande route /api/admin/candidates/:id/aannemen (geen Planbord-webhook,
-   * geen bericht). Bestaat de medewerker al, dan gebeurt er niets dubbel: de bestaande komt terug.
+   * Wat de knop "Medewerker aanmaken" gaat doen: de onboardingtemplates (de best passende
+   * voorgeselecteerd op taal en functiegroep) en of mail en Planboard echt naar buiten gaan.
+   */
+  app.get(r("/onboardingmail/:id"), adminMiddleware, alleenAan, veilig(async (req, res) => {
+    const c = await vind(req);
+    const { storage } = await import("../storage");
+    const { isMailMock } = await import("../mail");
+    const templates = await db.select({ id: onboardingTemplates.id, naam: onboardingTemplates.naam, taal: onboardingTemplates.taal, functiegroep: onboardingTemplates.functiegroep, opdrachtgever: onboardingTemplates.opdrachtgever, content: onboardingTemplates.content })
+      .from(onboardingTemplates).where(eq(onboardingTemplates.actief, true)).orderBy(onboardingTemplates.naam);
+    const bruikbaar = templates.filter((t) => (t.content || "").trim()).map(({ content: _c, ...t }) => t);
+    const groep = functiegroepVoor(c.functionType, (c as any).functieEersteKeus, isAfwas(c as any));
+    const voorstel = await storage.selecteerOnboardingTemplate({ taal: c.language || "Nederlands", functie: groep, opdrachtgever: null }).catch(() => undefined);
+    const test = process.env.TESTOMGEVING === "1";
+    res.json({
+      templates: bruikbaar,
+      voorstel: voorstel && bruikbaar.some((t) => t.id === voorstel.id) ? voorstel.id : null,
+      email: c.email || null,
+      mail: test ? (isMailMock() ? "mailvenster" : "geblokkeerd") : isMailMock() ? "uit" : "aan",
+      planbord: test ? "testomgeving" : process.env.PLANBORD_WEBHOOK_URL && process.env.WEBHOOK_SECRET ? "aan" : "uit",
+    });
+  }));
+
+  /**
+   * Van Onboarding naar het medewerkersdossier (besluit Max, 11 nov). Maakt de medewerker één keer
+   * aan, met dezelfde velden als de bestaande route /api/admin/candidates/:id/aannemen. Bij een
+   * nieuwe medewerker gaat daarna de gekozen onboardingmail uit en gaat hij via de bestaande
+   * webhook naar Planboard (shared/onboardingDoorzetten.ts). Mislukt een van die twee, dan blijft
+   * de medewerker staan en zegt de melding wat er nog moet. Bestaat de medewerker al, dan gebeurt
+   * er niets dubbel en wordt er niets verstuurd. In de testomgeving gaat er niets naar Planboard en
+   * gaat de mail alleen naar het mailvenster.
    * De antwoorden blijven in het dossier van de kandidaat staan; de medewerker verwijst daarnaar.
    */
   app.post(r("/medewerker/:id"), adminMiddleware, alleenAan, veilig(async (req, res) => {
@@ -283,6 +311,8 @@ export function registerIntakeV2Routes(
     const d = await h.zorgVoorDossier(c);
     if (d.stap !== "onboarding") throw h.Fout(409, "Een medewerker aanmaken kan pas vanuit Onboarding.");
     const w = await h.wie(req);
+    const t = req.body?.templateId;
+    const templateId = typeof t === "number" && Number.isInteger(t) && t > 0 ? t : null;
     const bestaand = await medewerkerVan(c.id);
     if (bestaand) return res.json({ medewerkerId: bestaand.id, nieuw: false });
     if (!c.email) throw h.Fout(400, `${c.firstName} heeft geen e-mailadres. Vul dat eerst in bij de persoonsgegevens.`);
@@ -299,7 +329,9 @@ export function registerIntakeV2Routes(
         language: c.language || "Nederlands", functie: c.functionType, status: "nieuw", candidateId: c.id,
       } as any).returning({ id: employees.id });
       await h.log(c.id, w, "medewerker", `Medewerker aangemaakt door ${w.voornaam}`);
-      res.status(201).json({ medewerkerId: e.id, nieuw: true });
+      const mail = await onboardingmail(h, c, e.id, templateId, w);
+      const planbord = await naarPlanbord(h, c, e.id, w);
+      res.status(201).json({ medewerkerId: e.id, nieuw: true, mail, planbord, melding: uitkomstTekst(c.firstName, mail, planbord) });
     } catch (fout: any) {
       // Twee klikken tegelijk: de tweede vindt de medewerker die de eerste maakte.
       const nu = await medewerkerVan(c.id);
@@ -307,4 +339,42 @@ export function registerIntakeV2Routes(
       throw fout;
     }
   }));
+}
+
+/** De gekozen onboardingmail versturen. Gooit nooit: de medewerker is er al. */
+async function onboardingmail(h: Hulp, c: Candidate, medewerkerId: number, templateId: number | null, w: Wie): Promise<StapUitkomst> {
+  let uit: StapUitkomst;
+  if (!templateId) uit = { status: "overgeslagen", reden: "geen template gekozen" };
+  else {
+    try {
+      const { isMailMock } = await import("../mail");
+      if (process.env.TESTOMGEVING === "1" && !isMailMock()) uit = { status: "overgeslagen", reden: "testomgeving zonder mailvenster" };
+      else {
+        const { verstuurOnboardingMail } = await import("../onboardingService");
+        const r = await verstuurOnboardingMail(medewerkerId, templateId, "handmatig");
+        uit = { status: "verzonden", reden: r.templateNaam };
+      }
+    } catch (fout: any) {
+      uit = { status: "mislukt", reden: String(fout?.message || "onbekende fout").slice(0, 200) };
+    }
+  }
+  const tekst = uit.status === "verzonden" ? `Onboardingmail verstuurd (${uit.reden}) door ${w.voornaam}`
+    : uit.status === "mislukt" ? `Onboardingmail niet verstuurd: ${uit.reden}` : `Geen onboardingmail verstuurd (${uit.reden})`;
+  await h.log(c.id, w, "onboardingmail", tekst).catch(() => {});
+  return uit;
+}
+
+/** Via de bestaande webhook naar Planboard, met alleen de velden van de oude route. Gooit nooit. */
+async function naarPlanbord(h: Hulp, c: Candidate, medewerkerId: number, w: Wie): Promise<StapUitkomst> {
+  let uit: StapUitkomst;
+  try {
+    const { sendPlanbordWebhook } = await import("../integrations/planbord-webhook");
+    const r = await sendPlanbordWebhook(planbordPayload(c as any, medewerkerId));
+    uit = { status: r.result, reden: r.reason === "testomgeving" ? "testomgeving" : r.reason?.startsWith("PLANBORD_WEBHOOK_URL") ? "koppeling niet ingesteld" : r.reason };
+  } catch (fout: any) {
+    uit = { status: "mislukt", reden: String(fout?.message || "onbekende fout").slice(0, 200) };
+  }
+  const tekst = uit.status === "verzonden" ? "Doorgezet naar Planboard" : uit.status === "mislukt" ? `Niet doorgezet naar Planboard: ${uit.reden}` : `Niet naar Planboard (${uit.reden})`;
+  await h.log(c.id, w, "planbord", tekst).catch(() => {});
+  return uit;
 }

@@ -250,14 +250,30 @@ productie), zonder codewijziging; versie 1 blijft in de code zodat terug altijd 
 | --- | --- | --- | --- |
 | 1 | Onderbouwing | Verplicht | Zo gebouwd |
 | 2 | Medewerker aanmaken | Met een knop in Onboarding | Zo gebouwd |
-| 3 | Inzetbaar en doorzetten | Bij Onboarding: onboardingmail en doorzetten naar Planboard via de bestaande webhook | Uitwerking volgt na akkoord op het voorstel |
-| 4 | Profiel naar Planbord | Pas als alles definitief is | Uitwerking volgt |
+| 3 | Inzetbaar en doorzetten | Bij de knop Medewerker aanmaken: onboardingmail (template voorgeselecteerd, aan te passen) en doorzetten naar Planboard via de bestaande webhook | Gebouwd, zie hieronder |
+| 4 | Profiel naar Planbord | Het volledige v2-profiel gaat pas mee als de hele nieuwe flow live staat op de website (niet de testomgeving) | Later |
 | 5 | Wat helpt bij de start | Een duidelijke briefing, een vast aanspreekpunt, samen met iemand anders van EXTRA, plus drie herschreven keuzes (`START_HULP`) | Gebouwd |
 | 6 | Werkkleding | Per functie, zie `KLEDING_PER_FUNCTIE`; banqueting zoals bediening | Gebouwd |
 | 7 | Certificaten | Vaste lijst (`CERTIFICATEN`) met Anders | Gebouwd |
-| 8 | Later op inspelen | Een melding om in te checken, op basis van het aantal diensten | Voorstel volgt |
+| 8 | Later op inspelen | Check-in op basis van het aantal diensten hoort in Planboard, waar de diensten staan. Hier niets bouwen | Geen werk hier |
 | 9 | Bewaartermijn | Historie volgt het dossier | Akkoord, zie hieronder |
 | 10 | Events en logistiek | Taken per functie nalopen met iemand van de vloer | Gebeurt |
+
+**Medewerker aanmaken (besluit 3).** De knop in Onboarding opent een venster met
+drie stappen. Eerst wordt de medewerker aangemaakt. Daarna gaat de onboardingmail
+uit: de best passende template staat voorgeselecteerd op taal en functiegroep, de
+interviewer kan een andere kiezen of geen mail sturen. Tot slot gaat de medewerker
+via de bestaande webhook naar Planboard, met alleen de velden die de oude route
+"Aannemen als medewerker" ook stuurt (`shared/onboardingDoorzetten.ts`). Geen
+applicationId, geen cv-blok en geen intakeblok: die komen bij besluit 4. Mislukt
+de mail of de webhook, dan blijft de medewerker staan en zegt de melding wat er nog
+moet; beide stappen staan in de historie. Een tweede klik verstuurt niets.
+
+In de testomgeving gaat er nooit iets naar Planboard (`sendPlanbordWebhook` slaat
+over bij `TESTOMGEVING=1`), en de mail gaat alleen naar het mailvenster. Staat er in
+de testomgeving toch een SendGrid-sleutel, dan wordt er geen onboardingmail
+verstuurd. In productie werkt de knop pas als `INTAKE_V2=1` staat; terug kan met
+`INTAKE_V2=0`.
 
 **AVG-opschoning.** De historie per antwoord staat in `intake_antwoorden`. Wie de
 AVG-opschoning van sollicitantdossiers bouwt of aanpast, moet deze tabel meenemen

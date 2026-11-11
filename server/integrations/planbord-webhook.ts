@@ -249,27 +249,37 @@ export function buildIntakePayloadBlock(fd: any, functionType?: string | null): 
   return block;
 }
 
-export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<void> {
+export type PlanbordUitkomst = { result: 'verzonden' | 'overgeslagen' | 'mislukt'; reason?: string };
+
+/**
+ * Geeft de uitkomst terug (bestaande aanroepers negeren die). In de testomgeving
+ * (TESTOMGEVING=1) gaat er nooit iets naar Planboard: geen externe testberichten.
+ */
+export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<PlanbordUitkomst> {
   const url = process.env.PLANBORD_WEBHOOK_URL;
   const secret = process.env.WEBHOOK_SECRET;
 
   // Eén duidelijke, altijd-aanwezige resultaatregel per aanroep, zodat levering
   // aantoonbaar is. Bevat applicationId, payloadVersion en het eindresultaat.
-  const logResult = (result: 'verzonden' | 'overgeslagen' | 'mislukt', reason?: string) => {
+  const logResult = (result: 'verzonden' | 'overgeslagen' | 'mislukt', reason?: string): PlanbordUitkomst => {
     console.log(
       `[planbord-webhook] applicationId=${data.applicationId ?? 'n/a'} ` +
       `payloadVersion=${PLANBORD_PAYLOAD_VERSION} result=${result}` +
       (reason ? ` reason=${reason}` : ''),
     );
+    return { result, reason };
   };
 
   console.error(
     '[planbord-webhook] called, url=', !!url, 'secret=', !!secret, 'employeeId=', data.id
   );
 
+  if (process.env.TESTOMGEVING === '1') {
+    return logResult('overgeslagen', 'testomgeving');
+  }
+
   if (!url || !secret) {
-    logResult('overgeslagen', 'PLANBORD_WEBHOOK_URL of WEBHOOK_SECRET ontbreekt');
-    return;
+    return logResult('overgeslagen', 'PLANBORD_WEBHOOK_URL of WEBHOOK_SECRET ontbreekt');
   }
 
   try {
@@ -295,13 +305,12 @@ export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<vo
     );
 
     if (!res.ok) {
-      logResult('mislukt', `http_${res.status}`);
-      return;
+      return logResult('mislukt', `http_${res.status}`);
     }
 
-    logResult('verzonden', `http_${res.status}`);
+    return logResult('verzonden', `http_${res.status}`);
   } catch (err: any) {
     console.error('[planbord-webhook] result status= NONE err=', err?.message ?? err);
-    logResult('mislukt', `exception:${err?.message ?? 'onbekend'}`);
+    return logResult('mislukt', `exception:${err?.message ?? 'onbekend'}`);
   }
 }

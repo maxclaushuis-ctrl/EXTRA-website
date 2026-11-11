@@ -223,9 +223,17 @@ async function main() {
   test("17 in Onboarding is er nog geen medewerker: dat is een eigen handeling", (await roep(`/kaart/${fleur.id}`)).d.medewerker === null);
 
   // ── 17: medewerkersdossier ────────────────────────────────────────────────
-  const [m1, m2] = await Promise.all([roep(`/medewerker/${fleur.id}`, { method: "POST" }), roep(`/medewerker/${fleur.id}`, { method: "POST" })]);
+  const om = await roep(`/onboardingmail/${fleur.id}`);
+  test("17 de knop weet dat er in de testomgeving niets naar Planboard gaat", om.status === 200 && om.d.planbord === "testomgeving" && Array.isArray(om.d.templates) && ["mailvenster", "geblokkeerd"].includes(om.d.mail));
+  const [m1, m2] = await Promise.all([roep(`/medewerker/${fleur.id}`, { method: "POST", body: { templateId: null } }), roep(`/medewerker/${fleur.id}`, { method: "POST", body: { templateId: null } })]);
+  const nieuwe = [m1, m2].find((x) => x.d.nieuw === true);
+  test("17 bij het aanmaken: zonder template geen mail, en in de testomgeving niet naar Planboard", !!nieuwe && nieuwe.d.mail?.status === "overgeslagen" && nieuwe.d.planbord?.status === "overgeslagen" && nieuwe.d.planbord?.reden === "testomgeving" && /niet naar Planboard \(testomgeving\)/.test(nieuwe.d.melding || ""));
+  const gb = await db.select().from(sollicitantGebeurtenissen).where(eq(sollicitantGebeurtenissen.candidateId, fleur.id));
+  test("17 mail en Planboard staan in de historie", gb.some((x: any) => x.soort === "onboardingmail") && gb.some((x: any) => x.soort === "planbord"));
   const mw = await db.select().from(employees).where(eq(employees.candidateId, fleur.id));
   test("17 twee keer tegelijk aanmaken geeft één medewerker", mw.length === 1 && m1.d.medewerkerId === m2.d.medewerkerId, `${mw.length} medewerkers`);
+  const nogEens = await roep(`/medewerker/${fleur.id}`, { method: "POST", body: { templateId: 999999 } });
+  test("17 een tweede klik verstuurt niets", nogEens.d.nieuw === false && nogEens.d.mail === undefined && nogEens.d.planbord === undefined);
   test("17 nog een keer aanmaken geeft dezelfde medewerker terug", (await roep(`/medewerker/${fleur.id}`, { method: "POST" })).d.nieuw === false && (await db.select().from(employees).where(eq(employees.candidateId, fleur.id))).length === 1);
   const prof = await roep(`/medewerkerprofiel/${mw[0].id}`);
   const p = prof.d.profiel;

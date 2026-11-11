@@ -344,20 +344,42 @@ export function Historie({ kandidaatId }: { kandidaatId: number }) {
 
 // ─── Onboarding: naar het medewerkersdossier ────────────────────────────────
 
+type OnboardingInfo = {
+  templates: { id: number; naam: string; taal: string; functiegroep: string | null; opdrachtgever: string | null }[];
+  voorstel: number | null; email: string | null;
+  mail: "aan" | "uit" | "mailvenster" | "geblokkeerd"; planbord: "aan" | "uit" | "testomgeving";
+};
+
 export function MedewerkerKaart({ data, bijgewerkt }: { data: KaartData; bijgewerkt: () => void }) {
   const [bezig, setBezig] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [info, setInfo] = useState<OnboardingInfo | null>(null);
+  const [keuze, setKeuze] = useState<string>("");
   const k = data.kandidaat;
   const m = data.medewerker;
+  async function openen() {
+    setOpen(true); setInfo(null);
+    try {
+      const r = await api<OnboardingInfo>(`/api/sollicitanten/onboardingmail/${k.id}`);
+      setInfo(r); setKeuze(r.voorstel ? String(r.voorstel) : "");
+    } catch (e: any) { melding(e.message); setOpen(false); }
+  }
   async function maak() {
     if (bezig) return;
     setBezig(true);
     try {
-      const r = await api<{ nieuw: boolean; gekoppeld?: boolean }>(`/api/sollicitanten/medewerker/${k.id}`, { method: "POST" });
-      melding(r.nieuw ? `${k.voornaam} staat nu in Medewerkers.` : r.gekoppeld ? "Gekoppeld aan de bestaande medewerker." : `${k.voornaam} stond al in Medewerkers.`);
+      const r = await api<{ nieuw: boolean; gekoppeld?: boolean; melding?: string }>(`/api/sollicitanten/medewerker/${k.id}`, { method: "POST", body: { templateId: keuze ? Number(keuze) : null } });
+      melding(r.melding || (r.nieuw ? `${k.voornaam} staat nu in Medewerkers.` : r.gekoppeld ? "Gekoppeld aan de bestaande medewerker. Er is niets verstuurd." : `${k.voornaam} stond al in Medewerkers. Er is niets verstuurd.`));
+      setOpen(false);
       bijgewerkt();
     } catch (e: any) { melding(e.message); }
     finally { setBezig(false); }
   }
+  const mailTekst = !info ? "" : info.mail === "mailvenster" ? "Testomgeving: de mail komt alleen in het mailvenster, niet bij de kandidaat."
+    : info.mail === "geblokkeerd" ? "Testomgeving: mail staat aan, dus er wordt hier geen onboardingmail verstuurd."
+    : info.mail === "uit" ? "Mail staat uit op deze omgeving; de mail wordt niet echt verstuurd." : `Gaat naar ${info.email || "het e-mailadres van de kandidaat"}.`;
+  const planbordTekst = !info ? "" : info.planbord === "testomgeving" ? "Testomgeving: er gaat niets naar Planboard."
+    : info.planbord === "uit" ? "De koppeling met Planboard is op deze omgeving niet ingesteld." : "Gaat via de bestaande koppeling naar Planboard, met dezelfde gegevens als nu.";
   return (
     <Kaartje className="sv-besluitkaart">
       <div className="sv-besluit">
@@ -365,15 +387,42 @@ export function MedewerkerKaart({ data, bijgewerkt }: { data: KaartData; bijgewe
           <h3>Medewerkersdossier</h3>
           <p className="sv-grijs" style={{ marginTop: 4 }}>{m
             ? `${k.voornaam} staat in Medewerkers (status: ${m.status}). De antwoorden, de beoordeling en de voorkeuren uit het gesprek blijven in dit dossier staan en zijn vanuit het medewerkersdossier te openen.`
-            : `Maak ${k.voornaam} aan in Medewerkers. De antwoorden, de beoordeling en de voorkeuren uit het gesprek gaan mee; er wordt niets verstuurd.`}</p>
+            : `Maak ${k.voornaam} aan in Medewerkers. Daarbij gaat de onboardingmail uit en wordt ${k.voornaam} doorgezet naar Planboard. De antwoorden uit het gesprek blijven in dit dossier.`}</p>
         </div>
-        {m ? <Chip soort="ok">✓ Medewerker aangemaakt</Chip> : <Knop soort="donker" disabled={bezig} onClick={maak}>Medewerker aanmaken</Knop>}
+        {m ? <Chip soort="ok">✓ Medewerker aangemaakt</Chip> : <Knop soort="donker" disabled={bezig} onClick={openen}>Medewerker aanmaken</Knop>}
       </div>
+      {open && (
+        <Dialoog titel={`${k.voornaam} aanmaken als medewerker`} sluit={() => !bezig && setOpen(false)} breed={600}>
+          {!info ? <p className="sv-grijs">Laden...</p> : <>
+            <ol className="sv2-drie">
+              <li><b>Medewerker aanmaken</b><span>{k.voornaam} komt in Medewerkers, met de antwoorden uit het gesprek.</span></li>
+              <li><b>Onboardingmail</b><span>{mailTekst}</span>
+                <select className="sv-invoer" value={keuze} onChange={(e) => setKeuze(e.target.value)} aria-label="Onboardingmail">
+                  <option value="">Geen onboardingmail versturen</option>
+                  {info.templates.map((t) => <option key={t.id} value={t.id}>{t.naam} · {t.taal}{t.functiegroep ? ` · ${t.functiegroep}` : ""}{t.opdrachtgever ? ` · ${t.opdrachtgever}` : ""}{t.id === info.voorstel ? " (voorstel)" : ""}</option>)}
+                </select>
+                {!info.templates.length && <small>Er staat nog geen actieve template met inhoud klaar. Maak er een in Medewerkers, onder Onboarding.</small>}
+              </li>
+              <li><b>Planboard</b><span>{planbordTekst}</span></li>
+            </ol>
+            <div className="sv-rij" style={{ justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+              <Knop disabled={bezig} onClick={() => setOpen(false)}>Annuleren</Knop>
+              <Knop soort="donker" disabled={bezig} onClick={maak}>{bezig ? "Bezig..." : keuze ? "Aanmaken en versturen" : "Aanmaken zonder mail"}</Knop>
+            </div>
+          </>}
+        </Dialoog>
+      )}
     </Kaartje>
   );
 }
 
 export const CSS_V2 = `
+.sv .sv2-drie{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:14px;counter-reset:d}
+.sv .sv2-drie li{display:grid;grid-template-columns:30px 1fr;gap:4px 10px;align-items:start;counter-increment:d}
+.sv .sv2-drie li::before{content:counter(d);grid-row:span 4;width:26px;height:26px;border-radius:50%;background:#37352C;color:#F8F7F4;display:grid;place-items:center;font-weight:800;font-size:13px}
+.sv .sv2-drie b{font-size:15px}.sv .sv2-drie span{color:#5C594F;font-size:13.5px}
+.sv .sv2-drie select{margin-top:6px;width:100%;height:40px;border:1px solid #DDD8CE;border-radius:10px;padding:0 10px;font:inherit;background:#fff;color:#37352C}
+.sv .sv2-drie small{color:#8A6D1F;font-size:12.5px}
 .sv .sv2-instructie{margin:0 0 14px 18px;padding:0;font-size:13.5px;color:#5C594F;line-height:1.6}
 .sv .sv2-schuif{display:grid;grid-template-columns:190px minmax(160px,1fr) 150px;gap:16px;align-items:start;margin-bottom:18px}
 .sv .sv2-schuif>b{font-size:15.5px;line-height:1.3;padding-top:2px}
