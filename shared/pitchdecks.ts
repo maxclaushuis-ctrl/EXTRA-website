@@ -17,6 +17,7 @@ export type DeckKleur = "rose" | "pistachio" | "sky";
 export interface Deck { naam: string; titel: string; kleur: DeckKleur }
 
 export const PITCHDECKS: Deck[] = [
+  { naam: "dekamarkt", titel: "DekaMarkt", kleur: "pistachio" },
   { naam: "gofo", titel: "GOFO", kleur: "pistachio" },
   { naam: "dpd", titel: "DPD", kleur: "pistachio" },
   { naam: "eg", titel: "EG Group", kleur: "rose" },
