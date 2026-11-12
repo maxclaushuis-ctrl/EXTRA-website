@@ -145,3 +145,16 @@
 .trede.t1{height:164px}.trede.t2{height:138px}.trede.t3{height:112px}
 .trede.t3 b{font-size:21px}
 @media (max-width:900px){.staffel{grid-template-columns:repeat(2,1fr)}.trede.t0,.trede.t1,.trede.t2,.trede.t3{height:auto;min-height:110px}}
+
+/* Ons voorstel: tekst links, staffel groot rechts */
+.voorstel2{display:grid;grid-template-columns:.9fr 1.1fr;gap:72px;align-items:end}
+.voorstel2 h2{font-size:clamp(44px,5.2vw,86px);line-height:.9;letter-spacing:-.06em;margin:20px 0 0}
+.voorstel2 .lead{margin-top:22px;color:rgba(248,247,244,.75);max-width:26em}
+.voorstel2 .staffel{margin-top:0;max-width:none;gap:14px}
+.voorstel2 .trede{padding:20px 18px 22px;border-radius:20px}
+.voorstel2 .trede small{font-size:13.5px}
+.voorstel2 .trede b{font-size:clamp(34px,3.4vw,52px)}
+.voorstel2 .trede span{font-size:13.5px}
+.voorstel2 .trede.t0{height:340px}.voorstel2 .trede.t1{height:290px}.voorstel2 .trede.t2{height:240px}.voorstel2 .trede.t3{height:190px}
+.voorstel2 .trede.t3 b{font-size:clamp(20px,1.8vw,27px);white-space:nowrap}
+@media (max-width:900px){.voorstel2{grid-template-columns:1fr;gap:30px}.voorstel2 .trede.t0,.voorstel2 .trede.t1,.voorstel2 .trede.t2,.voorstel2 .trede.t3{height:auto;min-height:130px}}
