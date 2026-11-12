@@ -20,7 +20,7 @@ import { afschermen } from "@shared/cvAfschermen";
 import { matchKaart, modelVoor, type FunctieModel, type MatchKaart, type Periode } from "@shared/kandidaatMatch";
 import { soortVan, valideerAnalyse } from "@shared/cvLezen";
 export { soortVan, valideerAnalyse };
-import type { JobVelden } from "@shared/jobRegels";
+import { geenErvaringTelt, type JobVelden } from "@shared/jobRegels";
 
 export function matchAan(): boolean {
   const w = process.env.JOB_V3_MATCH;
@@ -117,7 +117,7 @@ export async function analyseerCv(candidateId: number): Promise<CvAnalyse | null
     if (uit === "geen_ai") return bewaar({ status: "geen_ai", tekens: af.tekst.length });
     const a = await bewaar({ status: "klaar", tekens: af.tekst.length, periodes: uit.periodes, certificaten: uit.certificaten, model: "gpt-4o-mini" });
     // Momentopname van de match, voor de geschiedenis en de consistentie
-    const k = matchKaart(model, uit.periodes, uit.certificaten, { ervaringNiveau: velden.ervaringNiveau ?? null }, peil);
+    const k = matchKaart(model, uit.periodes, uit.certificaten, { ervaringNiveau: geenErvaringTelt(velden) ? "geen" : velden.ervaringNiveau === "geen" ? null : velden.ervaringNiveau ?? null }, peil);
     await db.insert(kandidaatMatches).values({
       candidateId, cvAnalyseId: a.id, functie: model.sleutel, toestand: k.uitkomst.toestand, score: k.uitkomst.score ?? null, laag: k.uitkomst.laag ?? null, hoog: k.uitkomst.hoog ?? null,
       dekking: k.uitkomst.dekking, voorlopig: k.uitkomst.voorlopig, onzekerheid: k.uitkomst.onzekerheid, eis: k.eis.status, label: k.uitkomst.label, invoer: k.berekening,
@@ -165,7 +165,7 @@ export function matchUit(c: { hasCv: boolean | null; cvFilename: string | null; 
   if (!a || a.bestand !== c.cvFilename) return { status: "nog_niet" };
   if (a.status !== "klaar") return { status: a.status, op: a.aangemaaktOp ? String(a.aangemaaktOp) : null, melding: MELDING[a.status] || MELDING.fout };
   const model = modelVoor(c.functieEersteKeus, c.functionType, (c.bronDetails as any)?.branche ?? null);
-  const kaart = matchKaart(model, (a.periodes || []) as Periode[], (a.certificaten || []) as string[], { ervaringNiveau: velden?.ervaringNiveau ?? null }, nu);
+  const kaart = matchKaart(model, (a.periodes || []) as Periode[], (a.certificaten || []) as string[], { ervaringNiveau: geenErvaringTelt(velden) ? "geen" : velden?.ervaringNiveau === "geen" ? null : velden?.ervaringNiveau ?? null }, nu);
   return { status: "klaar", op: a.aangemaaktOp ? String(a.aangemaaktOp) : null, kaart };
 }
 

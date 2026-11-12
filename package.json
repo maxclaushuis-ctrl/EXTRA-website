@@ -71,6 +71,7 @@
     "aanvraagmails:test": "tsx shared/aanvraagMails.test.ts",
     "mailopmaak:test": "tsx shared/mailOpmaak.test.ts",
     "vacatureweergave:test": "tsx shared/vacatureWeergave.test.ts",
+    "startscherm:test": "tsx shared/startScherm.test.ts",
     "vacatureinvoer:test": "tsx shared/vacatureInvoer.test.ts",
     "publish:vacature": "tsx scripts/publish-vacature.ts",
     "links:test": "tsx scripts/linkHerschrijver.test.ts",

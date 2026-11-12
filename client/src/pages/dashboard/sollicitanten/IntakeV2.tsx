@@ -20,6 +20,7 @@ import {
   type Actie, type Bron, type FunctieCtx, type Hoofdstuk, type IntakeV2, type TaalAntwoord, type Voorbereiding,
 } from "@shared/intakeV2";
 import type { KaartData } from "./Kaart";
+import { feiten, gespreksmoment, initialen, punten, tegels, tijdlijn } from "@shared/startScherm";
 import { FotoMaker, IV_CSS, IntakeScherm } from "./Intake";
 import { JobGesprekPaneel } from "../JobBeheer";
 import { Dialoog, Knop, api, melding, useData } from "./gedeeld";
@@ -240,6 +241,7 @@ function IntakeV2Scherm({ id, sluit, klaar, data }: { id: number; sluit: () => v
 
       <div className="i2-lijf">
         <nav className="i2-nav" aria-label="Hoofdstukken">
+          <button className={nr === 0 ? "nu" : ""} onClick={() => gaNaar(0)} aria-current={nr === 0 ? "step" : undefined}><span aria-hidden>0</span>Voorbereiding</button>
           {HOOFDSTUKKEN.map((x, n) => (
             <button key={x.code} className={n + 1 === nr ? "nu" : isKlaar(n + 1) ? "klaar" : ""} onClick={() => gaNaar(n + 1)} aria-current={n + 1 === nr ? "step" : undefined}>
               <span aria-hidden>{isKlaar(n + 1) ? "✓" : n + 1}</span>{x.titel}
@@ -249,9 +251,9 @@ function IntakeV2Scherm({ id, sluit, klaar, data }: { id: number; sluit: () => v
         </nav>
 
         <main className="i2-inhoud" ref={inhoud}>
-          <div className="i2-kolom">
+          <div className={`i2-kolom${h ? "" : " breed"}`}>
             {!h ? (
-              <Start vb={vb} data={data} begin={() => gaNaar(1)} open={setPaneel} />
+              <Start vb={vb} data={data} begin={() => gaNaar(1)} open={setPaneel} afnemer={afnemer} />
             ) : <>
               <button className="i2-uitleg" onClick={() => setUitleg((u) => !u)} aria-expanded={uitleg}>? Uitleg</button>
               <p className="i2-kicker">{h.titel.toUpperCase()} · CIRCA {h.minuten} {h.minuten === 1 ? "MINUUT" : "MINUTEN"}</p>
@@ -409,7 +411,7 @@ function Voorbereid({ vb, data }: { vb: Voorbereiding; data: KaartData }) {
       </dl>
       {vb.ontbreekt.length > 0 && <p className="i2-voorregel"><b>Nog niet bekend</b>{vb.ontbreekt.join(", ")}. Onbekend is geen nee.</p>}
       {vb.tegenstrijdig.length > 0 && <div className="i2-let"><b>Gegevens spreken elkaar tegen</b>{vb.tegenstrijdig.map((t) => <p key={t}>{t}</p>)}</div>}
-      {vb.bespreekpunten.length > 0 && <div className="i2-punten"><b>Om op door te vragen</b><ol>{vb.bespreekpunten.map((t) => <li key={t}>{t}</li>)}</ol></div>}
+      {vb.bespreekpunten.some((t) => !vb.tegenstrijdig.includes(t)) && <div className="i2-punten"><b>Om op door te vragen</b><ol>{vb.bespreekpunten.filter((t) => !vb.tegenstrijdig.includes(t)).map((t) => <li key={t}>{t}</li>)}</ol></div>}
       {cv.periodes.length > 0 && <>
         <p className="i2-lbl">WERKERVARING VOLGENS HET CV</p>
         <ul className="i2-periodes">{cv.periodes.slice(0, 6).map((x, n) => <li key={n}><b>{x.functie}</b>{x.werkgever ? ` bij ${x.werkgever}` : ""}<small>{[x.begin, x.einde].filter(Boolean).join(" tot ") || "periode onbekend"}</small></li>)}</ul>
@@ -418,19 +420,85 @@ function Voorbereid({ vb, data }: { vb: Voorbereiding; data: KaartData }) {
     </div>
   );
 }
-function Start({ vb, data, begin, open }: { vb: Voorbereiding; data: KaartData; begin: () => void; open: (p: Paneel) => void }) {
+/**
+ * Beginscherm (design 3.0, akkoord Max 12 nov): wie het is en wanneer, vier kerncijfers,
+ * hooguit twee punten om eerst te bespreken, en daaronder de details en de werkervaring.
+ * De logica staat in shared/startScherm.ts.
+ */
+function Start({ vb, data, begin, open, afnemer }: { vb: Voorbereiding; data: KaartData; begin: () => void; open: (p: Paneel) => void; afnemer: string }) {
   const k = data.kandidaat;
-  return <>
-    <p className="i2-kicker">VOORBEREIDING · VOOR JE BEGINT</p>
-    <h1>Dit weten we al van {k.voornaam}</h1>
-    <p className="i2-doel">Lees dit even door. In het gesprek hoef je niet opnieuw te vragen wat hier al duidelijk staat.</p>
-    <div className="i2-startkaart"><Voorbereid vb={vb} data={data} /></div>
-    <div className="i2-startknoppen">
-      {k.heeftCv && <button className="iv-knopje" onClick={() => open("cv")}>Cv openen</button>}
-      {data.job && <button className="iv-knopje" onClick={() => open("job")}>Gesprek met Job openen</button>}
-      <button className="i2-volgende" onClick={begin}>Start het gesprek →</button>
+  const v = data.voortraject!;
+  const b = BRANCHE[data.branche];
+  const moment = gespreksmoment(k.gespreksdatum, k.gesprekstijd);
+  const t = tegels(v);
+  const p = punten(vb);
+  const fs = feiten(vb);
+  const tl = tijdlijn(v);
+  const chips = [k.leeftijd ? `${k.leeftijd} jaar` : "", k.woonplaats || "", k.heeftCv ? "Cv aanwezig" : "Geen cv"].filter(Boolean);
+  return (
+    <div className="s3" style={{ ["--accent" as any]: b.foto, ["--accentvlak" as any]: b.vlak, ["--accenttekst" as any]: b.tekst }}>
+      <section className="s3-hero">
+        <div className="s3-av" aria-hidden>{initialen(k.naam)}</div>
+        <div className="s3-wie">
+          <p className="s3-kick">Voorbereiding · voor je begint</p>
+          <h1>{k.naam}</h1>
+          <div className="s3-chips"><span className="f">{k.functieNaam}</span><span>{b.label}</span>{chips.map((c) => <span key={c}>{c}</span>)}</div>
+        </div>
+        <div className="s3-acties">
+          {(moment || afnemer) && <p className="s3-wanneer">{moment && <>Gesprek <b>{moment}</b></>}{moment && afnemer ? " · " : ""}{afnemer && <>interviewer {afnemer}</>}</p>}
+          <button className="i2-volgende" onClick={begin}>Start het gesprek →</button>
+          <p className="s3-links">{k.heeftCv && <button onClick={() => open("cv")}>Cv openen</button>}{data.job && <button onClick={() => open("job")}>Gesprek met Job</button>}</p>
+        </div>
+      </section>
+
+      <div className="s3-tegels">
+        {t.map((x) => (
+          <div key={x.label} className={`s3-tegel${x.bron ? "" : " leeg"}`}>
+            <small><i />{x.label}</small>
+            <b>{x.hoofd}</b>
+            <span>{x.sub}{x.bron && <em className={`s3-bron ${x.bron}`}>{BRON_NAAM[x.bron]}</em>}</span>
+          </div>
+        ))}
+      </div>
+
+      {p.length > 0 && (
+        <section className="s3-eerst">
+          <header><b>Eerst bespreken</b><span>{p.length === 1 ? "1 punt" : `${p.length} punten`} · de rest weten we al</span></header>
+          {p.map((x) => (
+            <div key={x.titel + x.tekst} className="s3-punt">
+              <span className={`s3-label ${x.soort}`}>{x.label}</span>
+              <p><b>{x.titel}</b>{x.tekst && <small>{x.tekst}</small>}</p>
+              {x.vraag ? <div className="s3-vraag"><em>Vraag</em>{x.vraag}</div> : <div />}
+            </div>
+          ))}
+        </section>
+      )}
+
+      <div className="s3-twee">
+        <section className="s3-kaart">
+          <header><b>Wat we al weten</b>{data.job && <button onClick={() => open("job")}>Gesprek met Job ↗</button>}</header>
+          <dl>
+            {fs.map((x) => <div key={x.label} className="s3-feit"><dt>{x.label}</dt><dd>{x.citaat ? <q>{x.waarde}</q> : x.waarde}<em className={`s3-bron ${x.bron}`}>{BRON_NAAM[x.bron]}</em></dd></div>)}
+          </dl>
+          {vb.ontbreekt.length > 0 && <p className="s3-klein">Nog niet bekend: {vb.ontbreekt.join(", ")}. Onbekend is geen nee.</p>}
+        </section>
+        <section className="s3-kaart">
+          <header><b>Werkervaring volgens het cv</b>{k.heeftCv && <button onClick={() => open("cv")}>Cv openen ↗</button>}</header>
+          {tl.length > 0 ? <>
+            <ol className="s3-tijd">
+              {tl.map((x, n) => (
+                <li key={n} className={x.nu ? "nu" : ""}>
+                  <b>{x.functie}</b><span>{x.werkgever || "werkgever onbekend"}</span>
+                  <time>{x.duur && <strong>{x.duur}</strong>}{x.periode}</time>
+                </li>
+              ))}
+            </ol>
+            <p className="s3-klein">Door AI uit het cv gehaald. Bij twijfel geldt wat de kandidaat vertelt.</p>
+          </> : <p className="s3-klein">{k.heeftCv ? "Het cv is nog niet uitgelezen. Open het cv om het zelf te bekijken." : "Er is geen cv. Vraag in het gesprek naar de werkervaring."}</p>}
+        </section>
+      </div>
     </div>
-  </>;
+  );
 }
 function CvPaneel({ data }: { data: KaartData }) {
   const k = data.kandidaat;
@@ -866,6 +934,57 @@ const CSS2 = `
 .iv2 .i2-teller{margin:auto 12px 0;padding-top:14px;border-top:1px solid #E4E0D8;font-size:14px;color:#5C594F}
 .iv2 .i2-inhoud{flex:1;overflow:auto;padding:26px 36px 130px;min-width:0}
 .iv2 .i2-kolom{max-width:900px;margin:0 auto;position:relative}
+.iv2 .i2-kolom.breed{max-width:1180px}
+.iv2 .s3{--lijn3:#E4E0D8;display:grid;gap:14px}
+.iv2 .s3-hero{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;background:#fff;border:1px solid var(--lijn3);border-radius:22px;padding:22px 24px}
+.iv2 .s3-av{width:68px;height:68px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-weight:800;font-size:22px;color:#37352C}
+.iv2 .s3-kick{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A8478;margin:0}
+.iv2 .s3 h1{margin:4px 0 8px;font-size:34px;letter-spacing:-.035em;line-height:1}
+.iv2 .s3-chips{display:flex;flex-wrap:wrap;gap:6px}
+.iv2 .s3-chips span{background:#F8F7F4;border:1px solid var(--lijn3);border-radius:99px;padding:4px 10px;font-size:12.5px;font-weight:650;color:#5C594F}
+.iv2 .s3-chips span.f{background:var(--accentvlak);color:var(--accenttekst);border-color:transparent}
+.iv2 .s3-acties{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.iv2 .s3-wanneer{margin:0;font-size:13px;color:#6B665C}.iv2 .s3-wanneer b{color:#37352C}
+.iv2 .s3-links{margin:0;display:flex;gap:14px}
+.iv2 .s3-links button,.iv2 .s3-kaart header button{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:700;color:#37352C;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.iv2 .s3-tegels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.iv2 .s3-tegel{background:#fff;border:1px solid var(--lijn3);border-radius:18px;padding:16px 18px;min-width:0}
+.iv2 .s3-tegel small{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#6B665C;font-weight:650}
+.iv2 .s3-tegel small i{width:7px;height:7px;border-radius:50%;background:#37352C}
+.iv2 .s3-tegel b{display:block;font-size:27px;letter-spacing:-.04em;margin:8px 0 4px;line-height:1.1}
+.iv2 .s3-tegel.leeg b{color:#A39E94;font-size:20px}
+.iv2 .s3-tegel span{font-size:12.5px;color:#6B665C}
+.iv2 .s3-bron{display:inline-block;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:1px;background:#F1EDE6;color:#6B665C}
+.iv2 .s3-bron.job{background:#E4EEF8;color:#2D5679}.iv2 .s3-bron.cv{background:#EAF0E0;color:#4A6131}
+.iv2 .s3-eerst{background:#fff;border:1px solid var(--lijn3);border-radius:20px;overflow:hidden}
+.iv2 .s3-eerst header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--lijn3)}
+.iv2 .s3-eerst header b{font-size:16px}.iv2 .s3-eerst header span{font-size:12.5px;color:#6B665C}
+.iv2 .s3-punt{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(0,1fr);gap:18px;padding:14px 20px;align-items:start;border-top:1px solid #F0ECE5}
+.iv2 .s3-punt:first-of-type{border-top:0}
+.iv2 .s3-label{justify-self:start;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800;line-height:1.3}
+.iv2 .s3-label.tegen{background:#F5E3B5;color:#7A5A12}.iv2 .s3-label.onbekend,.iv2 .s3-label.let{background:#EDEAE4;color:#5C594F}.iv2 .s3-label.vraag{background:#E4EEF8;color:#2D5679}
+.iv2 .s3-punt p{margin:0;font-size:14px;line-height:1.45}.iv2 .s3-punt p b{display:block;font-weight:700}.iv2 .s3-punt p small{display:block;color:#6B665C;font-size:13px;margin-top:2px}
+.iv2 .s3-vraag{background:#F8F7F4;border-radius:12px;padding:9px 12px;font-size:13.5px;line-height:1.4}
+.iv2 .s3-vraag em{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A8478;margin-bottom:2px}
+.iv2 .s3-twee{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:14px;align-items:start}
+.iv2 .s3-kaart{background:#fff;border:1px solid var(--lijn3);border-radius:20px;padding:16px 20px}
+.iv2 .s3-kaart header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}.iv2 .s3-kaart header b{font-size:16px}
+.iv2 .s3-kaart dl{margin:0}
+.iv2 .s3-feit{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px solid #F0ECE5}
+.iv2 .s3-feit:first-child{border-top:0}
+.iv2 .s3-feit dt{font-size:12.5px;color:#8A8478;font-weight:650;padding-top:2px}.iv2 .s3-feit dd{margin:0;font-size:14px;font-weight:600;line-height:1.4}
+.iv2 .s3-feit q{font-weight:500;font-style:italic}
+.iv2 .s3-tijd{list-style:none;margin:6px 0 0;padding:0;position:relative}
+.iv2 .s3-tijd:before{content:"";position:absolute;left:6px;top:8px;bottom:14px;width:2px;background:var(--lijn3)}
+.iv2 .s3-tijd li{position:relative;padding:0 0 13px 26px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px}
+.iv2 .s3-tijd li:before{content:"";position:absolute;left:0;top:4px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #B9B3A8}
+.iv2 .s3-tijd li.nu:before{background:#37352C;border-color:#37352C}
+.iv2 .s3-tijd b{font-size:14px}.iv2 .s3-tijd span{grid-column:1;font-size:12.5px;color:#6B665C}
+.iv2 .s3-tijd time{grid-row:1/span 2;grid-column:2;font-size:12px;color:#8A8478;text-align:right;white-space:nowrap}
+.iv2 .s3-tijd time strong{display:block;color:#37352C;font-size:12.5px}
+.iv2 .s3-klein{font-size:12px;color:#8A8478;margin:6px 0 0}
+@media (max-width:1100px){.iv2 .s3-tegels{grid-template-columns:repeat(2,minmax(0,1fr))}.iv2 .s3-twee{grid-template-columns:1fr}}
+@media (max-width:760px){.iv2 .s3-hero{grid-template-columns:auto 1fr}.iv2 .s3-acties{grid-column:1/-1;align-items:stretch}.iv2 .s3-punt{grid-template-columns:1fr;gap:8px}.iv2 .s3 h1{font-size:28px}.iv2 .s3-tegel{padding:14px}.iv2 .s3-tegel b{font-size:21px}.iv2 .s3-av{width:52px;height:52px;font-size:18px}}
 .iv2 .i2-kicker{font-size:12.5px;font-weight:800;letter-spacing:.1em;color:#5C594F;margin:0}
 .iv2 h1{font-size:34px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em;line-height:1.15;padding-right:110px}
 .iv2 .i2-doel{color:#5C594F;margin:0 0 20px;font-size:16.5px}

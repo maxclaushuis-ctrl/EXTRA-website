@@ -3,7 +3,7 @@
  * vervallen vragen en de bewijscheck. Fictieve kandidaten, geen AI (de lezing is vast).
  * Run met:  npx tsx shared/jobBegrijpen.test.ts
  */
-import { start, verwerk, teksten, vervolgOpErvaring, MAX_DOORVRAGEN_PER_VELD, type JobContext, type Lezing } from "./jobRegels";
+import { start, verwerk, teksten, vervolgOpErvaring, geenErvaringTelt, MAX_DOORVRAGEN_PER_VELD, type JobContext, type Lezing } from "./jobRegels";
 import { bewijsCheck, herformuleringGoed, valideerLezing } from "./jobLezen";
 
 let geslaagd = 0;
@@ -93,6 +93,14 @@ test("Vervolg: samenvatting van de AI met het oude erin wint", vervolgOpErvaring
 const afw = vervolgOpErvaring({ ervaringNiveau: "geen" }, { ervaring: "3 jaar keuken", ervaringNiveau: "ervaren" }, "ervaring", "eigenlijk alleen afwas");
 test("Vervolg: ervaren gaat niet stil omlaag, wel een twijfel", afw.velden.ervaringNiveau === undefined && !!afw.twijfel?.includes("alleen afwas"));
 test("Vervolg: eerste antwoord ongemoeid", vervolgOpErvaring({ ervaring: "geen", ervaringNiveau: "geen" }, {}, "ervaring", "geen").velden.ervaringNiveau === "geen");
+{
+  const h = vervolgOpErvaring({ ervaring: "Ik heb nog niet in een hotel gewerkt", ervaringNiveau: "geen" }, {}, "ervaring", "Ik heb nog niet in een hotel gewerkt");
+  test("Eerste antwoord: nog niet in een hotel is geen 'geen ervaring'", h.velden.ervaringNiveau === undefined && h.velden.ervaring === undefined && h.velden.geenHotel === true);
+  const r = vervolgOpErvaring({ ervaring: "Nog niet in een hotel, wel in restaurants", ervaringNiveau: "geen" }, {}, "ervaring", "Nog niet in een hotel, wel in restaurants");
+  test("Eerste antwoord: met ander werk blijft de ervaring staan, zonder 'geen'", r.velden.ervaringNiveau === undefined && r.velden.ervaring === "Nog niet in een hotel, wel in restaurants" && r.velden.geenHotel === true);
+  test("Eerste antwoord: echt geen ervaring blijft geen ervaring", vervolgOpErvaring({ ervaring: "geen ervaring", ervaringNiveau: "geen" }, {}, "ervaring", "Ik heb geen ervaring, ook niet in een hotel").velden.ervaringNiveau === "geen");
+  test("Oude gegevens: hotelzin telt niet als geen ervaring", !geenErvaringTelt({ ervaringNiveau: "geen", ervaring: "Ik heb nog niet in een hotel gewerkt" }) && geenErvaringTelt({ ervaringNiveau: "geen", ervaring: "geen ervaring" }));
+}
 test("Vervolg: bij een andere vraag niets anders", vervolgOpErvaring({ diensten: "3-4" } as any, { ervaring: "x" }, "diensten", "3 tot 4").velden.diensten === "3-4");
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);

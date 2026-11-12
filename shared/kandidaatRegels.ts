@@ -8,7 +8,7 @@
  * moment). Met een gespreksdatum staan ze in Sollicitanten, afgewezen in het
  * Archief en aangenomen in Onboarding.
  */
-import { FUNCTIES_MET_ERVARING, openOnderwerpen, type JobVelden } from "./jobRegels";
+import { FUNCTIES_MET_ERVARING, geenErvaringTelt, openOnderwerpen, type JobVelden } from "./jobRegels";
 
 export type Kleur = "geel" | "rood" | "oranje2" | "oranje1" | "oranje";
 export const KLEUREN: Record<Kleur, { kleur: string; label: string; cijfer?: string }> = {
@@ -101,10 +101,10 @@ export function bolletje(c: KandidaatInvoer, nu: Date): Bolletje {
     const twijfels = j.twijfels || [];
     if (c.nationalityZone === "NON_EU" && v.werkautorisatie && v.werkautorisatie !== "vrij") {
       gele.push({ reden: "werkautorisatie", tekst: v.werkautorisatie === "twv" ? "Twijfel: TWV vereist" : "Twijfel: werkautorisatie onduidelijk", sinds: jobSinds });
-    } else if (FUNCTIES_MET_ERVARING.includes(c.functie) && v.ervaringNiveau === "geen" && c.cvEis === "voldaan" && c.hasCv) {
+    } else if (FUNCTIES_MET_ERVARING.includes(c.functie) && geenErvaringTelt(v) && c.cvEis === "voldaan" && c.hasCv) {
       // Het gesprek zegt geen ervaring, het cv laat de gevraagde ervaring wel zien: geen twijfel, het cv beoordelen.
       gele.push({ reden: "cv", tekst: "Cv controleren", sinds: jobSinds });
-    } else if (FUNCTIES_MET_ERVARING.includes(c.functie) && v.ervaringNiveau === "geen") {
+    } else if (FUNCTIES_MET_ERVARING.includes(c.functie) && geenErvaringTelt(v)) {
       gele.push({ reden: "ervaring", tekst: `Twijfel: geen ervaring voor ${c.functie === "chef" ? "de keuken" : "front office"}`, sinds: jobSinds });
     } else if (twijfels.some((t) => /MENS|collega|gebeld/i.test(t))) {
       gele.push({ reden: "mens", tekst: "Wil een collega spreken", sinds: jobSinds });

@@ -661,7 +661,20 @@ const ONTKENNING = /\b(niet|nooit|geen|not|never|no|haven'?t|hasn'?t)\b/i;
  * - Het niveau "ervaren" gaat niet stilletjes omlaag; wijkt het af, dan een twijfel voor de beoordelaar.
  */
 export function vervolgOpErvaring(nieuw: JobVelden, bekend: JobVelden, vorig: Onderwerp | null, tekst: string): { velden: JobVelden; twijfel?: string } {
-  if (vorig !== "ervaring" || !bekend.ervaring) return { velden: nieuw };
+  if (vorig !== "ervaring") return { velden: nieuw };
+  if (!bekend.ervaring) {
+    // Eerste antwoord "ik heb nog niet in een hotel gewerkt": dat is hotelinformatie, geen "geen ervaring".
+    // Zonder ander werk in het antwoord blijft de ervaring open, zodat Job er (anders verwoord) naar vraagt.
+    if (nieuw.ervaringNiveau === "geen" && OVER_HOTEL.test(tekst) && ONTKENNING.test(tekst) && !/\bgeen ervaring\b|no experience/i.test(tekst)) {
+      const uit: JobVelden = { ...nieuw };
+      delete uit.ervaringNiveau;
+      if (!ANDER_WERK.test(tekst)) delete uit.ervaring;
+      if (!uit.hotels) uit.hotels = "nog niet in een hotel gewerkt";
+      uit.geenHotel = true;
+      return { velden: uit };
+    }
+    return { velden: nieuw };
+  }
   const uit: JobVelden = { ...nieuw };
   if (OVER_HOTEL.test(tekst)) {
     delete uit.ervaring;
@@ -684,6 +697,16 @@ export function vervolgOpErvaring(nieuw: JobVelden, bekend: JobVelden, vorig: On
     delete uit.ervaringNiveau;
   }
   return { velden: uit, twijfel };
+}
+
+/**
+ * Telt "geen ervaring" echt? Niet als de opgeslagen ervaring alleen zegt dat iemand nog niet
+ * in een hotel werkte (oudere gesprekken van vóór de fix in vervolgOpErvaring).
+ */
+export function geenErvaringTelt(v: Pick<JobVelden, "ervaringNiveau" | "ervaring"> | null | undefined): boolean {
+  if (v?.ervaringNiveau !== "geen") return false;
+  const t = String(v.ervaring || "");
+  return !(OVER_HOTEL.test(t) && ONTKENNING.test(t) && !/\bgeen ervaring\b|no experience/i.test(t));
 }
 
 /** Antwoord op de hotelvraag dat zegt: nog niet in een hotel gewerkt. */
