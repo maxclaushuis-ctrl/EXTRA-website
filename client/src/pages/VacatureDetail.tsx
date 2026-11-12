@@ -123,6 +123,8 @@ export default function VacatureDetail() {
   const v = naarRij(post);
   const sector = v.branche === "events" ? "events" : v.branche === "logistiek" ? "logistiek" : "horeca";
   const over = alineas(post.introductionText, post.aboutRole, post.workEnvironment);
+  // Een heel lang woord (zoals "Reguliersbreestraat") past niet op de grote kopmaat; dan een maat kleiner.
+  const langWoord = v.kort.split(/\s+/).some((w) => w.length >= 15);
   const doen: string[] = post.responsibilities || [];
   const zoek: string[] = post.requirements || [];
   const bied: string[] = post.offer || [];
@@ -140,7 +142,7 @@ export default function VacatureDetail() {
         <div className="vh-grid">
           <div className="vh-tekst">
             <span className="chip"><i></i>Vacature · {v.afdeling}</span>
-            <h1 className="vh-h1">{v.kort}{v.client && <> <span className="serif">bij {v.client}</span></>}</h1>
+            <h1 className={`vh-h1${langWoord ? " lang" : ""}`}>{v.kort}{v.client && <> <span className="serif">bij {v.client}</span></>}</h1>
             <ul className="vh-meta">
               {v.location && <li>{v.location}</li>}
               {post.serviceType && <li>{post.serviceType}</li>}

@@ -2049,6 +2049,7 @@
 .d3.css-vacature .vh-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:72px;align-items:center}
 .d3.css-vacature .vhero .chip{margin-bottom:26px}
 .d3.css-vacature .vh-h1{font-size:clamp(48px,6vw,100px);font-weight:800;letter-spacing:-.065em;line-height:.92}
+.d3.css-vacature .vh-h1.lang{font-size:clamp(40px,3.9vw,64px)}
 .d3.css-vacature .vh-h1 .serif{display:block;color:var(--accent);font-size:.82em;margin-top:.08em}
 .d3.css-vacature .vh-meta{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:34px}
 .d3.css-vacature .vh-meta li{border:1.5px solid rgba(248,247,244,.3);border-radius:99px;padding:8px 16px;font-size:15px;font-weight:600}
@@ -2096,7 +2097,7 @@
 @media (max-width:760px){.d3.css-vacature .vhero{padding:110px 0 64px}
 .d3.css-vacature .kruimel{margin-bottom:28px}
 .d3.css-vacature .vh-grid, .d3.css-vacature .vb-grid{grid-template-columns:minmax(0,1fr);gap:40px}
-.d3.css-vacature .vh-h1{font-size:46px}
+.d3.css-vacature .vh-h1{font-size:46px}.d3.css-vacature .vh-h1.lang{font-size:32px}
 .d3.css-vacature .vbody{padding:72px 0 88px}
 .d3.css-vacature .vb-h2{margin-top:56px}
 .d3.css-vacature .vb-zoek, .d3.css-vacature .vb-bied{grid-template-columns:minmax(0,1fr)}
