@@ -26,6 +26,7 @@ export const PITCHDECKS: Deck[] = [
   { naam: "action", titel: "Action", kleur: "pistachio" },
   { naam: "aldi", titel: "ALDI", kleur: "pistachio" },
   { naam: "logistiek", titel: "Logistiek algemeen", kleur: "pistachio" },
+  { naam: "hotels", titel: "Hotels algemeen", kleur: "rose" },
   { naam: "vermaat", titel: "Vermaat", kleur: "rose" },
   { naam: "novotel", titel: "Novotel", kleur: "rose" },
   { naam: "novotel-en", titel: "Novotel (Engels)", kleur: "rose" },
