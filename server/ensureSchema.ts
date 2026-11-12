@@ -520,6 +520,16 @@ const AANVULLINGEN: Aanvulling[] = [
       `),
   },
   {
+    // Migratie 0035: zie migrations/manual/0035_pitchdeck_weghalen/.
+    // Alleen toevoegen: twee lege kolommen. Bestaande openingen blijven gewoon meetellen.
+    // Staat bewust direct na de tabel van 0029, zodat dit los naar de website kan.
+    omschrijving: "pitchdeck_openingen.weggehaald_op en weggehaald_door: eigen controles weghalen uit de cijfers",
+    uitvoeren: async () => {
+      await db.execute(sql`ALTER TABLE pitchdeck_openingen ADD COLUMN IF NOT EXISTS weggehaald_op timestamp`);
+      await db.execute(sql`ALTER TABLE pitchdeck_openingen ADD COLUMN IF NOT EXISTS weggehaald_door text`);
+    },
+  },
+  {
     // Migratie 0029, zie migrations/manual/0029_pitchdeck_tracker/
     omschrijving: "pitchdeck_openingen: indexen op link en datum",
     uitvoeren: async () => {
@@ -770,15 +780,6 @@ const AANVULLINGEN: Aanvulling[] = [
   at            timestamp NOT NULL DEFAULT now()
 )`);
       await db.execute(sql`CREATE INDEX IF NOT EXISTS intake_antwoorden_kandidaat_idx ON intake_antwoorden (candidate_id)`);
-    },
-  },
-  {
-    // Migratie 0035: zie migrations/manual/0035_pitchdeck_weghalen/.
-    // Alleen toevoegen: twee lege kolommen. Bestaande openingen blijven gewoon meetellen.
-    omschrijving: "pitchdeck_openingen.weggehaald_op en weggehaald_door: eigen controles weghalen uit de cijfers",
-    uitvoeren: async () => {
-      await db.execute(sql`ALTER TABLE pitchdeck_openingen ADD COLUMN IF NOT EXISTS weggehaald_op timestamp`);
-      await db.execute(sql`ALTER TABLE pitchdeck_openingen ADD COLUMN IF NOT EXISTS weggehaald_door text`);
     },
   },
 ];
