@@ -95,3 +95,42 @@ export function dubbeleMeta(lijst: Pick<VacatureInvoer, "slug" | "metaTitle" | "
   }
   return uit;
 }
+
+/**
+ * Velden die `publish-vacature.ts --bijwerken` mag aanpassen: alleen tekst.
+ * Slug, status, publicatiedatum, loon, canonical en afbeelding blijven altijd zoals ze zijn.
+ */
+export const TEKSTVELDEN = [
+  "title", "internalTitle", "shortDescription", "introductionText", "aboutRole", "workEnvironment",
+  "responsibilities", "requirements", "offer", "faqItems", "ctaText",
+  "focusKeyword", "metaTitle", "metaDescription", "ogTitle", "ogDescription",
+] as const;
+export type Tekstveld = (typeof TEKSTVELDEN)[number];
+
+export interface Verschil { veld: Tekstveld; oud: string; nieuw: string }
+
+const alsTekst = (v: unknown): string => (v == null ? "" : Array.isArray(v) ? v.join("\n") : String(v));
+
+/** Welke tekstvelden verschillen tussen de rij in de database en het bestand. Leeg = niets te doen. */
+export function verschillen(oud: Record<string, unknown>, nieuw: Partial<VacatureInvoer>): Verschil[] {
+  const uit: Verschil[] = [];
+  for (const veld of TEKSTVELDEN) {
+    if (!(veld in nieuw)) continue;
+    const a = alsTekst(oud[veld]);
+    const b = alsTekst(nieuw[veld]);
+    if (a !== b) uit.push({ veld, oud: a, nieuw: b });
+  }
+  return uit;
+}
+
+/** Het stuk rond de wijziging, zodat je in de voorvertoning ziet wat er echt anders wordt. */
+export function knipsel(oud: string, nieuw: string, rand = 40): { oud: string; nieuw: string } {
+  let begin = 0;
+  while (begin < oud.length && begin < nieuw.length && oud[begin] === nieuw[begin]) begin++;
+  let eindO = oud.length, eindN = nieuw.length;
+  while (eindO > begin && eindN > begin && oud[eindO - 1] === nieuw[eindN - 1]) { eindO--; eindN--; }
+  const van = Math.max(0, begin - rand);
+  const knip = (t: string, eind: number) =>
+    (van > 0 ? "…" : "") + t.slice(van, Math.min(t.length, eind + rand)) + (eind + rand < t.length ? "…" : "");
+  return { oud: knip(oud, eindO), nieuw: knip(nieuw, eindN) };
+}
