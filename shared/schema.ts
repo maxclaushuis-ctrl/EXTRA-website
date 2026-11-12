@@ -1241,6 +1241,9 @@ export const pitchdeckOpeningen = pgTable("pitchdeck_openingen", {
   kijktijdSec: integer("kijktijd_sec").notNull().default(0),
   geopendOp: timestamp("geopend_op").defaultNow(),
   laatstGezien: timestamp("laatst_gezien").defaultNow(),
+  // Migratie 0035: eigen controles weghalen uit de cijfers. Niet gewist, alleen gemarkeerd; terugzetten kan.
+  weggehaaldOp: timestamp("weggehaald_op"),
+  weggehaaldDoor: text("weggehaald_door"),
 }, (t) => ({
   linkIdx: index("pitchdeck_openingen_link_idx").on(t.linkId),
   geopendIdx: index("pitchdeck_openingen_geopend_idx").on(t.geopendOp),

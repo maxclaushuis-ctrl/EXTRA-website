@@ -772,6 +772,15 @@ const AANVULLINGEN: Aanvulling[] = [
       await db.execute(sql`CREATE INDEX IF NOT EXISTS intake_antwoorden_kandidaat_idx ON intake_antwoorden (candidate_id)`);
     },
   },
+  {
+    // Migratie 0035: zie migrations/manual/0035_pitchdeck_weghalen/.
+    // Alleen toevoegen: twee lege kolommen. Bestaande openingen blijven gewoon meetellen.
+    omschrijving: "pitchdeck_openingen.weggehaald_op en weggehaald_door: eigen controles weghalen uit de cijfers",
+    uitvoeren: async () => {
+      await db.execute(sql`ALTER TABLE pitchdeck_openingen ADD COLUMN IF NOT EXISTS weggehaald_op timestamp`);
+      await db.execute(sql`ALTER TABLE pitchdeck_openingen ADD COLUMN IF NOT EXISTS weggehaald_door text`);
+    },
+  },
 ];
 
 /**

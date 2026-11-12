@@ -6,6 +6,12 @@
  *   GET  /api/admin/pitchdecks          dashboard: links en openingen
  *   POST /api/admin/pitchdecks/links    dashboard: nieuwe link voor een ontvanger
  *   PATCH /api/admin/pitchdecks/links/:id  dashboard: link uit- of aanzetten
+ *   POST /api/admin/pitchdecks/openingen/weghalen     eigen controles weghalen uit de cijfers
+ *   POST /api/admin/pitchdecks/openingen/terugzetten  een weggehaalde opening weer laten meetellen
+ *
+ * Weghalen wist niets: de opening krijgt weggehaald_op en weggehaald_door en telt
+ * daarna niet meer mee. Het dashboard vraagt twee bevestigingen; de tweede gaat mee
+ * als eigenControle: true en zonder die gebeurt er niets.
  *
  * Openingen door een ingelogde admin of iemand met een @doehetextra.nl-account
  * tellen niet mee. Er wordt geen IP-adres opgeslagen. Links worden nooit
@@ -14,13 +20,13 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import { randomBytes } from "crypto";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "./db";
 import { storage } from "./storage";
 import { pitchdeckLinks, pitchdeckOpeningen } from "@shared/schema";
 import { AFZENDER } from "@shared/aanvraagMails";
 import {
-  PITCHDECKS, apparaatVan, isCode, isDeck, leesAantalSlides, leesPing, moetMailen, pitchdeckGeopendMail,
+  PITCHDECKS, apparaatVan, isCode, isDeck, leesAantalSlides, leesIds, leesPing, magWeghalen, moetMailen, pitchdeckGeopendMail,
 } from "@shared/pitchdecks";
 
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
@@ -67,7 +73,11 @@ export function registerPitchdeckTracker(app: Express, adminMiddleware: Middlewa
         ? await db.select().from(pitchdeckLinks).where(and(eq(pitchdeckLinks.code, k), eq(pitchdeckLinks.deck, deck), eq(pitchdeckLinks.actief, true)))
         : [];
 
-      const zelfde = link ? eq(pitchdeckOpeningen.linkId, link.id) : and(isNull(pitchdeckOpeningen.linkId), eq(pitchdeckOpeningen.deck, deck));
+      // Weggehaalde openingen (eigen controles) tellen ook hier niet mee.
+      const zelfde = and(
+        link ? eq(pitchdeckOpeningen.linkId, link.id) : and(isNull(pitchdeckOpeningen.linkId), eq(pitchdeckOpeningen.deck, deck)),
+        isNull(pitchdeckOpeningen.weggehaaldOp),
+      );
       const [vorige] = await db.select({ op: pitchdeckOpeningen.geopendOp }).from(pitchdeckOpeningen)
         .where(zelfde).orderBy(desc(pitchdeckOpeningen.geopendOp)).limit(1);
 
@@ -118,6 +128,7 @@ export function registerPitchdeckTracker(app: Express, adminMiddleware: Middlewa
         apparaat: pitchdeckOpeningen.apparaat, aantalSlides: pitchdeckOpeningen.aantalSlides,
         maxSlide: pitchdeckOpeningen.maxSlide, kijktijdSec: pitchdeckOpeningen.kijktijdSec,
         geopendOp: pitchdeckOpeningen.geopendOp,
+        weggehaaldOp: pitchdeckOpeningen.weggehaaldOp, weggehaaldDoor: pitchdeckOpeningen.weggehaaldDoor,
       }).from(pitchdeckOpeningen).orderBy(desc(pitchdeckOpeningen.geopendOp)).limit(500);
       return res.json({ decks: PITCHDECKS, links, openingen });
     } catch (err) {
@@ -161,4 +172,47 @@ export function registerPitchdeckTracker(app: Express, adminMiddleware: Middlewa
       return res.status(500).json({ message: "Bijwerken mislukt" });
     }
   });
+
+  app.post("/api/admin/pitchdecks/openingen/weghalen", adminMiddleware, async (req: Request, res: Response) => {
+    const ids = leesIds(req.body?.ids);
+    if (!ids) return res.status(400).json({ message: "Kies één of meer openingen" });
+    if (!magWeghalen(req.body)) return res.status(400).json({ message: "Bevestig eerst dat het eigen controles waren" });
+    try {
+      const door = await wieIsHet(req);
+      const rijen = await db.update(pitchdeckOpeningen).set({ weggehaaldOp: new Date(), weggehaaldDoor: door })
+        .where(and(inArray(pitchdeckOpeningen.id, ids), isNull(pitchdeckOpeningen.weggehaaldOp)))
+        .returning({ id: pitchdeckOpeningen.id });
+      console.log(`[pitchdeck] ${rijen.length} opening(en) weggehaald door ${door}`);
+      return res.json({ weggehaald: rijen.length });
+    } catch (err) {
+      console.error("[pitchdeck] weghalen mislukt:", err);
+      return res.status(500).json({ message: "Weghalen mislukt" });
+    }
+  });
+
+  app.post("/api/admin/pitchdecks/openingen/terugzetten", adminMiddleware, async (req: Request, res: Response) => {
+    const ids = leesIds(req.body?.ids);
+    if (!ids) return res.status(400).json({ message: "Kies één of meer openingen" });
+    try {
+      const rijen = await db.update(pitchdeckOpeningen).set({ weggehaaldOp: null, weggehaaldDoor: null })
+        .where(and(inArray(pitchdeckOpeningen.id, ids), isNotNull(pitchdeckOpeningen.weggehaaldOp)))
+        .returning({ id: pitchdeckOpeningen.id });
+      return res.json({ teruggezet: rijen.length });
+    } catch (err) {
+      console.error("[pitchdeck] terugzetten mislukt:", err);
+      return res.status(500).json({ message: "Terugzetten mislukt" });
+    }
+  });
+}
+
+/** De naam van wie weghaalt, voor de markering. Alleen de naam, geen e-mailadres. */
+async function wieIsHet(req: Request): Promise<string> {
+  const s: any = req.session;
+  try {
+    const u: any = s?.userId ? await storage.getUser(s.userId) : null;
+    const naam = [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || u?.username || u?.name;
+    return String(naam || "Admin").slice(0, 80);
+  } catch {
+    return "Admin";
+  }
 }

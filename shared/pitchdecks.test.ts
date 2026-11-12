@@ -2,7 +2,10 @@
  * Housetests voor de pitchdeck-tracker: `npm run pitchdecks:test`.
  */
 
-import { apparaatVan, isCode, isDeck, kijktijd, leesPing, leesStatus, moetMailen, pitchdeckGeopendMail } from "./pitchdecks";
+import {
+  apparaatVan, isCode, isDeck, kijktijd, leesPing, leesStatus, moetMailen, pitchdeckGeopendMail,
+  leesIds, magWeghalen, telbaar,
+} from "./pitchdecks";
 
 let geslaagd = 0;
 let gefaald = 0;
@@ -47,6 +50,14 @@ test("keer geopend in de mail", mail.html.includes("3e keer"));
 const zonder = pitchdeckGeopendMail({ deck: "csu", ontvanger: null, bedrijf: null, apparaat: "Mac", geopendOp: nu, keer: 1 }, "https://x");
 test("mail zonder persoonlijke link", zonder.subject === "De pitchdeck van CSU wordt nu bekeken", zonder.subject);
 test("geen gedachtestreepje in de mailtekst", !/[–—]/.test(mail.html + mail.text + zonder.html));
+
+// Eigen controles weghalen
+test("weghalen: ids worden gelezen en ontdubbeld", JSON.stringify(leesIds([3, 5, 3])) === "[3,5]");
+test("weghalen: lege lijst of geen lijst is ongeldig", leesIds([]) === null && leesIds(undefined) === null && leesIds("3") === null);
+test("weghalen: één ongeldige id maakt alles ongeldig", leesIds([3, "4"]) === null && leesIds([3, 0]) === null && leesIds([3, 1.5]) === null && leesIds([-1]) === null);
+test("weghalen: hooguit 200 tegelijk", leesIds(Array.from({ length: 200 }, (_, i) => i + 1))?.length === 200 && leesIds(Array.from({ length: 201 }, (_, i) => i + 1)) === null);
+test("weghalen: alleen met de tweede bevestiging", magWeghalen({ eigenControle: true }) && !magWeghalen({}) && !magWeghalen({ eigenControle: "true" }) && !magWeghalen(null));
+test("weghalen: weggehaalde openingen tellen niet mee", telbaar([{ id: 1, weggehaaldOp: null }, { id: 2, weggehaaldOp: "2026-11-12T10:00:00Z" }, { id: 3 }]).map((o: any) => o.id).join(",") === "1,3");
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
 process.exit(gefaald > 0 ? 1 : 0);

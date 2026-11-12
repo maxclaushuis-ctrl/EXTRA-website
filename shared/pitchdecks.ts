@@ -92,6 +92,34 @@ export function kijktijd(sec: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
+/** Zoveel openingen mogen in één keer worden weggehaald of teruggezet. */
+export const MAX_WEGHALEN = 200;
+
+/**
+ * De openingen om weg te halen of terug te zetten: unieke, positieve gehele getallen,
+ * hooguit MAX_WEGHALEN. Alles daarbuiten is ongeldig (null), zodat er nooit iets
+ * half of per ongeluk gebeurt.
+ */
+export function leesIds(x: unknown): number[] | null {
+  if (!Array.isArray(x) || x.length === 0 || x.length > MAX_WEGHALEN) return null;
+  const uit: number[] = [];
+  for (const v of x) {
+    if (typeof v !== "number" || !Number.isInteger(v) || v <= 0 || v > 2_000_000_000) return null;
+    if (!uit.includes(v)) uit.push(v);
+  }
+  return uit;
+}
+
+/** Weghalen vraagt twee bevestigingen; de tweede gaat mee naar de server als eigenControle: true. */
+export function magWeghalen(body: any): boolean {
+  return body?.eigenControle === true;
+}
+
+/** Alleen openingen die niet zijn weggehaald tellen mee in de cijfers. */
+export function telbaar<T extends { weggehaaldOp?: string | Date | null }>(openingen: T[]): T[] {
+  return openingen.filter((o) => !o.weggehaaldOp);
+}
+
 /** Geen nieuwe mail als dezelfde link binnen dit aantal minuten al gemeld is. */
 export const MAIL_RUST_MINUTEN = 30;
 

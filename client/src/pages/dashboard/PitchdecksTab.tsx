@@ -4,18 +4,20 @@
  * Per ontvanger een eigen link maken en zien wie welke presentatie opent,
  * wanneer, op welk apparaat, hoe lang en tot welke slide. De naam van de
  * ontvanger staat alleen hier; de link bevat een willekeurige code.
+ * Eigen controles kun je weghalen uit de cijfers (twee bevestigingen). Er wordt
+ * niets gewist; onder "Toon weggehaalde" zet je een opening terug.
  * Server: server/pitchdeckTracker.ts. Logica: shared/pitchdecks.ts.
  */
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, fetchJson, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Loader2, Plus, X } from 'lucide-react';
+import { Copy, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { D3Kop, D3Tegels, StatusLabel } from '@/pages/dashboard/d3';
-import { PITCHDECKS, kijktijd, leesStatus, type Deck } from '@shared/pitchdecks';
+import { PITCHDECKS, kijktijd, leesStatus, telbaar, type Deck } from '@shared/pitchdecks';
 
 interface Link { id: number; deck: string; code: string; ontvanger: string; bedrijf: string | null; actief: boolean; aangemaaktOp: string }
-interface Opening { id: number; deck: string; linkId: number | null; apparaat: string; aantalSlides: number; maxSlide: number; kijktijdSec: number; geopendOp: string }
+interface Opening { id: number; deck: string; linkId: number | null; apparaat: string; aantalSlides: number; maxSlide: number; kijktijdSec: number; geopendOp: string; weggehaaldOp?: string | null; weggehaaldDoor?: string | null }
 interface Overzicht { decks: Deck[]; links: Link[]; openingen: Opening[] }
 
 const KLEUR: Record<string, string> = { rose: '#EBD0E4', pistachio: '#CEDBBC', sky: '#C7DFF4' };
@@ -38,13 +40,19 @@ export default function PitchdecksTab() {
   const { toast } = useToast();
   const [nieuw, setNieuw] = useState(false);
   const [deckFilter, setDeckFilter] = useState<string>('alle');
+  const [gekozen, setGekozen] = useState<Set<number>>(new Set());
+  const [toonWeg, setToonWeg] = useState(false);
+  const [weghalen, setWeghalen] = useState<number[] | null>(null);
   const data = useQuery<Overzicht>({ queryKey: SLEUTEL, queryFn: () => fetchJson<Overzicht>('/api/admin/pitchdecks'), refetchInterval: 60_000 });
 
   // De lijst met decks staat in de code; zo werkt het formulier ook als het overzicht even niet laadt.
   const decks = data.data?.decks ?? PITCHDECKS;
   const deckVan = (naam: string) => decks.find((d) => d.naam === naam);
   const links = data.data?.links ?? [];
-  const openingen = data.data?.openingen ?? [];
+  const alleOpeningen = data.data?.openingen ?? [];
+  // Weggehaalde openingen (eigen controles) tellen nergens mee.
+  const openingen = useMemo(() => telbaar(alleOpeningen), [alleOpeningen]);
+  const weggehaald = alleOpeningen.filter((o) => !!o.weggehaaldOp);
   const linkVan = useMemo(() => new Map(links.map((l) => [l.id, l])), [links]);
 
   const perLink = useMemo(() => {
@@ -62,6 +70,11 @@ export default function PitchdecksTab() {
   }, [openingen]);
 
   const zichtbareOpeningen = openingen.filter((o) => deckFilter === 'alle' || o.deck === deckFilter);
+  const zichtbaarWeg = weggehaald.filter((o) => deckFilter === 'alle' || o.deck === deckFilter);
+  const lijst = toonWeg ? zichtbaarWeg : zichtbareOpeningen;
+  const getoond = lijst.slice(0, 100);
+  const kies = (id: number) => setGekozen((g) => { const n = new Set(g); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const alleGekozen = getoond.length > 0 && getoond.every((o) => gekozen.has(o.id));
   const zichtbareLinks = links.filter((l) => deckFilter === 'alle' || l.deck === deckFilter);
 
   const weekGeleden = Date.now() - 7 * 864e5;
@@ -76,6 +89,12 @@ export default function PitchdecksTab() {
     navigator.clipboard?.writeText(linkUrl(l));
     toast({ title: 'Link gekopieerd', description: `${l.ontvanger}, ${deckVan(l.deck)?.titel ?? l.deck}` });
   };
+
+  const terugzetten = useMutation({
+    mutationFn: (ids: number[]) => apiRequest('POST', '/api/admin/pitchdecks/openingen/terugzetten', { ids }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: SLEUTEL }); toast({ title: 'Opening teruggezet', description: 'Hij telt weer mee in de cijfers.' }); },
+    onError: (e: any) => toast({ title: 'Terugzetten mislukt', description: String(e?.message || e), variant: 'destructive' }),
+  });
 
   const zetActief = useMutation({
     mutationFn: (v: { id: number; actief: boolean }) => apiRequest('PATCH', `/api/admin/pitchdecks/links/${v.id}`, { actief: v.actief }),
@@ -111,19 +130,30 @@ export default function PitchdecksTab() {
       {data.isError && <p className="text-sm text-red-700">Het overzicht kon niet geladen worden.</p>}
 
       <section className="d3-paneel">
-        <div className="d3-voet" style={{ borderTop: 0, borderBottom: '1px solid #E4E0D8' }}><b style={{ color: '#37352C', fontSize: 15 }}>Openingen</b><span>Nieuwste bovenaan</span></div>
-        {zichtbareOpeningen.length === 0 ? (
-          <p className="p-6 text-sm d3-zacht">Nog geen openingen. Zodra iemand een deck opent, staat hij hier en krijg je een mail.</p>
+        <div className="d3-voet" style={{ borderTop: 0, borderBottom: '1px solid #E4E0D8' }}><b style={{ color: '#37352C', fontSize: 15 }}>{toonWeg ? 'Weggehaalde openingen' : 'Openingen'}</b><span>Nieuwste bovenaan</span></div>
+        {!toonWeg && gekozen.size > 0 && (
+          <div className="pd-keuzebalk">
+            <b>{gekozen.size} geselecteerd</b>
+            <button type="button" className="pd-wis" onClick={() => setGekozen(new Set())}>Selectie wissen</button>
+            <button type="button" className="pd-weg" onClick={() => setWeghalen(Array.from(gekozen))}>Weghalen uit de cijfers</button>
+          </div>
+        )}
+        {lijst.length === 0 ? (
+          <p className="p-6 text-sm d3-zacht">{toonWeg ? 'Er zijn geen weggehaalde openingen.' : 'Nog geen openingen. Zodra iemand een deck opent, staat hij hier en krijg je een mail.'}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="d3-tabel">
-              <thead><tr><th>Datum en tijd</th><th>Deck</th><th>Ontvanger</th><th>Apparaat</th><th>Kijktijd</th><th>Gelezen tot</th></tr></thead>
+              <thead><tr>
+                {!toonWeg && <th style={{ width: 36 }}><input type="checkbox" className="pd-vink" aria-label="Alles op deze pagina selecteren" checked={alleGekozen} onChange={() => setGekozen(alleGekozen ? new Set() : new Set(getoond.map((o) => o.id)))} /></th>}
+                <th>Datum en tijd</th><th>Deck</th><th>Ontvanger</th><th>Apparaat</th><th>Kijktijd</th><th>Gelezen tot</th><th>{toonWeg ? 'Weggehaald' : ''}</th>
+              </tr></thead>
               <tbody>
-                {zichtbareOpeningen.slice(0, 100).map((o) => {
+                {getoond.map((o) => {
                   const l = o.linkId != null ? linkVan.get(o.linkId) : undefined;
                   const deel = o.aantalSlides ? Math.min(100, Math.round((o.maxSlide / o.aantalSlides) * 100)) : 0;
                   return (
-                    <tr key={o.id}>
+                    <tr key={o.id} className={gekozen.has(o.id) && !toonWeg ? 'pd-gekozen' : undefined}>
+                      {!toonWeg && <td><input type="checkbox" className="pd-vink" aria-label={`Opening van ${wanneer(o.geopendOp)} selecteren`} checked={gekozen.has(o.id)} onChange={() => kies(o.id)} /></td>}
                       <td className="d3-datum">{wanneer(o.geopendOp)}</td>
                       <td><DeckNaam deck={deckVan(o.deck)} naam={o.deck} /></td>
                       <td>{l ? <><b>{l.ontvanger}</b>{l.bedrijf && <span className="d3-sub">{l.bedrijf}</span>}</> : <span className="d3-zacht">Onbekende ontvanger</span>}</td>
@@ -135,6 +165,16 @@ export default function PitchdecksTab() {
                           <span style={{ fontWeight: 500 }}>{o.aantalSlides ? `${Math.min(o.maxSlide, o.aantalSlides)} van ${o.aantalSlides}` : ''}</span>
                         </span>
                       </td>
+                      <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                        {toonWeg ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+                            <span className="d3-zacht" style={{ fontSize: 12.5 }}>{o.weggehaaldDoor ?? ''}{o.weggehaaldOp ? `, ${wanneer(o.weggehaaldOp)}` : ''}</span>
+                            <button type="button" className="d3-link" disabled={terugzetten.isPending} onClick={() => terugzetten.mutate([o.id])}>Terugzetten</button>
+                          </span>
+                        ) : (
+                          <button type="button" className="pd-prul" aria-label={`Opening van ${wanneer(o.geopendOp)} weghalen`} onClick={() => setWeghalen([o.id])}><Trash2 className="w-4 h-4" /></button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -142,6 +182,10 @@ export default function PitchdecksTab() {
             </table>
           </div>
         )}
+        <div className="d3-voet">
+          <span>{toonWeg ? 'Teruggezette openingen tellen weer mee in de cijfers.' : 'Eigen controles? Vink ze aan en haal ze weg uit de cijfers. Er wordt niets gewist.'}</span>
+          <button type="button" className="d3-link" onClick={() => { setToonWeg(!toonWeg); setGekozen(new Set()); }}>{toonWeg ? 'Terug naar de openingen' : `Toon weggehaalde (${zichtbaarWeg.length})`}</button>
+        </div>
       </section>
 
       <section className="d3-paneel">
@@ -191,6 +235,18 @@ export default function PitchdecksTab() {
       <p className="text-xs d3-zacht">Openingen terwijl je ingelogd bent in het dashboard tellen niet mee. Er wordt geen IP-adres opgeslagen, alleen het soort apparaat. Een uitgezette link opent de deck nog wel, maar telt als onbekende ontvanger.</p>
 
       {nieuw && <NieuweLink decks={decks} sluit={() => setNieuw(false)} gemaakt={(l) => { setNieuw(false); kopieer(l); }} />}
+      {weghalen && (
+        <Weghalen
+          openingen={alleOpeningen.filter((o) => weghalen.includes(o.id))}
+          deckTitel={(n) => deckVan(n)?.titel ?? n}
+          sluit={() => setWeghalen(null)}
+          klaar={(aantal) => {
+            setWeghalen(null); setGekozen(new Set());
+            toast({ title: aantal === 1 ? 'Opening weggehaald' : `${aantal} openingen weggehaald`, description: 'Ze tellen niet meer mee. Terugzetten kan onder "Toon weggehaalde".' });
+          }}
+        />
+      )}
+      <style>{PD_CSS}</style>
     </div>
   );
 }
@@ -251,3 +307,66 @@ function NieuweLink({ decks, sluit, gemaakt }: { decks: Deck[]; sluit: () => voi
     </div>
   );
 }
+
+/** Weghalen in twee stappen: eerst zien welke openingen, dan bevestigen dat het eigen controles waren. */
+function Weghalen({ openingen, deckTitel, sluit, klaar }: { openingen: Opening[]; deckTitel: (n: string) => string; sluit: () => void; klaar: (aantal: number) => void }) {
+  const { toast } = useToast();
+  const [stap, setStap] = useState<1 | 2>(1);
+  const [eigen, setEigen] = useState(false);
+  const n = openingen.length;
+  const weg = useMutation({
+    mutationFn: async () => {
+      const r = await apiRequest('POST', '/api/admin/pitchdecks/openingen/weghalen', { ids: openingen.map((o) => o.id), eigenControle: true });
+      return (typeof (r as any)?.json === 'function' ? await (r as any).json() : r) as { weggehaald: number };
+    },
+    onSuccess: (r) => { queryClient.invalidateQueries({ queryKey: SLEUTEL }); klaar(r?.weggehaald ?? n); },
+    onError: (e: any) => toast({ title: 'Weghalen mislukt', description: String(e?.message || e), variant: 'destructive' }),
+  });
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => !weg.isPending && sluit()}>
+      <div className="w-full max-w-md rounded-2xl border bg-white p-6 space-y-3 shadow-xl" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <p className="text-xs font-bold uppercase tracking-wider d3-zacht">Stap {stap} van 2</p>
+        {stap === 1 ? <>
+          <h2 className="text-lg font-bold">{n === 1 ? 'Deze opening weghalen?' : `${n} openingen weghalen?`}</h2>
+          <p className="text-sm" style={{ color: '#5C594F' }}>{n === 1 ? 'Deze opening telt' : 'Deze openingen tellen'} daarna niet meer mee in de cijfers en {n === 1 ? 'verdwijnt' : 'verdwijnen'} uit de lijst.</p>
+          <ul className="pd-weglijst">
+            {openingen.slice(0, 8).map((o) => <li key={o.id}>{wanneer(o.geopendOp)} · {deckTitel(o.deck)} · {kijktijd(o.kijktijdSec)}</li>)}
+            {n > 8 && <li className="d3-zacht">en nog {n - 8}</li>}
+          </ul>
+          <div className="flex justify-end gap-2 pt-1">
+            <button type="button" className="d3-knop" onClick={sluit}>Annuleren</button>
+            <button type="button" className="d3-knop vol" onClick={() => setStap(2)}>Verder</button>
+          </div>
+        </> : <>
+          <h2 className="text-lg font-bold">Weet je het zeker?</h2>
+          <label className="pd-eigen">
+            <input type="checkbox" className="pd-vink" checked={eigen} onChange={(e) => setEigen(e.target.checked)} />
+            <span>{n === 1 ? 'Dit was een eigen controle' : 'Dit waren eigen controles'} van EXTRA, niet van de ontvanger.</span>
+          </label>
+          <p className="text-sm" style={{ color: '#5C594F' }}>Per ongeluk weggehaald? Onder "Toon weggehaalde" zet je een opening weer terug.</p>
+          <div className="flex justify-end gap-2 pt-1">
+            <button type="button" className="d3-knop" disabled={weg.isPending} onClick={() => setStap(1)}>Terug</button>
+            <button type="button" className="d3-knop pd-rood" disabled={!eigen || weg.isPending} onClick={() => weg.mutate()}>
+              {weg.isPending ? <Loader2 className="animate-spin" /> : null} Ja, weghalen
+            </button>
+          </div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+const PD_CSS = `
+.pd-keuzebalk{display:flex;align-items:center;gap:14px;padding:10px 18px;background:#37352C;color:#F8F7F4;font-size:14px}
+.pd-keuzebalk .pd-wis{background:none;border:0;color:#F8F7F4;font:inherit;text-decoration:underline;opacity:.85;cursor:pointer}
+.pd-keuzebalk .pd-weg{margin-left:auto;background:#F8F7F4;color:#A2321F;border:0;border-radius:10px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer}
+.pd-vink{width:17px;height:17px;accent-color:#37352C;cursor:pointer}
+tr.pd-gekozen td{background:#FBF3F1}
+.pd-prul{border:1px solid #E4E0D8;background:#fff;border-radius:8px;width:30px;height:30px;display:inline-grid;place-items:center;color:#6B665C;cursor:pointer}
+.pd-prul:hover{color:#A2321F;border-color:#E2B9B0}
+.pd-weglijst{margin:0;padding:10px 14px;background:#F8F7F4;border-radius:12px;list-style:none;font-size:13.5px;line-height:1.7}
+.pd-eigen{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:12px 14px;border:1px solid #E4E0D8;border-radius:12px;cursor:pointer}
+.pd-eigen .pd-vink{margin-top:2px;flex:none}
+.d3-knop.pd-rood,.d3-knop.pd-rood:hover{background:#A2321F!important;border-color:#A2321F!important;color:#fff!important}
+.d3-knop.pd-rood:disabled{opacity:.45;cursor:not-allowed}
+`;
