@@ -801,7 +801,7 @@ export async function uitnodigingNaCheck(candidateId: number): Promise<void> {
   const c = await kandidaat(candidateId);
   if (!g || !c) return;
   const s = naarState(g);
-  const b: Uitgaand = { tekst: teksten(s.taal).uitgenodigd(c.firstName), planning: true };
+  const b: Uitgaand = { tekst: teksten(s.taal).uitgenodigd(c.firstName, !!c.hasCv), planning: true };
   await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
   if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
     if (binnenVenster(s, new Date())) await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);

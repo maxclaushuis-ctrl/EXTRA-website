@@ -98,6 +98,18 @@ check("Duur leesbaar", duurTekst(99, 109) === "8 tot 9 jaar" && duurTekst(33, 33
 check("Indeling: keuken is zelfstandig werkend kok", modelVoor("keuken", "chef", "hotels").sleutel === "kok");
 check("Indeling: afwas", modelVoor("afwas", "chef", "hotels").sleutel === "afwas");
 check("Indeling: runner bij events", modelVoor("runner", "horecamedewerker", "events").sleutel === "events");
+// Ervaringseis: minimaal zes maanden (besluit Max 16 nov 2026)
+{
+  const eis = (model: keyof typeof FUNCTIE_MODELLEN, per: Periode[], cert: string[] = []) => invoerVan(FUNCTIE_MODELLEN[model], per, cert, {}, PEIL).invoer.eis;
+  check("Eis 6 mnd: housekeeping met 3 maanden is niet voldaan", eis("housekeeping", [P({ begin: "2026-03", einde: "2026-05" })]) === "niet_voldaan");
+  check("Eis 6 mnd: housekeeping met 8 maanden is voldaan", eis("housekeeping", [P({ begin: "2025-10", einde: "2026-05" })]) === "voldaan");
+  check("Eis 6 mnd: precies 6 maanden is voldaan", eis("housekeeping", [P({ begin: "2025-12", einde: "2026-05" })]) === "voldaan");
+  check("Eis 6 mnd: alleen jaartallen (kan 1 tot 12 maanden zijn) is onbekend, een mens kijkt", eis("frontoffice", [P({ begin: "2025", einde: "2025" })]) === "onbekend");
+  check("Eis 6 mnd: 3 maanden op het cv, 12 volgens het gesprek telt als mogelijk voldaan", eis("housekeeping", [P({ begin: "2026-03", einde: "2026-05" }), P({ bron: "gesprek", duurMaanden: 12 })]) !== "niet_voldaan");
+  check("Eis 6 mnd: kok met 4 maanden zelfstandig is niet voldaan", eis("kok", [P({ begin: "2026-02", einde: "2026-05", kerntaken: [0] })]) === "niet_voldaan");
+  check("Eis 6 mnd: heftruck telt het certificaat, niet de maanden", eis("heftruck", [P({ begin: "2026-04", einde: "2026-05" })], ["Heftruckcertificaat"]) === "voldaan");
+  check("Eis 6 mnd: functies zonder eis blijven zonder eis", eis("afwas", [P({ begin: "2026-04", einde: "2026-05" })]) === "geen");
+}
 check("Indeling: bar is bediening restaurant en bar", modelVoor("bar", "horecamedewerker", "events").sleutel === "bediening");
 check("Indeling: heftruck", modelVoor("heftruck", "logistiek", "logistiek").sleutel === "heftruck");
 check("Indeling: orderpicker", modelVoor("orderpicker", "logistiek", "logistiek").sleutel === "orderpicken");

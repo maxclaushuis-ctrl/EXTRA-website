@@ -78,17 +78,20 @@ export interface FunctieModel {
   verwant: string;
 }
 
+/** Minimale ervaring in maanden bij housekeeping, front office en kok (besluit Max 16 nov 2026). */
+export const EIS_MAANDEN = 6;
+
 export const FUNCTIE_MODELLEN: Record<string, FunctieModel> = {
   housekeeping: { sleutel: "housekeeping", naam: "Housekeeping", soort: "vereist", eisRegel: "ervaring",
-    eisTekst: "enige relevante ervaring met hotelkamers of vergelijkbaar housekeepingwerk",
+    eisTekst: "minimaal zes maanden ervaring met hotelkamers of vergelijkbaar housekeepingwerk",
     kerntaken: ["kamers opmaken", "badkamers schoonmaken", "werken met een kamerlijst"],
     verwant: "ander schoonmaakwerk (telt nooit vanzelf als hotelervaring)" },
   frontoffice: { sleutel: "frontoffice", naam: "Front office", soort: "vereist", eisRegel: "ervaring",
-    eisTekst: "enige receptie-ervaring",
+    eisTekst: "minimaal zes maanden receptie-ervaring",
     kerntaken: ["in- en uitchecken", "reserveringen", "gasten te woord staan"],
     verwant: "klantenservice, baliewerk" },
   kok: { sleutel: "kok", naam: "Zelfstandig werkend kok", soort: "vereist", eisRegel: "kerntaak0",
-    eisTekst: "koken, zelfstandig op een post",
+    eisTekst: "minimaal zes maanden koken, zelfstandig op een post",
     kerntaken: ["zelfstandig een post draaien", "mise-en-place", "bestellingen afwerken tijdens de service"],
     verwant: "keukenassistent of keukenhulp, cateringkeuken" },
   heftruck: { sleutel: "heftruck", naam: "Heftruck of reachtruck", soort: "vereist", eisRegel: "certificaat",
@@ -260,6 +263,12 @@ export function invoerVan(model: FunctieModel, periodes: Periode[], certificaten
       if (model.eisRegel === "certificaat") eis = certificaten.some((c) => CERTIFICAAT.test(c)) ? "voldaan" : "onbekend";
       else if (model.eisRegel === "kerntaak0") eis = [...zelfdeCv, ...zelfdeGesprek].some((p) => p.kerntaken.includes(0)) ? "voldaan" : "onbekend";
       else eis = "voldaan";
+      // Minimaal zes maanden in de functie (besluit Max 16 nov 2026). Niet bij heftruck: daar telt het certificaat.
+      // Zeker te kort: niet voldaan. Kan het allebei zijn (datums onvolledig): onbekend, een mens kijkt.
+      if (model.eisRegel !== "certificaat" && A && typeof A === "object") {
+        if (A.max < EIS_MAANDEN) eis = "niet_voldaan";
+        else if (A.min < EIS_MAANDEN && eis === "voldaan") eis = "onbekend";
+      }
     } else eis = verwant.length ? "af_te_wegen" : "onbekend";
   }
   const schatting = !!(A && typeof A === "object" && A.min !== A.max) || !!(C && C.min !== C.max);
@@ -318,7 +327,7 @@ export function matchKaart(model: FunctieModel, periodes: Periode[], certificate
     : u.toestand === "eis_niet_voldaan" ? "Ervaringseis niet voldaan: geen score. De beslissing ligt bij de beoordelaar."
       : `${soortTekst} · dekking ${u.dekking}%: geen score (een score vraagt bekende ervaring en minstens 70% dekking)`;
   const eisTekst = model.soort !== "vereist" ? `Geen ervaringseis: ${model.soort === "starters" ? "starters zijn welkom" : "ervaring is gewenst, niet vereist"}.`
-    : ({ voldaan: "Voldaan", niet_voldaan: "Niet voldaan, zelf aangegeven", onbekend: "Onbekend", af_te_wegen: "Af te wegen door de beoordelaar", geen: "" } as Record<Eis, string>)[invoer.eis] + `: ${model.eisTekst}.`;
+    : ({ voldaan: "Voldaan", niet_voldaan: "Niet voldaan", onbekend: "Onbekend", af_te_wegen: "Af te wegen door de beoordelaar", geen: "" } as Record<Eis, string>)[invoer.eis] + `: ${model.eisTekst}.`;
   const zelfde = periodes.filter((p) => p.soort === "zelfde");
   const sterk: [string, string][] = zelfde.slice(0, 3).map((p) => [`${p.functie}${p.werkgever ? `, ${p.werkgever}` : ""}${p.begin || p.einde ? `, ${datumTekst(p.begin)} tot ${datumTekst(p.einde)}` : p.duurMaanden ? `, ${p.duurMaanden} maanden` : ""}`, p.bron]);
   const aandacht: MatchKaart["aandacht"] = [];

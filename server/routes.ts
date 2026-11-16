@@ -412,12 +412,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Delete partial candidates older than 30 days with no CV
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const stalePartials = allCandidates.filter((c: any) =>
-          !c.hasCv &&
-          c.status === 'in_behandeling' &&
-          new Date(c.createdAt) < thirtyDaysAgo
-        );
+        // Alleen het oude formulier: bij aanmeldformulier 3 is "in behandeling zonder cv" een
+        // gewone kandidaat, geen afgebroken aanmelding (shared/opschoning.ts, besluit Max 16 nov 2026).
+        const { magOpgeschoond } = await import("@shared/opschoning");
+        const opschoonNu = new Date();
+        const stalePartials = allCandidates.filter((c: any) => magOpgeschoond(c, opschoonNu));
         for (const c of stalePartials) {
           await storage.deleteCandidate(c.id);
           console.log(`Cleanup: gedeeltelijke aanmelding ${c.id} verwijderd`);
