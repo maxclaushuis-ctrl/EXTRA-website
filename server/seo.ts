@@ -24,6 +24,7 @@ import {
   normalizeMetaPath,
   type RouteMeta,
 } from "@shared/routeMeta";
+import { faqPageJsonLd, faqUitArtikel } from "@shared/blogFaq";
 import { storage } from "./storage";
 import { blogFragment, vacatureFragment, lijstFragment } from "./contentFragment";
 import { verwanteItems, verwantFragment } from "@shared/verwanteLinks";
@@ -470,6 +471,8 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
                 jsonLd: [
                   breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title),
                   blogPostingJsonLd(post as any, `${SITE_ORIGIN}${dyn.canonicalBase}/${post.slug}`),
+                  // Veelgestelde vragen onderaan het artikel (h2 + h3/p) als FAQPage.
+                  faqPageJsonLd(faqUitArtikel((post as any).content)),
                 ].filter((v): v is string => !!v),
               },
               // Fragment op basis van het opgevraagde pad (niet de canonical):

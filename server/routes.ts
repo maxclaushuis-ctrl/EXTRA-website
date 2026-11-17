@@ -16,6 +16,8 @@ import { storage } from "./storage";
 import { syncOpAchtergrond, synchroniseerCrmNaarMail, blokkeerVerwijderdeContacten } from "./crmSync";
 import { meldAan } from "./indexnow";
 import { ROUTE_META, SITE_ORIGIN, HREFLANG_GROUPS } from "@shared/routeMeta";
+import { PAGINA_DATUMS } from "@shared/paginaDatums";
+import { lastmodRegel } from "@shared/sitemapDatum";
 import { moveCardToPhase, markNotReached } from "./salesflow";
 import { geocodeNlAddress } from "./geocode";
 import { verstuurWachtwoordInstelLink, stelWachtwoordIn, wachtwoordSterkGenoeg } from "./authReset";
@@ -10756,13 +10758,12 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${staticPages.map(p => `  <url>
     <loc>${baseUrl}${p.url === '/' ? '' : p.url}${p.url === '/' ? '/' : ''}</loc>
-${alternatesVoor(p.url)}    <lastmod>${today}</lastmod>
-    <changefreq>${p.changefreq}</changefreq>
+${alternatesVoor(p.url)}${lastmodRegel(p.url, PAGINA_DATUMS)}    <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`).join('\n')}
 ${posts.map(p => `  <url>
     <loc>${baseUrl}/blog/${p.slug}</loc>
-    <lastmod>${(p.publishedAt || p.createdAt)?.toISOString().split('T')[0] || today}</lastmod>
+    <lastmod>${(p.updatedAt || p.publishedAt || p.createdAt)?.toISOString().split('T')[0] || today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>`).join('\n')}

@@ -10,6 +10,8 @@ import fs from "fs";
 import path from "path";
 import type { Express, Request, Response } from "express";
 import { ROUTE_META, SITE_ORIGIN, normalizeMetaPath } from "@shared/routeMeta";
+import { engelsePaden, fragmentNaarTekst } from "@shared/llmsTekst";
+import { storage } from "./storage";
 
 const GROUPS: { heading: string; paths: string[] }[] = [
   {
@@ -31,6 +33,8 @@ const GROUPS: { heading: string; paths: string[] }[] = [
       "/tijdelijk-horeca-personeel",
       "/last-minute-horecapersoneel",
       "/flexibel-horeca-personeel",
+      "/horeca-personeel",
+      "/uitzenden-of-zzp",
     ],
   },
   {
@@ -70,18 +74,11 @@ const GROUPS: { heading: string; paths: string[] }[] = [
   },
   {
     heading: "English",
-    paths: [
-      "/en",
-      "/en/hospitality-staff-amsterdam",
-      "/en/hotel-staffing-amsterdam",
-      "/en/event-staff-amsterdam",
-      "/en/catering-staff-amsterdam",
-      "/en/restaurant-staff-amsterdam",
-      "/en/how-we-work",
-      "/en/about",
-      "/en/hospitality-jobs",
-      "/en/contact",
-    ],
+    // Vaste volgorde vooraan; alles wat er onder /en bijkomt, volgt vanzelf.
+    paths: engelsePaden(
+      ["/en", "/en/hospitality-staff-amsterdam", "/en/hotel-staffing-amsterdam", "/en/event-staff-amsterdam", "/en/catering-staff-amsterdam", "/en/restaurant-staff-amsterdam", "/en/how-we-work", "/en/about", "/en/hospitality-jobs", "/en/contact"],
+      ROUTE_META.filter((m) => !m.noindex && !m.canonical).map((m) => m.path),
+    ),
   },
   {
     heading: "Contact",
@@ -98,7 +95,19 @@ function metaFor(p: string) {
   return ROUTE_META.find((m) => normalizeMetaPath(m.path) === normalizeMetaPath(p));
 }
 
-function buildIndex(): string {
+/** Gepubliceerde blogartikelen; bij een databasefout gewoon geen bloglijst. */
+async function blogArtikelen(): Promise<any[]> {
+  try {
+    const { posts } = await storage.getBlogPosts({ status: "published", limit: 200 });
+    return posts;
+  } catch {
+    return [];
+  }
+}
+
+const BLOG_KOP = "Blog: uitleg voor werkgevers";
+
+async function buildIndex(): Promise<string> {
   let out = HEADER;
   for (const group of GROUPS) {
     out += `\n## ${group.heading}\n\n`;
@@ -108,6 +117,14 @@ function buildIndex(): string {
       out += `- [${m.title.split("|")[0].trim()}](${SITE_ORIGIN}${m.path}): ${m.description}\n`;
     }
   }
+  const posts = await blogArtikelen();
+  if (posts.length) {
+    out += `\n## ${BLOG_KOP}\n\n`;
+    for (const post of posts) {
+      const tekst = String(post.metaDescription || post.excerpt || "").replace(/\s+/g, " ").trim();
+      out += `- [${post.title}](${SITE_ORIGIN}/blog/${post.slug})${tekst ? `: ${tekst}` : ""}\n`;
+    }
+  }
   return out;
 }
 
@@ -115,26 +132,18 @@ function fragmentText(distPublicDir: string, routePath: string): string | undefi
   const n = normalizeMetaPath(routePath);
   const file = path.join(distPublicDir, "prerender", (n === "/" ? "index" : n.slice(1).replace(/\//g, "__")) + ".html");
   try {
-    const html = fs.readFileSync(file, "utf-8");
-    return html
-      .replace(/<script[\s\S]*?<\/script>/g, " ")
-      .replace(/<style[\s\S]*?<\/style>/g, " ")
-      .replace(/<[^>]*>/g, " ")
-      .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    return fragmentNaarTekst(fs.readFileSync(file, "utf-8"));
   } catch {
     return undefined;
   }
 }
 
 export function registerLlmsTxt(app: Express, getDistPublicDir: () => string): void {
-  app.get("/llms.txt", (_req: Request, res: Response) => {
-    res.status(200).type("text/plain; charset=utf-8").send(buildIndex());
+  app.get("/llms.txt", async (_req: Request, res: Response) => {
+    res.status(200).type("text/plain; charset=utf-8").send(await buildIndex());
   });
 
-  app.get("/llms-full.txt", (_req: Request, res: Response) => {
+  app.get("/llms-full.txt", async (_req: Request, res: Response) => {
     let out = HEADER;
     const dist = getDistPublicDir();
     for (const group of GROUPS) {
@@ -145,6 +154,16 @@ export function registerLlmsTxt(app: Express, getDistPublicDir: () => string): v
         out += `\n### ${m.title.split("|")[0].trim()}\nURL: ${SITE_ORIGIN}${m.path}\n${m.description}\n`;
         const text = fragmentText(dist, m.path);
         if (text) out += `\n${text}\n`;
+      }
+    }
+    const posts = await blogArtikelen();
+    if (posts.length) {
+      out += `\n## ${BLOG_KOP}\n`;
+      for (const post of posts) {
+        const kort = String(post.metaDescription || post.excerpt || "").replace(/\s+/g, " ").trim();
+        out += `\n### ${post.title}\nURL: ${SITE_ORIGIN}/blog/${post.slug}\n${kort}\n`;
+        const tekst = fragmentNaarTekst(String(post.content || ""));
+        if (tekst) out += `\n${tekst}\n`;
       }
     }
     res.status(200).type("text/plain; charset=utf-8").send(out);

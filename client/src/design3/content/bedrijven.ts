@@ -1689,7 +1689,7 @@ export const logistiek: PaginaContent = {
         ],
         [
           "Werken jullie ook in ploegendienst en in het weekend?",
-          "Ja. Vroege, late en nachtdiensten zijn mogelijk, net als weekendbezetting tijdens piekperiodes. Toeslagen lopen volgens de inlenersbeloning van jouw cao."
+          "Ja. Vroege, late en nachtdiensten zijn mogelijk, net als weekendbezetting tijdens piekperiodes. Toeslagen volgen de arbeidsvoorwaarden in jouw bedrijf. De uitzendkracht krijgt gelijkwaardige arbeidsvoorwaarden, wat vroeger inlenersbeloning heette."
         ],
         [
           "Loop ik risico op schijnzelfstandigheid?",
