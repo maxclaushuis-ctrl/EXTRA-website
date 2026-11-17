@@ -23,7 +23,7 @@ export interface Knop { tekst: string; href: string | null }
 export interface HeroKnop { tekst: string; href: string; vol: boolean; tel: boolean }
 
 export type Sectie =
-  | { type: "hero"; werk: boolean; foto: string; pos: string | null; chip: string; h1: string[]; reageer: string; knoppen: HeroKnop[]; lockup: [string, string] | null; lead: string; vink: [string, string][]; vink4: boolean }
+  | { type: "hero"; werk: boolean; foto: string; /** Staande uitsnede voor telefoons en een kleinere liggende versie; beide optioneel. */ fotoMobiel?: string; fotoKlein?: string; pos: string | null; chip: string; h1: string[]; reageer: string; knoppen: HeroKnop[]; lockup: [string, string] | null; lead: string; vink: [string, string][]; vink4: boolean }
   | { type: "kruimel"; pad: [string, string | null][] }
   | { type: "aanvraag"; functies: string[] }
   | { type: "hierwerk"; eyebrow: string; h2: string; p: string; logos: { src: string; alt: string; h: number; vol: boolean }[] }
@@ -96,7 +96,16 @@ function Hero({ s }: { s: S<"hero"> }) {
   return (
     <section className={`hero hhot${s.werk ? " hwerk" : ""}`}>
       <div className="boven">
-        <div className="foto"><img src={s.foto} alt="" style={st({ objectPosition: s.pos })} {...({ fetchpriority: "high" } as any)} /></div>
+        <div className="foto">
+          {s.fotoMobiel ? (
+            <picture style={{ display: "contents" }}>
+              <source media="(max-width:700px)" srcSet={s.fotoMobiel} />
+              <img src={s.foto} srcSet={s.fotoKlein ? `${s.fotoKlein} 1280w, ${s.foto} 2000w` : undefined} sizes={s.fotoKlein ? "100vw" : undefined} alt="" style={st({ objectPosition: s.pos })} {...({ fetchpriority: "high" } as any)} />
+            </picture>
+          ) : (
+            <img src={s.foto} alt="" style={st({ objectPosition: s.pos })} {...({ fetchpriority: "high" } as any)} />
+          )}
+        </div>
         <div className="titel"><div className="w">
           {chip && <span className="chip"><i></i>{chip}</span>}
           <h1 className="mega hh1">{s.h1.map((r, i) => <Fragment key={i}>{i > 0 && " "}<span className="hr"><T t={r} /></span></Fragment>)}</h1>

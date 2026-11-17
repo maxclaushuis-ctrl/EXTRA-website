@@ -593,8 +593,10 @@ export const events: PaginaContent = {
     {
       "type": "hero",
       "werk": false,
-      "foto": "/d3/e-hero.webp",
-      "pos": "53% 20%",
+      "foto": "/d3/ev-hero-2000.webp",
+      "fotoMobiel": "/d3/ev-hero-m.webp",
+      "fotoKlein": "/d3/ev-hero-1280.webp",
+      "pos": "53% 22%",
       "chip": "{reviews} · NEN-4400-1 gecertificeerd",
       "h1": [
         "Event[[(ueel)]] personeel nodig?",
