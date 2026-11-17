@@ -29,6 +29,7 @@ const GROUPS: { heading: string; paths: string[] }[] = [
       "/horeca-personeel-inhuren",
       "/horeca-personeel-amsterdam",
       "/tijdelijk-horeca-personeel",
+      "/last-minute-horecapersoneel",
       "/flexibel-horeca-personeel",
     ],
   },

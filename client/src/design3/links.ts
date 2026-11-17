@@ -245,6 +245,7 @@ export const TAALKNOP_NAAR_EN: Record<string, string> = {
   "/flexibel-horeca-personeel": "/en/hospitality-staff-amsterdam",
   "/horeca-personeel-inhuren": "/en/hospitality-staff-amsterdam",
   "/tijdelijk-horeca-personeel": "/en/hospitality-staff-amsterdam",
+  "/last-minute-horecapersoneel": "/en/hospitality-staff-amsterdam",
   "/uitzenden-of-zzp": "/en/hospitality-staff-amsterdam",
   "/horeca-werk-amsterdam": "/en/hospitality-work",
   "/housekeeping-vacatures-amsterdam": "/en/housekeeping-jobs",
