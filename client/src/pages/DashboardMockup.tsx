@@ -1075,15 +1075,13 @@ export default function DashboardMockup() {
             <>
               {(sollicitantenV2 ? [
                 // Sollicitanten 3.0 (D1): Medewerkers heet Onboarding, Archief staat eronder.
+                // Job (eenmalige instellingen) en Archief staan onder Systeem (besluit Max 17 nov 2026).
                 { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
-                { icon: Bot, label: 'Job', tab: 'job' },
                 { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten2' },
                 { icon: CheckCircle2, label: 'Onboarding', tab: 'onboarding2' },
-                { icon: Archive, label: 'Archief', tab: 'archief2' },
                 { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
               ] : [
                 { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
-                { icon: Bot, label: 'Job', tab: 'job' },
                 { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
                 { icon: CheckCircle2, label: 'Medewerkers', tab: 'medewerkers' },
                 { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
@@ -1302,22 +1300,29 @@ export default function DashboardMockup() {
               color: HUISSTIJL.KLEUR.zijMuted,
             }}>Systeem</span>
           </div>
+          {[
+            { icon: Settings2, label: 'Admin-accounts', tab: 'admin-beheer' },
+            { icon: Bot, label: 'Job', tab: 'job' },
+            ...(sollicitantenV2 ? [{ icon: Archive, label: 'Archief', tab: 'archief2' }] : []),
+          ].map((item) => (
           <button
-            onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
-            title="Admin-accounts"
+            key={item.tab}
+            onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); setNavKlik((n) => n + 1); }}
+            title={item.label}
             className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
             style={{
               fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
-              fontWeight: activeTab === 'admin-beheer' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+              fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
               padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
               gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-              color: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
-              backgroundColor: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
+              color: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefTekst : HUISSTIJL.KLEUR.zijTekst,
+              backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.zijActiefVlak : 'transparent',
             }}
           >
-            <Settings2 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
-            <span>Admin-accounts</span>
+            <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
+            <span>{item.label}</span>
           </button>
+          ))}
         </div>
 
         <div className="dh-userinfo" style={{ padding: `8px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, borderTop: `1px solid ${HUISSTIJL.KLEUR.zijRand}`, marginTop: '8px' }}>
