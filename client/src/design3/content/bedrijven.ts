@@ -826,6 +826,41 @@ export const events: PaginaContent = {
       ]
     },
     {
+      "type": "waarom",
+      "eyebrow": "Congressen, beurzen, gala's en festivals",
+      "h2": "Personeel voor [[grote evenementen]]",
+      "lead": "Bij een grote productie moet de bezetting vanaf de eerste minuut kloppen. EXTRA levert teams van 5 tot meer dan 100 medewerkers en werkt mee aan meer dan 500 events per jaar.",
+      "punten": [
+        {
+          "ic": "doc",
+          "h3": "Eerst je draaiboek",
+          "p": "Het aantal gasten, het type service, de tijden en de locatie. Daarop stellen we het team samen, van bediening en bar tot hosts en runners."
+        },
+        {
+          "ic": "oog",
+          "h3": "Een teamcaptain op locatie",
+          "p": "Bij grotere producties zetten we een teamcaptain in die de briefing kent, het team aanstuurt en schakelt met jouw eventmanager."
+        },
+        {
+          "ic": "vink",
+          "h3": "Rekenvoorbeeld: diner voor 300 gasten",
+          "p": "Met één bediening per 10 tot 12 gasten kom je op 25 tot 30 bedieningsmedewerkers, plus bar, runners en een teamcaptain. De precieze bezetting hangt af van het aantal gangen, de zaal en de afstand tot de keuken."
+        },
+        {
+          "ic": "koffer",
+          "h3": "Voor organisatoren, locaties en cateraars",
+          "p": "Eventbureaus, organisatoren van congressen en beurzen, eventlocaties, cateraars en bedrijven met een groot personeelsfeest."
+        },
+        {
+          "ic": "pijl",
+          "h3": "Ook buiten Amsterdam",
+          "p": "Ons zwaartepunt is Amsterdam. Voor grotere opdrachten werken we in heel Nederland."
+        }
+      ],
+      "check": null,
+      "paddingTop": null
+    },
+    {
       "type": "portaal",
       "eyebrow": "Klantportaal",
       "h2": "Je eigen klantportaal, [[waar jij centraal staat]]",
