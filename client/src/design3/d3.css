@@ -984,7 +984,7 @@
 @media (max-width:1100px){.d3.d3 .f3-rij{grid-template-columns:1fr 1fr}}
 @media (max-width:760px){.d3.d3 .f3-rij{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px 20px}
 .d3.d3 .f3 ul{font-size:15px}}
-.d3.d3 p, .d3.d3 li, .d3.d3 .lead, .d3.d3 .zacht, .d3.d3 label span, .d3.d3 .if-kop span, .d3.d3 .scr-kop span, .d3.d3 .sc-kop span, .d3.d3 .pt-tekst, .d3.d3 .faq .antwoord, .d3.d3 .stap p, .d3.d3 .tb-kop span{font-weight:400!important;font-size:13pt!important;line-height:16pt!important;letter-spacing:-.02em!important}
+.d3.d3 p, .d3.d3 li, .d3.d3 .lead, .d3.d3 .zacht, .d3.d3 label span, .d3.d3 .if-kop span, .d3.d3 .scr-kop span, .d3.d3 .sc-kop span, .d3.d3 .pt-tekst, .d3.d3 .faq .antwoord, .d3.d3 .stap p, .d3.d3 .tb-pop .tb-kop span{font-weight:400!important;font-size:13pt!important;line-height:16pt!important;letter-spacing:-.02em!important}
 .d3.d3 .shero .mega{font-size:clamp(56px,8.4vw,140px)}
 .d3.d3 .shero .onder{padding:220px 0 90px}
 .d3.d3 .shero .cirkel{top:130px;bottom:auto;right:6%}
