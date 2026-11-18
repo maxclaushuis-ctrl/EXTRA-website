@@ -7,6 +7,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { BRANCHE, BRANCHES, type Branche } from "@shared/sollicitantRegels";
 import { KLEUREN, KLEUR_VOLGORDE, GROEP_VOLGORDE, PUNT_KLEUR, STADIA, AANMELD_KLEUR, groepenVoor, vergelijkGroep, type Fase, type Groep, type Kleur, type Punt, type Stadium } from "@shared/kandidaatRegels";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { CSS, Dialoog, Knop, Leeg, Meldingen, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
 import { Dossier3, K3CSS } from "./Kaart3";
@@ -20,8 +21,8 @@ interface Rij {
   groep?: Groep; punt?: Punt; groepTekst?: string; groepSub?: string | null; stap?: string | null; dubbel?: boolean;
 }
 interface Overzicht { rijen: Rij[]; tellers: { perKleur: Record<Kleur, number>; perBranche: Record<string, number>; aandacht: number }; planners: { id: number; naam: string }[] }
-interface Filter { kleuren: Kleur[]; groepen: Groep[]; functie: string; planner: string; datum: string }
-const STANDAARD: Filter = { kleuren: ["geel", "rood"], groepen: [], functie: "", planner: "", datum: "" };
+interface Filter { kleuren: Kleur[]; groepen: Groep[]; stadia: string[]; functie: string; planner: string; datum: string }
+const STANDAARD: Filter = { kleuren: ["geel", "rood"], groepen: [], stadia: [], functie: "", planner: "", datum: "" };
 const SLEUTEL = "extra-kandidaten-filter";
 /** Nieuwe aanmeldingen heeft een eigen opgeslagen filter, zodat een filter in de ene bak de andere niet leegmaakt. */
 const sleutelVoor = (fase?: Fase) => (fase === "nieuw" ? `${SLEUTEL}-nieuw` : SLEUTEL);
@@ -38,6 +39,19 @@ export function Stip({ kleur, cijfer, maat = 20 }: { kleur: Kleur; cijfer?: stri
 }
 
 const FUNCTIE_OPTIES = [["horecamedewerker", "Bediening en bar"], ["bediening", "Bediening en bar (nieuw formulier)"], ["chef", "Keuken"], ["keuken", "Keuken (nieuw formulier)"], ["afwas", "Afwas"], ["housekeeping", "Housekeeping"], ["frontoffice", "Front office"], ["logistiek", "Logistiek"]];
+
+/** Keuzelijst in de stijl van de rest van het dashboard (dezelfde Select als bij Periode en Functie elders). */
+function Kies({ label, waarde, opties, onChange, boven }: { label: string; waarde: string; opties: [string, string][]; onChange: (w: string) => void; boven?: boolean }) {
+  return (
+    <div className="sv-veld" style={boven ? { marginTop: 10 } : undefined}>
+      <span>{label}</span>
+      <Select value={waarde || "alle"} onValueChange={(v) => onChange(v === "alle" ? "" : v)}>
+        <SelectTrigger className="h-10 w-full bg-white text-sm" aria-label={label}><SelectValue /></SelectTrigger>
+        <SelectContent>{([["alle", "Alle"], ...opties] as [string, string][]).map(([w, l]) => <SelectItem key={w} value={w}>{l}</SelectItem>)}</SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 /**
  * Het overzicht. Met `fase` (schakelaar NIEUWE_AANMELDINGEN) is dit een van de twee bakken:
@@ -64,16 +78,18 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
   const pas = (f: Filter, rijen: Rij[]) => {
     const nu = Date.now();
     return rijen.filter((r) => (branche === "alle" || r.branche === branche)
-      && (groepen ? (!f.groepen.length || f.groepen.includes(r.groep!)) : (!f.kleuren.length || f.kleuren.includes(r.kleur)))
+      && (nieuw ? (!f.stadia.length || f.stadia.includes(r.stadium?.label ?? "")) : groepen ? (!f.groepen.length || f.groepen.includes(r.groep!)) : (!f.kleuren.length || f.kleuren.includes(r.kleur)))
       && (!f.functie || r.functieCode === f.functie)
       && (!f.planner || (f.planner === "geen" ? !r.plannerId : f.planner === "mij" ? r.mijn : String(r.plannerId) === f.planner))
-      && (!f.datum || nu - new Date(r.aangemeld).getTime() <= Number(f.datum) * 86400000)
+      && (nieuw || !f.datum || nu - new Date(r.aangemeld).getTime() <= Number(f.datum) * 86400000)
       && (!zoek.trim() || [r.naam].some((x) => x.toLowerCase().includes(zoek.trim().toLowerCase()))));
   };
   const lijst = useMemo(() => {
     const l = data ? pas(filter, data.rijen) : [];
+    // Aanmeldingen: wie het langst niets deed bovenaan (rood, oranje, geel, groen), daarbinnen de langst wachtende.
+    if (nieuw) { const rang = { rood: 0, oranje: 1, geel: 2, groen: 3 } as const; return [...l].sort((a, b) => (rang[a.stadium?.kleur ?? "groen"] - rang[b.stadium?.kleur ?? "groen"]) || new Date(a.sinds).getTime() - new Date(b.sinds).getTime()); }
     return groepen ? [...l].sort((a, b) => vergelijkGroep({ groep: a.groep!, sinds: new Date(a.sinds) }, { groep: b.groep!, sinds: new Date(b.sinds) })) : l;
-  }, [data, filter, branche, zoek, groepen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, filter, branche, zoek, groepen, nieuw]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (open) {
     const ids = lijst.map((r) => r.id);
@@ -93,7 +109,9 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
   const conceptN = concept && data ? pas(concept, data.rijen).length : 0;
   const perGroep = (g: Groep) => (data ? data.rijen.filter((r) => r.groep === g).length : 0);
   const nKlaar = perGroep("beoordelen"), nActie = perGroep("actie") + perGroep("geen_reactie");
-  const filterAan = (groepen ? filter.groepen.length : filter.kleuren.length) || filter.functie || filter.planner || filter.datum;
+  // Aanmeldingen staan in één lijst zonder kopjes; Kandidaten blijft in groepen.
+  const blokken: Array<[Groep | null, Rij[]]> = nieuw ? [[null, lijst]] : GROEP_VOLGORDE.map((g): [Groep | null, Rij[]] => [g, lijst.filter((r) => r.groep === g)]);
+  const filterAan = (nieuw ? filter.stadia.length : groepen ? filter.groepen.length : filter.kleuren.length) || filter.functie || filter.planner || (!nieuw && filter.datum);
   return (
     <div className="sv" style={{ borderRadius: 18 }}>
       <style>{CSS}{KCSS}</style>
@@ -102,7 +120,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
           <div>
             <h1>{titel}</h1>
             <p className="sv-sub">{!data || (!status && !statusFout) ? "Laden..." : nieuw && groepen
-              ? `${data.rijen.length} ${data.rijen.length === 1 ? "aanmelding" : "aanmeldingen"} onderweg, ${nActie} ${nActie === 1 ? "vraagt" : "vragen"} een actie`
+              ? `${data.rijen.length} ${data.rijen.length === 1 ? "aanmelding" : "aanmeldingen"} onderweg`
               : fase === "kandidaat" && groepen
               ? `${nKlaar} klaar voor beoordeling, ${perGroep("actie")} eerst nakijken`
               : groepen
@@ -115,33 +133,36 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
             <button key={b} className={`tab ${branche === b ? "aan" : ""}`} onClick={() => setBranche(b)}>{b === "alle" ? "Alle" : BRANCHE[b].label} <span className="sv-grijs" style={{ fontSize: 13 }}>{telBranche(b)}</span></button>
           ))}
           <span style={{ flex: 1 }} />
-          <input type="search" placeholder="Zoek kandidaat" value={zoek} onChange={(e) => setZoek(e.target.value)} style={{ width: 240, height: 40 }} aria-label="Zoek kandidaat" />
+          <input type="search" placeholder={nieuw ? "Zoek aanmelding" : "Zoek kandidaat"} value={zoek} onChange={(e) => setZoek(e.target.value)} style={{ width: 240, height: 40 }} aria-label={nieuw ? "Zoek aanmelding" : "Zoek kandidaat"} />
           <div style={{ position: "relative" }}>
             <button className="sv-knop" style={concept ? { borderColor: "#37352C" } : undefined} onClick={() => setConcept(concept ? null : filter)} aria-expanded={!!concept}>Filter{filterAan ? " ●" : ""}</button>
             {concept && data && (
               <div className="k-filter" role="dialog" aria-label="Filter">
-                <p className="sv-lbl">STATUS</p>
-                {groepen && GROEP_VOLGORDE.map((g) => (
+                <p className="sv-lbl">{nieuw ? "STADIUM" : "STATUS"}</p>
+                {nieuw && STADIA.map((st) => (
+                  <label key={st} className="k-filterrij">
+                    <input type="checkbox" checked={concept.stadia.includes(st)} onChange={(e) => setConcept({ ...concept, stadia: e.target.checked ? [...concept.stadia, st] : concept.stadia.filter((x) => x !== st) })} />
+                    <span style={{ flex: 1 }}>{st}</span><span className="sv-grijs">{data.rijen.filter((r) => r.stadium?.label === st).length}</span>
+                  </label>
+                ))}
+                {!nieuw && groepen && GROEP_VOLGORDE.map((g) => (
                   <label key={g} className="k-filterrij">
                     <input type="checkbox" checked={concept.groepen.includes(g)} onChange={(e) => setConcept({ ...concept, groepen: e.target.checked ? [...concept.groepen, g] : concept.groepen.filter((x) => x !== g) })} />
                     <span className="k-punt" style={{ background: GR[g].kleur }} /><span style={{ flex: 1 }}>{GR[g].titel}</span><span className="sv-grijs">{perGroep(g)}</span>
                   </label>
                 ))}
-                {!groepen && KLEUR_VOLGORDE.map((k) => (
+                {!nieuw && !groepen && KLEUR_VOLGORDE.map((k) => (
                   <label key={k} className="k-filterrij">
                     <input type="checkbox" checked={concept.kleuren.includes(k)} onChange={(e) => setConcept({ ...concept, kleuren: e.target.checked ? [...concept.kleuren, k] : concept.kleuren.filter((x) => x !== k) })} />
                     <Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} /><span style={{ flex: 1 }}>{KLEUREN[k].label}</span><span className="sv-grijs">{data.tellers.perKleur[k] || 0}</span>
                   </label>
                 ))}
-                <label className="sv-veld" style={{ marginTop: 10 }}><span>Functie</span>
-                  <select value={concept.functie} onChange={(e) => setConcept({ ...concept, functie: e.target.value })}><option value="">Alle</option>{FUNCTIE_OPTIES.map(([w, l]) => <option key={w} value={w}>{l}</option>)}</select></label>
-                {!nieuw && <label className="sv-veld"><span>Planner</span>
-                  <select value={concept.planner} onChange={(e) => setConcept({ ...concept, planner: e.target.value })}><option value="">Alle</option><option value="geen">Niet toegewezen</option><option value="mij">Mij</option>{data.planners.map((p) => <option key={p.id} value={String(p.id)}>{p.naam}</option>)}</select></label>}
-                <label className="sv-veld"><span>Aanmelddatum</span>
-                  <select value={concept.datum} onChange={(e) => setConcept({ ...concept, datum: e.target.value })}><option value="">Alle</option><option value="1">Vandaag</option><option value="7">Laatste 7 dagen</option><option value="30">Laatste 30 dagen</option></select></label>
+                <Kies boven label="Functie" waarde={concept.functie} opties={FUNCTIE_OPTIES as unknown as [string, string][]} onChange={(w) => setConcept({ ...concept, functie: w })} />
+                {!nieuw && <Kies label="Planner" waarde={concept.planner} opties={[["geen", "Niet toegewezen"], ["mij", "Mij"], ...data.planners.map((p) => [String(p.id), p.naam] as [string, string])]} onChange={(w) => setConcept({ ...concept, planner: w })} />}
+                {!nieuw && <Kies label="Aanmelddatum" waarde={concept.datum} opties={[["1", "Vandaag"], ["7", "Laatste 7 dagen"], ["30", "Laatste 30 dagen"]]} onChange={(w) => setConcept({ ...concept, datum: w })} />}
                 <div className="sv-tussen" style={{ alignItems: "center", marginTop: 6 }}>
-                  <button className="sv-knop sv-knop-link" onClick={() => setConcept({ kleuren: [], groepen: [], functie: "", planner: "", datum: "" })}>Wis filters</button>
-                  <Knop soort="donker" style={{ height: 36 }} onClick={() => { setFilter(concept); setConcept(null); }}>Toon {conceptN} kandidaten</Knop>
+                  <button className="sv-knop sv-knop-link" onClick={() => setConcept({ kleuren: [], groepen: [], stadia: [], functie: "", planner: "", datum: "" })}>Wis filters</button>
+                  <Knop soort="donker" style={{ height: 36 }} onClick={() => { setFilter(concept); setConcept(null); }}>Toon {conceptN} {nieuw ? "aanmeldingen" : "kandidaten"}</Knop>
                 </div>
               </div>
             )}
@@ -160,17 +181,16 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
             ) : (
               <thead><tr><th style={{ width: "19%" }}>Kandidaat</th><th style={{ width: "21%" }}>Status</th><th className="k-breed" style={{ width: "15%" }}>Volgende stap</th><th className="k-breed" style={{ width: "15%" }}>Match</th><th className="k-breed" style={{ width: "9%" }}>Sinds</th><th className="k-breed" style={{ width: "15%" }}>Planner</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
             )}
-            <tbody>{GROEP_VOLGORDE.map((g) => {
-              const rijen = lijst.filter((r) => r.groep === g);
+            <tbody>{blokken.map(([g, rijen]) => {
               if (!rijen.length) return null;
               return (
-                <Fragment key={g}>
-                  <tr className="k-groepkop"><td colSpan={nieuw ? 6 : 7}><div><span className="k-punt" style={{ background: GR[g].kleur }} /><b>{GR[g].titel}</b><span className="sv-grijs">{rijen.length}</span><span className="k-hint">{GR[g].hint}</span></div></td></tr>
+                <Fragment key={g ?? "alle"}>
+                  {g && <tr className="k-groepkop"><td colSpan={7}><div><span className="k-punt" style={{ background: GR[g].kleur }} /><b>{GR[g].titel}</b><span className="sv-grijs">{rijen.length}</span><span className="k-hint">{GR[g].hint}</span></div></td></tr>}
                   {rijen.map((r) => (
                     <tr key={r.id} className={`klik${g === "lopend" ? " k-stil" : ""}`} tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
                       <td><b className="k-naam">{r.naam}</b><div className="sv-klein k-functie">{r.functie}{r.dubbel && <span className="k-label" title="Er is een ander dossier dat op deze persoon lijkt">Mogelijk dubbel</span>}</div></td>
                       {nieuw && <td><StadiumKort s={r.stadium} /></td>}
-                      <td style={{ whiteSpace: "normal" }}><div className="k-status"><span className="k-punt" style={{ background: PUNT_KLEUR[r.punt!] }} aria-hidden="true" /><div>{r.groepTekst}{r.groepSub && <div className="sv-klein">{r.groepSub}</div>}<div className="k-smal sv-klein">{[r.stap, r.sindsTekst].filter(Boolean).join(", ")}</div></div></div></td>
+                      <td style={{ whiteSpace: "normal" }}><div className="k-status">{!nieuw && <span className="k-punt" style={{ background: PUNT_KLEUR[r.punt!] }} aria-hidden="true" />}<div>{r.groepTekst}{r.groepSub && <div className="sv-klein">{r.groepSub}</div>}<div className="k-smal sv-klein">{[r.stap, r.sindsTekst].filter(Boolean).join(", ")}</div></div></div></td>
                       <td className="k-breed k-stap">{r.stap || ""}</td>
                       {!nieuw && <td className="k-breed"><MatchKort m={r.match} /></td>}
                       <td className="k-breed sv-grijs">{r.sindsTekst}</td>
@@ -198,7 +218,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
           </table>
         ) : null}
         {data && !lijst.length && (
-          <Leeg>{zoek ? `Geen kandidaat gevonden voor '${zoek}'.` : fase && groepen && !filterAan && branche === "alle" ? (nieuw ? "Er zijn geen nieuwe aanmeldingen." : "Er staan geen complete profielen te wachten.") : !groepen && filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
+          <Leeg>{zoek ? `Geen ${nieuw ? "aanmelding" : "kandidaat"} gevonden voor '${zoek}'.` : fase && groepen && !filterAan && branche === "alle" ? (nieuw ? "Er zijn geen nieuwe aanmeldingen." : "Er staan geen complete profielen te wachten.") : !groepen && filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
             ? <>Niemand vraagt nu je aandacht. <button className="sv-knop sv-knop-link" onClick={() => setFilter({ ...filter, kleuren: [] })}>Toon alle lopende kandidaten</button></>
             : branche !== "alle" ? `Geen lopende kandidaten in ${BRANCHE[branche].label}.` : "Geen kandidaten met dit filter."}</Leeg>
         )}
