@@ -12,7 +12,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { BRANCHE } from "@shared/sollicitantRegels";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { Dialoog, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
-import { Inplannen, MAANDEN, uitleg, wanneer, type DossierData } from "./index";
+import { Inplannen, MAANDEN, Toewijzen, uitleg, wanneer, type DossierData } from "./index";
 
 const PADEN: Record<string, string> = {
   housekeeping: "M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 15h18M3 18v2M21 18v2M6 10V7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3",
@@ -30,6 +30,7 @@ const PADEN: Record<string, string> = {
   groot: "M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7",
   neer: "M12 4v11M7 10l5 5 5-5M4 20h16",
   slot: "M5 11h14v9H5zM8 11V8a4 4 0 0 1 8 0v3",
+  agenda: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4",
   clip: "M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7",
 };
 function Ic({ n }: { n: string }) {
@@ -116,11 +117,12 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp, tab = "k
     try {
       const r = await post(`${id}/accepteren`, { zonderCv: d!.profiel.cv === null });
       setAccepteren(false);
-      melding(`Door naar de kennismaking: ${d!.voornaam} krijgt ${r.mail ? "een mail met een afspraakknop" : "geen mail (geen e-mailadres)"}.`);
+      melding(`Door naar de kennismaking: ${d!.voornaam} krijgt ${r.mail ? "een mail met een afspraakknop" : "geen mail (geen e-mailadres)"}.${r.whatsapp === "mislukt" ? " Let op: het WhatsApp-bericht is niet verstuurd. Bel of mail de kandidaat." : ""}`);
       volgende();
     } catch (e: any) { setAccepteren(false); melding(e.message); }
   }
 
+  const kanInplannen = d.status === "in_behandeling" || d.status === "gepland";
   const vak = VAK[d.branche] || "";
   const icoon = FUNCTIE_ICOON[d.functieCode || ""] || "horeca";
   const lopend = d.status === "in_behandeling";
@@ -135,7 +137,6 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp, tab = "k
   const meer = [
     d.contact.telefoon ? { label: `Bel ${d.voornaam}`, doe: () => { window.location.href = `tel:${d.contact.telefoon}`; } } : null,
     d.job?.kanaal === "whatsapp" ? { label: "Openen in de WhatsApp-inbox", doe: naarWhatsapp } : webLink ? { label: "Open het webgesprek", doe: () => window.open(webLink, "_blank", "noopener") } : null,
-    d.status === "in_behandeling" || d.status === "gepland" ? { label: "Zelf een kennismaking plannen", doe: () => setInplannen(true) } : null,
   ].filter(Boolean) as { label: string; doe: () => void }[];
 
   const gele = d.bolletje.kleur === "geel" || d.bolletje.kleur === "rood" ? d.bolletje.gele : [];
@@ -159,12 +160,11 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp, tab = "k
             <h1 title={d.naam}>{d.naam}</h1>
             <div className="k3-regel">
               <span className={`k3-fn ${vak}`}><Ic n={icoon} />{d.functie}</span>
-              <span className={`k3-st ${stKlas}`}>{d.bolletje.tekst} · {d.bolletje.sindsTekst}</span>
+              <span className={`k3-st ${d.afspraak && d.afspraak.kleur !== "geel" ? (d.afspraak.kleur === "rood" ? "stop" : "letop") : stKlas}`}>{d.afspraak && d.afspraak.kleur !== "geel" ? d.afspraak.label : d.bolletje.tekst} · {d.bolletje.sindsTekst}</span>
               <span className={`k3-verantw ${d.planner ? "" : "leeg"}`}>
                 <span className="k3-ava" aria-hidden="true">{d.planner ? initialen(d.planner.label) : ""}</span>
-                {d.planner ? <>Verantwoordelijk: <b>{d.planner.label}</b></> : "Nog niet toegewezen"}
-                <button className="k3-link klein" disabled={bezig} onClick={() => post(`${id}/planner`, {}).then(opnieuw).catch((e) => melding(e.message))}>aan mij toewijzen</button>
-                {d.planner && <button className="k3-link klein" disabled={bezig} onClick={() => post(`${id}/planner`, { loslaten: true }).then(opnieuw).catch((e) => melding(e.message))}>loslaten</button>}
+                <span>Verantwoordelijk:</span>
+                <Toewijzen id={id} planner={d.planner} bezig={bezig} klaar={opnieuw} />
               </span>
             </div>
             <div className="k3-sub">{[BRANCHE[d.branche].label !== d.functie ? BRANCHE[d.branche].label : null, d.leeftijd !== null ? `${d.leeftijd} jaar` : null, d.plaats, `aangemeld ${wanneer(d.aangemeld)}${d.bron ? ` via ${d.bron}` : ""}`].filter(Boolean).join(" · ")}</div>
@@ -176,6 +176,7 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp, tab = "k
                 {menu && <div className="k3-menu" role="menu">{meer.map((m) => <button key={m.label} role="menuitem" onClick={() => { setMenu(false); m.doe(); }}>{m.label}</button>)}</div>}
               </div>}
               <button className="k3-knop" disabled={!cv} onClick={() => setCvGroot(true)}><Ic n="oog" />{cv ? "Bekijk cv" : "Geen cv"}</button>
+              {kanInplannen && <button className="k3-knop" disabled={bezig} onClick={() => setInplannen(true)}><Ic n="agenda" />Gesprek inplannen</button>}
               <button className="k3-knop weg" disabled={bezig} onClick={() => setAfwijzen(true)}><Ic n="kruis" />Afwijzen</button>
               <button className="k3-knop vol" disabled={accepterenUit} title={accepterenWaarom} onClick={() => setAccepteren(true)}><Ic n="vink" />{lopend ? "Accepteren" : "Uitgenodigd"}</button>
             </div>
@@ -321,7 +322,7 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp, tab = "k
       )}
       {afwijzen && <AfwijzenDialoog id={id} naam={d.naam} voornaam={d.voornaam} stap="kandidaten" sluit={() => setAfwijzen(false)}
         klaar={(r) => { setAfwijzen(false); melding(`Afgewezen: ${d.voornaam} staat in het archief.${r.verstuurd ? " De mail is verstuurd." : ""}`); volgende(); }} />}
-      {inplannen && <Inplannen id={id} voornaam={d.voornaam} sluit={() => setInplannen(false)} klaar={() => { setInplannen(false); melding(`Ingepland: ${d.voornaam} staat nu bij Sollicitanten · Gesprekken.`); volgende(); }} />}
+      {inplannen && <Inplannen id={id} voornaam={d.voornaam} agenda={!!d.afspraak} vernieuw={opnieuw} sluit={() => setInplannen(false)} klaar={() => { setInplannen(false); melding(`Ingepland: ${d.voornaam} staat nu bij Sollicitanten · Gesprekken.`); volgende(); }} />}
     </div>
   );
 }

@@ -56,7 +56,7 @@ const knop = (donker = false): React.CSSProperties => ({
 const th: React.CSSProperties = { textAlign: "left", fontSize: 12, color: "#8A8478", fontWeight: 600, padding: "0 10px 8px", borderBottom: "1px solid #E4E0D8" };
 const td: React.CSSProperties = { padding: "10px", borderBottom: "1px solid #F0ECE5", fontSize: 13.5, verticalAlign: "top" };
 
-interface JobStatusInfo { aan: boolean; testomgeving: boolean; handmatigStarten: boolean; ai: boolean; whatsapp: boolean; sjablonen: { start: boolean; herinnering: boolean; afspraak: boolean } }
+interface JobStatusInfo { aan: boolean; testomgeving: boolean; handmatigStarten: boolean; ai: boolean; whatsapp: boolean; sjablonen: { start: boolean; herinnering: boolean; afspraak: boolean; uitnodiging?: boolean } }
 interface Rij { id: number; candidateId: number; voornaam: string; achternaam: string; functie: string; status: Status; kanaal: string; taal: string; twijfels: string[]; laatsteActiviteitAt: string; link: string }
 interface Interviewer { naam: string; dagen: number[]; van: string; tot: string; pauzeVan?: string | null; pauzeTot?: string | null; actief?: boolean }
 interface Afspraak { id: number; candidateId: number; voornaam: string; achternaam: string; functie: string; interviewer: string; datum: string; tijd: string }
@@ -152,6 +152,7 @@ export function JobBeheer() {
               {vlag(status.sjablonen.start, "Startsjabloon ingesteld", "Geen startsjabloon: link per mail")}
               {vlag(status.sjablonen.herinnering, "Herinneringssjabloon ingesteld", "Geen herinneringssjabloon: herinnering per mail")}
               {vlag(status.sjablonen.afspraak, "Afspraaksjabloon ingesteld", "Geen afspraaksjabloon")}
+              {status.sjablonen.uitnodiging !== undefined && vlag(status.sjablonen.uitnodiging, "Uitnodigingssjabloon ingesteld", "Geen uitnodigingssjabloon: de uitnodiging buiten 24 uur gaat alleen per mail")}
               {status.testomgeving && <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "#7A6200" }}>Testomgeving: Job mag hier met de hand gestart worden.</p>}
             </div>
           ) : <p>Laden…</p>}

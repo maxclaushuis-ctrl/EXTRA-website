@@ -22,6 +22,8 @@
  *    kiest de kandidaat zelf een moment.
  */
 import { taalWissel } from "./jobTaal";
+import type { AndereTijden } from "./andereTijden";
+import type { LijstSectie } from "./jobPlanning";
 
 export type JobTaal = "nl" | "en";
 
@@ -103,6 +105,8 @@ export interface JobVelden {
   pogingen?: Partial<Record<Onderwerp, number>>;
   cvParaat?: "ja" | "nee";
   zoekt?: string;
+  /** Kandidaten (KANDIDATEN_AFSPRAKEN): de kandidaat vond geen moment dat past en Job zoekt nieuwe momenten (shared/andereTijden.ts). */
+  andereTijden?: AndereTijden;
   /**
    * Job 3.0 fase 1, stuurvelden (geen antwoorden van de kandidaat):
    * herinneringenUit = na STOP en terugkomen gaan automatische herinneringen niet vanzelf weer aan;
@@ -164,6 +168,8 @@ export interface Uitgaand {
   cvUpload?: boolean;
   /** Web: toon de momentenkiezer. */
   planning?: boolean;
+  /** WhatsApp: een eigen keuzelijst (bijvoorbeeld nieuwe momenten of "Wat past je beter?") in plaats van alle vrije momenten. */
+  lijst?: LijstSectie[];
   /** Korte reactie van Job; wordt samengevoegd met het bericht erna (zie verwerk). */
   reactie?: boolean;
 }
@@ -1230,9 +1236,11 @@ export function herinneringNodig(s: JobState, nu: Date, schema: HerinneringSchem
 /**
  * Uitgenodigd, maar nog geen moment gekozen: een herinnering na 24 uur en een
  * tweede na nog eens 48 uur. Daarna niets meer; Kandidaten kleurt het geel.
+ * Met schakelaar KANDIDATEN_AFSPRAKEN (`max` = 3): een derde na nog eens 48 uur.
+ * Daarna blijft de kandidaat oranje staan, met de volgende stap "bel hem of haar".
  */
-export function planHerinneringNodig(s: JobState, nu: Date): boolean {
-  if (s.status !== "plannen" || s.herinneringen >= 2 || s.velden?.herinneringenUit) return false;
+export function planHerinneringNodig(s: JobState, nu: Date, max = 2): boolean {
+  if (s.status !== "plannen" || s.herinneringen >= max || s.velden?.herinneringenUit) return false;
   const vanaf = s.herinneringen === 0 ? s.laatsteActiviteitAt : s.herinneringAt;
   // Onveranderd: 24 uur en daarna 48 uur (de constanten hierboven zijn alleen voor de aanmelding).
   const wacht = s.herinneringen === 0 ? 24 * UUR : 48 * UUR;
@@ -1244,11 +1252,13 @@ export function planHerinneringNodig(s: JobState, nu: Date): boolean {
  * koos (een collega zoekt samen een moment), of een moment dat intussen bezet is (de lijst
  * komt opnieuw). Een vrij moment boekt de service zelf.
  */
+/** De twijfel die bij "geen moment dat past" hoort; Kandidaten leest daar rood uit af. */
+export const ANDERE_TIJDEN_TWIJFEL = "Kandidaat vond geen moment dat past.";
 export function momentAntwoord(s: JobState, keuze: "geen" | "bezet", nu: Date, afspraakBlijft = false): Resultaat {
   const state: JobState = { ...s, twijfels: [...s.twijfels], laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null };
   if (keuze === "bezet") return { state, berichten: [{ tekst: T[s.taal].momentBezet, planning: true }], acties: [] };
   // Bij verzetten blijft de oude afspraak staan tot er een nieuwe is.
-  const reden = afspraakBlijft ? "Kandidaat wil verzetten maar vond geen moment dat past." : "Kandidaat vond geen moment dat past.";
+  const reden = afspraakBlijft ? "Kandidaat wil verzetten maar vond geen moment dat past." : ANDERE_TIJDEN_TWIJFEL;
   state.status = afspraakBlijft ? "gepland" : "planner";
   if (!state.twijfels.includes(reden)) state.twijfels.push(reden);
   return { state, berichten: [{ tekst: afspraakBlijft ? T[s.taal].geenMomentAfspraakBlijft : T[s.taal].geenMomentPast }], acties: [{ soort: "planner", reden }] };

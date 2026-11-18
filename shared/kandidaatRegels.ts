@@ -8,7 +8,7 @@
  * moment). Met een gespreksdatum staan ze in Sollicitanten, afgewezen in het
  * Archief en aangenomen in Onboarding.
  */
-import { FUNCTIES_MET_ERVARING, geenErvaringTelt, openOnderwerpen, type JobVelden } from "./jobRegels";
+import { ANDERE_TIJDEN_TWIJFEL, FUNCTIES_MET_ERVARING, geenErvaringTelt, openOnderwerpen, type JobVelden } from "./jobRegels";
 
 export type Kleur = "geel" | "rood" | "oranje2" | "oranje1" | "oranje";
 export const KLEUREN: Record<Kleur, { kleur: string; label: string; cijfer?: string }> = {
@@ -366,3 +366,39 @@ export const GROEPEN_KANDIDAAT: typeof GROEPEN = {
   lopend: { titel: "Uitgenodigd", hint: "Goedgekeurd, wacht op een gekozen moment", kleur: GROEPEN.lopend.kleur },
 };
 export const groepenVoor = (fase: Fase): typeof GROEPEN => (fase === "kandidaat" ? GROEPEN_KANDIDAAT : GROEPEN);
+
+// ─── Kandidaten: de afspraak (schakelaar KANDIDATEN_AFSPRAKEN) ───────────────
+
+/**
+ * In Kandidaten betekent de kleur wat er met de afspraak is (besluit Max, 18 november 2026):
+ * geel = beoordelen (nog niet uitgenodigd), oranje = afspraak aangeboden maar nog niet gekozen,
+ * rood = de kandidaat wil andere tijden. Wie een moment kiest is bevestigd en staat bij Sollicitanten.
+ * Afgeleid uit wat er al is, niets opgeslagen.
+ */
+export type AfspraakKleur = "geel" | "oranje" | "rood";
+export const AFSPRAAK: Record<AfspraakKleur, { kleur: string; label: string; stap: string }> = {
+  geel: { kleur: "#D9B526", label: "Beoordelen", stap: "Afspraak maken of afwijzen" },
+  oranje: { kleur: "#D9761C", label: "Afspraak aangeboden", stap: "Afspraakbevestiging" },
+  rood: { kleur: "#C2412D", label: "Wil andere tijden", stap: "Bevestig zijn tijden of biedt andere tijden aan" },
+};
+export const AFSPRAAK_VOLGORDE: AfspraakKleur[] = ["rood", "geel", "oranje"];
+/** Na de derde herinnering op de uitnodiging: niets gaat automatisch weg, een planner belt. */
+export const BEL_REGEL = "Alle herinneringen gehad: bel hem of haar";
+export const AANTAL_PLAN_HERINNERINGEN = 3;
+
+export interface AfspraakStatus { kleur: AfspraakKleur; label: string; stap: string; sub: string | null }
+
+export function afspraakStatus(c: KandidaatInvoer): AfspraakStatus {
+  const j = c.job;
+  const andere = !!j && j.status === "planner" && (j.twijfels || []).includes(ANDERE_TIJDEN_TWIJFEL);
+  if (andere) {
+    const voorkeur = j!.velden?.andereTijden?.voorkeur;
+    return { kleur: "rood", ...pak("rood"), sub: voorkeur ? `Voorkeur: ${voorkeur}` : null };
+  }
+  if (c.status === "gepland" || (j && j.status === "plannen")) {
+    const klaar = !!j && j.herinneringen >= AANTAL_PLAN_HERINNERINGEN;
+    return { kleur: "oranje", ...pak("oranje"), sub: klaar ? BEL_REGEL : null };
+  }
+  return { kleur: "geel", ...pak("geel"), sub: null };
+}
+const pak = (k: AfspraakKleur) => ({ label: AFSPRAAK[k].label, stap: AFSPRAAK[k].stap });

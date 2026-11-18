@@ -14,7 +14,8 @@ import {
   candidates, jobGesprekken, jobBerichten, kandidaatMogelijkeMatch, sollicitantGebeurtenissen, users, employees,
   type Candidate,
 } from "@shared/schema";
-import { bolletje, indeling, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_ACTIE, MATCH_REDEN_TEKST, KLEUR_VOLGORDE, aanmeldfase, stadium, nieuweAanmeldingenAan, type Fase, type Kleur } from "@shared/kandidaatRegels";
+import { bolletje, indeling, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_ACTIE, MATCH_REDEN_TEKST, KLEUR_VOLGORDE, aanmeldfase, afspraakStatus, stadium, nieuweAanmeldingenAan, type Fase, type Kleur } from "@shared/kandidaatRegels";
+import { afsprakenAan } from "@shared/jobPlanning";
 import { brancheVan, functieNaam, isAfwas, ingangBranche, BRANCHE, leeftijd } from "@shared/sollicitantRegels";
 import type { JobVelden } from "@shared/jobRegels";
 import { functieVan, isLabel } from "@shared/aanmeldLabels";
@@ -93,6 +94,7 @@ async function overzicht(ik: number | null, fase?: Fase | null) {
       match: kortMatch(m),
       groep: ind.groep, punt: ind.punt, groepTekst: ind.tekst, groepSub: ind.sub, stap: ind.stap, dubbel: ind.dubbel,
       ...(splits ? { fase: aanmeldfase(inv), stadium: stadium(inv) } : {}),
+      ...(afsprakenAan(process.env) ? { afspraak: afspraakStatus(inv) } : {}),
     };
   }).sort((a, b) => vergelijk({ kleur: a.kleur as Kleur, sinds: new Date(a.sinds) }, { kleur: b.kleur as Kleur, sinds: new Date(b.sinds) }));
   const fasen = splits ? { nieuw: alleRijen.filter((r) => (r as any).fase === "nieuw").length, kandidaat: alleRijen.filter((r) => (r as any).fase === "kandidaat").length } : null;
@@ -162,6 +164,7 @@ async function dossier(id: number) {
     leeftijd: leeftijd(c.birthDate ? String(c.birthDate) : null, nu), plaats: c.city, aangemeld: c.createdAt, bron,
     bolletje: { kleur: b.kleur, cijfer: b.cijfer || null, tekst: b.tekst, reden: b.reden, sinds: b.sinds, sindsTekst: sindsTekst(b.sinds, nu), gele: b.gele.map((x) => ({ ...x, ...VOLGENDE_ACTIE[x.reden] })) },
     planner: planner ? { id: planner.id, label: plannerLabel(planner) } : null,
+    ...(afsprakenAan(process.env) ? { afspraak: afspraakStatus(invoer(c, g, matches[0], uitgenodigd?.at, matchBlok.kaart?.eis.status ?? null)) } : {}),
     matches: matchDetails,
     profiel: {
       ervaring: v.ervaring || c.previousExperience || null, diensten: v.diensten ? DIENSTEN[String(v.diensten)] || String(v.diensten) : c.availability || null,
@@ -220,6 +223,19 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
     const job = await import("../job/jobService");
     res.json(await job.momenten());
   }));
+  /** Wie een kandidaat kan krijgen: de actieve beheerders (planners) van EXTRA. */
+  app.get(r("/toewijsbaar"), adminMiddleware, aan, veilig(async (_req, res) => {
+    const us = await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName }).from(users)
+      .where(and(eq(users.role, "admin"), eq(users.status, "active"))).orderBy(users.firstName, users.lastName);
+    res.json(us.map((u) => ({ id: u.id, naam: plannerLabel(u) })));
+  }));
+  /** De agenda voor de planner (alleen met KANDIDATEN_AFSPRAKEN): vrij, bezet en al aangeboden aan deze kandidaat. */
+  app.get(r("/agenda"), adminMiddleware, aan, veilig(async (req, res) => {
+    if (!afsprakenAan(process.env)) throw new Fout(404, "Niet beschikbaar.");
+    const job = await import("../job/jobService");
+    const id = Number(req.query.kandidaat);
+    res.json(await job.agendaOverzicht(Number.isInteger(id) && id > 0 ? id : undefined));
+  }));
   app.get(r("/dossier/:id"), adminMiddleware, aan, veilig(async (req, res) => {
     const d = await dossier(nummer(req.params.id));
     if (!d) throw new Fout(404, "Kandidaat niet gevonden.");
@@ -244,7 +260,7 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
     const job = await import("../job/jobService");
     const g = await job.naarPlannen(c.id);
     await db.update(candidates).set({ status: "gepland", updatedAt: new Date() }).where(eq(candidates.id, c.id));
-    await job.uitnodigingNaCheck(c.id).catch((e: any) => console.warn("[Kandidaten] bericht van Job na accepteren mislukt:", e?.message || e));
+    const whatsapp = await job.uitnodigingNaCheck(c.id).catch((e: any) => { console.warn("[Kandidaten] bericht van Job na accepteren mislukt:", e?.message || e); return "mislukt" as const; });
     let mail = false;
     if (c.email) {
       const { stuurUitnodigingsmail } = await import("../job/jobMails");
@@ -254,8 +270,8 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
       }).catch(() => false);
     }
     await storage.createCandidateAuditLog({ candidateId: c.id, action: "updated", changedByUserId: w.id, changeData: { description: `Uitgenodigd door ${w.voornaam}` }, ipAddress: null } as any).catch(() => {});
-    await log(c, w, "uitgenodigd", `Uitgenodigd door ${w.voornaam}${mail ? ", mail met afspraakknop verstuurd" : ", geen mail verstuurd"}`);
-    res.json({ ok: true, mail });
+    await log(c, w, "uitgenodigd", `Uitgenodigd door ${w.voornaam}${mail ? ", mail met afspraakknop verstuurd" : ", geen mail verstuurd"}${whatsapp === "mislukt" ? ", WhatsApp niet verstuurd" : ""}`);
+    res.json({ ok: true, mail, whatsapp });
   }));
 
   app.post(r("/:id/inplannen"), adminMiddleware, aan, veilig(async (req, res) => {
@@ -264,11 +280,15 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
     const datum = String(req.body?.datum || ""), tijd = String(req.body?.tijd || "");
     const w = await wie(req);
     const job = await import("../job/jobService");
+    const [voor] = await db.select({ id: jobGesprekken.id, status: jobGesprekken.status, herinneringen: jobGesprekken.herinneringen, herinneringAt: jobGesprekken.herinneringAt }).from(jobGesprekken).where(eq(jobGesprekken.candidateId, c.id));
     const g = await job.naarPlannen(c.id);
     if (c.status === "in_behandeling") await db.update(candidates).set({ status: "gepland", updatedAt: new Date() }).where(eq(candidates.id, c.id));
-    const uit = await job.boek(g, { datum, tijd });
+    const interviewer = afsprakenAan(process.env) && typeof req.body?.interviewer === "string" ? req.body.interviewer : undefined;
+    const uit = await job.boek(g, { datum, tijd, interviewer });
     if (!uit.ok) {
       if (c.status === "in_behandeling") await db.update(candidates).set({ status: "in_behandeling" }).where(eq(candidates.id, c.id));
+      // Mislukt het inplannen, dan blijft de kandidaat staan zoals hij stond (bijvoorbeeld rood).
+      if (voor) await db.update(jobGesprekken).set({ status: voor.status, herinneringen: voor.herinneringen, herinneringAt: voor.herinneringAt }).where(eq(jobGesprekken.id, voor.id));
       throw new Fout(409, (uit as any).reden === "bezet" ? "Dit moment is net weg. Kies een ander moment." : "Inplannen lukte niet. Kies een ander moment.");
     }
     await log(c, w, "ingepland", `Gesprek ingepland door ${w.voornaam}: ${datum.split("-").reverse().join("-")} om ${tijd}`);
@@ -278,10 +298,36 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
   app.post(r("/:id/planner"), adminMiddleware, aan, veilig(async (req, res) => {
     const c = await kandidaat(nummer(req.params.id));
     const w = await wie(req);
-    const naar = req.body?.loslaten === true ? null : w.id;
+    // Zonder body: aan mij toewijzen. Met `loslaten`: niemand. Met `userId`: aan die collega van EXTRA.
+    let naar: number | null = w.id;
+    let wieTekst = `${w.voornaam} is nu de planner`;
+    if (req.body?.loslaten === true) { naar = null; wieTekst = `${w.voornaam} heeft de kandidaat losgelaten`; }
+    else if (req.body?.userId !== undefined && req.body?.userId !== null) {
+      const uid = Number(req.body.userId);
+      const [u] = Number.isInteger(uid) && uid > 0 ? await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName, role: users.role, status: users.status }).from(users).where(eq(users.id, uid)) : [];
+      if (!u || u.role !== "admin" || u.status !== "active") throw new Fout(400, "Deze collega kan geen kandidaten krijgen.");
+      naar = u.id;
+      wieTekst = u.id === w.id ? `${w.voornaam} is nu de planner` : `${w.voornaam} heeft de kandidaat toegewezen aan ${plannerLabel(u)}`;
+    }
     await db.update(candidates).set({ plannerUserId: naar, plannerSinds: naar ? new Date() : null }).where(eq(candidates.id, c.id));
-    await log(c, w, "planner", naar ? `${w.voornaam} is nu de planner` : `${w.voornaam} heeft de kandidaat losgelaten`);
+    await log(c, w, "planner", wieTekst);
     res.json({ ok: true });
+  }));
+
+  /** Een planner zet momenten klaar voor de kandidaat (biedt andere tijden aan). Alleen met KANDIDATEN_AFSPRAKEN. */
+  app.post(r("/:id/aanbieden"), adminMiddleware, aan, veilig(async (req, res) => {
+    if (!afsprakenAan(process.env)) throw new Fout(404, "Niet beschikbaar.");
+    const c = await kandidaat(nummer(req.params.id));
+    if (c.status !== "in_behandeling" && !(c.status === "gepland" && !c.interviewDate)) throw new Fout(409, `${c.firstName} heeft al een gesprek of staat niet meer bij de lopende kandidaten.`);
+    const ms = Array.isArray(req.body?.momenten) ? (req.body.momenten as any[]).map((m) => ({ datum: String(m?.datum || ""), tijd: String(m?.tijd || "") })) : [];
+    if (!ms.length || ms.some((m) => !/^\d{4}-\d{2}-\d{2}$/.test(m.datum) || !/^\d{2}:\d{2}$/.test(m.tijd))) throw new Fout(400, "Kies minstens een moment.");
+    const w = await wie(req);
+    const job = await import("../job/jobService");
+    const uit = await job.biedAan(c.id, ms);
+    if (!uit.ok) throw new Fout(409, uit.reden === "bezet" ? "Een van de momenten is net weg. Kies opnieuw." : "Kies minstens een moment.");
+    if (c.status === "in_behandeling") await db.update(candidates).set({ status: "gepland", updatedAt: new Date() }).where(eq(candidates.id, c.id));
+    await log(c, w, "tijden_aangeboden", `Momenten aangeboden door ${w.voornaam}: ${ms.map((m) => `${m.datum.split("-").reverse().join("-")} ${m.tijd}`).join(", ")}${uit.verstuurd ? "" : " (geen WhatsApp verstuurd)"}`);
+    res.json({ ok: true, verstuurd: uit.verstuurd });
   }));
 
   app.post(r("/match/:matchId"), adminMiddleware, aan, veilig(async (req, res) => {

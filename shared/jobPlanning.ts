@@ -8,6 +8,7 @@
  *    unieke index op interviewer, datum en tijd; zie server/job/jobStorage.ts).
  *  - Een half uur per gesprek.
  *  - Niet vandaag, en niet binnen 12 uur: de interviewer moet het kunnen zien.
+ *    Met schakelaar KANDIDATEN_AFSPRAKEN (besluit Max, 18 november 2026) is dat 48 uur.
  *  - Alle tijden zijn Nederlandse tijd (Europe/Amsterdam).
  *
  * Standaard (besluit Max, 6 november 2026):
@@ -29,7 +30,24 @@ export interface Interviewer {
 
 export const GESPREKSDUUR_MIN = 30;
 export const MIN_VOORLOOP_UUR = 12;
+/** Met schakelaar KANDIDATEN_AFSPRAKEN: minimaal 48 uur tussen nu en het gesprek. */
+export const MIN_VOORLOOP_UUR_AFSPRAKEN = 48;
 export const DAGEN_VOORUIT = 14;
+
+/**
+ * Schakelaar KANDIDATEN_AFSPRAKEN: kleuren en volgende stap in Kandidaten, agenda in het dossier,
+ * 48 uur voorloop, drie herinneringen op de uitnodiging en andere tijden aanbieden. In de testomgeving
+ * vanzelf aan, uit met KANDIDATEN_AFSPRAKEN=0; elders alleen met KANDIDATEN_AFSPRAKEN=1.
+ */
+export function afsprakenAan(env: { TESTOMGEVING?: string; KANDIDATEN_AFSPRAKEN?: string }): boolean {
+  const w = env.KANDIDATEN_AFSPRAKEN;
+  return w === "1" || (env.TESTOMGEVING === "1" && w !== "0");
+}
+
+/** Hoeveel uur er minimaal tussen nu en het gesprek moet zitten. */
+export function voorloopUur(env: { TESTOMGEVING?: string; KANDIDATEN_AFSPRAKEN?: string }): number {
+  return afsprakenAan(env) ? MIN_VOORLOOP_UUR_AFSPRAKEN : MIN_VOORLOOP_UUR;
+}
 
 export const STANDAARD_INTERVIEWERS: Interviewer[] = [
   { naam: "Charlotte", dagen: [1, 2, 3, 4, 5], van: "10:30", tot: "15:30", pauzeVan: "12:00", pauzeTot: "13:00", actief: true },
@@ -96,13 +114,13 @@ export function tijdenVan(i: Interviewer): string[] {
  * Per datum en tijd hooguit één moment; bij meerdere vrije interviewers krijgt
  * degene met de minste gesprekken die dag het, zodat het werk verdeeld wordt.
  */
-export function vrijeMomenten(interviewers: Interviewer[], bezet: Bezet[], nu: Date, dagen = DAGEN_VOORUIT): Moment[] {
+export function vrijeMomenten(interviewers: Interviewer[], bezet: Bezet[], nu: Date, dagen = DAGEN_VOORUIT, voorloop = MIN_VOORLOOP_UUR): Moment[] {
   const actief = interviewers.filter((i) => i.actief !== false && i.dagen.length > 0);
   const bezetSet = new Set(bezet.map((b) => `${b.interviewer}|${b.datum}|${b.tijd}`));
   const perDag = new Map<string, number>();
   for (const b of bezet) perDag.set(`${b.interviewer}|${b.datum}`, (perDag.get(`${b.interviewer}|${b.datum}`) || 0) + 1);
 
-  const grens = amsterdam(new Date(nu.getTime() + MIN_VOORLOOP_UUR * 60 * 60 * 1000));
+  const grens = amsterdam(new Date(nu.getTime() + voorloop * 60 * 60 * 1000));
   const vandaag = amsterdam(nu).datum;
   const uit: Moment[] = [];
   for (let n = 1; n <= dagen; n++) {
@@ -128,9 +146,57 @@ export function vrijeMomenten(interviewers: Interviewer[], bezet: Bezet[], nu: D
   return uit;
 }
 
+// ─── Agenda voor de planner ──────────────────────────────────────────────────
+
+export type CelStatus = "vrij" | "bezet" | "pauze" | "niet" | "te_vroeg";
+export interface AgendaCel { interviewer: string; status: CelStatus; wie?: string }
+export interface AgendaRij { tijd: string; cellen: AgendaCel[] }
+export interface AgendaDag { datum: string; interviewers: string[]; rijen: AgendaRij[] }
+
+/** Alle starttijden van een interviewer op een werkdag, ook in de pauze. */
+function dagTijden(i: Interviewer): string[] {
+  const uit: string[] = [];
+  for (let m = minuten(i.van); m + GESPREKSDUUR_MIN <= minuten(i.tot); m += GESPREKSDUUR_MIN) uit.push(hhmm(m));
+  return uit;
+}
+
+/**
+ * De agenda zoals de planner hem ziet: per dag en per interviewer vrij, bezet, pauze of
+ * te vroeg (binnen de voorloop, dus niet aan te bieden). Zelfde regels als `vrijeMomenten`,
+ * maar elke interviewer los, zonder tijden samen te voegen.
+ * `afspraken` zijn de geplande gesprekken; `wie` is de naam van de kandidaat, alleen voor de planner.
+ */
+export function agenda(interviewers: Interviewer[], afspraken: { interviewer: string; datum: string; tijd: string; wie?: string }[], nu: Date, dagen = DAGEN_VOORUIT, voorloop = MIN_VOORLOOP_UUR): AgendaDag[] {
+  const actief = interviewers.filter((i) => i.actief !== false && i.dagen.length > 0);
+  const bezet = new Map(afspraken.map((a) => [`${a.interviewer}|${a.datum}|${a.tijd}`, a.wie || ""]));
+  const grens = amsterdam(new Date(nu.getTime() + voorloop * 60 * 60 * 1000));
+  const vandaag = amsterdam(nu).datum;
+  const uit: AgendaDag[] = [];
+  for (let n = 1; n <= dagen; n++) {
+    const datum = plusDag(vandaag, n);
+    const wd = weekdag(datum);
+    const werkend = actief.filter((i) => i.dagen.includes(wd));
+    if (!werkend.length) continue;
+    const tijden = Array.from(new Set(werkend.flatMap(dagTijden))).sort();
+    const rijen: AgendaRij[] = tijden.map((tijd) => ({
+      tijd,
+      cellen: werkend.map((i): AgendaCel => {
+        if (!dagTijden(i).includes(tijd)) return { interviewer: i.naam, status: "niet" };
+        if (!tijdenVan(i).includes(tijd)) return { interviewer: i.naam, status: "pauze" };
+        const k = `${i.naam}|${datum}|${tijd}`;
+        if (bezet.has(k)) return { interviewer: i.naam, status: "bezet", wie: bezet.get(k) || undefined };
+        if (`${datum} ${tijd}` < `${grens.datum} ${grens.tijd}`) return { interviewer: i.naam, status: "te_vroeg" };
+        return { interviewer: i.naam, status: "vrij" };
+      }),
+    }));
+    uit.push({ datum, interviewers: werkend.map((i) => i.naam), rijen });
+  }
+  return uit;
+}
+
 /** Is dit moment (nog) vrij voor een interviewer? Voor de controle vlak voor het boeken. */
-export function momentGeldig(interviewers: Interviewer[], bezet: Bezet[], nu: Date, m: { datum: string; tijd: string }): Moment | null {
-  return vrijeMomenten(interviewers, bezet, nu).find((v) => v.datum === m.datum && v.tijd === m.tijd) || null;
+export function momentGeldig(interviewers: Interviewer[], bezet: Bezet[], nu: Date, m: { datum: string; tijd: string }, voorloop = MIN_VOORLOOP_UUR): Moment | null {
+  return vrijeMomenten(interviewers, bezet, nu, DAGEN_VOORUIT, voorloop).find((v) => v.datum === m.datum && v.tijd === m.tijd) || null;
 }
 
 const DAGNAAM = {

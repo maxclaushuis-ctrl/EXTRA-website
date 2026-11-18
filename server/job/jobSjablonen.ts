@@ -11,8 +11,8 @@
  */
 import * as meta from "../whatsapp/metaClient";
 
-export type SjabloonSoort = "start" | "herinnering" | "afspraak";
-export const NAMEN: Record<SjabloonSoort, string> = { start: "job_start_v3", herinnering: "job_herinnering", afspraak: "job_afspraak" };
+export type SjabloonSoort = "start" | "herinnering" | "afspraak" | "uitnodiging";
+export const NAMEN: Record<SjabloonSoort, string> = { start: "job_start_v3", herinnering: "job_herinnering", afspraak: "job_afspraak", uitnodiging: "job_uitnodiging" };
 /** Eerste versie van het startsjabloon: de laatste terugval. */
 export const START_OUD = "job_start";
 /**
@@ -50,6 +50,14 @@ export const SJABLOON_DEFS: Def[] = [
   { soort: "afspraak", taal: "en",
     tekst: "Hi {{1}}, tomorrow at {{2}} you have your meeting with {{3}} at EXTRA, Herengracht 372 in Amsterdam. Bring your passport or ID card. Does that still work?",
     voorbeeld: ["Lisa", "14:00", "Charlotte"], knoppen: ["I'll be there", "Reschedule"] },
+  // Na Accepteren in Kandidaten, bij de herinneringen op de uitnodiging en als een planner momenten aanbiedt, buiten de 24 uur van WhatsApp.
+  // Het herinneringssjabloon past daar niet: dat gaat over een aanmelding die nog niet af is (Verder of Liever bellen).
+  { soort: "uitnodiging", taal: "nl",
+    tekst: "Hoi {{1}}, je kunt een moment kiezen voor je kennismaking bij EXTRA op kantoor (Herengracht 372, Amsterdam). Kies hieronder een moment dat je uitkomt.",
+    voorbeeld: ["Noor"], knoppen: ["Kies een moment"] },
+  { soort: "uitnodiging", taal: "en",
+    tekst: "Hi {{1}}, you can choose a time for your meeting at the EXTRA office (Herengracht 372, Amsterdam). Pick a time below that suits you.",
+    voorbeeld: ["Noor"], knoppen: ["Choose a moment"] },
 ];
 
 /**
@@ -159,7 +167,7 @@ export async function standBijMeta(vers = false): Promise<{ ok: boolean; lijst: 
  * sjabloon (Job valt terug op het webgesprek of de mail).
  */
 export async function sjabloonNaam(soort: SjabloonSoort): Promise<string> {
-  const env = { start: process.env.JOB_WA_SJABLOON_START, herinnering: process.env.JOB_WA_SJABLOON_HERINNERING, afspraak: process.env.JOB_WA_SJABLOON_AFSPRAAK }[soort];
+  const env = { start: process.env.JOB_WA_SJABLOON_START, herinnering: process.env.JOB_WA_SJABLOON_HERINNERING, afspraak: process.env.JOB_WA_SJABLOON_AFSPRAAK, uitnodiging: process.env.JOB_WA_SJABLOON_UITNODIGING }[soort];
   if (env && env.trim()) return env.trim();
   if (!metaActief()) return "";
   const s = await standBijMeta().catch(() => null);
@@ -179,7 +187,7 @@ export async function sjabloonNaam(soort: SjabloonSoort): Promise<string> {
  * Null: geen sjabloon (Job valt terug op het webgesprek of de mail).
  */
 export async function sjabloonVoor(soort: SjabloonSoort, taal: "nl" | "en"): Promise<{ naam: string; taal: "nl" | "en"; terugval: boolean } | null> {
-  const env = { start: process.env.JOB_WA_SJABLOON_START, herinnering: process.env.JOB_WA_SJABLOON_HERINNERING, afspraak: process.env.JOB_WA_SJABLOON_AFSPRAAK }[soort];
+  const env = { start: process.env.JOB_WA_SJABLOON_START, herinnering: process.env.JOB_WA_SJABLOON_HERINNERING, afspraak: process.env.JOB_WA_SJABLOON_AFSPRAAK, uitnodiging: process.env.JOB_WA_SJABLOON_UITNODIGING }[soort];
   if (env && env.trim()) return { naam: env.trim(), taal, terugval: false };
   if (!metaActief()) return null;
   const s = await standBijMeta().catch(() => null);

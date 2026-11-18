@@ -4,9 +4,9 @@
  * Job. Schakelaar KANDIDATEN_V2 (in de testomgeving vanzelf aan).
  * Afwijzen gebruikt de dialoog en de route van Sollicitanten.
  */
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { BRANCHE, BRANCHES, type Branche } from "@shared/sollicitantRegels";
-import { KLEUREN, KLEUR_VOLGORDE, GROEP_VOLGORDE, PUNT_KLEUR, STADIA, AANMELD_KLEUR, groepenVoor, vergelijkGroep, type Fase, type Groep, type Kleur, type Punt, type Stadium } from "@shared/kandidaatRegels";
+import { KLEUREN, KLEUR_VOLGORDE, GROEP_VOLGORDE, PUNT_KLEUR, STADIA, AANMELD_KLEUR, AFSPRAAK, AFSPRAAK_VOLGORDE, groepenVoor, vergelijkGroep, type AfspraakKleur, type AfspraakStatus, type Fase, type Groep, type Kleur, type Punt, type Stadium } from "@shared/kandidaatRegels";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { CSS, Dialoog, Knop, Leeg, Meldingen, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
@@ -18,11 +18,13 @@ interface Rij {
   status: string; sinds: string; sindsTekst: string; planner: string; plannerId: number | null; mijn: boolean; aangemeld: string;
   match?: { score: number | null; toestand: string; voorlopig: boolean } | null;
   fase?: Fase; stadium?: Stadium;
+  /** Met schakelaar KANDIDATEN_AFSPRAKEN: wat er met de afspraak is (geel, oranje of rood). */
+  afspraak?: AfspraakStatus;
   groep?: Groep; punt?: Punt; groepTekst?: string; groepSub?: string | null; stap?: string | null; dubbel?: boolean;
 }
 interface Overzicht { rijen: Rij[]; tellers: { perKleur: Record<Kleur, number>; perBranche: Record<string, number>; aandacht: number }; planners: { id: number; naam: string }[] }
-interface Filter { kleuren: Kleur[]; groepen: Groep[]; stadia: string[]; functie: string; planner: string; datum: string }
-const STANDAARD: Filter = { kleuren: ["geel", "rood"], groepen: [], stadia: [], functie: "", planner: "", datum: "" };
+interface Filter { kleuren: Kleur[]; groepen: Groep[]; stadia: string[]; afspraken: AfspraakKleur[]; functie: string; planner: string; datum: string }
+const STANDAARD: Filter = { kleuren: ["geel", "rood"], groepen: [], stadia: [], afspraken: [], functie: "", planner: "", datum: "" };
 const SLEUTEL = "extra-kandidaten-filter";
 /** Nieuwe aanmeldingen heeft een eigen opgeslagen filter, zodat een filter in de ene bak de andere niet leegmaakt. */
 const sleutelVoor = (fase?: Fase) => (fase === "nieuw" ? `${SLEUTEL}-nieuw` : SLEUTEL);
@@ -71,6 +73,8 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
   const [zoek, setZoek] = useState("");
   const [filter, setFilter] = useState<Filter>(() => leesFilter(fase));
   const [concept, setConcept] = useState<Filter | null>(null);
+  // Kandidaten met schakelaar KANDIDATEN_AFSPRAKEN: de kleur zegt wat er met de afspraak is.
+  const afspraakModus = fase === "kandidaat" && !!data && data.rijen.every((r) => !!r.afspraak);
   const [open, setOpen] = useState<number | null>(() => { try { const id = Number(new URLSearchParams(window.location.search).get("kandidaat")); return id > 0 ? id : null; } catch { return null; } });
 
   useEffect(() => { try { localStorage.setItem(sleutelVoor(fase), JSON.stringify(filter)); } catch { /* geen opslag */ } }, [filter, fase]);
@@ -78,7 +82,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
   const pas = (f: Filter, rijen: Rij[]) => {
     const nu = Date.now();
     return rijen.filter((r) => (branche === "alle" || r.branche === branche)
-      && (nieuw ? (!f.stadia.length || f.stadia.includes(r.stadium?.label ?? "")) : groepen ? (!f.groepen.length || f.groepen.includes(r.groep!)) : (!f.kleuren.length || f.kleuren.includes(r.kleur)))
+      && (afspraakModus ? (!f.afspraken.length || f.afspraken.includes(r.afspraak!.kleur)) : nieuw ? (!f.stadia.length || f.stadia.includes(r.stadium?.label ?? "")) : groepen ? (!f.groepen.length || f.groepen.includes(r.groep!)) : (!f.kleuren.length || f.kleuren.includes(r.kleur)))
       && (!f.functie || r.functieCode === f.functie)
       && (!f.planner || (f.planner === "geen" ? !r.plannerId : f.planner === "mij" ? r.mijn : String(r.plannerId) === f.planner))
       && (nieuw || !f.datum || nu - new Date(r.aangemeld).getTime() <= Number(f.datum) * 86400000)
@@ -87,9 +91,10 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
   const lijst = useMemo(() => {
     const l = data ? pas(filter, data.rijen) : [];
     // Aanmeldingen: wie het langst niets deed bovenaan (rood, oranje, geel, groen), daarbinnen de langst wachtende.
+    if (afspraakModus) return [...l].sort((a, b) => (AFSPRAAK_VOLGORDE.indexOf(a.afspraak!.kleur) - AFSPRAAK_VOLGORDE.indexOf(b.afspraak!.kleur)) || new Date(a.sinds).getTime() - new Date(b.sinds).getTime());
     if (nieuw) { const rang = { rood: 0, oranje: 1, geel: 2, groen: 3 } as const; return [...l].sort((a, b) => (rang[a.stadium?.kleur ?? "groen"] - rang[b.stadium?.kleur ?? "groen"]) || new Date(a.sinds).getTime() - new Date(b.sinds).getTime()); }
     return groepen ? [...l].sort((a, b) => vergelijkGroep({ groep: a.groep!, sinds: new Date(a.sinds) }, { groep: b.groep!, sinds: new Date(b.sinds) })) : l;
-  }, [data, filter, branche, zoek, groepen, nieuw]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, filter, branche, zoek, groepen, nieuw, afspraakModus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (open) {
     const ids = lijst.map((r) => r.id);
@@ -110,8 +115,9 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
   const perGroep = (g: Groep) => (data ? data.rijen.filter((r) => r.groep === g).length : 0);
   const nKlaar = perGroep("beoordelen"), nActie = perGroep("actie") + perGroep("geen_reactie");
   // Aanmeldingen staan in één lijst zonder kopjes; Kandidaten blijft in groepen.
-  const blokken: Array<[Groep | null, Rij[]]> = nieuw ? [[null, lijst]] : GROEP_VOLGORDE.map((g): [Groep | null, Rij[]] => [g, lijst.filter((r) => r.groep === g)]);
-  const filterAan = (nieuw ? filter.stadia.length : groepen ? filter.groepen.length : filter.kleuren.length) || filter.functie || filter.planner || (!nieuw && filter.datum);
+  const blokken: Array<[Groep | null, Rij[]]> = nieuw || afspraakModus ? [[null, lijst]] : GROEP_VOLGORDE.map((g): [Groep | null, Rij[]] => [g, lijst.filter((r) => r.groep === g)]);
+  const perAfspraak = (k: AfspraakKleur) => (data ? data.rijen.filter((r) => r.afspraak?.kleur === k).length : 0);
+  const filterAan = (afspraakModus ? filter.afspraken.length : nieuw ? filter.stadia.length : groepen ? filter.groepen.length : filter.kleuren.length) || filter.functie || filter.planner || (!nieuw && filter.datum);
   return (
     <div className="sv" style={{ borderRadius: 18 }}>
       <style>{CSS}{KCSS}</style>
@@ -121,6 +127,8 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
             <h1>{titel}</h1>
             <p className="sv-sub">{!data || (!status && !statusFout) ? "Laden..." : nieuw && groepen
               ? `${data.rijen.length} ${data.rijen.length === 1 ? "aanmelding" : "aanmeldingen"} onderweg`
+              : afspraakModus
+              ? `${perAfspraak("geel")} te beoordelen, ${perAfspraak("oranje")} wachten op bevestiging, ${perAfspraak("rood")} willen andere tijden`
               : fase === "kandidaat" && groepen
               ? `${nKlaar} klaar voor beoordeling, ${perGroep("actie")} eerst nakijken`
               : groepen
@@ -138,20 +146,26 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
             <button className="sv-knop" style={concept ? { borderColor: "#37352C" } : undefined} onClick={() => setConcept(concept ? null : filter)} aria-expanded={!!concept}>Filter{filterAan ? " ●" : ""}</button>
             {concept && data && (
               <div className="k-filter" role="dialog" aria-label="Filter">
-                <p className="sv-lbl">{nieuw ? "STADIUM" : "STATUS"}</p>
+                <p className="sv-lbl">{afspraakModus ? "AFSPRAAK" : nieuw ? "STADIUM" : "STATUS"}</p>
+                {afspraakModus && AFSPRAAK_VOLGORDE.map((k) => (
+                  <label key={k} className="k-filterrij">
+                    <input type="checkbox" checked={concept.afspraken.includes(k)} onChange={(e) => setConcept({ ...concept, afspraken: e.target.checked ? [...concept.afspraken, k] : concept.afspraken.filter((x) => x !== k) })} />
+                    <span className="k-punt" style={{ background: AFSPRAAK[k].kleur }} /><span style={{ flex: 1 }}>{AFSPRAAK[k].label}</span><span className="sv-grijs">{perAfspraak(k)}</span>
+                  </label>
+                ))}
                 {nieuw && STADIA.map((st) => (
                   <label key={st} className="k-filterrij">
                     <input type="checkbox" checked={concept.stadia.includes(st)} onChange={(e) => setConcept({ ...concept, stadia: e.target.checked ? [...concept.stadia, st] : concept.stadia.filter((x) => x !== st) })} />
                     <span style={{ flex: 1 }}>{st}</span><span className="sv-grijs">{data.rijen.filter((r) => r.stadium?.label === st).length}</span>
                   </label>
                 ))}
-                {!nieuw && groepen && GROEP_VOLGORDE.map((g) => (
+                {!nieuw && !afspraakModus && groepen && GROEP_VOLGORDE.map((g) => (
                   <label key={g} className="k-filterrij">
                     <input type="checkbox" checked={concept.groepen.includes(g)} onChange={(e) => setConcept({ ...concept, groepen: e.target.checked ? [...concept.groepen, g] : concept.groepen.filter((x) => x !== g) })} />
                     <span className="k-punt" style={{ background: GR[g].kleur }} /><span style={{ flex: 1 }}>{GR[g].titel}</span><span className="sv-grijs">{perGroep(g)}</span>
                   </label>
                 ))}
-                {!nieuw && !groepen && KLEUR_VOLGORDE.map((k) => (
+                {!nieuw && !afspraakModus && !groepen && KLEUR_VOLGORDE.map((k) => (
                   <label key={k} className="k-filterrij">
                     <input type="checkbox" checked={concept.kleuren.includes(k)} onChange={(e) => setConcept({ ...concept, kleuren: e.target.checked ? [...concept.kleuren, k] : concept.kleuren.filter((x) => x !== k) })} />
                     <Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} /><span style={{ flex: 1 }}>{KLEUREN[k].label}</span><span className="sv-grijs">{data.tellers.perKleur[k] || 0}</span>
@@ -161,7 +175,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
                 {!nieuw && <Kies label="Planner" waarde={concept.planner} opties={[["geen", "Niet toegewezen"], ["mij", "Mij"], ...data.planners.map((p) => [String(p.id), p.naam] as [string, string])]} onChange={(w) => setConcept({ ...concept, planner: w })} />}
                 {!nieuw && <Kies label="Aanmelddatum" waarde={concept.datum} opties={[["1", "Vandaag"], ["7", "Laatste 7 dagen"], ["30", "Laatste 30 dagen"]]} onChange={(w) => setConcept({ ...concept, datum: w })} />}
                 <div className="sv-tussen" style={{ alignItems: "center", marginTop: 6 }}>
-                  <button className="sv-knop sv-knop-link" onClick={() => setConcept({ kleuren: [], groepen: [], stadia: [], functie: "", planner: "", datum: "" })}>Wis filters</button>
+                  <button className="sv-knop sv-knop-link" onClick={() => setConcept({ kleuren: [], groepen: [], stadia: [], afspraken: [], functie: "", planner: "", datum: "" })}>Wis filters</button>
                   <Knop soort="donker" style={{ height: 36 }} onClick={() => { setFilter(concept); setConcept(null); }}>Toon {conceptN} {nieuw ? "aanmeldingen" : "kandidaten"}</Knop>
                 </div>
               </div>
@@ -169,12 +183,25 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
           </div>
           <button className="sv-knop" onClick={naarArchief}>Archief</button>
         </div>
-        {fase === "kandidaat" && (
-          <p className="k-uitleg">Hier staan alleen complete profielen: het gesprek is af en het cv is binnen. Open een dossier om goed te keuren of af te wijzen.</p>
-        )}
-        {!groepen && status && (<div className="sv-legenda">{KLEUR_VOLGORDE.map((k) => <span key={k}><Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} />{KLEUREN[k].label}</span>)}</div>)}
+        {afspraakModus && (<div className="sv-legenda">{AFSPRAAK_VOLGORDE.map((k) => <span key={k}><i style={{ background: AFSPRAAK[k].kleur }} />{k === "geel" ? "Geel: beoordelen" : k === "oranje" ? "Oranje: afspraak aangeboden, nog niet gekozen" : "Rood: wil andere tijden"}</span>)}</div>)}
+        {!groepen && !afspraakModus && status && (<div className="sv-legenda">{KLEUR_VOLGORDE.map((k) => <span key={k}><Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} />{KLEUREN[k].label}</span>)}</div>)}
         {fout && <div className="sv-fout">Laden mislukt. Probeer het opnieuw. <button className="sv-knop sv-knop-link" onClick={opnieuw}>Opnieuw</button></div>}
-        {groepen ? (
+        {afspraakModus ? (
+          <table className="sv-tabel k-groepen">
+            <thead><tr><th style={{ width: "21%" }}>Kandidaat</th><th style={{ width: "21%" }}>Afspraak</th><th style={{ width: "24%" }}>Volgende stap</th><th className="k-breed" style={{ width: "12%" }}>Match</th><th className="k-breed" style={{ width: "9%" }}>Sinds</th><th className="k-breed" style={{ width: "13%" }}>Planner</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
+            <tbody>{lijst.map((r) => (
+              <tr key={r.id} className="klik" tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
+                <td><b className="k-naam">{r.naam}</b><div className="sv-klein k-functie">{r.functie}{r.dubbel && <span className="k-label" title="Er is een ander dossier dat op deze persoon lijkt">Mogelijk dubbel</span>}</div></td>
+                <td><span className={`k-pill ${r.afspraak!.kleur}`} style={{ background: AFSPRAAK[r.afspraak!.kleur].kleur }}>{r.afspraak!.label}</span></td>
+                <td style={{ whiteSpace: "normal" }}>{r.afspraak!.stap}{r.afspraak!.sub && <div className="sv-klein">{r.afspraak!.sub}</div>}</td>
+                <td className="k-breed"><MatchKort m={r.match} /></td>
+                <td className="k-breed sv-grijs">{r.sindsTekst}</td>
+                <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>
+                <td style={{ color: "#B3AEA3" }}>›</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        ) : groepen ? (
           <table className="sv-tabel k-groepen">
             {nieuw ? (
               <thead><tr><th style={{ width: "21%" }}>Kandidaat</th><th style={{ width: "22%" }}>Stadium</th><th style={{ width: "24%" }}>Status</th><th className="k-breed" style={{ width: "20%" }}>Volgende stap</th><th className="k-breed" style={{ width: "10%" }}>Sinds</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
@@ -218,7 +245,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
           </table>
         ) : null}
         {data && !lijst.length && (
-          <Leeg>{zoek ? `Geen ${nieuw ? "aanmelding" : "kandidaat"} gevonden voor '${zoek}'.` : fase && groepen && !filterAan && branche === "alle" ? (nieuw ? "Er zijn geen nieuwe aanmeldingen." : "Er staan geen complete profielen te wachten.") : !groepen && filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
+          <Leeg>{zoek ? `Geen ${nieuw ? "aanmelding" : "kandidaat"} gevonden voor '${zoek}'.` : fase && (groepen || afspraakModus) && !filterAan && branche === "alle" ? (nieuw ? "Er zijn geen nieuwe aanmeldingen." : "Er staan geen complete profielen te wachten.") : !groepen && filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
             ? <>Niemand vraagt nu je aandacht. <button className="sv-knop sv-knop-link" onClick={() => setFilter({ ...filter, kleuren: [] })}>Toon alle lopende kandidaten</button></>
             : branche !== "alle" ? `Geen lopende kandidaten in ${BRANCHE[branche].label}.` : "Geen kandidaten met dit filter."}</Leeg>
         )}
@@ -258,6 +285,8 @@ export interface DossierData {
   id: number; voornaam: string; naam: string; status: string; functie: string; branche: Branche; leeftijd: number | null; plaats: string | null; aangemeld: string; bron: string | null;
   bolletje: { kleur: Kleur; cijfer: string | null; tekst: string; reden: string; sinds: string; sindsTekst: string; gele: { reden: string; tekst: string; titel: string; actie: string }[] };
   planner: { id: number; label: string } | null;
+  /** Met schakelaar KANDIDATEN_AFSPRAKEN: wat er met de afspraak is. */
+  afspraak?: AfspraakStatus;
   matches: { id: number; soort: string; matchId: number; redenen: string[]; naam: string; wanneer: string | null; stand: string }[];
   profiel: { ervaring: string | null; diensten: string | null; werkgebied: string | null; nationaliteit: string | null; talen: string | null; werkautorisatie: string | null; cv: string | null; uitJob: boolean };
   contact: { telefoon: string | null; whatsapp: string | null; email: string | null; postcode: string | null; woonland: string | null; whatsappStatus: string; toestemmingOp: string | null; gesprekstaal: string | null };
@@ -303,7 +332,7 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp, tab = "kandidate
   async function accepteer(zonderCv = false) {
     try {
       const r = await post(`${id}/accepteren`, { zonderCv });
-      melding(`Uitgenodigd: ${d!.voornaam} krijgt ${r.mail ? "een mail met een afspraakknop" : "geen mail (geen e-mailadres)"}.`);
+      melding(`Uitgenodigd: ${d!.voornaam} krijgt ${r.mail ? "een mail met een afspraakknop" : "geen mail (geen e-mailadres)"}.${r.whatsapp === "mislukt" ? " Let op: het WhatsApp-bericht is niet verstuurd. Bel of mail de kandidaat." : ""}`);
       volgende();
     } catch (e: any) {
       if (/geen cv/i.test(e.message)) setGeenCv(true); else melding(e.message);
@@ -337,9 +366,8 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp, tab = "kandidate
           {!geel && <p style={{ marginTop: 6 }}>{d.bolletje.tekst} <span className="sv-grijs">· {d.bolletje.sindsTekst}</span></p>}
         </div>
         <div style={{ textAlign: "right", fontSize: 13 }}>
-          <div>Planner: {d.planner ? d.planner.label : "niet toegewezen"}</div>
-          <button className="sv-knop sv-knop-link" onClick={() => post(`${id}/planner`, {}).then(opnieuw).catch((e) => melding(e.message))}>aan mij toewijzen</button>
-          {d.planner && <> · <button className="sv-knop sv-knop-link" onClick={() => post(`${id}/planner`, { loslaten: true }).then(opnieuw).catch((e) => melding(e.message))}>loslaten</button></>}
+          <div>Verantwoordelijk:</div>
+          <Toewijzen id={id} planner={d.planner} bezig={bezig} klaar={opnieuw} />
           {!geel && <div style={{ marginTop: 10 }}>{besluit}</div>}
         </div>
       </div>
@@ -445,7 +473,7 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp, tab = "kandidate
           <div className="sv-rij" style={{ justifyContent: "flex-end" }}><Knop onClick={() => setGeenCv(false)}>Annuleren</Knop><Knop soort="groen" onClick={() => { setGeenCv(false); accepteer(true); }}>Toch uitnodigen</Knop></div>
         </Dialoog>
       )}
-      {inplannen && <Inplannen id={id} voornaam={d.voornaam} sluit={() => setInplannen(false)} klaar={() => { setInplannen(false); melding(`Ingepland: ${d.voornaam} staat nu bij Sollicitanten · Gesprekken.`); volgende(); }} />}
+      {inplannen && <Inplannen id={id} voornaam={d.voornaam} agenda={!!d.afspraak} vernieuw={opnieuw} sluit={() => setInplannen(false)} klaar={() => { setInplannen(false); melding(`Ingepland: ${d.voornaam} staat nu bij Sollicitanten · Gesprekken.`); volgende(); }} />}
     </div>
   );
 }
@@ -481,40 +509,144 @@ function Uitklap({ titel, samenvatting, open, wissel, children }: { titel: strin
   );
 }
 
-export function Inplannen({ id, voornaam, sluit, klaar }: { id: number; voornaam: string; sluit: () => void; klaar: () => void }) {
-  const { data, fout } = useData<{ datum: string; tijd: string }[]>("/api/admin/kandidaten/momenten");
+/** Verantwoordelijk: kies wie van EXTRA de kandidaat onder zich heeft (of niemand). */
+export function Toewijzen({ id, planner, bezig, klaar }: { id: number; planner: { id: number; label: string } | null; bezig: boolean; klaar: () => void }) {
+  const { data } = useData<{ id: number; naam: string }[]>("/api/admin/kandidaten/toewijsbaar");
+  const [wacht, setWacht] = useState(false);
+  const opties = [...(data || [])];
+  if (planner && !opties.some((o) => o.id === planner.id)) opties.unshift({ id: planner.id, naam: planner.label });
+  const kies = (v: string) => {
+    setWacht(true);
+    api(`/api/admin/kandidaten/${id}/planner`, { method: "POST", body: v === "geen" ? { loslaten: true } : { userId: Number(v) } })
+      .then(klaar).catch((e) => melding(e.message)).finally(() => setWacht(false));
+  };
+  return (
+    <Select value={planner ? String(planner.id) : "geen"} onValueChange={kies} disabled={bezig || wacht}>
+      <SelectTrigger className="h-8 w-auto min-w-[150px] gap-2 bg-white text-[13px]" aria-label="Verantwoordelijk"><SelectValue /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="geen">Niet toegewezen</SelectItem>
+        {opties.map((o) => <SelectItem key={o.id} value={String(o.id)}>{o.naam}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
+}
+
+interface AgendaData {
+  dagen: { datum: string; interviewers: string[]; rijen: { tijd: string; cellen: { interviewer: string; status: "vrij" | "bezet" | "pauze" | "niet" | "te_vroeg"; wie?: string }[] }[] }[];
+  aangeboden: string[]; voorloopUur: number; bijgewerktAt: string;
+}
+interface Keuze { datum: string; tijd: string; interviewer: string }
+const zelfde = (a: Keuze, b: Keuze) => a.datum === b.datum && a.tijd === b.tijd && a.interviewer === b.interviewer;
+
+/**
+ * Een gesprek inplannen. Met `agenda` (schakelaar KANDIDATEN_AFSPRAKEN) is dit de agenda van de
+ * interviewers, ververst elke 30 seconden: kies een moment en plan in, of vink er meerdere aan en
+ * bied ze de kandidaat aan. Zonder `agenda` de lijst met vrije momenten, zoals altijd.
+ */
+export function Inplannen({ id, voornaam, sluit, klaar, agenda = false, vernieuw }: { id: number; voornaam: string; sluit: () => void; klaar: () => void; agenda?: boolean; vernieuw?: () => void }) {
+  const { data, fout } = useData<{ datum: string; tijd: string }[]>(agenda ? null : "/api/admin/kandidaten/momenten");
+  const ag = useData<AgendaData>(agenda ? `/api/admin/kandidaten/agenda?kandidaat=${id}` : null);
   const [keuze, setKeuze] = useState<{ datum: string; tijd: string } | null>(null);
+  const [gekozen, setGekozen] = useState<Keuze[]>([]);
   const [bezig, setBezig] = useState(false);
   const [melding2, setMelding2] = useState("");
+  const ververs = useRef(ag.opnieuw);
+  ververs.current = ag.opnieuw;
+  useEffect(() => {
+    if (!agenda) return;
+    const t = setInterval(() => ververs.current(), 30000);
+    return () => clearInterval(t);
+  }, [agenda]);
+  // Een moment dat na het verversen niet meer vrij is, valt uit de keuze.
+  const vrij = useMemo(() => {
+    const s = new Set<string>();
+    for (const d of ag.data?.dagen || []) for (const r of d.rijen) for (const c of r.cellen) if (c.status === "vrij") s.add(`${d.datum}|${r.tijd}|${c.interviewer}`);
+    return s;
+  }, [ag.data]);
+  useEffect(() => { setGekozen((g) => { const rest = g.filter((k) => vrij.has(`${k.datum}|${k.tijd}|${k.interviewer}`)); return rest.length === g.length ? g : rest; }); }, [vrij]);
   const perDag = useMemo(() => {
     const m = new Map<string, string[]>();
     for (const x of data || []) { const l = m.get(x.datum) || []; if (!l.includes(x.tijd)) l.push(x.tijd); m.set(x.datum, l); }
     return Array.from(m.entries());
   }, [data]);
+  const dagNaam = (datum: string) => new Date(`${datum}T12:00:00Z`).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Amsterdam" }).toUpperCase();
+  const fouten = fout || ag.fout;
+  const geladen = agenda ? !!ag.data : !!data;
+  const wissel = (k: Keuze) => setGekozen((g) => (g.some((x) => zelfde(x, k)) ? g.filter((x) => !zelfde(x, k)) : [...g, k]));
+  const post = (pad: string, body: unknown, na: () => void) => {
+    setBezig(true); setMelding2("");
+    api(`/api/admin/kandidaten/${id}/${pad}`, { method: "POST", body }).then(na).catch((e) => { setMelding2(e.message); setBezig(false); if (agenda) ag.opnieuw(); });
+  };
   return (
-    <Dialoog titel={`Gesprek met ${voornaam} inplannen`} sluit={sluit} breed={620}>
-      <p className="sv-sub" style={{ marginBottom: 12 }}>Vrije momenten van de interviewers. {voornaam} krijgt de bevestigingsmail met het agenda-bestand.</p>
-      {fout && <div className="sv-fout">{fout}</div>}
-      {!data && !fout && <p className="sv-grijs">Laden...</p>}
-      {data && !perDag.length && <p className="sv-grijs">Geen vrije momenten in de komende twee weken. Pas de werktijden aan bij Job.</p>}
-      <div style={{ maxHeight: 360, overflow: "auto" }}>
-        {perDag.map(([datum, tijden]) => (
+    <Dialoog titel={`Gesprek met ${voornaam} inplannen`} sluit={sluit} breed={agenda ? 760 : 620}>
+      {!agenda && <p className="sv-sub" style={{ marginBottom: 12 }}>Vrije momenten van de interviewers. {voornaam} krijgt de bevestigingsmail met het agenda-bestand.</p>}
+      {agenda && <p className="sv-sub" style={{ marginBottom: 12 }}>Agenda van de interviewers, minimaal {ag.data?.voorloopUur ?? 48} uur vanaf nu. Kies één moment om zelf in te plannen, of vink er meerdere aan en bied ze {voornaam} aan. Aangeboden momenten zijn niet gereserveerd: wie het eerst kiest, krijgt het. De agenda ververst elke 30 seconden{ag.data ? ` (bijgewerkt ${tijdstip(ag.data.bijgewerktAt)})` : ""}.</p>}
+      {fouten && <div className="sv-fout">{fouten}</div>}
+      {!geladen && !fouten && <p className="sv-grijs">Laden...</p>}
+      {!agenda && data && !perDag.length && <p className="sv-grijs">Geen vrije momenten in de komende twee weken. Pas de werktijden aan bij Job.</p>}
+      {agenda && ag.data && !ag.data.dagen.length && <p className="sv-grijs">Geen werkdagen in de komende twee weken. Pas de werktijden aan bij Job.</p>}
+      <div style={{ maxHeight: 400, overflow: "auto" }}>
+        {!agenda && perDag.map(([datum, tijden]) => (
           <div key={datum} style={{ marginBottom: 12 }}>
-            <p className="sv-lbl">{new Date(`${datum}T12:00:00Z`).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Amsterdam" }).toUpperCase()}</p>
+            <p className="sv-lbl">{dagNaam(datum)}</p>
             <div className="sv-wissel">{tijden.map((t) => <button key={t} className={keuze?.datum === datum && keuze.tijd === t ? "aan" : ""} onClick={() => setKeuze({ datum, tijd: t })}>{t}</button>)}</div>
+          </div>
+        ))}
+        {agenda && ag.data?.dagen.map((d) => (
+          <div key={d.datum} style={{ marginBottom: 14 }}>
+            <p className="sv-lbl">{dagNaam(d.datum)}</p>
+            <table className="k-agenda">
+              <thead><tr><th />{d.interviewers.map((n) => <th key={n}>{n}</th>)}</tr></thead>
+              <tbody>{d.rijen.map((r) => (
+                <tr key={r.tijd}>
+                  <th>{r.tijd}</th>
+                  {r.cellen.map((c) => {
+                    const k = { datum: d.datum, tijd: r.tijd, interviewer: c.interviewer };
+                    const aan = gekozen.some((x) => zelfde(x, k));
+                    const eerder = c.status === "vrij" && !!ag.data?.aangeboden.includes(`${d.datum}T${r.tijd}`);
+                    return (
+                      <td key={c.interviewer}>
+                        {c.status === "vrij"
+                          ? <button className={`k-cel vrij${aan ? " aan" : ""}${eerder ? " eerder" : ""}`} onClick={() => wissel(k)} title={eerder ? `Eerder aangeboden aan ${voornaam}` : "Vrij"}>{aan ? "gekozen" : eerder ? "eerder aangeboden" : "vrij"}</button>
+                          : <span className={`k-cel ${c.status}`} title={c.status === "bezet" ? `Bezet${c.wie ? `: ${c.wie}` : ""}` : c.status === "te_vroeg" ? "Binnen 48 uur, niet aan te bieden" : undefined}>{c.status === "bezet" ? (c.wie || "bezet") : c.status === "pauze" ? "pauze" : c.status === "te_vroeg" ? "te vroeg" : ""}</span>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}</tbody>
+            </table>
           </div>
         ))}
       </div>
       {melding2 && <div className="sv-fout">{melding2}</div>}
       <div className="sv-rij" style={{ justifyContent: "flex-end", marginTop: 12 }}>
         <Knop onClick={sluit}>Annuleren</Knop>
-        <Knop soort="donker" disabled={!keuze || bezig} onClick={() => { setBezig(true); api(`/api/admin/kandidaten/${id}/inplannen`, { method: "POST", body: keuze }).then(klaar).catch((e) => { setMelding2(e.message); setBezig(false); }); }}>Inplannen</Knop>
+        {agenda ? (<>
+          <Knop disabled={!gekozen.length || bezig} onClick={() => post("aanbieden", { momenten: gekozen.map((k) => ({ datum: k.datum, tijd: k.tijd })) }, () => { melding(`${gekozen.length === 1 ? "Moment" : "Momenten"} aangeboden aan ${voornaam}.`); sluit(); vernieuw?.(); })}>Aanbieden{gekozen.length > 1 ? ` (${gekozen.length})` : ""}</Knop>
+          <Knop soort="donker" disabled={gekozen.length !== 1 || bezig} onClick={() => post("inplannen", gekozen[0], klaar)}>Inplannen</Knop>
+        </>) : (
+          <Knop soort="donker" disabled={!keuze || bezig} onClick={() => post("inplannen", keuze, klaar)}>Inplannen</Knop>
+        )}
       </div>
     </Dialoog>
   );
 }
 
 const KCSS = `
+.sv .k-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap}
+.sv .k-pill.geel{color:#3B3000}
+.sv .k-agenda{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
+.sv .k-agenda th{font-size:12px;font-weight:600;color:#8A8478;text-align:center;padding:2px}
+.sv .k-agenda tbody th{width:56px;text-align:right;padding-right:6px}
+.sv .k-agenda td{padding:0}
+.sv .k-cel{display:block;width:100%;height:26px;line-height:26px;border-radius:6px;text-align:center;font-size:11.5px;border:0;padding:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sv .k-cel.vrij{background:#EEF5E8;color:#3D5E25;cursor:pointer}
+.sv .k-cel.vrij:hover{background:#DDEBCF}
+.sv .k-cel.vrij.eerder{background:#FBE6D0;color:#8A4A10}
+.sv .k-cel.vrij.aan{background:#37352C;color:#fff;font-weight:700}
+.sv .k-cel.bezet{background:#ECEEF1;color:#8A919B}
+.sv .k-cel.te_vroeg{background:#F4F2EC;color:#B3AEA3}
+.sv .k-cel.pauze{background:repeating-linear-gradient(45deg,#FAFAF7,#FAFAF7 4px,#F0EEE8 4px,#F0EEE8 8px);color:#B3AEA3}
 .sv .k-filter{position:absolute;right:0;top:46px;width:300px;background:#fff;border:1px solid #E4E0D8;border-radius:14px;padding:16px;z-index:20;box-shadow:0 12px 30px -12px rgba(55,53,44,.35)}
 .sv .k-filterrij{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13.5px;cursor:pointer}
 .sv .k-aandacht{background:#FFFBEA;border:1px solid #EFDC8C;border-radius:16px;padding:18px 20px}

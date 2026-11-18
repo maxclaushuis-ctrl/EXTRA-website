@@ -31,9 +31,10 @@ import { planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBeri
   type Actie, type JobContext, type Onderwerp, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
-  afspraakHerinneringNodig, amsterdam, dagTekst, gekozenMoment, momentenLijst, momentGeldig, STANDAARD_INTERVIEWERS, vrijeMomenten,
+  afspraakHerinneringNodig, afsprakenAan, agenda, amsterdam, DAGEN_VOORUIT, dagTekst, gekozenMoment, momentenLijst, momentGeldig, STANDAARD_INTERVIEWERS, voorloopUur, vrijeMomenten,
   type Bezet, type LijstSectie, type Interviewer, type Moment,
 } from "@shared/jobPlanning";
+import { geenTijd, gekozenVoorkeur, plannerAanbodTekst, sleutel as momentSleutel, voorkeurAntwoord, VOORKEUR_KNOP, type Vervolg } from "@shared/andereTijden";
 import { begrijpenAan, formulerenAan, lees } from "./jobAi";
 import { filterPrivacy, privacyMelding, type PrivacyUitkomst } from "@shared/jobPrivacy";
 import { geenDubbelBericht, zonderHerhaling } from "@shared/jobHerhaling";
@@ -90,8 +91,8 @@ export function gesprekLink(token: string, extra = ""): string {
 /** De sjablonen die Job mag gebruiken: een Secret, of het eigen sjabloon zodra Meta het goedkeurde (jobSjablonen.ts). */
 async function SJABLONEN() {
   const { sjabloonNaam } = await import("./jobSjablonen");
-  const [start, herinnering, afspraak] = await Promise.all([sjabloonNaam("start"), sjabloonNaam("herinnering"), sjabloonNaam("afspraak")]);
-  return { start, herinnering, afspraak };
+  const [start, herinnering, afspraak, uitnodiging] = await Promise.all([sjabloonNaam("start"), sjabloonNaam("herinnering"), sjabloonNaam("afspraak"), sjabloonNaam("uitnodiging")]);
+  return { start, herinnering, afspraak, uitnodiging };
 }
 
 async function whatsappKlaar(): Promise<boolean> {
@@ -112,7 +113,7 @@ export async function jobStatus() {
     handmatigStarten: magHandmatigStarten(),
     ai: aiBeschikbaar(),
     whatsapp: await whatsappKlaar(),
-    sjablonen: { start: !!s.start, herinnering: !!s.herinnering, afspraak: !!s.afspraak },
+    sjablonen: { start: !!s.start, herinnering: !!s.herinnering, afspraak: !!s.afspraak, uitnodiging: !!s.uitnodiging },
   };
 }
 
@@ -284,7 +285,9 @@ async function isTestkandidaat(candidateId: number): Promise<boolean> {
 async function stuurJobBericht(candidateId: number, telefoon: string, b: Uitgaand, token: string, taal: JobTaal): Promise<boolean> {
   // Plannen gebeurt in WhatsApp zelf: een keuzelijst met vrije momenten. Lukt dat niet
   // (geen vrije momenten of de lijst komt niet aan), dan de tekst met de planlink.
-  if (b.planning) {
+  // Een eigen keuzelijst (nieuwe momenten, of "Wat past je beter?"): lukt versturen niet, dan valt het terug op tekst.
+  if (b.lijst?.length && await verstuurWhatsappLijst(candidateId, telefoon, b.tekst, b.planning ? teksten(taal).momentKnop : VOORKEUR_KNOP[taal], b.lijst)) return true;
+  if (b.planning && !b.lijst) {
     const secties = momentenLijst(await momenten().catch(() => [] as Moment[]), taal);
     if (secties.length && await verstuurWhatsappLijst(candidateId, telefoon, b.tekst, teksten(taal).momentKnop, secties)) return true;
   }
@@ -376,7 +379,7 @@ async function verstuurSjabloon(candidateId: number, telefoon: string, naam: str
 }
 
 /** Een sjabloon in de gesprekstaal; niet goedgekeurd in het Engels, dan het Nederlandse (gelogd). */
-async function verstuurSjabloonInTaal(candidateId: number, telefoon: string, soort: "herinnering" | "afspraak", taal: JobTaal, parameters: string[], tekstVoorInbox: string): Promise<boolean> {
+async function verstuurSjabloonInTaal(candidateId: number, telefoon: string, soort: "herinnering" | "afspraak" | "uitnodiging", taal: JobTaal, parameters: string[], tekstVoorInbox: string): Promise<boolean> {
   const { sjabloonVoor } = await import("./jobSjablonen");
   const k = await sjabloonVoor(soort, taal).catch(() => null);
   if (!k) return false;
@@ -393,6 +396,18 @@ function binnenVenster(s: JobState, nu: Date): boolean {
  * ookNaStop: de kandidaat schreef zelf na STOP. Job mag dan antwoorden (binnen
  * het venster van 24 uur), ook al staat de WhatsApp-toestemming nog op opt_out.
  */
+/** Wat Job antwoordt als een kandidaat andere tijden wil (shared/andereTijden.ts), als gewoon resultaat van een beurt. */
+function vervolgResultaat(s: JobState, v: Vervolg, nu: Date): ReturnType<typeof verwerk> {
+  if (v.soort === "planner") return momentAntwoord({ ...s, velden: { ...s.velden, andereTijden: v.staat } }, "geen", nu, false);
+  const state: JobState = {
+    ...s, velden: { ...s.velden, andereTijden: v.staat }, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null,
+  };
+  if (v.soort === "vraag") {
+    return { state, berichten: [{ tekst: v.tekst, lijst: v.lijst, keuzes: v.lijst.flatMap((x) => x.rijen.map((rij) => rij.titel)) }], acties: [] };
+  }
+  return { state, berichten: [{ tekst: v.tekst, planning: true, lijst: momentenLijst(v.momenten, s.taal) }], acties: [] };
+}
+
 async function bewaarEnVerstuur(g: JobGesprek, s: JobState, berichten: Uitgaand[], nu: Date, ookNaStop = false) {
   const c = g.kanaal === "whatsapp" ? await kandidaat(g.candidateId) : null;
   for (const b of berichten) {
@@ -659,13 +674,28 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
 
   // Een moment uit de WhatsApp-keuzelijst: meteen boeken, de bevestiging komt in WhatsApp.
   let planKeuze: ReturnType<typeof gekozenMoment> = null;
+  // Andere tijden (KANDIDATEN_AFSPRAKEN): de kandidaat kiest "Geen tijd die past", Job vraagt wat beter past en zoekt nieuwe momenten.
+  let vervolg: Vervolg | null = null;
+  // De knop "Kies een moment" van het uitnodigingssjabloon: Job stuurt nu de keuzelijst.
+  let kiesMoment = false;
   if (tekst && g.kanaal === "whatsapp" && s.status === "plannen" && !invoer.cvOntvangen && !herkenCommando(tekst, s.laatsteOnderwerp)) {
     const ms = await momenten();
+    kiesMoment = gevuld.some((d) => ["kies een moment", "choose a moment"].includes(d.trim().toLowerCase()));
     for (const d of gevuld) planKeuze = gekozenMoment(d, ms) ?? planKeuze;
     if (planKeuze && typeof planKeuze === "object") {
       const uit = await boek({ ...g, laatsteInkomendAt: nu, laatsteActiviteitAt: nu } as JobGesprek, planKeuze);
       if (uit.ok) return { ok: true, status: "gepland", berichten: uit.berichten };
       planKeuze = "bezet";
+    } else if (afsprakenAan(process.env)) {
+      const at = s.velden.andereTijden;
+      if (!planKeuze && at?.wacht) {
+        let v: ReturnType<typeof gekozenVoorkeur> = null;
+        for (const d of gevuld) v = gekozenVoorkeur(d) ?? v;
+        if (v) vervolg = voorkeurAntwoord(at, v, ms, s.taal);
+      } else if (planKeuze === "geen" && !(await actieveAfspraak(g.candidateId))) {
+        const getoond = momentenLijst(ms, s.taal).flatMap((x) => x.rijen.map((rij) => rij.id.replace(/^moment:/, ""))).filter((id) => id !== "geen");
+        vervolg = geenTijd(at, getoond, s.taal);
+      }
     }
   }
 
@@ -676,6 +706,10 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
     // Alleen gevoelige gegevens: niets uitlezen, de open vraag blijft staan.
     const herhaal = s.status === "bezig" && s.laatsteOnderwerp ? [vraag(s.laatsteOnderwerp, s.taal, ctx, s.velden)] : [];
     r = { state: { ...s, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null }, berichten: herhaal, acties: [] };
+  } else if (kiesMoment) {
+    r = { state: { ...s, laatsteInkomendAt: nu.toISOString(), laatsteActiviteitAt: nu.toISOString(), herinneringen: 0, herinneringAt: null }, berichten: [{ tekst: teksten(s.taal).planHerinnering(ctx.voornaam), planning: true }], acties: [] };
+  } else if (vervolg) {
+    r = vervolgResultaat(s, vervolg, nu);
   } else if (planKeuze === "geen" || planKeuze === "bezet") {
     r = momentAntwoord(s, planKeuze, nu, planKeuze === "geen" && !!(await actieveAfspraak(g.candidateId)));
   } else if (beurtAan() && tekst && !invoer.cvOntvangen) {
@@ -796,17 +830,22 @@ export async function naarPlannen(candidateId: number): Promise<JobGesprek> {
  * kandidaat een keuzelijst met momenten (zonder vrije momenten de planlink),
  * anders het herinneringssjabloon; op het antwoord daarop volgt de keuzelijst. De mail met de afspraakknop stuurt de route zelf.
  */
-export async function uitnodigingNaCheck(candidateId: number): Promise<void> {
+export async function uitnodigingNaCheck(candidateId: number): Promise<"verstuurd" | "mislukt" | "niet"> {
   const g = await gesprekVanKandidaat(candidateId);
   const c = await kandidaat(candidateId);
-  if (!g || !c) return;
+  if (!g || !c) return "niet";
   const s = naarState(g);
   const b: Uitgaand = { tekst: teksten(s.taal).uitgenodigd(c.firstName, !!c.hasCv), planning: true };
   await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
   if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
-    if (binnenVenster(s, new Date())) await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);
-    else await verstuurSjabloonInTaal(c.id, waNummer(c), "herinnering", s.taal, [c.firstName], b.tekst);
+    // Buiten de 24 uur: het uitnodigingssjabloon (het herinneringssjabloon gaat over een aanmelding die nog niet af is).
+    const ok = binnenVenster(s, new Date())
+      ? await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal)
+      : await verstuurSjabloonInTaal(c.id, waNummer(c), "uitnodiging", s.taal, [c.firstName], b.tekst);
+    if (!ok) console.warn(`[Job] uitnodiging via WhatsApp aan kandidaat ${c.id} niet verstuurd (sjabloon job_uitnodiging nog niet goedgekeurd, of fictieve testkandidaat)`);
+    return ok ? "verstuurd" : "mislukt";
   }
+  return "niet";
 }
 
 /**
@@ -883,14 +922,14 @@ async function bezet(): Promise<Bezet[]> {
 }
 
 export async function momenten(): Promise<Moment[]> {
-  return vrijeMomenten(await interviewers(), await bezet(), new Date());
+  return vrijeMomenten(await interviewers(), await bezet(), new Date(), DAGEN_VOORUIT, voorloopUur(process.env));
 }
 
 export type BoekUitkomst =
   | { ok: true; datum: string; tijd: string; interviewer: string; dagTekst: string; berichten: VerwerkResultaat["berichten"] }
   | { ok: false; reden: "status" | "bezet" | "ongeldig" };
 
-export async function boek(g: JobGesprek, m: { datum: string; tijd: string }): Promise<BoekUitkomst> {
+export async function boek(g: JobGesprek, m: { datum: string; tijd: string; interviewer?: string }): Promise<BoekUitkomst> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(m.datum || "") || !/^\d{2}:\d{2}$/.test(m.tijd || "")) return { ok: false, reden: "ongeldig" };
   if (g.status !== "plannen" && g.status !== "gepland") return { ok: false, reden: "status" };
   const oud = await actieveAfspraak(g.candidateId);
@@ -899,7 +938,9 @@ export async function boek(g: JobGesprek, m: { datum: string; tijd: string }): P
   // die interviewer. Pas als niemand meer vrij is, is het moment bezet.
   let vrij: Moment | null = null;
   for (let poging = 0; poging < 3; poging++) {
-    vrij = momentGeldig(await interviewers(), await bezet(), new Date(), m);
+    // Kiest een planner uit de agenda een bepaalde interviewer, dan geldt alleen die; anders wordt de interviewer met de minste gesprekken gekozen.
+    const alle = await interviewers();
+    vrij = momentGeldig(m.interviewer ? alle.filter((i) => i.naam === m.interviewer) : alle, await bezet(), new Date(), m, voorloopUur(process.env));
     if (!vrij) return { ok: false, reden: "bezet" };
     try {
       const gekozen = vrij;
@@ -916,6 +957,8 @@ export async function boek(g: JobGesprek, m: { datum: string; tijd: string }): P
 
   const nu = new Date();
   const s: JobState = { ...naarState(g), status: "gepland", laatsteActiviteitAt: nu.toISOString() };
+  // Gekozen: wat er over andere tijden bijgehouden werd is niet meer nodig.
+  if (s.velden.andereTijden) { s.velden = { ...s.velden }; delete s.velden.andereTijden; }
   await bewaarState(g.id, s, { afgerondAt: g.afgerondAt || nu });
   await storage.updateCandidate(g.candidateId, {
     status: "gepland", interviewDate: vrij.datum, interviewTime: vrij.tijd, interviewLocation: "Herengracht 372",
@@ -991,10 +1034,12 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
   }
 
   // Uitgenodigd maar nog geen moment gekozen: herinneren met de planlink.
-  const teKiezen = await db.select().from(jobGesprekken).where(eq(jobGesprekken.status, "plannen"));
+  // Met KANDIDATEN_AFSPRAKEN: drie herinneringen (24 uur, 48 uur, 48 uur) en alleen tussen 7:00 en 22:00. Daarna belt een planner.
+  const tijdenAan = afsprakenAan(process.env);
+  const teKiezen = tijdenAan && !binnenVerstuurvenster(nu) ? [] : await db.select().from(jobGesprekken).where(eq(jobGesprekken.status, "plannen"));
   for (const g of teKiezen) {
     const s = naarState(g);
-    if (!planHerinneringNodig(s, nu)) continue;
+    if (!planHerinneringNodig(s, nu, tijdenAan ? 3 : 2)) continue;
     const c = await kandidaat(g.candidateId);
     const ctx = await context(g.candidateId, s.taal);
     if (!c || !ctx || c.status === "afgewezen" || c.interviewDate) continue;
@@ -1005,7 +1050,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
     if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
       if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);
-      else await verstuurSjabloonInTaal(c.id, waNummer(c), "herinnering", s.taal, [c.firstName], b.tekst);
+      else await verstuurSjabloonInTaal(c.id, waNummer(c), "uitnodiging", s.taal, [c.firstName], b.tekst);
     }
     if (c.email) {
       const { stuurUitnodigingsmail } = await import("./jobMails");
@@ -1074,4 +1119,60 @@ export async function kandidatenZonderGesprek() {
     .from(candidates)
     .where(and(eq(candidates.status, "in_behandeling"), sql`NOT EXISTS (SELECT 1 FROM job_gesprekken jg WHERE jg.candidate_id = ${candidates.id})`))
     .orderBy(desc(candidates.createdAt)).limit(50);
+}
+
+// ─── Agenda en momenten aanbieden (Kandidaten, schakelaar KANDIDATEN_AFSPRAKEN) ──
+
+/**
+ * De agenda voor de planner: per dag en per interviewer vrij, bezet, pauze of te vroeg.
+ * `aangeboden` zijn de momenten die deze kandidaat al kreeg bij "andere tijden" (niet gereserveerd).
+ */
+export async function agendaOverzicht(candidateId?: number) {
+  const nu = new Date();
+  const afspraken = await afsprakenVanaf(amsterdam(nu).datum);
+  const dagen = agenda(
+    await interviewers(),
+    afspraken.map((a) => ({ interviewer: a.interviewer, datum: String(a.datum), tijd: a.tijd, wie: `${a.voornaam} ${(a.achternaam || "").charAt(0)}.`.trim() })),
+    nu, DAGEN_VOORUIT, voorloopUur(process.env),
+  );
+  const g = candidateId ? await gesprekVanKandidaat(candidateId) : null;
+  return { dagen, aangeboden: g ? naarState(g).velden.andereTijden?.aangeboden ?? [] : [], voorloopUur: voorloopUur(process.env), bijgewerktAt: nu.toISOString() };
+}
+
+export type AanbiedUitkomst = { ok: true; verstuurd: boolean } | { ok: false; reden: "bezet" | "leeg" };
+
+/**
+ * Een planner zet zelf een of meer momenten klaar voor de kandidaat ("biedt andere tijden aan").
+ * De kandidaat krijgt ze als keuzelijst in WhatsApp (of via de planlink) en is daarna weer oranje.
+ * De momenten zijn niet gereserveerd; wie kiest, boekt via `boek` met dezelfde bewaking tegen dubbel boeken.
+ */
+export async function biedAan(candidateId: number, gekozen: { datum: string; tijd: string }[]): Promise<AanbiedUitkomst> {
+  const lijst = gekozen.slice(0, 5);
+  if (!lijst.length) return { ok: false, reden: "leeg" };
+  const vrij = await momenten();
+  const ms: Moment[] = [];
+  for (const m of lijst) {
+    const v = vrij.find((x) => x.datum === m.datum && x.tijd === m.tijd);
+    if (!v) return { ok: false, reden: "bezet" };
+    ms.push(v);
+  }
+  const g = await naarPlannen(candidateId);
+  const c = await kandidaat(candidateId);
+  if (!c) return { ok: false, reden: "leeg" };
+  const nu = new Date();
+  const s0 = naarState(g);
+  const at = s0.velden.andereTijden;
+  const s: JobState = {
+    ...s0, status: "plannen", herinneringen: 0, herinneringAt: null, laatsteActiviteitAt: nu.toISOString(),
+    velden: { ...s0.velden, andereTijden: { ronde: at?.ronde ?? 0, wacht: false, aangeboden: Array.from(new Set([...(at?.aangeboden || []), ...ms.map(momentSleutel)])), voorkeur: at?.voorkeur } },
+  };
+  await bewaarState(g.id, s);
+  const b: Uitgaand = { tekst: plannerAanbodTekst(s.taal), planning: true, lijst: momentenLijst(ms, s.taal) };
+  await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, extra: "planning", kanaal: g.kanaal });
+  let verstuurd = false;
+  if (g.kanaal === "whatsapp" && c.whatsappOptInStatus === "actief" && waNummer(c)) {
+    if (binnenVenster(s, nu)) verstuurd = await stuurJobBericht(c.id, waNummer(c), b, g.token, s.taal);
+    else verstuurd = await verstuurSjabloonInTaal(c.id, waNummer(c), "uitnodiging", s.taal, [c.firstName], b.tekst);
+  }
+  return { ok: true, verstuurd };
 }
