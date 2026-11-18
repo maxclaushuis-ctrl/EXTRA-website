@@ -33,7 +33,10 @@ import {
 import type { JobVelden } from "@shared/jobRegels";
 import type { Periode } from "@shared/kandidaatMatch";
 import { laatsteAnalyses, matchUit } from "../job/cvAnalyse";
-import { functiegroepVoor, planbordPayload, uitkomstTekst, type StapUitkomst } from "@shared/onboardingDoorzetten";
+import {
+  functiegroepVoor, planbordPayload, planbordProfiel, planbordProfielAan, profielSamenvatting, uitkomstTekst,
+  type PlanbordProfiel, type StapUitkomst,
+} from "@shared/onboardingDoorzetten";
 
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
 interface Wie { id: number | null; naam: string; voornaam: string }
@@ -330,7 +333,7 @@ export function registerIntakeV2Routes(
       } as any).returning({ id: employees.id });
       await h.log(c.id, w, "medewerker", `Medewerker aangemaakt door ${w.voornaam}`);
       const mail = await onboardingmail(h, c, e.id, templateId, w);
-      const planbord = await naarPlanbord(h, c, e.id, w);
+      const planbord = await naarPlanbord(h, c, d, e.id, w);
       res.status(201).json({ medewerkerId: e.id, nieuw: true, mail, planbord, melding: uitkomstTekst(c.firstName, mail, planbord) });
     } catch (fout: any) {
       // Twee klikken tegelijk: de tweede vindt de medewerker die de eerste maakte.
@@ -364,17 +367,35 @@ async function onboardingmail(h: Hulp, c: Candidate, medewerkerId: number, templ
   return uit;
 }
 
-/** Via de bestaande webhook naar Planboard, met alleen de velden van de oude route. Gooit nooit. */
-async function naarPlanbord(h: Hulp, c: Candidate, medewerkerId: number, w: Wie): Promise<StapUitkomst> {
+/**
+ * Via de bestaande webhook naar Planboard, met de velden van de oude route. Met de schakelaar
+ * PLANBORD_PROFIEL gaat het profiel uit de beoordeling en de intake mee (alleen toevoegen).
+ * Gooit nooit: lukt het profiel niet, dan gaat de zending zonder profiel.
+ */
+async function naarPlanbord(h: Hulp, c: Candidate, d: SollicitantDossier, medewerkerId: number, w: Wie): Promise<StapUitkomst> {
   let uit: StapUitkomst;
+  let profiel: PlanbordProfiel | null = null;
+  const metProfiel = planbordProfielAan(process.env);
+  if (metProfiel) {
+    try {
+      profiel = planbordProfiel({
+        intake: d.intakeVersie === 2 && isV2(d.intake) ? d.intake : null,
+        beoordeling: d.intakeVersie === 2 ? ((d.beoordeling || null) as BeoordelingV2 | null) : null,
+        beoordeeldAt: d.beoordeeldAt, beoordeeldDoor: d.beoordeeldDoor, functie: functieCtxVan(c),
+      });
+    } catch (fout: any) {
+      console.error("[planbord-profiel] niet opgebouwd:", String(fout?.message || fout).slice(0, 200));
+    }
+  }
   try {
     const { sendPlanbordWebhook } = await import("../integrations/planbord-webhook");
-    const r = await sendPlanbordWebhook(planbordPayload(c as any, medewerkerId));
+    const r = await sendPlanbordWebhook(planbordPayload(c as any, medewerkerId, profiel));
     uit = { status: r.result, reden: r.reason === "testomgeving" ? "testomgeving" : r.reason?.startsWith("PLANBORD_WEBHOOK_URL") ? "koppeling niet ingesteld" : r.reason };
   } catch (fout: any) {
     uit = { status: "mislukt", reden: String(fout?.message || "onbekende fout").slice(0, 200) };
   }
-  const tekst = uit.status === "verzonden" ? "Doorgezet naar Planboard" : uit.status === "mislukt" ? `Niet doorgezet naar Planboard: ${uit.reden}` : `Niet naar Planboard (${uit.reden})`;
+  const wat = metProfiel ? `, ${profielSamenvatting(profiel)}` : "";
+  const tekst = uit.status === "verzonden" ? `Doorgezet naar Planboard${wat}` : uit.status === "mislukt" ? `Niet doorgezet naar Planboard: ${uit.reden}` : `Niet naar Planboard (${uit.reden})${wat}`;
   await h.log(c.id, w, "planbord", tekst).catch(() => {});
   return uit;
 }

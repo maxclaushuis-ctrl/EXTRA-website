@@ -251,7 +251,7 @@ productie), zonder codewijziging; versie 1 blijft in de code zodat terug altijd 
 | 1 | Onderbouwing | Verplicht | Zo gebouwd |
 | 2 | Medewerker aanmaken | Met een knop in Onboarding | Zo gebouwd |
 | 3 | Inzetbaar en doorzetten | Bij de knop Medewerker aanmaken: onboardingmail (template voorgeselecteerd, aan te passen) en doorzetten naar Planboard via de bestaande webhook | Gebouwd, zie hieronder |
-| 4 | Profiel naar Planbord | Het volledige v2-profiel gaat pas mee als de hele nieuwe flow live staat op de website (niet de testomgeving) | Later |
+| 4 | Profiel naar Planbord | Het volledige v2-profiel gaat pas mee als de hele nieuwe flow live staat op de website (niet de testomgeving) | Compact profiel gebouwd achter `PLANBORD_PROFIEL` (18 nov), zie hieronder; aanzetten in productie blijft later |
 | 5 | Wat helpt bij de start | Een duidelijke briefing, een vast aanspreekpunt, samen met iemand anders van EXTRA, plus drie herschreven keuzes (`START_HULP`) | Gebouwd |
 | 6 | Werkkleding | Per functie, zie `KLEDING_PER_FUNCTIE`; banqueting zoals bediening | Gebouwd |
 | 7 | Certificaten | Vaste lijst (`CERTIFICATEN`) met Anders | Gebouwd |
@@ -274,6 +274,34 @@ over bij `TESTOMGEVING=1`), en de mail gaat alleen naar het mailvenster. Staat e
 de testomgeving toch een SendGrid-sleutel, dan wordt er geen onboardingmail
 verstuurd. In productie werkt de knop pas als `INTAKE_V2=1` staat; terug kan met
 `INTAKE_V2=0`.
+
+**Profiel naar Planboard (besluit 4, akkoord Max 18 nov 2026).** Voor het zijpaneel
+en de medewerkerspagina in Planboard gaat er bij de knop Medewerker aanmaken een
+extra blok `data.profiel` mee. Alleen toevoegen: de bestaande velden blijven gelijk
+en de oude route "Aannemen als medewerker" is niet aangeraakt. Een zending met dit
+blok heeft `payloadVersion` 3, elke andere blijft 2.
+
+| Veld | Inhoud | Bron |
+| --- | --- | --- |
+| `versie` | 1 | vast |
+| `beoordeling` | `algeheleIndruk` en `communicatie` (1 tot en met 100 of null), `datum` (JJJJ-MM-DD, Nederlandse tijd), `door` (voornaam) | de schuiven `indruk` en `communicatief`, `beoordeeld_at`, `beoordeeld_door` |
+| `ervaring` | `duur` en `functie` (hoofdfunctie) | `ervaring_duur`, functiemodel |
+| `functies` | namen van de gekozen functies, hoofdfunctie eerst | functiemodellen |
+| `zelfstandigIn` | taken met niveau zelfstandig, volgens de kandidaat | `taken` |
+| `talen` | `taal` en `niveau` (basis, werkgesprekken, uitgebreid of null) | `talen` |
+| `letOp` | alleen harde grenzen | `plannerskaart(...).grenzen` |
+
+De sleutels zijn er altijd; wat onbekend is, is null (geen lege lijsten). Is er
+niets bekend, dan gaat er geen blok mee. Representatief en de onderbouwing van de
+interviewer gaan bewust niet mee. De opbouw staat in `planbordProfiel`
+(`shared/onboardingDoorzetten.ts`), getest met `npm run onboardingdoorzetten:test`.
+
+Schakelaar `PLANBORD_PROFIEL`: in de testomgeving vanzelf aan, uit met `0`; elders
+alleen met `1`. In de testomgeving gaat er hoe dan ook niets naar Planboard; de
+tijdlijn van de kandidaat laat wel zien wat er mee zou gaan, zonder inhoud
+(bijvoorbeeld "met profiel: beoordeling, ervaring, 2 taken, 2 talen"). Terug: de
+schakelaar uit of weghalen, dan is de zending weer precies de oude. Lukt het
+opbouwen van het profiel niet, dan gaat de zending zonder profiel.
 
 **AVG-opschoning.** De historie per antwoord staat in `intake_antwoorden`. Wie de
 AVG-opschoning van sollicitantdossiers bouwt of aanpast, moet deze tabel meenemen

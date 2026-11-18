@@ -298,6 +298,10 @@ function modellen(f: FunctieCtx) {
   }
   return uit;
 }
+/** De namen van de gekozen functies, de hoofdfunctie eerst (voor het profiel naar Planboard). */
+export function functieNamen(f: FunctieCtx): string[] {
+  return modellen(f).map((m) => m.naam);
+}
 const hoofd = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 /** De taken waarvoor de interviewer het niveau vastlegt: de kerntaken van de gekozen functies (shared/kandidaatMatch.ts). */

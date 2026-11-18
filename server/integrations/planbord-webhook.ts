@@ -15,6 +15,9 @@
 // top-level `payloadVersion` en een additief `data.intake`-blok. Bestaande
 // v1-velden zijn NOOIT gewijzigd of verwijderd.
 export const PLANBORD_PAYLOAD_VERSION = 2 as const;
+// v3 = v2 + een additief `data.profiel`-blok (shared/onboardingDoorzetten.ts). Alleen een
+// zending die dat blok heeft, krijgt versie 3; alle andere blijven versie 2.
+export const PLANBORD_PAYLOAD_VERSION_PROFIEL = 3 as const;
 
 /**
  * Genormaliseerde ervaringsduur. `raw` is de letterlijke opgeslagen waarde uit
@@ -125,6 +128,8 @@ export interface PlanbordPayloadData {
   referralCode?: string | null; // Aanbreng-code van de kandidaat — optioneel & additief
   // Contract v2: additief intake-blok. Optioneel zodat v1-aanroepen blijven werken.
   intake?: IntakeBlock;
+  // Contract v3: additief profiel uit formulier versie 2. Optioneel; zonder dit blok blijft de zending v2.
+  profiel?: import("@shared/onboardingDoorzetten").PlanbordProfiel;
 }
 
 // ─── Normalisatie ervaringsduur ────────────────────────────────────────────
@@ -261,10 +266,11 @@ export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<Pl
 
   // Eén duidelijke, altijd-aanwezige resultaatregel per aanroep, zodat levering
   // aantoonbaar is. Bevat applicationId, payloadVersion en het eindresultaat.
+  const payloadVersion = data.profiel ? PLANBORD_PAYLOAD_VERSION_PROFIEL : PLANBORD_PAYLOAD_VERSION;
   const logResult = (result: 'verzonden' | 'overgeslagen' | 'mislukt', reason?: string): PlanbordUitkomst => {
     console.log(
       `[planbord-webhook] applicationId=${data.applicationId ?? 'n/a'} ` +
-      `payloadVersion=${PLANBORD_PAYLOAD_VERSION} result=${result}` +
+      `payloadVersion=${payloadVersion} result=${result}` +
       (reason ? ` reason=${reason}` : ''),
     );
     return { result, reason };
@@ -291,7 +297,7 @@ export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<Pl
       },
       body: JSON.stringify({
         event: 'applicant.ready',
-        payloadVersion: PLANBORD_PAYLOAD_VERSION,
+        payloadVersion,
         timestamp: new Date().toISOString(),
         source: 'EXTRA Horecapersoneel',
         data,

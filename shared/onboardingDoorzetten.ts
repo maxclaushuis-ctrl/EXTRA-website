@@ -11,7 +11,12 @@
  *
  * In de testomgeving gaat er niets naar Planboard, en de mail alleen naar het
  * mailvenster. Bewust puur (geen server-imports), zodat de tests onder kale tsx draaien.
+ *
+ * Profiel voor Planboard (akkoord Max, 18 nov 2026): achter de schakelaar PLANBORD_PROFIEL
+ * gaat er een extra blok `profiel` mee, voor het zijpaneel en de medewerkerspagina in
+ * Planboard. Alleen toevoegen: zonder de schakelaar is de payload precies zoals hiervoor.
  */
+import { functieNamen, plannerskaart, type BeoordelingV2, type FunctieCtx, type IntakeV2 } from "./intakeV2";
 
 export type Functiegroep = "Bediening" | "Chef" | "Housekeeping" | "Logistiek";
 
@@ -49,10 +54,11 @@ export interface KandidaatVoorPlanbord {
  * Geen applicationId en geen cv-blok: die horen bij de oude aanmeldingen. Planboard haalt
  * het cv op via een applicationId; voor de nieuwe flow regelen we dat als alles live is.
  */
-export function planbordPayload(k: KandidaatVoorPlanbord, medewerkerId: number) {
+export function planbordPayload(k: KandidaatVoorPlanbord, medewerkerId: number, profiel?: PlanbordProfiel | null) {
   const t = klein(k.functionType);
   const leeg = (v?: string | null) => (v && String(v).trim() ? String(v).trim() : null);
   return {
+    ...(profiel ? { profiel } : {}),
     id: String(medewerkerId),
     candidateId: k.id,
     employeeId: medewerkerId,
@@ -71,6 +77,88 @@ export function planbordPayload(k: KandidaatVoorPlanbord, medewerkerId: number) 
     language: leeg(k.language) || "Nederlands",
     referralCode: leeg(k.referralCode),
   };
+}
+
+// ─── Profiel voor Planboard ─────────────────────────────────────────────────
+
+/** Schakelaar PLANBORD_PROFIEL: in de testomgeving vanzelf aan, uit met 0; elders alleen met 1. */
+export function planbordProfielAan(env: { PLANBORD_PROFIEL?: string; TESTOMGEVING?: string }): boolean {
+  const w = env.PLANBORD_PROFIEL;
+  return w === "1" || (env.TESTOMGEVING === "1" && w !== "0");
+}
+
+/**
+ * Het blok `data.profiel` (payloadVersion 3). De sleutels zijn er altijd; wat onbekend is, is null.
+ * Representatief en de onderbouwing van de interviewer gaan bewust niet mee.
+ */
+export interface PlanbordProfiel {
+  versie: 1;
+  /** De schuiven uit het sollicitatiegesprek, 1 tot en met 100. */
+  beoordeling: { algeheleIndruk: number | null; communicatie: number | null; datum: string | null; door: string | null } | null;
+  ervaring: { duur: string; functie: string | null } | null;
+  functies: string[] | null;
+  /** Taken met het niveau zelfstandig, volgens de kandidaat. */
+  zelfstandigIn: string[] | null;
+  talen: { taal: string; niveau: string | null }[] | null;
+  /** Alleen harde grenzen, geen voorkeuren. */
+  letOp: string[] | null;
+}
+
+export interface ProfielInvoer {
+  intake: IntakeV2 | null;
+  beoordeling: BeoordelingV2 | null;
+  beoordeeldAt?: Date | string | null;
+  beoordeeldDoor?: string | null;
+  functie: FunctieCtx;
+}
+
+const cijfer = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 1 && v <= 100 ? Math.round(v) : null);
+const gevuld = <T>(x: T[]) => (x.length ? x : null);
+
+/** De datum in Nederland als JJJJ-MM-DD, of null. */
+function datumNL(v: Date | string | null | undefined): string | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  const deel = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d);
+  const pak = (soort: string) => deel.find((x) => x.type === soort)?.value || "";
+  return `${pak("year")}-${pak("month")}-${pak("day")}`;
+}
+
+/** Bouwt het profiel uit de beoordeling en de intake. Is er niets bekend, dan null: er gaat dan geen blok mee. */
+export function planbordProfiel(inv: ProfielInvoer): PlanbordProfiel | null {
+  const b: BeoordelingV2 = inv.beoordeling || {};
+  const indruk = cijfer(b.indruk), communicatie = cijfer(b.communicatief);
+  const beoordeling = indruk === null && communicatie === null ? null
+    : { algeheleIndruk: indruk, communicatie, datum: datumNL(inv.beoordeeldAt), door: (inv.beoordeeldDoor || "").trim().split(/\s+/)[0] || null };
+  const i = inv.intake;
+  if (!beoordeling && !i) return null;
+  const functies = functieNamen(inv.functie);
+  const duur = (i?.ervaring_duur || "").trim();
+  const zelfstandig = Object.entries(i?.taken || {}).filter(([, t]) => t?.niveau === "zelfstandig").map(([naam]) => naam);
+  const talen = (i?.talen || []).filter((t) => t && typeof t.taal === "string" && t.taal.trim()).map((t) => ({ taal: t.taal.trim(), niveau: t.niveau || null }));
+  return {
+    versie: 1,
+    beoordeling,
+    ervaring: duur ? { duur, functie: functies[0] || null } : null,
+    functies: gevuld(functies),
+    zelfstandigIn: gevuld(zelfstandig),
+    talen: gevuld(talen),
+    letOp: i ? gevuld(plannerskaart(i).grenzen) : null,
+  };
+}
+
+/** Wat er in het profiel zit, voor de tijdlijn. Zonder inhoud, dus zonder persoonsgegevens. */
+export function profielSamenvatting(p: PlanbordProfiel | null): string {
+  if (!p) return "zonder profiel";
+  const delen = [
+    p.beoordeling ? "beoordeling" : "",
+    p.ervaring ? "ervaring" : "",
+    p.zelfstandigIn ? `${p.zelfstandigIn.length} ${p.zelfstandigIn.length === 1 ? "taak" : "taken"}` : "",
+    p.talen ? `${p.talen.length} ${p.talen.length === 1 ? "taal" : "talen"}` : "",
+    p.letOp ? `${p.letOp.length} keer let op` : "",
+  ].filter(Boolean);
+  return delen.length ? `met profiel: ${delen.join(", ")}` : "met profiel";
 }
 
 export type StapUitkomst = { status: "verzonden" | "overgeslagen" | "mislukt"; reden?: string };
