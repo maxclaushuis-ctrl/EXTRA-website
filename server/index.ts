@@ -731,7 +731,8 @@ function scheduleDailyCvReminders() {
 }
 
 /**
- * Job, de AI-recruiter: herinneringen (22 uur, 48 uur later, daarna rood) en
+ * Job, de AI-recruiter: herinneringen (oud schema: 22 uur, 48 uur later, daarna rood;
+ * nieuw schema met JOB_HERINNERING_SCHEMA: 3 uur, 21 uur later, 48 uur later, alleen 7:00 tot 22:00) en
  * de herinnering de dag voor de kennismaking. Elk uur, alleen met JOB_ENABLED=1.
  */
 function scheduleJobHerinneringen() {
@@ -745,6 +746,10 @@ function scheduleJobHerinneringen() {
       const { herinneringenRun } = await import("./job/jobService");
       const r = await herinneringenRun();
       if (r.herinneringen || r.rood || r.afspraken) log(`[Job] herinneringen: ${r.herinneringen}, rood: ${r.rood}, afspraken: ${r.afspraken}`);
+      // Wie 3 dagen op rood staat gaat naar het archief (Aanmelding niet compleet), alleen met AANMELDING_ARCHIVEREN.
+      const { aanmeldingenArchiveren } = await import("./sollicitanten/sollicitantRoutes");
+      const n = await aanmeldingenArchiveren();
+      if (n) log(`[Sollicitanten] ${n} aanmelding(en) naar het archief: aanmelding niet compleet`);
     } catch (err) {
       console.error("[Job] herinneringen mislukt:", err);
     }

@@ -132,7 +132,7 @@ export function bolletje(c: KandidaatInvoer, nu: Date): Bolletje {
   if (gele.length) return { kleur: "geel", reden: gele[0].reden, tekst: gele[0].tekst, sinds: gele[0].sinds, gele: lijst };
 
   if (j && j.status === "geen_reactie") {
-    return { kleur: "rood", reden: "geen_reactie", tekst: openTekst(c, ", geen reactie op 2 herinneringen"), sinds: d(j.herinneringAt, jobSinds), gele: [] };
+    return { kleur: "rood", reden: "geen_reactie", tekst: openTekst(c, ", geen reactie op de herinneringen"), sinds: d(j.herinneringAt, jobSinds), gele: [] };
   }
   if (j && (j.status === "bezig" || j.status === "wacht_cv")) {
     if (j.herinneringen >= 2) return { kleur: "oranje2", cijfer: "2", reden: "bezig", tekst: openTekst(c), sinds: d(j.herinneringAt, jobSinds), gele: [] };
@@ -200,7 +200,7 @@ export const GROEP_VOLGORDE: Groep[] = ["beoordelen", "actie", "geen_reactie", "
 export const GROEPEN: Record<Groep, { titel: string; hint: string; kleur: string }> = {
   beoordelen: { titel: "Klaar voor beoordeling", hint: "Alles binnen, open het dossier om te beslissen", kleur: "#5E8C3A" },
   actie: { titel: "Actie nodig", hint: "Eerst iets uitzoeken", kleur: "#D9B526" },
-  geen_reactie: { titel: "Geen reactie", hint: "Na 2 herinneringen", kleur: "#C2412D" },
+  geen_reactie: { titel: "Geen reactie", hint: "Na de herinneringen", kleur: "#C2412D" },
   lopend: { titel: "Lopend", hint: "Wacht op de kandidaat, geen actie", kleur: "#B3AFA6" },
 };
 export type Punt = "groen" | "geel" | "rood" | "oranje2" | "oranje1" | "grijs";
@@ -245,7 +245,7 @@ export function indeling(c: KandidaatInvoer, nu: Date, cvEis?: string | null): I
       uit = { groep: "actie", punt: "geel", tekst: r.reden === "geen_job" ? "Job niet gestart" : schoon(r.tekst), sub: r.reden === "geen_job" ? "Geen gesprek na de aanmelding" : null, stap: STAP[r.reden] || null, dubbel };
     }
   } else if (b.kleur === "rood") {
-    uit = { groep: "geen_reactie", punt: "rood", tekst: schoon(b.tekst.replace(/, geen reactie op 2 herinneringen$/, "")), sub: null, stap: STAP.geen_reactie!, dubbel };
+    uit = { groep: "geen_reactie", punt: "rood", tekst: schoon(b.tekst.replace(/, geen reactie op de herinneringen$/, "")), sub: null, stap: STAP.geen_reactie!, dubbel };
   } else if (b.kleur === "oranje2" || b.kleur === "oranje1") {
     uit = { groep: "lopend", punt: b.kleur, tekst: b.tekst, sub: b.kleur === "oranje2" ? "2e herinnering verstuurd" : "1e herinnering verstuurd", stap: null, dubbel };
   } else {

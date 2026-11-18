@@ -39,7 +39,7 @@ test("woont in het buitenland: geel", bolletje(basis({ woonland: "Spanje", job: 
 test("meerdere gele redenen: allemaal in het dossier", bolletje(basis({ birthDate: "2010-06-01", woonland: "Spanje", job: job() }), nu).gele.length === 2);
 test("STOP: geel afsluiten", bolletje(basis({ job: job({ status: "gestopt" }) }), nu).reden === "gestopt");
 const rood = bolletje(basis({ job: job({ status: "geen_reactie", herinneringen: 2, velden: { ervaring: "x", diensten: "1-2" } as any }) }), nu);
-test("geen reactie: rood met open vragen", rood.kleur === "rood" && /vragen open, geen reactie op 2 herinneringen$/.test(rood.tekst), rood.tekst);
+test("geen reactie: rood met open vragen", rood.kleur === "rood" && /vragen open, geen reactie op de herinneringen$/.test(rood.tekst), rood.tekst);
 test("tweede herinnering: oranje 2", bolletje(basis({ job: job({ herinneringen: 2 }) }), nu).kleur === "oranje2");
 test("eerste herinnering: oranje 1", bolletje(basis({ job: job({ herinneringen: 1 }) }), nu).cijfer === "1");
 test("nu in gesprek", bolletje(basis({ job: job({ laatsteActiviteitAt: new Date(nu.getTime() - 120000).toISOString() }) }), nu).tekst === "Nu in gesprek met Job");

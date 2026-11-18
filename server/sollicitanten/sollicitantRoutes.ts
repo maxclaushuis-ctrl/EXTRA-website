@@ -27,6 +27,7 @@ import {
   gestoptInLabel, terugzetLabel, geenGehoorTeller, isAfwas, ingangBranche,
 } from "@shared/sollicitantRegels";
 import { nieuweAanmeldingenAan } from "@shared/kandidaatRegels";
+import { archiefNodig, ARCHIEF_REDEN_ONCOMPLEET, aanmeldingArchiverenAan } from "@shared/jobRegels";
 import { isV2, beoordelingV2Compleet, type BeoordelingV2 } from "@shared/intakeV2";
 import { afwijsmailAan, maakAfwijsmail, stuurAfwijsmail } from "./afwijsmail";
 import { intakeV2Aan, registerIntakeV2Routes, voortrajectVan, medewerkerVan, medewerkersVan, functieCtxVan } from "./intakeV2Routes";
@@ -363,6 +364,28 @@ async function afwijzen(c: Candidate, d: SollicitantDossier, w: Wie, body: any) 
   const label = afwijsLabel(reden.code, eigen);
   await log(c.id, w, "afgewezen", `Afgewezen door ${w.voornaam}: ${label} · ${verstuurd ? "mail verstuurd" : "geen mail verstuurd"}`, { reden: reden.code, uit });
   return { verstuurd };
+}
+
+/**
+ * Een aanmelding die na de herinneringen op rood staat en 3 dagen niets hoorde, gaat naar het archief met de reden
+ * "Aanmelding niet compleet". Zonder afwijsmail. Terugzetten kan altijd. Schakelaar AANMELDING_ARCHIVEREN
+ * (testomgeving vanzelf aan, uit met =0, elders alleen met =1). Draait elk uur vanuit de planner van Job.
+ */
+export async function aanmeldingenArchiveren(nu: Date = new Date()): Promise<number> {
+  if (!aanmeldingArchiverenAan(process.env)) return 0;
+  const rood = await db.select().from(jobGesprekken).where(eq(jobGesprekken.status, "geen_reactie"));
+  const systeem: Wie = { id: null, naam: "Systeem", voornaam: "Systeem" };
+  let aantal = 0;
+  for (const g of rood) {
+    if (!archiefNodig({ status: g.status, herinneringAt: g.herinneringAt ?? null }, nu)) continue;
+    try {
+      const c = await kandidaat(g.candidateId);
+      if (!c || c.status !== "in_behandeling") continue;
+      await afwijzen(c, await zorgVoorDossier(c), systeem, { reden: ARCHIEF_REDEN_ONCOMPLEET, mail: false });
+      aantal++;
+    } catch (e: any) { console.warn("[Sollicitanten] automatisch archiveren mislukt:", g.candidateId, e?.message || e); }
+  }
+  return aantal;
 }
 
 async function terugzetten(c: Candidate, d: SollicitantDossier, w: Wie) {

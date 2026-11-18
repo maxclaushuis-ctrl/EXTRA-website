@@ -442,7 +442,7 @@ export function uitleg(d: DossierData, reden: string): string {
     case "gestopt": return `${v} heeft STOP gestuurd of zich afgemeld. Er gaan geen berichten meer uit.`;
     case "geen_job": return `${v} heeft nog niet met Job gepraat.`;
     case "uitgenodigd_lang": return `${v} is uitgenodigd, maar heeft nog geen moment gekozen.`;
-    case "geen_reactie": return `${v} reageerde niet op twee herinneringen van Job. ${d.bolletje.tekst.replace(/, geen reactie op 2 herinneringen$/, "")}.`;
+    case "geen_reactie": return `${v} reageerde niet op de herinneringen van Job. ${d.bolletje.tekst.replace(/, geen reactie op de herinneringen$/, "")}.`;
     case "match": return `Deze aanmelding lijkt op een eerder dossier. Bekijk of het dezelfde persoon is.`;
     default: return d.bolletje.tekst;
   }

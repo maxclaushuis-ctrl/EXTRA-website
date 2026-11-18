@@ -340,6 +340,7 @@ const T = {
     cvBinnenKort: "Je cv is binnen.",
     herinnering1: (v: string) => `Hoi ${v}, je was bijna klaar. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen. Zullen we verder?`,
     herinnering2: (v: string) => `Hoi ${v}, je aanmelding bij EXTRA staat nog open. Wil je verder? Stuur gerust een bericht, ik ga verder waar we gebleven waren.`,
+    herinnering3: (v: string) => `Hoi ${v}, we hoorden nog niets van je over je aanmelding bij EXTRA. Wil je nog verder? Stuur gerust een bericht, dan ga ik verder waar we gebleven waren. Anders sluiten we je aanmelding over een paar dagen af.`,
     herinneringKeuzes: ["Verder", "Liever bellen"],
     afspraakHerinnering: (v: string, tijd: string, wie: string) => `Hoi ${v}, morgen om ${tijd} is je kennismaking met ${wie} bij EXTRA, Herengracht 372. Lukt het?`,
     afspraakKeuzes: ["Ik kom", "Verzetten"],
@@ -422,6 +423,7 @@ const T = {
     cvBinnenKort: "Your CV is in.",
     herinnering1: (v: string) => `Hi ${v}, you were almost done. A few more quick questions, then you can book a meeting right away. Shall we continue?`,
     herinnering2: (v: string) => `Hi ${v}, your application at EXTRA is still open. Want to continue? Just send a message and I'll pick up where we left off.`,
+    herinnering3: (v: string) => `Hi ${v}, we haven't heard from you about your application at EXTRA. Do you still want to continue? Just send a message and I'll pick up where we left off. Otherwise we'll close your application in a few days.`,
     herinneringKeuzes: ["Continue", "Call me instead"],
     afspraakHerinnering: (v: string, tijd: string, wie: string) => `Hi ${v}, tomorrow at ${tijd} you have your meeting with ${wie} at EXTRA, Herengracht 372. Does that still work?`,
     afspraakKeuzes: ["I'll be there", "Reschedule"],
@@ -1174,16 +1176,54 @@ export const EERSTE_HERINNERING_NA = 22 * UUR;
 export const TWEEDE_HERINNERING_NA = 48 * UUR;
 export const ROOD_NA = 48 * UUR;
 
-export type Herinnering = "eerste" | "tweede" | "rood";
+/**
+ * Het schema van de herinneringen. Het oude schema (22 uur, 48 uur later, 48 uur later rood zonder bericht)
+ * blijft de standaard. Het nieuwe schema (Max, 18 november 2026) heeft drie echte herinneringen: 3 uur na de
+ * laatste activiteit, 21 uur na de eerste, 48 uur na de tweede. De derde zet de aanmelding op rood.
+ * Herinneringen gaan alleen tussen 7:00 en 22:00 (Nederlandse tijd). Schakelaar JOB_HERINNERING_SCHEMA.
+ */
+export interface HerinneringSchema { eerste: number; tweede: number; derde: number; derdeBericht: boolean; venster: boolean }
+export const SCHEMA_OUD: HerinneringSchema = { eerste: EERSTE_HERINNERING_NA, tweede: TWEEDE_HERINNERING_NA, derde: ROOD_NA, derdeBericht: false, venster: false };
+export const SCHEMA_NIEUW: HerinneringSchema = { eerste: 3 * UUR, tweede: 21 * UUR, derde: 48 * UUR, derdeBericht: true, venster: true };
+/** In de testomgeving vanzelf aan, uit met JOB_HERINNERING_SCHEMA=0; elders alleen met =1. */
+export function herinneringSchema(env: { TESTOMGEVING?: string; JOB_HERINNERING_SCHEMA?: string }): HerinneringSchema {
+  const w = env.JOB_HERINNERING_SCHEMA;
+  return w === "1" || (env.TESTOMGEVING === "1" && w !== "0") ? SCHEMA_NIEUW : SCHEMA_OUD;
+}
+
+/** Herinneringen gaan alleen tussen 7:00 en 22:00 Nederlandse tijd. */
+export const VERSTUUR_VANAF_UUR = 7;
+export const VERSTUUR_TOT_UUR = 22;
+export function binnenVerstuurvenster(nu: Date): boolean {
+  const uur = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: "Europe/Amsterdam" }).format(nu));
+  return uur >= VERSTUUR_VANAF_UUR && uur < VERSTUUR_TOT_UUR;
+}
+
+/** Zo lang staat een aanmelding op rood voordat hij automatisch naar het archief gaat. */
+export const ARCHIEF_NA_ROOD = 72 * UUR;
+/** De reden in het archief voor een aanmelding die nooit compleet werd. */
+export const ARCHIEF_REDEN_ONCOMPLEET = "aanmelding_niet_compleet";
+/** In de testomgeving vanzelf aan, uit met AANMELDING_ARCHIVEREN=0; elders alleen met =1. */
+export function aanmeldingArchiverenAan(env: { TESTOMGEVING?: string; AANMELDING_ARCHIVEREN?: string }): boolean {
+  const w = env.AANMELDING_ARCHIVEREN;
+  return w === "1" || (env.TESTOMGEVING === "1" && w !== "0");
+}
+/** Staat de aanmelding lang genoeg op rood (geen reactie na de herinneringen) om naar het archief te gaan? */
+export function archiefNodig(s: { status: string; herinneringAt: string | Date | null }, nu: Date): boolean {
+  if (s.status !== "geen_reactie" || !s.herinneringAt) return false;
+  return nu.getTime() - new Date(s.herinneringAt).getTime() >= ARCHIEF_NA_ROOD;
+}
+
+export type Herinnering = "eerste" | "tweede" | "derde" | "rood";
 
 /** Welke herinnering is nu aan de beurt? Alleen voor gesprekken die op de kandidaat wachten. */
-export function herinneringNodig(s: JobState, nu: Date): Herinnering | null {
+export function herinneringNodig(s: JobState, nu: Date, schema: HerinneringSchema = SCHEMA_OUD): Herinnering | null {
   if (s.status !== "bezig" && s.status !== "wacht_cv") return null;
   if (s.velden?.herinneringenUit) return null;
   const sinds = (iso: string | null) => (iso ? nu.getTime() - new Date(iso).getTime() : 0);
-  if (s.herinneringen === 0 && sinds(s.laatsteActiviteitAt) >= EERSTE_HERINNERING_NA) return "eerste";
-  if (s.herinneringen === 1 && sinds(s.herinneringAt) >= TWEEDE_HERINNERING_NA) return "tweede";
-  if (s.herinneringen === 2 && sinds(s.herinneringAt) >= ROOD_NA) return "rood";
+  if (s.herinneringen === 0 && sinds(s.laatsteActiviteitAt) >= schema.eerste) return "eerste";
+  if (s.herinneringen === 1 && sinds(s.herinneringAt) >= schema.tweede) return "tweede";
+  if (s.herinneringen === 2 && sinds(s.herinneringAt) >= schema.derde) return schema.derdeBericht ? "derde" : "rood";
   return null;
 }
 
@@ -1194,7 +1234,8 @@ export function herinneringNodig(s: JobState, nu: Date): Herinnering | null {
 export function planHerinneringNodig(s: JobState, nu: Date): boolean {
   if (s.status !== "plannen" || s.herinneringen >= 2 || s.velden?.herinneringenUit) return false;
   const vanaf = s.herinneringen === 0 ? s.laatsteActiviteitAt : s.herinneringAt;
-  const wacht = s.herinneringen === 0 ? EERSTE_HERINNERING_NA + 2 * 3600 * 1000 : TWEEDE_HERINNERING_NA;
+  // Onveranderd: 24 uur en daarna 48 uur (de constanten hierboven zijn alleen voor de aanmelding).
+  const wacht = s.herinneringen === 0 ? 24 * UUR : 48 * UUR;
   return !!vanaf && nu.getTime() - new Date(vanaf).getTime() >= wacht;
 }
 
@@ -1225,6 +1266,15 @@ export function herinnering(s: JobState, ctx: JobContext, soort: Herinnering, nu
     state.status = "geen_reactie";
     state.herinneringen = 3;
     return { state, berichten: [], acties: [{ soort: "planner", reden: "Geen reactie na twee herinneringen. Kies: bellen, nog een bericht of laten rusten." }] };
+  }
+  if (soort === "derde") {
+    state.status = "geen_reactie";
+    state.herinneringen = 3;
+    return {
+      state,
+      berichten: [{ tekst: t.herinnering3(ctx.voornaam), keuzes: t.herinneringKeuzes }],
+      acties: [{ soort: "planner", reden: "Geen reactie na drie herinneringen. Kies: bellen, nog een bericht of laten rusten. Na 3 dagen gaat de aanmelding automatisch naar het archief." }],
+    };
   }
   state.herinneringen = soort === "eerste" ? 1 : 2;
   const tekst = soort === "eerste" ? t.herinnering1(ctx.voornaam) : t.herinnering2(ctx.voornaam);

@@ -10,7 +10,10 @@
 import {
   start, verwerk, volgendeOnderwerp, herinneringNodig, herinnering, herkenCommando, plannerRedenen,
   samenvatting, profielVelden, UUR, type JobContext, type JobState, type Lezing, type Resultaat,
+  SCHEMA_OUD, SCHEMA_NIEUW, herinneringSchema, binnenVerstuurvenster, archiefNodig, aanmeldingArchiverenAan, ARCHIEF_REDEN_ONCOMPLEET,
+  planHerinneringNodig, teksten,
 } from "./jobRegels";
+import { afwijsreden } from "./sollicitantRegels";
 import { reserveLezing, valideerLezing, raadTaal } from "./jobLezen";
 import {
   tijdenVan, vrijeMomenten, momentGeldig, amsterdam, dagTekst, afspraakHerinneringNodig, agendaBestand,
@@ -252,6 +255,40 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Verder: Job stelt de openstaande vraag opnieuw", verder.state.status === "bezig" && verder.berichten.length === 1 && verder.berichten[0].tekst.includes("housekeeping"));
   test("Liever bellen: naar de planner", antwoord({ state: h1.state, berichten: [], acties: [] }, ctx, "Liever bellen").state.status === "planner");
   test("Geen herinneringen als het gesprek bij de planner ligt", herinneringNodig({ ...s, status: "planner" }, new Date(NU.getTime() + 100 * UUR)) === null);
+}
+
+// ─── 6b. Herinneringen, nieuw schema (Max, 18 november 2026) ─────────────────
+{
+  const ctx: JobContext = { voornaam: "Noor", functie: "housekeeping", nationalityZone: "NL", hasCv: false };
+  const s: JobState = start(ctx, "nl", NU).state;
+  const na = (u: number) => new Date(NU.getTime() + u * UUR);
+  test("Schema nieuw: de standaard blijft het oude schema", herinneringNodig(s, na(4)) === null && herinneringNodig(s, na(22)) === "eerste");
+  test("Schema nieuw: niet na 2 uur, eerste na 3 uur", herinneringNodig(s, na(2), SCHEMA_NIEUW) === null && herinneringNodig(s, na(3), SCHEMA_NIEUW) === "eerste");
+  const h1 = herinnering(s, ctx, "eerste", na(3));
+  test("Schema nieuw: tweede 21 uur na de eerste", herinneringNodig(h1.state, na(23), SCHEMA_NIEUW) === null && herinneringNodig(h1.state, na(24), SCHEMA_NIEUW) === "tweede");
+  const h2 = herinnering(h1.state, ctx, "tweede", na(24));
+  test("Schema nieuw: derde 48 uur na de tweede", herinneringNodig(h2.state, na(71), SCHEMA_NIEUW) === null && herinneringNodig(h2.state, na(72), SCHEMA_NIEUW) === "derde");
+  const h3 = herinnering(h2.state, ctx, "derde", na(72));
+  test("Derde herinnering: een echt bericht en rood", h3.state.status === "geen_reactie" && h3.state.herinneringen === 3 && h3.berichten.length === 1 && h3.berichten[0].tekst.includes("hoorden nog niets"));
+  test("Derde herinnering: planner krijgt een melding", h3.acties.some((a) => a.soort === "planner" && /archief/.test(a.reden)));
+  test("Derde herinnering: ook in het Engels", herinnering({ ...h2.state, taal: "en" }, ctx, "derde", na(72)).berichten[0].tekst.includes("haven't heard from you"));
+  test("Na rood geen herinneringen meer", herinneringNodig(h3.state, na(500), SCHEMA_NIEUW) === null);
+  test("Oud schema: derde stap blijft rood zonder bericht", herinneringNodig(h2.state, na(24 + 48), SCHEMA_OUD) === "rood" && herinnering(h2.state, ctx, "rood", na(72)).berichten.length === 0);
+  test("Planherinnering (uitgenodigd) blijft 24 en 48 uur", planHerinneringNodig({ ...s, status: "plannen" }, na(23)) === false && planHerinneringNodig({ ...s, status: "plannen" }, na(24)) === true);
+  test("Schakelaar schema: testomgeving vanzelf aan", herinneringSchema({ TESTOMGEVING: "1" }) === SCHEMA_NIEUW && herinneringSchema({ TESTOMGEVING: "1", JOB_HERINNERING_SCHEMA: "0" }) === SCHEMA_OUD);
+  test("Schakelaar schema: elders alleen met 1", herinneringSchema({}) === SCHEMA_OUD && herinneringSchema({ JOB_HERINNERING_SCHEMA: "1" }) === SCHEMA_NIEUW);
+  // Verstuurvenster 7:00 tot 22:00 Nederlandse tijd (november: UTC+1, juli: UTC+2)
+  const nl = (iso: string) => binnenVerstuurvenster(new Date(iso));
+  test("Venster: 6:59 buiten, 7:00 binnen (winter)", !nl("2026-11-18T05:59:00Z") && nl("2026-11-18T06:00:00Z"));
+  test("Venster: 21:59 binnen, 22:00 buiten (winter)", nl("2026-11-18T20:59:00Z") && !nl("2026-11-18T21:00:00Z"));
+  test("Venster: zomertijd telt mee", !nl("2026-07-15T04:59:00Z") && nl("2026-07-15T05:00:00Z") && nl("2026-07-15T19:59:00Z") && !nl("2026-07-15T20:00:00Z"));
+  test("Venster: midden in de nacht buiten", !nl("2026-11-18T01:30:00Z"));
+  // Archief na 3 dagen rood
+  test("Archief: niet voor 3 dagen rood, wel daarna", !archiefNodig({ status: "geen_reactie", herinneringAt: na(0).toISOString() }, na(71)) && archiefNodig({ status: "geen_reactie", herinneringAt: na(0).toISOString() }, na(72)));
+  test("Archief: alleen bij geen reactie", !archiefNodig({ status: "bezig", herinneringAt: na(0).toISOString() }, na(500)) && !archiefNodig({ status: "gestopt", herinneringAt: na(0).toISOString() }, na(500)) && !archiefNodig({ status: "geen_reactie", herinneringAt: null }, na(500)));
+  test("Archief: reden bestaat en stuurt geen mail", afwijsreden(ARCHIEF_REDEN_ONCOMPLEET)?.label === "Aanmelding niet compleet" && afwijsreden(ARCHIEF_REDEN_ONCOMPLEET)?.geenMail === true);
+  test("Archief: schakelaar testomgeving aan, uit met 0, elders met 1", aanmeldingArchiverenAan({ TESTOMGEVING: "1" }) && !aanmeldingArchiverenAan({ TESTOMGEVING: "1", AANMELDING_ARCHIVEREN: "0" }) && !aanmeldingArchiverenAan({}) && aanmeldingArchiverenAan({ AANMELDING_ARCHIVEREN: "1" }));
+  test("Teksten: geen gedachtestreepjes in de derde herinnering", ![teksten("nl").herinnering3("Noor"), teksten("en").herinnering3("Noor")].some((x) => /[\u2013\u2014]/.test(x)));
 }
 
 // ─── 7. Na het plannen ───────────────────────────────────────────────────────

@@ -595,6 +595,8 @@ export const AFWIJSREDENEN: Afwijsreden[] = [
     mail: "We hadden een afspraak voor een gesprek op kantoor, maar we hebben je helaas niet gezien. Daarom stoppen we je aanmelding. Wil je toch bij EXTRA werken? Meld je dan opnieuw aan via doehetextra.nl." },
   { code: "geen_reactie", label: "Geen reactie",
     mail: "We hebben een paar keer geprobeerd je te bereiken, maar kregen geen reactie. Daarom stoppen we je aanmelding. Wil je toch bij EXTRA werken? Meld je dan opnieuw aan via doehetextra.nl." },
+  { code: "aanmelding_niet_compleet", label: "Aanmelding niet compleet", geenMail: true, stappen: [], // alleen het systeem kiest deze (automatisch archiveren), niet in de keuzelijst van een planner
+    mail: "Je aanmelding bij EXTRA was nog niet compleet en we hoorden niets meer van je. Daarom hebben we hem afgesloten. Wil je toch bij EXTRA werken? Meld je dan opnieuw aan via doehetextra.nl." },
   { code: "geen_twv", label: "Geen werkvergunning",
     mail: "Op dit moment kunnen we je helaas niet inzetten, omdat je daarvoor een werkvergunning nodig hebt. Verandert dat, dan horen we graag weer van je." },
   { code: "taal", label: "Taal onvoldoende voor deze functie",

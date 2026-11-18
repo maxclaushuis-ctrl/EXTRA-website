@@ -27,7 +27,7 @@ import { db } from "../db";
 import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
 import { planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
-  ervaringWerk, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
+  ervaringWerk, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herinneringSchema, binnenVerstuurvenster, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type Onderwerp, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
@@ -958,10 +958,13 @@ export async function boek(g: JobGesprek, m: { datum: string; tijd: string }): P
  */
 export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinneringen: number; rood: number; afspraken: number }> {
   let aantal = 0, rood = 0, afspraken = 0;
+  // Schema van Max (18 nov 2026): herinneringen alleen tussen 7:00 en 22:00. Wat buiten die tijd aan de beurt is, gaat bij de eerstvolgende run.
+  const schema = herinneringSchema(process.env);
+  if (schema.venster && !binnenVerstuurvenster(nu)) return { herinneringen: 0, rood: 0, afspraken: 0 };
   const open = await db.select().from(jobGesprekken).where(inArray(jobGesprekken.status, ["bezig", "wacht_cv"]));
   for (const g of open) {
     const s = naarState(g);
-    const soort = herinneringNodig(s, nu);
+    const soort = herinneringNodig(s, nu, schema);
     if (!soort) continue;
     const ctx = await context(g.candidateId, s.taal);
     if (!ctx) continue;
@@ -969,6 +972,7 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     await bewaarState(g.id, r.state);
     await voerUit(g, r.state, r.acties);
     if (soort === "rood") { rood++; continue; }
+    if (soort === "derde") rood++;
     aantal++;
     for (const b of r.berichten) {
       await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, keuzes: b.keuzes || null, kanaal: g.kanaal });
