@@ -35,6 +35,8 @@ export interface KandidaatInvoer {
   hasCv: boolean;
   job: null | {
     status: string;
+    /** "web" of "whatsapp"; alleen om in Nieuwe aanmeldingen het kanaal te tonen. */
+    kanaal?: string | null;
     herinneringen: number;
     herinneringAt: Date | string | null;
     laatsteActiviteitAt: Date | string;
@@ -279,3 +281,66 @@ export function matchRedenen(nieuw: Persoon, ander: Persoon): string[] {
   return r;
 }
 export const MATCH_REDEN_TEKST: Record<string, string> = { telefoon: "telefoonnummer", email: "e-mailadres", naam_geboortedatum: "naam en geboortedatum" };
+
+// ─── Nieuwe aanmeldingen: de voorstap van Kandidaten (schakelaar NIEUWE_AANMELDINGEN) ──
+
+/**
+ * Nieuwe aanmeldingen staan vóór Kandidaten. Wie zich heeft aangemeld maar het gesprek met
+ * Job of het cv nog niet af heeft, staat in Nieuwe aanmeldingen. Is alles binnen, dan staat
+ * hij vanzelf in Kandidaten, waar alleen nog het profiel beoordeeld wordt. Afgeleid, niets
+ * opgeslagen of verplaatst. In de testomgeving vanzelf aan, uit met NIEUWE_AANMELDINGEN=0;
+ * elders alleen met NIEUWE_AANMELDINGEN=1.
+ */
+export function nieuweAanmeldingenAan(env: { TESTOMGEVING?: string; NIEUWE_AANMELDINGEN?: string }): boolean {
+  const w = env.NIEUWE_AANMELDINGEN;
+  return w === "1" || (env.TESTOMGEVING === "1" && w !== "0");
+}
+
+export type Fase = "nieuw" | "kandidaat";
+
+/** Job is klaar met het gesprek en wacht niet meer op de kandidaat (of een collega kijkt al mee). */
+const JOB_KLAAR = ["planner", "cv_controle", "plannen", "gepland"];
+
+function gesprekCtx(c: KandidaatInvoer) {
+  return { voornaam: "", functie: c.functie, nationalityZone: (c.nationalityZone as any) || null, hasCv: c.hasCv };
+}
+
+/**
+ * Nieuwe aanmelding of kandidaat? Een kandidaat is iemand bij wie het gesprek met Job af is
+ * en het cv binnen is (of de kandidaat zegt er geen te hebben), of die al is uitgenodigd.
+ * Gestopt, geen reactie, nog bezig of nog wachten op het cv blijft een nieuwe aanmelding.
+ * Een twijfel (TWV, wil een collega spreken) zet iemand niet terug: compleet is compleet,
+ * de twijfel staat in Kandidaten bij Eerst nakijken.
+ */
+export function aanmeldfase(c: KandidaatInvoer): Fase {
+  if (c.status === "gepland") return "kandidaat";
+  const j = c.job;
+  if (!j || !JOB_KLAAR.includes(j.status)) return "nieuw";
+  const v = j.velden || {};
+  // Een collega kan al meekijken terwijl Job nog vragen heeft: dan is het gesprek nog niet af.
+  if (j.status === "planner" && openOnderwerpen(v, gesprekCtx(c)).vragen > 0) return "nieuw";
+  return c.hasCv || v.cvParaat === "nee" ? "kandidaat" : "nieuw";
+}
+
+export type StadiumStap = 1 | 2 | 3;
+export interface Stadium { stap: StadiumStap; label: "Aangemeld" | "Gesprek" | "Cv"; kanaal: string }
+export const STADIA: Stadium["label"][] = ["Aangemeld", "Gesprek", "Cv"];
+
+/** Hoe ver iemand is in het aanmeldproces: Aangemeld, Gesprek met Job, Cv. */
+export function stadium(c: KandidaatInvoer): Stadium {
+  const j = c.job;
+  if (!j) return { stap: 1, label: "Aangemeld", kanaal: "via de website" };
+  const kanaal = j.kanaal === "whatsapp" ? "via WhatsApp" : "via het webgesprek";
+  const v = j.velden || {};
+  if (!Object.keys(v).length) return { stap: 1, label: "Aangemeld", kanaal };
+  if (openOnderwerpen(v, gesprekCtx(c)).vragen > 0) return { stap: 2, label: "Gesprek", kanaal };
+  return { stap: 3, label: "Cv", kanaal };
+}
+
+/** In Kandidaten hebben twee groepen een andere naam: wie compleet is maar een twijfel heeft, en wie al is uitgenodigd. */
+export const GROEPEN_KANDIDAAT: typeof GROEPEN = {
+  ...GROEPEN,
+  actie: { titel: "Eerst nakijken", hint: "Compleet, maar er is een twijfel", kleur: GROEPEN.actie.kleur },
+  lopend: { titel: "Uitgenodigd", hint: "Goedgekeurd, wacht op een gekozen moment", kleur: GROEPEN.lopend.kleur },
+};
+export const groepenVoor = (fase: Fase): typeof GROEPEN => (fase === "kandidaat" ? GROEPEN_KANDIDAAT : GROEPEN);

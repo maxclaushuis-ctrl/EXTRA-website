@@ -44,13 +44,13 @@ import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import GoogleReviewsTab from './dashboard/GoogleReviewsTab';
 import PitchdecksTab from './dashboard/PitchdecksTab';
-import { Presentation as PresentatieIcoon } from 'lucide-react';
+import { Presentation as PresentatieIcoon, Inbox as AanmeldingenIcoon } from 'lucide-react';
 // Fase 2: nieuwe WhatsApp-inbox (mockup-herbouw). WhatsAppBeheer blijft bestaan tot fase 4.
 import WhatsAppInbox from './dashboard/whatsapp';
 import CommunicatieNav from './dashboard/CommunicatieNav';
 import NavGroepKop from './dashboard/NavGroepKop';
 import { SollicitantenV2, useSollicitantenV2, KandidaatAfwijzen } from './dashboard/sollicitanten';
-import { KandidatenV2, useKandidatenV2 } from './dashboard/kandidaten';
+import { KandidatenV2, useKandidatenV2, useNieuweAanmeldingen } from './dashboard/kandidaten';
 import TakenPagina from './dashboard/TakenPagina';
 import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
 import WhatsAppContacten from './dashboard/WhatsAppContacten';
@@ -230,6 +230,10 @@ export default function DashboardMockup() {
   const [activeTab, setActiveTab] = useState('kandidaten');
   const sollicitantenV2 = useSollicitantenV2(isAuthenticated && user?.role === 'admin');
   const kandidatenV2 = useKandidatenV2(isAuthenticated && user?.role === 'admin');
+  // Nieuwe aanmeldingen (voorstap van Kandidaten), schakelaar NIEUWE_AANMELDINGEN. Het getal in het menu ververst bij elke tabwissel.
+  const nieuweAanm = useNieuweAanmeldingen(isAuthenticated && user?.role === 'admin' && kandidatenV2, activeTab);
+  const aanmeldingenTab = kandidatenV2 && nieuweAanm.aan;
+  useEffect(() => { if (activeTab === 'nieuwe-aanmeldingen' && nieuweAanm.geladen && !aanmeldingenTab) setActiveTab('kandidaten'); }, [activeTab, nieuweAanm.geladen, aanmeldingenTab]);
   const [oudeKandidaten, setOudeKandidaten] = useState(false);
   // Elke klik op een menu-item opent de lijst opnieuw, ook als er een kaart open stond.
   const [navKlik, setNavKlik] = useState(0);
@@ -252,7 +256,7 @@ export default function DashboardMockup() {
       // Link uit de pitchdeck-mail (/dashboard?tab=pitchdecks).
       if (new URLSearchParams(window.location.search).get('tab') === 'pitchdecks') setActiveTab('pitchdecks');
       // Melding van Job (/dashboard?tab=job).
-      { const t = new URLSearchParams(window.location.search).get('tab'); if (t === 'job' || t === 'sollicitanten2' || t === 'onboarding2' || t === 'archief2') setActiveTab(t); }
+      { const t = new URLSearchParams(window.location.search).get('tab'); if (t === 'job' || t === 'sollicitanten2' || t === 'onboarding2' || t === 'archief2' || t === 'nieuwe-aanmeldingen') setActiveTab(t); }
     } catch { /* geen URL beschikbaar */ }
   }, []);
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
@@ -1076,6 +1080,8 @@ export default function DashboardMockup() {
               {(sollicitantenV2 ? [
                 // Sollicitanten 3.0 (D1): Medewerkers heet Onboarding, Archief staat eronder.
                 // Job (eenmalige instellingen) en Archief staan onder Systeem (besluit Max 17 nov 2026).
+                // Nieuwe aanmeldingen staat boven Kandidaten (schakelaar NIEUWE_AANMELDINGEN, besluit Max 18 nov 2026).
+                ...(aanmeldingenTab ? [{ icon: AanmeldingenIcoon, label: 'Nieuwe aanmeldingen', tab: 'nieuwe-aanmeldingen', badge: nieuweAanm.aantal }] : []),
                 { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
                 { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten2' },
                 { icon: CheckCircle2, label: 'Onboarding', tab: 'onboarding2' },
@@ -1102,6 +1108,16 @@ export default function DashboardMockup() {
                 >
                   <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                   <span>{item.label}</span>
+                  {'badge' in item && (item as { badge?: number }).badge ? (
+                    <span
+                      className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold"
+                      style={{ backgroundColor: HUISSTIJL.KLEUR.zijActiefVlak, color: HUISSTIJL.KLEUR.zijActiefTekst }}
+                      title="Nieuwe aanmeldingen"
+                      data-testid="badge-nieuwe-aanmeldingen"
+                    >
+                      {(item as { badge?: number }).badge! > 99 ? '99+' : (item as { badge?: number }).badge}
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </>
@@ -1513,8 +1529,11 @@ export default function DashboardMockup() {
         </header>
 
         <div className={(activeTab === 'prospect-campagnes' || activeTab === 'prospect-contacten') ? '' : 'p-3 sm:p-6'}>
+          {activeTab === 'nieuwe-aanmeldingen' && aanmeldingenTab && (
+            <KandidatenV2 key={`n${navKlik}`} fase="nieuw" naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setActiveTab('kandidaten')} />
+          )}
           {activeTab === 'kandidaten' && kandidatenV2 && !oudeKandidaten ? (
-            <KandidatenV2 key={`k${navKlik}`} naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setOudeKandidaten(true)} />
+            <KandidatenV2 key={`k${navKlik}`} fase={aanmeldingenTab ? 'kandidaat' : undefined} naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setOudeKandidaten(true)} />
           ) : activeTab === 'kandidaten' ? (
             <div>
               {/* Kandidaat detail dialog */}

@@ -43,7 +43,7 @@ function initialen(naam: string): string {
   return ((w[0]?.[0] || "") + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase() || "?";
 }
 
-export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; ids: number[]; context: string; naar: (id: number) => void; terug: () => void; naarWhatsapp: () => void }) {
+export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp, tab = "kandidaten", terugLabel = "Kandidaten" }: { id: number; ids: number[]; context: string; naar: (id: number) => void; terug: () => void; naarWhatsapp: () => void; tab?: string; terugLabel?: string }) {
   const { data: d, fout, opnieuw } = useData<DossierData>(`/api/admin/kandidaten/dossier/${id}`);
   const [afwijzen, setAfwijzen] = useState(false);
   const [accepteren, setAccepteren] = useState(false);
@@ -60,9 +60,9 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
   const volgende = () => { const n = ids.filter((x) => x !== id); if (n.length) naar(n[Math.min(i, n.length - 1)]); else terug(); };
 
   useEffect(() => {
-    try { const u = new URL(window.location.href); u.searchParams.set("tab", "kandidaten"); u.searchParams.set("kandidaat", String(id)); window.history.replaceState(null, "", u.toString()); } catch { /* geen URL */ }
+    try { const u = new URL(window.location.href); u.searchParams.set("tab", tab); u.searchParams.set("kandidaat", String(id)); window.history.replaceState(null, "", u.toString()); } catch { /* geen URL */ }
     return () => { try { const u = new URL(window.location.href); u.searchParams.delete("kandidaat"); window.history.replaceState(null, "", u.toString()); } catch { /* geen URL */ } };
-  }, [id]);
+  }, [id, tab]);
   // De kop blijft staan en het gesprek schuift mee. Het hoofdvlak van het dashboard heeft overflow:auto
   // zonder eigen hoogte; daardoor werkt sticky er niet in. Zolang deze kaart open is: overflow clip
   // (knipt hetzelfde, maar is geen scrollvlak). Bij het sluiten komt de oude waarde terug.
@@ -104,7 +104,7 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
     return () => { document.removeEventListener("click", dicht); window.removeEventListener("keydown", esc); };
   }, [menu]);
 
-  if (fout) return <div className="k3" ref={wortel}><button className="k3-knop" onClick={terug}>Terug naar Kandidaten</button><div className="sv-fout" style={{ marginTop: 12 }}>{fout}</div></div>;
+  if (fout) return <div className="k3" ref={wortel}><button className="k3-knop" onClick={terug}>Terug naar {terugLabel}</button><div className="sv-fout" style={{ marginTop: 12 }}>{fout}</div></div>;
   if (!d) return <div className="k3" ref={wortel}><p className="k3-zacht">Laden...</p></div>;
 
   async function post(pad: string, body: unknown = {}) {
@@ -146,7 +146,7 @@ export function Dossier3({ id, ids, context, naar, terug, naarWhatsapp }: { id: 
     <div className="k3" ref={wortel}>
       <header className="k3-kop" ref={kop}>
         <div className="k3-kruimel">
-          <button className="k3-link" onClick={terug}>Kandidaten</button><span>/</span><span className="k3-context">{context}</span>
+          <button className="k3-link" onClick={terug}>{terugLabel}</button><span>/</span><span className="k3-context">{context}</span>
           {ids.length > 1 && <div className="k3-nav">
             <button className="k3-knop klein icoon" disabled={i <= 0} onClick={() => naar(ids[i - 1])} aria-label="Vorige kandidaat"><Ic n="links" /></button>
             <span className="k3-num">{i + 1} van {ids.length}</span>

@@ -26,6 +26,7 @@ import {
   magAccepteren, magOnboarden, checkUitIntake, beoordelingCompleet, afwijsreden, afwijsLabel,
   gestoptInLabel, terugzetLabel, geenGehoorTeller, isAfwas, ingangBranche,
 } from "@shared/sollicitantRegels";
+import { nieuweAanmeldingenAan } from "@shared/kandidaatRegels";
 import { isV2, beoordelingV2Compleet, type BeoordelingV2 } from "@shared/intakeV2";
 import { afwijsmailAan, maakAfwijsmail, stuurAfwijsmail } from "./afwijsmail";
 import { intakeV2Aan, registerIntakeV2Routes, voortrajectVan, medewerkerVan, medewerkersVan, functieCtxVan } from "./intakeV2Routes";
@@ -446,7 +447,7 @@ export function registerSollicitantenRoutes(app: Express, adminMiddleware: Middl
   };
 
   app.get(r("/status"), adminMiddleware, (_req, res) => {
-    res.json({ aan: sollicitantenAan(), intakeV2: intakeV2Aan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", kaart3: kaart3Aan(), groepen: groepenAan(), afwijsmail: afwijsmailAan() });
+    res.json({ aan: sollicitantenAan(), intakeV2: intakeV2Aan(), kandidaten: process.env.KANDIDATEN_V2 === "1" || process.env.TESTOMGEVING === "1", kaart3: kaart3Aan(), groepen: groepenAan(), afwijsmail: afwijsmailAan(), nieuweAanmeldingen: nieuweAanmeldingenAan(process.env) });
   });
 
   app.get(r("/week"), adminMiddleware, alleenAan, veilig(async (req, res) => { res.json(await week(String(req.query.van || ""))); }));

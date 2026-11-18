@@ -14,7 +14,7 @@ import {
   candidates, jobGesprekken, jobBerichten, kandidaatMogelijkeMatch, sollicitantGebeurtenissen, users, employees,
   type Candidate,
 } from "@shared/schema";
-import { bolletje, indeling, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_ACTIE, MATCH_REDEN_TEKST, KLEUR_VOLGORDE, type Kleur } from "@shared/kandidaatRegels";
+import { bolletje, indeling, inKandidaten, plannerLabel, sindsTekst, vergelijk, VOLGENDE_ACTIE, MATCH_REDEN_TEKST, KLEUR_VOLGORDE, aanmeldfase, stadium, nieuweAanmeldingenAan, type Fase, type Kleur } from "@shared/kandidaatRegels";
 import { brancheVan, functieNaam, isAfwas, ingangBranche, BRANCHE, leeftijd } from "@shared/sollicitantRegels";
 import type { JobVelden } from "@shared/jobRegels";
 import { functieVan, isLabel } from "@shared/aanmeldLabels";
@@ -41,7 +41,7 @@ function invoer(c: Candidate, g: any | undefined, match: any | undefined, uitgen
     status: c.status, interviewDate: c.interviewDate ? String(c.interviewDate) : null, createdAt: c.createdAt,
     birthDate: c.birthDate ? String(c.birthDate) : null, woonland: c.woonland ?? null,
     functie: isAfwas(c) ? "afwas" : c.functionType, nationalityZone: c.nationalityZone, hasCv: !!c.hasCv,
-    job: g ? { status: g.status, herinneringen: g.herinneringen, herinneringAt: g.herinneringAt, laatsteActiviteitAt: g.laatsteActiviteitAt, bijgewerktAt: g.bijgewerktAt, velden: (g.velden || {}) as JobVelden, twijfels: g.twijfels || [] } : null,
+    job: g ? { status: g.status, kanaal: g.kanaal, herinneringen: g.herinneringen, herinneringAt: g.herinneringAt, laatsteActiviteitAt: g.laatsteActiviteitAt, bijgewerktAt: g.bijgewerktAt, velden: (g.velden || {}) as JobVelden, twijfels: g.twijfels || [] } : null,
     matchOpen: match ? { aangemaaktOp: match.aangemaaktOp, redenen: match.redenen } : null,
     uitgenodigdAt: uitgenodigdAt ?? null,
     cvEis: cvEis ?? null,
@@ -70,11 +70,16 @@ function kortMatch(m: ReturnType<typeof matchUit>): { score: number | null; toes
   return { score: u.score ?? null, toestand: u.toestand, voorlopig: u.voorlopig };
 }
 
-async function overzicht(ik: number | null) {
+/**
+ * @param fase alleen met schakelaar NIEUWE_AANMELDINGEN: "nieuw" (Nieuwe aanmeldingen) of "kandidaat"
+ * (Kandidaten, alleen complete profielen). Zonder fase of met de schakelaar uit staat iedereen erin, zoals altijd.
+ */
+async function overzicht(ik: number | null, fase?: Fase | null) {
   const nu = new Date();
+  const splits = nieuweAanmeldingenAan(process.env);
   const { cs, gm, mm, um, pm } = await lopende();
   const am = await laatsteAnalyses(cs.map((c) => c.id));
-  const rijen = cs.filter((c) => inKandidaten({ status: c.status, interviewDate: c.interviewDate ? String(c.interviewDate) : null })).map((c) => {
+  const alleRijen = cs.filter((c) => inKandidaten({ status: c.status, interviewDate: c.interviewDate ? String(c.interviewDate) : null })).map((c) => {
     const m = matchUit(c, am.get(c.id), gm.get(c.id)?.velden as JobVelden | undefined, nu);
     const inv = invoer(c, gm.get(c.id), mm.get(c.id), um.get(c.id), m.kaart?.eis.status ?? null);
     const b = bolletje(inv, nu);
@@ -87,14 +92,17 @@ async function overzicht(ik: number | null) {
       planner: plannerLabel(planner || null), plannerId: c.plannerUserId || null, mijn: !!ik && c.plannerUserId === ik, aangemeld: c.createdAt,
       match: kortMatch(m),
       groep: ind.groep, punt: ind.punt, groepTekst: ind.tekst, groepSub: ind.sub, stap: ind.stap, dubbel: ind.dubbel,
+      ...(splits ? { fase: aanmeldfase(inv), stadium: stadium(inv) } : {}),
     };
   }).sort((a, b) => vergelijk({ kleur: a.kleur as Kleur, sinds: new Date(a.sinds) }, { kleur: b.kleur as Kleur, sinds: new Date(b.sinds) }));
+  const fasen = splits ? { nieuw: alleRijen.filter((r) => (r as any).fase === "nieuw").length, kandidaat: alleRijen.filter((r) => (r as any).fase === "kandidaat").length } : null;
+  const rijen = splits && fase ? alleRijen.filter((r) => (r as any).fase === fase) : alleRijen;
   const perKleur = Object.fromEntries(KLEUR_VOLGORDE.map((k) => [k, rijen.filter((r) => r.kleur === k).length]));
   const perBranche = { alle: rijen.length, hotels: rijen.filter((r) => r.branche === "hotels").length, events: rijen.filter((r) => r.branche === "events").length, logistiek: rijen.filter((r) => r.branche === "logistiek").length };
   const gezien = new Set<number>();
   const planners: { id: number; naam: string }[] = [];
   for (const r of rijen) if (r.plannerId && !gezien.has(r.plannerId)) { gezien.add(r.plannerId); planners.push({ id: r.plannerId, naam: r.planner }); }
-  return { rijen, tellers: { perKleur, perBranche, aandacht: (perKleur.geel || 0) + (perKleur.rood || 0) }, planners };
+  return { rijen, tellers: { perKleur, perBranche, aandacht: (perKleur.geel || 0) + (perKleur.rood || 0) }, planners, ...(fasen ? { fasen } : {}) };
 }
 
 /** Events: alle aangevinkte functies (alleen als het er meer dan één zijn), de eerste is de hoofdfunctie. */
@@ -198,7 +206,16 @@ export function registerKandidatenRoutes(app: Express, adminMiddleware: Middlewa
     await db.insert(sollicitantGebeurtenissen).values({ candidateId: c.id, soort, tekst, door: w.voornaam, doorUserId: w.id });
   }
 
-  app.get(r("/overzicht"), adminMiddleware, aan, veilig(async (req, res) => { res.json(await overzicht((await wie(req)).id)); }));
+  app.get(r("/overzicht"), adminMiddleware, aan, veilig(async (req, res) => {
+    const f = req.query.fase === "nieuw" || req.query.fase === "kandidaat" ? (req.query.fase as Fase) : null;
+    res.json(await overzicht((await wie(req)).id, f));
+  }));
+  /** Voor het menu: hoeveel nieuwe aanmeldingen er staan. Zonder schakelaar 404, dan is er geen tabblad. */
+  app.get(r("/aanmeldingen/teller"), adminMiddleware, aan, veilig(async (_req, res) => {
+    if (!nieuweAanmeldingenAan(process.env)) return res.status(404).json({ message: "Niet beschikbaar." });
+    const o = await overzicht(null, null);
+    res.json({ nieuw: o.fasen?.nieuw ?? 0, kandidaat: o.fasen?.kandidaat ?? 0 });
+  }));
   app.get(r("/momenten"), adminMiddleware, aan, veilig(async (_req, res) => {
     const job = await import("../job/jobService");
     res.json(await job.momenten());

@@ -45,6 +45,7 @@
     "twv:test": "tsx server/twvVerlopen.test.ts",
     "testdata:test": "tsx scripts/testdataRegels.test.ts",
     "kandidaat:test": "tsx shared/kandidaat.test.ts",
+    "aanmeldfase:test": "tsx shared/aanmeldfase.test.ts",
     "aanmeldlabels:test": "tsx shared/aanmeldLabels.test.ts",
     "kandidaatmatch:test": "tsx shared/kandidaatMatch.test.ts && tsx shared/cvAfschermen.test.ts && tsx shared/cvVragen.test.ts && tsx server/job/__tests__/cvAnalyse.test.ts",
     "sollicitant:test": "tsx shared/sollicitant.test.ts",

@@ -6,7 +6,7 @@
  */
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { BRANCHE, BRANCHES, type Branche } from "@shared/sollicitantRegels";
-import { KLEUREN, KLEUR_VOLGORDE, GROEPEN, GROEP_VOLGORDE, PUNT_KLEUR, vergelijkGroep, type Groep, type Kleur, type Punt } from "@shared/kandidaatRegels";
+import { KLEUREN, KLEUR_VOLGORDE, GROEP_VOLGORDE, PUNT_KLEUR, STADIA, groepenVoor, vergelijkGroep, type Fase, type Groep, type Kleur, type Punt, type Stadium } from "@shared/kandidaatRegels";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { CSS, Dialoog, Knop, Leeg, Meldingen, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
 import { Dossier3, K3CSS } from "./Kaart3";
@@ -16,15 +16,18 @@ interface Rij {
   id: number; naam: string; functie: string; functieCode: string; branche: Branche; kleur: Kleur; cijfer: string | null;
   status: string; sinds: string; sindsTekst: string; planner: string; plannerId: number | null; mijn: boolean; aangemeld: string;
   match?: { score: number | null; toestand: string; voorlopig: boolean } | null;
+  fase?: Fase; stadium?: Stadium;
   groep?: Groep; punt?: Punt; groepTekst?: string; groepSub?: string | null; stap?: string | null; dubbel?: boolean;
 }
 interface Overzicht { rijen: Rij[]; tellers: { perKleur: Record<Kleur, number>; perBranche: Record<string, number>; aandacht: number }; planners: { id: number; naam: string }[] }
 interface Filter { kleuren: Kleur[]; groepen: Groep[]; functie: string; planner: string; datum: string }
 const STANDAARD: Filter = { kleuren: ["geel", "rood"], groepen: [], functie: "", planner: "", datum: "" };
 const SLEUTEL = "extra-kandidaten-filter";
+/** Nieuwe aanmeldingen heeft een eigen opgeslagen filter, zodat een filter in de ene bak de andere niet leegmaakt. */
+const sleutelVoor = (fase?: Fase) => (fase === "nieuw" ? `${SLEUTEL}-nieuw` : SLEUTEL);
 
-function leesFilter(): Filter {
-  try { const f = JSON.parse(localStorage.getItem(SLEUTEL) || "null"); if (f && Array.isArray(f.kleuren)) return { ...STANDAARD, ...f }; } catch { /* geen opslag */ }
+function leesFilter(fase?: Fase): Filter {
+  try { const f = JSON.parse(localStorage.getItem(sleutelVoor(fase)) || "null"); if (f && Array.isArray(f.kleuren)) return { ...STANDAARD, ...f }; } catch { /* geen opslag */ }
   return STANDAARD;
 }
 
@@ -36,19 +39,27 @@ export function Stip({ kleur, cijfer, maat = 20 }: { kleur: Kleur; cijfer?: stri
 
 const FUNCTIE_OPTIES = [["horecamedewerker", "Bediening en bar"], ["bediening", "Bediening en bar (nieuw formulier)"], ["chef", "Keuken"], ["keuken", "Keuken (nieuw formulier)"], ["afwas", "Afwas"], ["housekeeping", "Housekeeping"], ["frontoffice", "Front office"], ["logistiek", "Logistiek"]];
 
-export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naarArchief: () => void; naarWhatsapp: () => void; oudeWeergave: () => void }) {
-  const { data, fout, opnieuw } = useData<Overzicht>("/api/admin/kandidaten/overzicht");
+/**
+ * Het overzicht. Met `fase` (schakelaar NIEUWE_AANMELDINGEN) is dit een van de twee bakken:
+ * "nieuw" = Nieuwe aanmeldingen (gesprek of cv nog niet af), "kandidaat" = Kandidaten (alleen
+ * complete profielen). Zonder `fase` staat iedereen erin, zoals voor de schakelaar.
+ */
+export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: { naarArchief: () => void; naarWhatsapp: () => void; oudeWeergave: () => void; fase?: Fase }) {
+  const { data, fout, opnieuw } = useData<Overzicht>(`/api/admin/kandidaten/overzicht${fase ? `?fase=${fase}` : ""}`);
+  const nieuw = fase === "nieuw";
+  const GR = groepenVoor(fase ?? "nieuw");
+  const titel = nieuw ? "Nieuwe aanmeldingen" : "Kandidaten";
   const { data: status, fout: statusFout } = useData<{ kaart3?: boolean; groepen?: boolean }>("/api/sollicitanten/status");
   const kaart3 = !!status?.kaart3;
   // Groepen (wie is er aan zet): de status gebruikt groepen in plaats van kleuren.
   const groepen = !!status?.groepen && !!data?.rijen.every((r) => !!r.groep);
   const [branche, setBranche] = useState<Branche | "alle">("alle");
   const [zoek, setZoek] = useState("");
-  const [filter, setFilter] = useState<Filter>(leesFilter);
+  const [filter, setFilter] = useState<Filter>(() => leesFilter(fase));
   const [concept, setConcept] = useState<Filter | null>(null);
   const [open, setOpen] = useState<number | null>(() => { try { const id = Number(new URLSearchParams(window.location.search).get("kandidaat")); return id > 0 ? id : null; } catch { return null; } });
 
-  useEffect(() => { try { localStorage.setItem(SLEUTEL, JSON.stringify(filter)); } catch { /* geen opslag */ } }, [filter]);
+  useEffect(() => { try { localStorage.setItem(sleutelVoor(fase), JSON.stringify(filter)); } catch { /* geen opslag */ } }, [filter, fase]);
 
   const pas = (f: Filter, rijen: Rij[]) => {
     const nu = Date.now();
@@ -71,8 +82,8 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
     return (
       <div className="sv" style={{ borderRadius: 18 }}>
         <style>{CSS}{KCSS}{kaart3 ? K3CSS : ""}</style>
-        <D id={open} ids={ids.includes(open) ? ids : [open, ...ids]} context={`${branche === "alle" ? "Alle" : BRANCHE[branche].label}${groepen ? (filter.groepen.length ? ` · ${filter.groepen.map((g) => GROEPEN[g].titel.toLowerCase()).join(", ")}` : "") : filter.kleuren.length ? ` · ${filter.kleuren.map((k) => KLEUREN[k].label.toLowerCase()).join(", ")}` : ""}`}
-          naar={(id) => setOpen(id)} terug={() => { setOpen(null); opnieuw(); }} naarWhatsapp={naarWhatsapp} />
+        <D id={open} ids={ids.includes(open) ? ids : [open, ...ids]} context={`${branche === "alle" ? "Alle" : BRANCHE[branche].label}${groepen ? (filter.groepen.length ? ` · ${filter.groepen.map((g) => GR[g].titel.toLowerCase()).join(", ")}` : "") : filter.kleuren.length ? ` · ${filter.kleuren.map((k) => KLEUREN[k].label.toLowerCase()).join(", ")}` : ""}`}
+          naar={(id) => setOpen(id)} terug={() => { setOpen(null); opnieuw(); }} naarWhatsapp={naarWhatsapp} {...(nieuw ? { tab: "nieuwe-aanmeldingen", terugLabel: titel } : {})} />
         <Meldingen />
       </div>
     );
@@ -89,8 +100,12 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
       <div className="sv-lijst">
         <div className="sv-tussen">
           <div>
-            <h1>Kandidaten</h1>
-            <p className="sv-sub">{!data || (!status && !statusFout) ? "Laden..." : groepen
+            <h1>{titel}</h1>
+            <p className="sv-sub">{!data || (!status && !statusFout) ? "Laden..." : nieuw && groepen
+              ? `${data.rijen.length} ${data.rijen.length === 1 ? "aanmelding" : "aanmeldingen"} onderweg, ${nActie} ${nActie === 1 ? "vraagt" : "vragen"} een actie`
+              : fase === "kandidaat" && groepen
+              ? `${nKlaar} klaar voor beoordeling, ${perGroep("actie")} eerst nakijken`
+              : groepen
               ? `${nKlaar} klaar voor beoordeling, ${nActie} ${nActie === 1 ? "vraagt" : "vragen"} een actie`
               : `${data.tellers.aandacht} ${data.tellers.aandacht === 1 ? "kandidaat vraagt" : "kandidaten vragen"} je aandacht`}</p>
           </div>
@@ -109,7 +124,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
                 {groepen && GROEP_VOLGORDE.map((g) => (
                   <label key={g} className="k-filterrij">
                     <input type="checkbox" checked={concept.groepen.includes(g)} onChange={(e) => setConcept({ ...concept, groepen: e.target.checked ? [...concept.groepen, g] : concept.groepen.filter((x) => x !== g) })} />
-                    <span className="k-punt" style={{ background: GROEPEN[g].kleur }} /><span style={{ flex: 1 }}>{GROEPEN[g].titel}</span><span className="sv-grijs">{perGroep(g)}</span>
+                    <span className="k-punt" style={{ background: GR[g].kleur }} /><span style={{ flex: 1 }}>{GR[g].titel}</span><span className="sv-grijs">{perGroep(g)}</span>
                   </label>
                 ))}
                 {!groepen && KLEUR_VOLGORDE.map((k) => (
@@ -133,23 +148,28 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
           </div>
           <button className="sv-knop" onClick={naarArchief}>Archief</button>
         </div>
+        {fase && (
+          <p className="k-uitleg">{nieuw
+            ? "Hier staan mensen die zich hebben aangemeld en het gesprek of het cv nog niet af hebben. Zodra alles binnen is, staan ze vanzelf bij Kandidaten."
+            : "Hier staan alleen complete profielen: het gesprek is af en het cv is binnen. Open een dossier om goed te keuren of af te wijzen."}</p>
+        )}
         {!groepen && status && (<div className="sv-legenda">{KLEUR_VOLGORDE.map((k) => <span key={k}><Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} />{KLEUREN[k].label}</span>)}</div>)}
         {fout && <div className="sv-fout">Laden mislukt. Probeer het opnieuw. <button className="sv-knop sv-knop-link" onClick={opnieuw}>Opnieuw</button></div>}
         {groepen ? (
           <table className="sv-tabel k-groepen">
-            <thead><tr><th style={{ width: "19%" }}>Kandidaat</th><th style={{ width: "21%" }}>Status</th><th className="k-breed" style={{ width: "15%" }}>Volgende stap</th><th className="k-breed" style={{ width: "15%" }}>Match</th><th className="k-breed" style={{ width: "9%" }}>Sinds</th><th className="k-breed" style={{ width: "15%" }}>Planner</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
+            <thead><tr><th style={{ width: "19%" }}>Kandidaat</th><th style={{ width: "21%" }}>Status</th><th className="k-breed" style={{ width: "15%" }}>Volgende stap</th><th className="k-breed" style={{ width: "15%" }}>{nieuw ? "Stadium" : "Match"}</th><th className="k-breed" style={{ width: "9%" }}>Sinds</th><th className="k-breed" style={{ width: "15%" }}>Planner</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
             <tbody>{GROEP_VOLGORDE.map((g) => {
               const rijen = lijst.filter((r) => r.groep === g);
               if (!rijen.length) return null;
               return (
                 <Fragment key={g}>
-                  <tr className="k-groepkop"><td colSpan={7}><div><span className="k-punt" style={{ background: GROEPEN[g].kleur }} /><b>{GROEPEN[g].titel}</b><span className="sv-grijs">{rijen.length}</span><span className="k-hint">{GROEPEN[g].hint}</span></div></td></tr>
+                  <tr className="k-groepkop"><td colSpan={7}><div><span className="k-punt" style={{ background: GR[g].kleur }} /><b>{GR[g].titel}</b><span className="sv-grijs">{rijen.length}</span><span className="k-hint">{GR[g].hint}</span></div></td></tr>
                   {rijen.map((r) => (
                     <tr key={r.id} className={`klik${g === "lopend" ? " k-stil" : ""}`} tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
                       <td><b className="k-naam">{r.naam}</b><div className="sv-klein k-functie">{r.functie}{r.dubbel && <span className="k-label" title="Er is een ander dossier dat op deze persoon lijkt">Mogelijk dubbel</span>}</div></td>
                       <td style={{ whiteSpace: "normal" }}><div className="k-status"><span className="k-punt" style={{ background: PUNT_KLEUR[r.punt!] }} aria-hidden="true" /><div>{r.groepTekst}{r.groepSub && <div className="sv-klein">{r.groepSub}</div>}<div className="k-smal sv-klein">{[r.stap, r.sindsTekst].filter(Boolean).join(", ")}</div></div></div></td>
                       <td className="k-breed k-stap">{r.stap || ""}</td>
-                      <td className="k-breed"><MatchKort m={r.match} /></td>
+                      <td className="k-breed">{nieuw ? <StadiumKort s={r.stadium} /> : <MatchKort m={r.match} />}</td>
                       <td className="k-breed sv-grijs">{r.sindsTekst}</td>
                       <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>
                       <td style={{ color: "#B3AEA3" }}>›</td>
@@ -175,14 +195,26 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave }: { naar
           </table>
         ) : null}
         {data && !lijst.length && (
-          <Leeg>{zoek ? `Geen kandidaat gevonden voor '${zoek}'.` : !groepen && filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
+          <Leeg>{zoek ? `Geen kandidaat gevonden voor '${zoek}'.` : fase && groepen && !filterAan && branche === "alle" ? (nieuw ? "Er zijn geen nieuwe aanmeldingen." : "Er staan geen complete profielen te wachten.") : !groepen && filter.kleuren.join() === "geel,rood" || filter.kleuren.join() === "rood,geel"
             ? <>Niemand vraagt nu je aandacht. <button className="sv-knop sv-knop-link" onClick={() => setFilter({ ...filter, kleuren: [] })}>Toon alle lopende kandidaten</button></>
             : branche !== "alle" ? `Geen lopende kandidaten in ${BRANCHE[branche].label}.` : "Geen kandidaten met dit filter."}</Leeg>
         )}
-        <p className="sv-klein" style={{ marginTop: 16 }}>Wie een gesprek heeft gepland, staat bij Sollicitanten. Het oude overzicht staat er nog: <button className="sv-knop sv-knop-link" onClick={oudeWeergave}>open de oude weergave</button>.</p>
+        <p className="sv-klein" style={{ marginTop: 16 }}>Wie een gesprek heeft gepland, staat bij Sollicitanten.{!nieuw && <> Het oude overzicht staat er nog: <button className="sv-knop sv-knop-link" onClick={oudeWeergave}>open de oude weergave</button>.</>}</p>
       </div>
       <Meldingen />
     </div>
+  );
+}
+
+/** Hoe ver iemand is in het aanmeldproces: drie stappen (Aangemeld, Gesprek, Cv) en het kanaal. */
+function StadiumKort({ s }: { s?: Stadium }) {
+  if (!s) return null;
+  return (
+    <span className="k-stadium" title={`${s.label}, ${s.kanaal}`}>
+      <span className="k-stappen" role="img" aria-label={`Stap ${s.stap} van 3: ${s.label}`}>{STADIA.map((l, i) => <i key={l} className={i < s.stap ? "aan" : ""} />)}</span>
+      <b>{s.label}</b>
+      <span className="sv-grijs" style={{ fontSize: 12 }}>{s.kanaal}</span>
+    </span>
   );
 }
 
@@ -221,7 +253,7 @@ export function wanneer(x: string): string {
   return `${dag} ${tijdstip(x)}`;
 }
 
-function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; ids: number[]; context: string; naar: (id: number) => void; terug: () => void; naarWhatsapp: () => void }) {
+function Dossier({ id, ids, context, naar, terug, naarWhatsapp, tab = "kandidaten", terugLabel = "Kandidaten" }: { id: number; ids: number[]; context: string; naar: (id: number) => void; terug: () => void; naarWhatsapp: () => void; tab?: string; terugLabel?: string }) {
   const { data: d, fout, opnieuw } = useData<DossierData>(`/api/admin/kandidaten/dossier/${id}`);
   const [afwijzen, setAfwijzen] = useState(false);
   const [geenCv, setGeenCv] = useState(false);
@@ -233,11 +265,11 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; 
   const volgende = () => { const n = ids.filter((x) => x !== id); if (n.length) naar(n[Math.min(i, n.length - 1)]); else terug(); };
 
   useEffect(() => {
-    try { const u = new URL(window.location.href); u.searchParams.set("tab", "kandidaten"); u.searchParams.set("kandidaat", String(id)); window.history.replaceState(null, "", u.toString()); } catch { /* geen URL */ }
+    try { const u = new URL(window.location.href); u.searchParams.set("tab", tab); u.searchParams.set("kandidaat", String(id)); window.history.replaceState(null, "", u.toString()); } catch { /* geen URL */ }
     return () => { try { const u = new URL(window.location.href); u.searchParams.delete("kandidaat"); window.history.replaceState(null, "", u.toString()); } catch { /* geen URL */ } };
-  }, [id]);
+  }, [id, tab]);
 
-  if (fout) return <div className="sv-dossier"><button className="sv-terug" onClick={terug}>← Kandidaten</button><div className="sv-fout">{fout}</div></div>;
+  if (fout) return <div className="sv-dossier"><button className="sv-terug" onClick={terug}>← {terugLabel}</button><div className="sv-fout">{fout}</div></div>;
   if (!d) return <div className="sv-dossier"><p className="sv-grijs">Laden...</p></div>;
 
   async function post(pad: string, body: unknown = {}) {
@@ -267,7 +299,7 @@ function Dossier({ id, ids, context, naar, terug, naarWhatsapp }: { id: number; 
   return (
     <div className="sv-dossier" style={{ background: "#F8F7F4" }}>
       <div className="sv-tussen" style={{ alignItems: "center", marginBottom: 14 }}>
-        <button className="sv-terug" style={{ margin: 0 }} onClick={terug}>← Kandidaten <span className="sv-grijs">· {context}</span></button>
+        <button className="sv-terug" style={{ margin: 0 }} onClick={terug}>← {terugLabel} <span className="sv-grijs">· {context}</span></button>
         {ids.length > 1 && <div className="sv-rij">
           <button className="sv-knop" disabled={i <= 0} onClick={() => naar(ids[i - 1])}>‹ Vorige</button>
           <span className="sv-grijs">{i + 1} van {ids.length}</span>
@@ -500,6 +532,11 @@ const KCSS = `
 .sv .k-stap{color:#55524A;white-space:normal!important;line-height:1.35}
 .sv .k-stil td{color:#55524A}
 .sv .k-match-kort{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.sv .k-uitleg{margin:14px 0 0;padding:10px 14px;border-radius:12px;background:#F2EEE7;color:#45403A;font-size:13.5px}
+.sv .k-stadium{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.sv .k-stappen{display:inline-flex;gap:3px}
+.sv .k-stappen i{display:block;width:16px;height:6px;border-radius:3px;background:#EDEAE4}
+.sv .k-stappen i.aan{background:#37352C}
 .sv .k-meter{width:40px;height:6px;border-radius:6px;background:#EDEAE4;overflow:hidden;display:inline-block}
 .sv .k-meter i{display:block;height:100%;background:#37352C;border-radius:6px}
 @media (max-width:1023px){.sv .k-twee{grid-template-columns:1fr}}
@@ -516,4 +553,28 @@ export function useKandidatenV2(ingelogdAlsAdmin: boolean): boolean {
     return () => { weg = true; };
   }, [ingelogdAlsAdmin]);
   return aan;
+}
+
+/**
+ * Nieuwe aanmeldingen (schakelaar NIEUWE_AANMELDINGEN, in de testomgeving vanzelf aan): staat het tabblad aan,
+ * en hoeveel aanmeldingen zijn er nog onderweg? Het getal ververst bij elke tabwissel en elke minuut.
+ */
+export function useNieuweAanmeldingen(ingelogdAlsAdmin: boolean, ververs: unknown): { geladen: boolean; aan: boolean; aantal: number } {
+  const [aan, setAan] = useState<boolean | null>(null);
+  const [aantal, setAantal] = useState(0);
+  useEffect(() => {
+    if (!ingelogdAlsAdmin) { setAan(null); return; }
+    let weg = false;
+    api<{ nieuweAanmeldingen?: boolean }>("/api/sollicitanten/status").then((s) => { if (!weg) setAan(!!s.nieuweAanmeldingen); }).catch(() => { if (!weg) setAan(false); });
+    return () => { weg = true; };
+  }, [ingelogdAlsAdmin]);
+  useEffect(() => {
+    if (!aan) { setAantal(0); return; }
+    let weg = false;
+    const haal = () => api<{ nieuw: number }>("/api/admin/kandidaten/aanmeldingen/teller").then((t) => { if (!weg) setAantal(t.nieuw || 0); }).catch(() => { /* getal blijft staan */ });
+    haal();
+    const timer = setInterval(haal, 60000);
+    return () => { weg = true; clearInterval(timer); };
+  }, [aan, ververs]);
+  return { geladen: aan !== null, aan: !!aan, aantal };
 }
