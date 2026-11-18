@@ -322,19 +322,41 @@ export function aanmeldfase(c: KandidaatInvoer): Fase {
   return c.hasCv || v.cvParaat === "nee" ? "kandidaat" : "nieuw";
 }
 
+/**
+ * Kleur van een aanmelding: hoe lang de kandidaat al niets heeft gedaan, afgelezen aan de herinneringen
+ * die Job heeft gestuurd. Groen = nog in het proces, geel = 1e herinnering, oranje = 2e herinnering,
+ * rood = geen reactie meer.
+ */
+export type AanmeldKleur = "groen" | "geel" | "oranje" | "rood";
+export const AANMELD_KLEUR: Record<AanmeldKleur, { kleur: string; label: string }> = {
+  groen: { kleur: "#5E8C3A", label: "Nog in het proces" },
+  geel: { kleur: "#D9B526", label: "1e herinnering verstuurd" },
+  oranje: { kleur: "#D9761C", label: "2e herinnering verstuurd" },
+  rood: { kleur: "#C2412D", label: "Geen reactie" },
+};
+export function aanmeldKleur(c: KandidaatInvoer): AanmeldKleur {
+  const j = c.job;
+  if (!j) return "groen";
+  if (j.status === "geen_reactie" || j.status === "gestopt" || j.herinneringen >= 3) return "rood";
+  if (j.herinneringen === 2) return "oranje";
+  if (j.herinneringen === 1) return "geel";
+  return "groen";
+}
+
 export type StadiumStap = 1 | 2 | 3;
-export interface Stadium { stap: StadiumStap; label: "Aangemeld" | "Gesprek" | "Cv"; kanaal: string }
-export const STADIA: Stadium["label"][] = ["Aangemeld", "Gesprek", "Cv"];
+export interface Stadium { stap: StadiumStap; label: "Aangemeld" | "Gesprek" | "Cv uploaden"; kanaal: string; kleur: AanmeldKleur }
+export const STADIA: Stadium["label"][] = ["Aangemeld", "Gesprek", "Cv uploaden"];
 
 /** Hoe ver iemand is in het aanmeldproces: Aangemeld, Gesprek met Job, Cv. */
 export function stadium(c: KandidaatInvoer): Stadium {
   const j = c.job;
-  if (!j) return { stap: 1, label: "Aangemeld", kanaal: "via de website" };
-  const kanaal = j.kanaal === "whatsapp" ? "via WhatsApp" : "via het webgesprek";
+  const kleur = aanmeldKleur(c);
+  if (!j) return { stap: 1, label: "Aangemeld", kanaal: "via de website", kleur };
+  const kanaal = j.kanaal === "whatsapp" ? "via Job op WhatsApp" : "via Job op de website";
   const v = j.velden || {};
-  if (!Object.keys(v).length) return { stap: 1, label: "Aangemeld", kanaal };
-  if (openOnderwerpen(v, gesprekCtx(c)).vragen > 0) return { stap: 2, label: "Gesprek", kanaal };
-  return { stap: 3, label: "Cv", kanaal };
+  if (!Object.keys(v).length) return { stap: 1, label: "Aangemeld", kanaal, kleur };
+  if (openOnderwerpen(v, gesprekCtx(c)).vragen > 0) return { stap: 2, label: "Gesprek", kanaal, kleur };
+  return { stap: 3, label: "Cv uploaden", kanaal, kleur };
 }
 
 /** In Kandidaten hebben twee groepen een andere naam: wie compleet is maar een twijfel heeft, en wie al is uitgenodigd. */

@@ -2,7 +2,7 @@
  * Huistests: Nieuwe aanmeldingen of Kandidaten (aanmeldfase, stadium en schakelaar in
  * shared/kandidaatRegels.ts). Draaien: npm run aanmeldfase:test
  */
-import { aanmeldfase, stadium, nieuweAanmeldingenAan, groepenVoor, GROEPEN, indeling, type KandidaatInvoer } from "./kandidaatRegels";
+import { aanmeldfase, aanmeldKleur, stadium, nieuweAanmeldingenAan, groepenVoor, GROEPEN, indeling, type KandidaatInvoer } from "./kandidaatRegels";
 
 let geslaagd = 0, gefaald = 0;
 function test(naam: string, ok: boolean, uitleg = "") {
@@ -45,8 +45,15 @@ test("nieuw volgt vanzelf: zodra het cv binnen is wordt het kandidaat", aanmeldf
 test("stadium: geen Job is Aangemeld via de website", stadium(basis()).stap === 1 && stadium(basis()).label === "Aangemeld" && stadium(basis()).kanaal === "via de website");
 test("stadium: Job gestart maar nog niets beantwoord is Aangemeld", stadium(basis({ job: job() })).stap === 1);
 test("stadium: vragen open is Gesprek", stadium(basis({ job: job({ velden: HALF }) })).stap === 2 && stadium(basis({ job: job({ velden: HALF }) })).label === "Gesprek");
-test("stadium: alles beantwoord, cv open is Cv", stadium(basis({ job: job({ status: "wacht_cv", velden: VOL }) })).stap === 3 && stadium(basis({ job: job({ status: "wacht_cv", velden: VOL }) })).label === "Cv");
-test("stadium: kanaal WhatsApp en webgesprek", stadium(basis({ job: job({ kanaal: "whatsapp", velden: HALF }) })).kanaal === "via WhatsApp" && stadium(basis({ job: job({ kanaal: "web", velden: HALF }) })).kanaal === "via het webgesprek");
+test("stadium: alles beantwoord, cv open is Cv", stadium(basis({ job: job({ status: "wacht_cv", velden: VOL }) })).stap === 3 && stadium(basis({ job: job({ status: "wacht_cv", velden: VOL }) })).label === "Cv uploaden");
+test("stadium: kanaal WhatsApp en webgesprek", stadium(basis({ job: job({ kanaal: "whatsapp", velden: HALF }) })).kanaal === "via Job op WhatsApp" && stadium(basis({ job: job({ kanaal: "web", velden: HALF }) })).kanaal === "via Job op de website");
+
+// Kleur van de aanmelding (herinneringen)
+test("kleur: geen Job of nog geen herinnering is groen", aanmeldKleur(basis()) === "groen" && aanmeldKleur(basis({ job: job({ velden: HALF }) })) === "groen");
+test("kleur: 1e herinnering is geel", aanmeldKleur(basis({ job: job({ herinneringen: 1, velden: HALF }) })) === "geel");
+test("kleur: 2e herinnering is oranje", aanmeldKleur(basis({ job: job({ herinneringen: 2, velden: HALF }) })) === "oranje");
+test("kleur: geen reactie of gestopt is rood", aanmeldKleur(basis({ job: job({ status: "geen_reactie", herinneringen: 2, velden: HALF }) })) === "rood" && aanmeldKleur(basis({ job: job({ status: "gestopt", velden: HALF }) })) === "rood");
+test("kleur: zit in het stadium", stadium(basis({ job: job({ herinneringen: 1, velden: HALF }) })).kleur === "geel");
 
 // Groepsnamen per bak
 test("groepen: Kandidaten noemt actie Eerst nakijken en lopend Uitgenodigd", groepenVoor("kandidaat").actie.titel === "Eerst nakijken" && groepenVoor("kandidaat").lopend.titel === "Uitgenodigd");

@@ -6,7 +6,7 @@
  */
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { BRANCHE, BRANCHES, type Branche } from "@shared/sollicitantRegels";
-import { KLEUREN, KLEUR_VOLGORDE, GROEP_VOLGORDE, PUNT_KLEUR, STADIA, groepenVoor, vergelijkGroep, type Fase, type Groep, type Kleur, type Punt, type Stadium } from "@shared/kandidaatRegels";
+import { KLEUREN, KLEUR_VOLGORDE, GROEP_VOLGORDE, PUNT_KLEUR, STADIA, AANMELD_KLEUR, groepenVoor, vergelijkGroep, type Fase, type Groep, type Kleur, type Punt, type Stadium } from "@shared/kandidaatRegels";
 import { AfwijzenDialoog } from "../sollicitanten/Afwijzen";
 import { CSS, Dialoog, Knop, Leeg, Meldingen, api, kortDatum, melding, tijdstip, useData } from "../sollicitanten/gedeeld";
 import { Dossier3, K3CSS } from "./Kaart3";
@@ -48,7 +48,7 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
   const { data, fout, opnieuw } = useData<Overzicht>(`/api/admin/kandidaten/overzicht${fase ? `?fase=${fase}` : ""}`);
   const nieuw = fase === "nieuw";
   const GR = groepenVoor(fase ?? "nieuw");
-  const titel = nieuw ? "Nieuwe aanmeldingen" : "Kandidaten";
+  const titel = nieuw ? "Aanmeldingen" : "Kandidaten";
   const { data: status, fout: statusFout } = useData<{ kaart3?: boolean; groepen?: boolean }>("/api/sollicitanten/status");
   const kaart3 = !!status?.kaart3;
   // Groepen (wie is er aan zet): de status gebruikt groepen in plaats van kleuren.
@@ -135,8 +135,8 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
                 ))}
                 <label className="sv-veld" style={{ marginTop: 10 }}><span>Functie</span>
                   <select value={concept.functie} onChange={(e) => setConcept({ ...concept, functie: e.target.value })}><option value="">Alle</option>{FUNCTIE_OPTIES.map(([w, l]) => <option key={w} value={w}>{l}</option>)}</select></label>
-                <label className="sv-veld"><span>Planner</span>
-                  <select value={concept.planner} onChange={(e) => setConcept({ ...concept, planner: e.target.value })}><option value="">Alle</option><option value="geen">Niet toegewezen</option><option value="mij">Mij</option>{data.planners.map((p) => <option key={p.id} value={String(p.id)}>{p.naam}</option>)}</select></label>
+                {!nieuw && <label className="sv-veld"><span>Planner</span>
+                  <select value={concept.planner} onChange={(e) => setConcept({ ...concept, planner: e.target.value })}><option value="">Alle</option><option value="geen">Niet toegewezen</option><option value="mij">Mij</option>{data.planners.map((p) => <option key={p.id} value={String(p.id)}>{p.naam}</option>)}</select></label>}
                 <label className="sv-veld"><span>Aanmelddatum</span>
                   <select value={concept.datum} onChange={(e) => setConcept({ ...concept, datum: e.target.value })}><option value="">Alle</option><option value="1">Vandaag</option><option value="7">Laatste 7 dagen</option><option value="30">Laatste 30 dagen</option></select></label>
                 <div className="sv-tussen" style={{ alignItems: "center", marginTop: 6 }}>
@@ -148,30 +148,33 @@ export function KandidatenV2({ naarArchief, naarWhatsapp, oudeWeergave, fase }: 
           </div>
           <button className="sv-knop" onClick={naarArchief}>Archief</button>
         </div>
-        {fase && (
-          <p className="k-uitleg">{nieuw
-            ? "Hier staan mensen die zich hebben aangemeld en het gesprek of het cv nog niet af hebben. Zodra alles binnen is, staan ze vanzelf bij Kandidaten."
-            : "Hier staan alleen complete profielen: het gesprek is af en het cv is binnen. Open een dossier om goed te keuren of af te wijzen."}</p>
+        {fase === "kandidaat" && (
+          <p className="k-uitleg">Hier staan alleen complete profielen: het gesprek is af en het cv is binnen. Open een dossier om goed te keuren of af te wijzen.</p>
         )}
         {!groepen && status && (<div className="sv-legenda">{KLEUR_VOLGORDE.map((k) => <span key={k}><Stip kleur={k} cijfer={KLEUREN[k].cijfer} maat={14} />{KLEUREN[k].label}</span>)}</div>)}
         {fout && <div className="sv-fout">Laden mislukt. Probeer het opnieuw. <button className="sv-knop sv-knop-link" onClick={opnieuw}>Opnieuw</button></div>}
         {groepen ? (
           <table className="sv-tabel k-groepen">
-            <thead><tr><th style={{ width: "19%" }}>Kandidaat</th><th style={{ width: "21%" }}>Status</th><th className="k-breed" style={{ width: "15%" }}>Volgende stap</th><th className="k-breed" style={{ width: "15%" }}>{nieuw ? "Stadium" : "Match"}</th><th className="k-breed" style={{ width: "9%" }}>Sinds</th><th className="k-breed" style={{ width: "15%" }}>Planner</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
+            {nieuw ? (
+              <thead><tr><th style={{ width: "21%" }}>Kandidaat</th><th style={{ width: "22%" }}>Stadium</th><th style={{ width: "24%" }}>Status</th><th className="k-breed" style={{ width: "20%" }}>Volgende stap</th><th className="k-breed" style={{ width: "10%" }}>Sinds</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
+            ) : (
+              <thead><tr><th style={{ width: "19%" }}>Kandidaat</th><th style={{ width: "21%" }}>Status</th><th className="k-breed" style={{ width: "15%" }}>Volgende stap</th><th className="k-breed" style={{ width: "15%" }}>Match</th><th className="k-breed" style={{ width: "9%" }}>Sinds</th><th className="k-breed" style={{ width: "15%" }}>Planner</th><th aria-label="Openen" style={{ width: 28 }} /></tr></thead>
+            )}
             <tbody>{GROEP_VOLGORDE.map((g) => {
               const rijen = lijst.filter((r) => r.groep === g);
               if (!rijen.length) return null;
               return (
                 <Fragment key={g}>
-                  <tr className="k-groepkop"><td colSpan={7}><div><span className="k-punt" style={{ background: GR[g].kleur }} /><b>{GR[g].titel}</b><span className="sv-grijs">{rijen.length}</span><span className="k-hint">{GR[g].hint}</span></div></td></tr>
+                  <tr className="k-groepkop"><td colSpan={nieuw ? 6 : 7}><div><span className="k-punt" style={{ background: GR[g].kleur }} /><b>{GR[g].titel}</b><span className="sv-grijs">{rijen.length}</span><span className="k-hint">{GR[g].hint}</span></div></td></tr>
                   {rijen.map((r) => (
                     <tr key={r.id} className={`klik${g === "lopend" ? " k-stil" : ""}`} tabIndex={0} onClick={() => setOpen(r.id)} onKeyDown={(e) => { if (e.key === "Enter") setOpen(r.id); }}>
                       <td><b className="k-naam">{r.naam}</b><div className="sv-klein k-functie">{r.functie}{r.dubbel && <span className="k-label" title="Er is een ander dossier dat op deze persoon lijkt">Mogelijk dubbel</span>}</div></td>
+                      {nieuw && <td><StadiumKort s={r.stadium} /></td>}
                       <td style={{ whiteSpace: "normal" }}><div className="k-status"><span className="k-punt" style={{ background: PUNT_KLEUR[r.punt!] }} aria-hidden="true" /><div>{r.groepTekst}{r.groepSub && <div className="sv-klein">{r.groepSub}</div>}<div className="k-smal sv-klein">{[r.stap, r.sindsTekst].filter(Boolean).join(", ")}</div></div></div></td>
                       <td className="k-breed k-stap">{r.stap || ""}</td>
-                      <td className="k-breed">{nieuw ? <StadiumKort s={r.stadium} /> : <MatchKort m={r.match} />}</td>
+                      {!nieuw && <td className="k-breed"><MatchKort m={r.match} /></td>}
                       <td className="k-breed sv-grijs">{r.sindsTekst}</td>
-                      <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>
+                      {!nieuw && <td className="k-breed" style={{ color: r.plannerId ? undefined : "#8A8478" }}>{r.planner}</td>}
                       <td style={{ color: "#B3AEA3" }}>›</td>
                     </tr>
                   ))}
@@ -211,7 +214,7 @@ function StadiumKort({ s }: { s?: Stadium }) {
   if (!s) return null;
   return (
     <span className="k-stadium" title={`${s.label}, ${s.kanaal}`}>
-      <span className="k-stappen" role="img" aria-label={`Stap ${s.stap} van 3: ${s.label}`}>{STADIA.map((l, i) => <i key={l} className={i < s.stap ? "aan" : ""} />)}</span>
+      <span className="k-stappen" role="img" aria-label={`Stap ${s.stap} van 3: ${s.label}. ${AANMELD_KLEUR[s.kleur].label}`} title={AANMELD_KLEUR[s.kleur].label}>{STADIA.map((l, i) => <i key={l} className={i < s.stap ? "aan" : ""} style={i < s.stap ? { background: AANMELD_KLEUR[s.kleur].kleur } : undefined} />)}</span>
       <b>{s.label}</b>
       <span className="sv-grijs" style={{ fontSize: 12 }}>{s.kanaal}</span>
     </span>

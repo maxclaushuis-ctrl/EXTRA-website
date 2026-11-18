@@ -1080,8 +1080,8 @@ export default function DashboardMockup() {
               {(sollicitantenV2 ? [
                 // Sollicitanten 3.0 (D1): Medewerkers heet Onboarding, Archief staat eronder.
                 // Job (eenmalige instellingen) en Archief staan onder Systeem (besluit Max 17 nov 2026).
-                // Nieuwe aanmeldingen staat boven Kandidaten (schakelaar NIEUWE_AANMELDINGEN, besluit Max 18 nov 2026).
-                ...(aanmeldingenTab ? [{ icon: AanmeldingenIcoon, label: 'Nieuwe aanmeldingen', tab: 'nieuwe-aanmeldingen', badge: nieuweAanm.aantal }] : []),
+                // Aanmeldingen (voorstap van Kandidaten) staat boven Kandidaten (schakelaar NIEUWE_AANMELDINGEN, besluit Max 18 nov 2026).
+                ...(aanmeldingenTab ? [{ icon: AanmeldingenIcoon, label: 'Aanmeldingen', tab: 'nieuwe-aanmeldingen', badge: nieuweAanm.aantal }] : []),
                 { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
                 { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten2' },
                 { icon: CheckCircle2, label: 'Onboarding', tab: 'onboarding2' },
@@ -1112,7 +1112,7 @@ export default function DashboardMockup() {
                     <span
                       className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold"
                       style={{ backgroundColor: HUISSTIJL.KLEUR.zijActiefVlak, color: HUISSTIJL.KLEUR.zijActiefTekst }}
-                      title="Nieuwe aanmeldingen"
+                      title="Aanmeldingen onderweg"
                       data-testid="badge-nieuwe-aanmeldingen"
                     >
                       {(item as { badge?: number }).badge! > 99 ? '99+' : (item as { badge?: number }).badge}
@@ -1529,10 +1529,9 @@ export default function DashboardMockup() {
         </header>
 
         <div className={(activeTab === 'prospect-campagnes' || activeTab === 'prospect-contacten') ? '' : 'p-3 sm:p-6'}>
-          {activeTab === 'nieuwe-aanmeldingen' && aanmeldingenTab && (
-            <KandidatenV2 key={`n${navKlik}`} fase="nieuw" naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setActiveTab('kandidaten')} />
-          )}
-          {activeTab === 'kandidaten' && kandidatenV2 && !oudeKandidaten ? (
+          {activeTab === 'nieuwe-aanmeldingen' ? (
+            aanmeldingenTab ? <KandidatenV2 key={`n${navKlik}`} fase="nieuw" naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setActiveTab('kandidaten')} /> : null
+          ) : activeTab === 'kandidaten' && kandidatenV2 && !oudeKandidaten ? (
             <KandidatenV2 key={`k${navKlik}`} fase={aanmeldingenTab ? 'kandidaat' : undefined} naarArchief={() => setActiveTab('archief2')} naarWhatsapp={() => setActiveTab('whatsapp')} oudeWeergave={() => setOudeKandidaten(true)} />
           ) : activeTab === 'kandidaten' ? (
             <div>
