@@ -186,4 +186,27 @@ export const GESPREKKEN: Gesprek[] = [
     },
     verwacht: { nietGevraagd: ["sterren"], velden: { ervaringNiveau: /ervaren/ }, reactie: [{ na: /niet in hotels gewerkt/i, nietMoet: /welke hotels|which hotels/i }] },
   },
+  // Test van Max, 18 november 2026: "2 jaar" werd niet als antwoord gezien, de vraag kwam terug en na "Zeg ik net" ging Job door zonder de ervaring.
+  {
+    naam: "Max 18 nov: Hi, dan 2 jaar (bediening en bar)", eerdereFout: true, ctx: nlCtx("horecamedewerker", { voornaam: "Max", functieNaam: { nl: "bediening en bar", en: "waiting and bar" } }), taal: "nl",
+    antwoorden: { ervaring: ["Hi", "2 jaar", "Zeg ik net", "Zeg ik net"] },
+    verwacht: {
+      velden: { ervaring: /2 jaar|twee jaar/i },
+      nooit: [{ veld: "ervaring", bevat: /zeg ik net/i }],
+      reactie: [
+        { na: /^2 jaar$/i, nietMoet: /hoeveel jaar ervaring|ik vraag het even anders|hoe lang ongeveer|al eens in de horeca gewerkt/i },
+        { na: /^Hi$/, nietMoet: /bespreken we bij de kennismaking/i },
+      ],
+    },
+  },
+  {
+    naam: "Kort antwoord op de ervaringsvraag: 2 jaar", eerdereFout: true, ctx: nlCtx("horecamedewerker", { functieNaam: { nl: "bediening en bar", en: "waiting and bar" } }), taal: "nl",
+    antwoorden: { ervaring: ["2 jaar", "Zeg ik net"] },
+    verwacht: { velden: { ervaring: /2 jaar|twee jaar/i }, reactie: [{ na: /^2 jaar$/i, nietMoet: /hoeveel jaar ervaring|ik vraag het even anders/i }] },
+  },
+  {
+    naam: "Kort antwoord in het Engels: 2 years", ctx: nlCtx("horecamedewerker", { functieNaam: { nl: "bediening en bar", en: "waiting and bar" } }), taal: "en",
+    antwoorden: { ervaring: ["2 years", "I just told you"] },
+    verwacht: { velden: { ervaring: /2 years|two years/i }, nooit: [{ veld: "ervaring", bevat: /just told/i }] },
+  },
 ];
