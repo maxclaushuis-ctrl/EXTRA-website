@@ -14,6 +14,8 @@ let gefaald = 0;
 function test(naam: string, ok: boolean, uitleg = "") {
   if (ok) { geslaagd++; console.log(`✓ ${naam}`); } else { gefaald++; console.log(`✗ ${naam}${uitleg ? ` (${uitleg})` : ""}`); }
 }
+// Deze test is voor Job 4; Job 5 (het model voert het gesprek) heeft een eigen test (jobGesprek.test.ts).
+process.env.JOB_GESPREK_AI = "0";
 const NU = new Date("2026-11-11T10:00:00Z");
 const nl = teksten("nl");
 const hk: JobContext = { voornaam: "Noor", functie: "housekeeping", label: "hotels", nationalityZone: "NL", hasCv: false, stopV3: true };

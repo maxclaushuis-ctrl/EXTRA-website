@@ -41,6 +41,7 @@ import { geenDubbelBericht, zonderHerhaling } from "@shared/jobHerhaling";
 import { Bundelaar, type Deel } from "@shared/jobBundel";
 import { landcodes, starttaal } from "@shared/jobTaal";
 import { beurtAan, echteAi, verwerkBeurt } from "./jobBeurt";
+import { gesprekAan, gesprekModel } from "@shared/jobGesprek";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
@@ -712,10 +713,10 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
     r = vervolgResultaat(s, vervolg, nu);
   } else if (planKeuze === "geen" || planKeuze === "bezet") {
     r = momentAntwoord(s, planKeuze, nu, planKeuze === "geen" && !!(await actieveAfspraak(g.candidateId)));
-  } else if (beurtAan() && tekst && !invoer.cvOntvangen) {
+  } else if ((beurtAan() || gesprekAan(process.env)) && tekst && !invoer.cvOntvangen) {
     // Job 4: één beurt die het hele bericht begrijpt; de vaste regels bewaken wat er mag (jobBeurt.ts).
     const gesprek = await gesprekVoorAi(g.id, tekst, 24);
-    const uit = await verwerkBeurt({ state: s, ctx, tekst, laatsteVraag: gesprek.laatsteVraag, geschiedenis: gesprek.geschiedenis, nu, ai: echteAi() });
+    const uit = await verwerkBeurt({ state: s, ctx, tekst, laatsteVraag: gesprek.laatsteVraag, geschiedenis: gesprek.geschiedenis, nu, ai: gesprekAan(process.env) ? echteAi(gesprekModel(process.env)) : echteAi() });
     r = uit.r;
     console.log(`[Job] beurt gesprek ${g.id}: ${uit.bron}${uit.beurt ? ` ${uit.beurt.soorten.join("+")} velden=${Object.keys(uit.beurt.velden).join(",") || "-"}` : ""}${uit.gebruikt ? ` reactie=${uit.gebruikt.reactie} vraag=${uit.gebruikt.vraag} kennis=${uit.gebruikt.kennis ?? "-"}` : ""}${uit.ai ? ` ${uit.ai.model} ${uit.ai.ms}ms` : ""}`);
   } else {

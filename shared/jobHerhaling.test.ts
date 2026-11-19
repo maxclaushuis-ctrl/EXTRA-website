@@ -9,6 +9,9 @@
  * keer stellen of blijven hangen.
  */
 import { verwerkBeurt, type AiAanroep } from "../server/job/jobBeurt";
+
+// Deze test is voor Job 4; Job 5 (het model voert het gesprek) heeft een eigen test (server/job/__tests__/jobGesprek.test.ts).
+process.env.JOB_GESPREK_AI = "0";
 import { start, verwerk, plannerRedenen, type JobContext, type JobState, type Lezing, type Onderwerp } from "./jobRegels";
 import { ontkenning, weetNiet, herkansing, zonderHerhaling, zelfdeVraag, geenDubbelBericht, normaal } from "./jobHerhaling";
 import { teksten, vraag } from "./jobRegels";

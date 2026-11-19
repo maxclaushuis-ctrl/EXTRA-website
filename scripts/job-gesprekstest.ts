@@ -9,6 +9,7 @@
  *   npm run job:gesprekstest -- gpt-4o-mini,gpt-4.1-mini          (modellen vergelijken)
  *   JOB_TEST_RECHTER=0 npm run job:gesprekstest                  (zonder rechter)
  *   JOB_TEST_FILTER=kok npm run job:gesprekstest                 (alleen gesprekken met "kok" in de naam)
+ *   JOB_GESPREK_AI=0 npm run job:gesprekstest                    (Job 4 in plaats van Job 5, om te vergelijken)
  *
  * Er wordt niets opgeslagen en niets verstuurd: geen database, geen WhatsApp, geen mail.
  * Het volledige verslag komt in job-gesprekstest.txt; op het scherm staat de samenvatting.
