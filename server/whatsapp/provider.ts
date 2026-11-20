@@ -172,6 +172,16 @@ export async function sendButtons(to: string, body: string, knoppen: string[]): 
   });
 }
 
+/** Stuur een bericht met één linkknop (zoals "Zet in agenda") via de actieve provider (zelfde Cloud API-vorm bij beide). */
+export async function sendCtaUrl(to: string, body: string, knop: string, url: string): Promise<ProviderSendResult> {
+  if (activeProvider() === 'meta') {
+    return fromMetaResult(await metaClient.sendCtaUrlMessage(to, body, knop, url));
+  }
+  const p: any = metaClient.ctaUrlPayload(to, body, knop, url);
+  delete p.recipient_type;
+  return d360PostMessages(p);
+}
+
 /** Stuur een keuzelijst via de actieve provider (zelfde Cloud API-vorm bij beide). */
 export async function sendList(to: string, body: string, knop: string, secties: { titel: string; rijen: { id: string; titel: string; beschrijving?: string }[] }[]): Promise<ProviderSendResult> {
   if (activeProvider() === 'meta') {

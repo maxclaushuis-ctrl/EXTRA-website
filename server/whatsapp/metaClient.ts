@@ -168,6 +168,27 @@ export async function sendButtonsMessage(to: string, body: string, knoppen: stri
 }
 
 /**
+ * Een bericht met één knop die een link opent (interactive cta_url), zodat de link zelf niet in de
+ * tekst staat. Meta: tekst hooguit 1024 tekens, knoptekst hooguit 20.
+ */
+export function ctaUrlPayload(to: string, body: string, knop: string, url: string) {
+  return {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'interactive',
+    interactive: {
+      type: 'cta_url',
+      body: { text: body.slice(0, 1024) },
+      action: { name: 'cta_url', parameters: { display_text: knop.slice(0, 20), url } },
+    },
+  };
+}
+export async function sendCtaUrlMessage(to: string, body: string, knop: string, url: string): Promise<MetaSendResult> {
+  return postMessages(ctaUrlPayload(to, body, knop, url));
+}
+
+/**
  * Stuur een keuzelijst (binnen het 24-uurs window). Meta: hooguit 10 regels in totaal,
  * regeltitel hooguit 24 tekens, knoptekst hooguit 20. Het antwoord komt binnen als
  * interactive.list_reply met de titel van de regel.

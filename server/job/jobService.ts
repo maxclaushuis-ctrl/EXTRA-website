@@ -26,7 +26,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
-import { planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
+import { agendaKnopAan, bevestigingWhatsapp, planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
   ervaringWerk, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herinneringSchema, binnenVerstuurvenster, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type Onderwerp, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
@@ -286,6 +286,11 @@ async function isTestkandidaat(candidateId: number): Promise<boolean> {
 async function stuurJobBericht(candidateId: number, telefoon: string, b: Uitgaand, token: string, taal: JobTaal): Promise<boolean> {
   // Plannen gebeurt in WhatsApp zelf: een keuzelijst met vrije momenten. Lukt dat niet
   // (geen vrije momenten of de lijst komt niet aan), dan de tekst met de planlink.
+  // Een linkknop ("Zet in agenda"): lukt dat niet, dan de link gewoon in de tekst.
+  if (b.link) {
+    if (await verstuurWhatsappLink(candidateId, telefoon, b.tekst, b.link.tekst, b.link.url)) return true;
+    return verstuurWhatsappTekst(candidateId, telefoon, `${b.tekst}\n\n${b.link.tekst}: ${b.link.url}`);
+  }
   // Een eigen keuzelijst (nieuwe momenten, of "Wat past je beter?"): lukt versturen niet, dan valt het terug op tekst.
   if (b.lijst?.length && await verstuurWhatsappLijst(candidateId, telefoon, b.tekst, b.planning ? teksten(taal).momentKnop : VOORKEUR_KNOP[taal], b.lijst)) return true;
   if (b.planning && !b.lijst) {
@@ -325,6 +330,30 @@ async function verstuurWhatsappTekst(candidateId: number, telefoon: string, teks
     return r.ok;
   } catch (e: any) {
     console.warn("[Job] WhatsApp versturen mislukt:", e?.message || e);
+    return false;
+  }
+}
+
+async function verstuurWhatsappLink(candidateId: number, telefoon: string, tekst: string, knop: string, url: string): Promise<boolean> {
+  try {
+    telefoon = await inboxNummer(telefoon);
+    const waProvider = await import("../whatsapp/provider");
+    const waStorage = await import("../whatsapp/storage");
+    if (!waProvider.isSendConfigured()) return false;
+    if (await isTestkandidaat(candidateId)) { console.log(`[Job] kandidaat ${candidateId} is fictief (testdata), geen WhatsApp`); return false; }
+    const match = await waStorage.resolveAndUpsertConversation({ phoneNumber: telefoon, inbound: false, bodyPreview: tekst, at: new Date() });
+    const dbId = await waStorage.insertOutboundQueued({
+      direction: "outbound", fromNumber: "extra", toNumber: telefoon, messageType: "interactive",
+      body: `${tekst}\n\n[${knop}]`,
+      candidateId: match.candidateId ?? candidateId, prospectContactId: match.prospectContactId, matchCategory: match.category,
+      sentByUserId: null, rawPayload: { type: "interactive", cta: { knop, url }, text: { body: tekst }, to: telefoon, job: true },
+    } as any);
+    const r = await waProvider.sendCtaUrl(telefoon, tekst, knop, url);
+    await waStorage.updateOutboundResult(dbId, r.ok ? { waMessageId: r.waMessageId ?? null, status: "sent" } : { status: "failed", errorCode: r.errorCode ?? null, errorMessage: r.errorMessage ?? null });
+    if (!r.ok) console.warn(`[Job] linkknop naar kandidaat ${candidateId} mislukt: ${r.errorMessage}`);
+    return r.ok;
+  } catch (e: any) {
+    console.warn("[Job] linkknop versturen mislukt:", e?.message || e);
     return false;
   }
 }
@@ -975,9 +1004,7 @@ export async function boek(g: JobGesprek, m: { datum: string; tijd: string; inte
   const tekst = teksten(s.taal).gepland(dag, vrij.tijd, vrij.interviewer);
   const agendaLink = `${basisUrl()}/api/job/${encodeURIComponent(g.token)}/agenda.ics`;
   // In WhatsApp: de bevestiging met de agendalink en een knop om te verzetten.
-  const bevestiging: Uitgaand = g.kanaal === "whatsapp"
-    ? { tekst: `${tekst}\n\n${teksten(s.taal).agendaWa(agendaLink)}`, keuzes: [teksten(s.taal).verzettenKnop] }
-    : { tekst };
+  const bevestiging: Uitgaand = g.kanaal === "whatsapp" ? bevestigingWhatsapp(tekst, agendaLink, s.taal, agendaKnopAan(process.env)) : { tekst };
   await bewaarEnVerstuur(g, s, [bevestiging], nu);
 
   const c = await kandidaat(g.candidateId);

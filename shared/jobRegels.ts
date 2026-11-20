@@ -168,6 +168,8 @@ export interface Uitgaand {
   cvUpload?: boolean;
   /** Web: toon de momentenkiezer. */
   planning?: boolean;
+  /** WhatsApp: een knop die een link opent (zoals "Zet in agenda"), zodat de link niet in de tekst staat. */
+  link?: { tekst: string; url: string };
   /** WhatsApp: een eigen keuzelijst (bijvoorbeeld nieuwe momenten of "Wat past je beter?") in plaats van alle vrije momenten. */
   lijst?: LijstSectie[];
   /** Korte reactie van Job; wordt samengevoegd met het bericht erna (zie verwerk). */
@@ -334,6 +336,8 @@ const T = {
     geenMomentAfspraakBlijft: "Geen probleem, je huidige afspraak blijft staan. Een collega van EXTRA neemt contact met je op om samen een ander moment te zoeken.",
     agendaWa: (link: string) => `Zet het in je agenda: ${link}`,
     verzettenKnop: "Verzetten",
+    agendaKnop: "Zet in agenda",
+    verzettenTyp: "Lukt het toch niet? Typ VERZETTEN.",
     wachtPlanner: "Een collega van EXTRA kijkt naar je aanmelding en neemt contact met je op. Wil je iets doorgeven? Typ het gerust, dan leest een collega mee.",
     gestopt: "Je krijgt geen berichten meer van ons over deze aanmelding. Wil je later toch verder, stuur dan gerust een bericht.",
     welkomTerug: "Fijn dat je er weer bent. Wil je verder met je aanmelding?",
@@ -417,6 +421,8 @@ const T = {
     geenMomentAfspraakBlijft: "No problem, your current appointment stays as it is. A colleague from EXTRA will contact you to find another moment together.",
     agendaWa: (link: string) => `Add it to your calendar: ${link}`,
     verzettenKnop: "Reschedule",
+    agendaKnop: "Add to calendar",
+    verzettenTyp: "Can't make it after all? Type RESCHEDULE.",
     wachtPlanner: "A colleague from EXTRA is looking at your application and will get in touch. Anything to add? Just type it and a colleague will read along.",
     gestopt: "You won't get any more messages from us about this application. Want to continue later after all? Just send a message.",
     welkomTerug: "Good to have you back. Do you want to continue with your application?",
@@ -564,6 +570,24 @@ export function herkenCommando(tekst: string | null | undefined, onderwerp: Onde
   if (["ik kom", "i'll be there", "ill be there", "ik kom!", "yes i'll be there"].includes(s)) return "ikkom";
   if (["verder", "continue", "ga verder", "doorgaan", "go on"].includes(s)) return "verder";
   return null;
+}
+
+/**
+ * Agendaknop (JOB_WA_AGENDAKNOP, besluit Max 20 november 2026): de bevestiging in WhatsApp krijgt een
+ * knop "Zet in agenda" in plaats van de lange link, en de knop Verzetten vervalt (typen kan nog).
+ * In de testomgeving vanzelf aan, uit met =0; elders alleen met =1.
+ */
+export function agendaKnopAan(env: { TESTOMGEVING?: string; JOB_WA_AGENDAKNOP?: string }): boolean {
+  const w = env.JOB_WA_AGENDAKNOP;
+  return w === "1" || (env.TESTOMGEVING === "1" && w !== "0");
+}
+
+/** De bevestiging van een afspraak in WhatsApp: met de agendaknop, of zoals voorheen met de link en de knop Verzetten. */
+export function bevestigingWhatsapp(tekst: string, agendaLink: string, taal: JobTaal, knop: boolean): Uitgaand {
+  const t = T[taal];
+  return knop
+    ? { tekst: `${tekst}\n\n${t.verzettenTyp}`, link: { tekst: t.agendaKnop, url: agendaLink } }
+    : { tekst: `${tekst}\n\n${t.agendaWa(agendaLink)}`, keuzes: [t.verzettenKnop] };
 }
 
 // ─── Het gesprek ─────────────────────────────────────────────────────────────
