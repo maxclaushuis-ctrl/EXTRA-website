@@ -284,10 +284,20 @@ export default function Home() {
   );
 }
 
+/** Kleinere versie voor de branchekaarten (getoond op 570 px breed). Zie ook client/public/prerender/index.html. */
+const TAK_KLEIN: Record<string, [klein: string, breed: number]> = {
+  "/d3/h-barista.webp": ["/d3/h-barista-600.webp", 1200],
+  "/d3/ev-hero-m.webp": ["/d3/ev-hero-m-600.webp", 900],
+};
+function takSrcset(foto: string): { srcSet?: string; sizes?: string } {
+  const k = TAK_KLEIN[foto];
+  return k ? { srcSet: `${k[0]} 600w, ${foto} ${k[1]}w`, sizes: "(max-width: 760px) 90vw, 570px" } : {};
+}
+
 function Tak({ kleur, foto, pos, label, kop, tekst, k1, k2 }: { kleur: string; foto: string; pos: string; label: [string, string]; kop: string; tekst: string; k1: [string, string]; k2: [string, string] }) {
   return (
     <article className="tak" style={v({ "--kleur": kleur })}>
-      <img src={foto} alt="" style={{ objectPosition: pos }} loading="lazy" />
+      <img src={foto} {...takSrcset(foto)} alt="" style={{ objectPosition: pos }} loading="lazy" />
       <span className="taklabel" aria-hidden="true"><b>{label[0]}</b><small>{label[1]}</small></span>
       <div className="takinhoud">
         <h3>{kop}</h3>

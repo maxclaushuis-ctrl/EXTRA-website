@@ -44,6 +44,9 @@
          eerste render in de systeemletter — per omgeving verschillend lang.
          Poppins blijft wél asynchroon: die wordt alleen op de publieke
          marketingpagina's gebruikt voor koppen, nergens in het dashboard. -->
+    <!-- Lettertypen van design 3.0 meteen ophalen, niet pas nadat de CSS binnen is (PageSpeed: kritiek pad). -->
+    <link rel="preload" as="font" type="font/woff2" href="/d3/plus-jakarta-sans-latin-wght-normal.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/d3/fraunces-italic.woff2" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" />
