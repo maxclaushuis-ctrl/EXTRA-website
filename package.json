@@ -33,6 +33,7 @@
     "pitchdecks:test": "tsx shared/pitchdecks.test.ts",
     "gsc:test": "tsx shared/gsc.test.ts",
     "serverhtml:test": "tsx shared/serverHtml.test.ts",
+    "cache:test": "tsx server/cacheHeaders.test.ts",
     "www:test": "tsx server/wwwRedirect.test.ts",
     "verwant:test": "tsx shared/verwanteLinks.test.ts",
     "taal:test": "tsx shared/taal.test.ts",

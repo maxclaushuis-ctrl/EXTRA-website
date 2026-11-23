@@ -6,6 +6,7 @@ import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { meldAan } from "./indexnow";
 import { setupVite, serveStatic, log } from "./vite";
+import { cacheVoor } from "./cacheHeaders";
 import { storage } from "./storage";
 import { pool } from "./db";
 import { sendCvReminderEmail } from "./mail";
@@ -79,14 +80,11 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Cache-control headers for immutable hashed assets (Vite build output)
+// Cache-Control voor bestanden (zie server/cacheHeaders.ts). express.static zet
+// zijn eigen max-age=0 alleen als er nog geen Cache-Control staat.
 app.use((req, res, next) => {
-  const url = req.path;
-  if (/\/assets\/.*\.(js|css|webp|png|jpg|jpeg|svg|woff2?|ttf|ico)(\?.*)?$/.test(url)) {
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-  } else if (/\.(webp|png|jpg|jpeg|svg|gif)$/.test(url)) {
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-  }
+  const cache = cacheVoor(req.path);
+  if (cache) res.setHeader('Cache-Control', cache);
   next();
 });
 
