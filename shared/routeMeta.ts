@@ -61,7 +61,7 @@ export const ROUTE_META: RouteMeta[] = [
   // ── KERNPAGINA'S (NL) ──────────────────────────────────────────────
   {
     path: "/",
-    title: "Uitzendbureau Amsterdam: horeca, events en logistiek | EXTRA",
+    title: "Horeca uitzendbureau Amsterdam, events en logistiek | EXTRA",
     ogTitle: "EXTRA | Het uitzendbureau dat werkt",
     description:
       "Personeel voor hotels, horeca, events en logistiek in Amsterdam en omgeving. Iedereen in loondienst, NEN 4400-1 gecertificeerd en dagbetaling mogelijk.",
