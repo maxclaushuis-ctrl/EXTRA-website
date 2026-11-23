@@ -306,7 +306,7 @@ function Voet({ taal }: { taal: Taal }) {
         ))}
       </div>
       <div className="onder">
-        <span>© {new Date().getFullYear()} EXTRA Uitzendbureau B.V. · {t.kvk} · Amsterdam</span>
+        <span>© {new Date().getFullYear()} EXTRA B.V. · {t.kvk} · Amsterdam</span>
         <span>
           {t.juridisch.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
         </span>

@@ -1947,7 +1947,7 @@ export default function LandingPage() {
             {/* Bottom bar */}
             <div className="border-t pt-7 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
               <p className="text-xs text-purple-300/35 text-center sm:text-left">
-                © {new Date().getFullYear()} EXTRA Uitzendbureau B.V. · KvK 91860903 · Amsterdam
+                © {new Date().getFullYear()} EXTRA B.V. · KvK 91860903 · Amsterdam
               </p>
               <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-purple-300/40">
                 <a href="/privacybeleid" className="hover:text-white transition-colors">Privacybeleid</a>

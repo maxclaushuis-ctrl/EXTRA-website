@@ -314,7 +314,7 @@ export default function PublicFooter() {
             style={{ borderColor: "rgba(255,255,255,0.07)" }}
           >
             <p className="text-xs text-purple-300/35 text-center sm:text-left">
-              © {new Date().getFullYear()} EXTRA Uitzendbureau B.V. · KvK 91860903 · Amsterdam
+              © {new Date().getFullYear()} EXTRA B.V. · KvK 91860903 · Amsterdam
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-purple-300/40">
               {/* De beleidspagina's bestaan alleen in het Nederlands — het zijn
