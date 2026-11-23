@@ -235,7 +235,7 @@ function PageLoader() {
     <div className="min-h-screen bg-[#37352C] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 rounded-full border-4 border-[#F8F7F4]/20 border-t-[#F8F7F4] animate-spin" />
-        <span className="text-[#F8F7F4]/60 text-sm font-medium">{engels ? "Loading..." : "Even laden..."}</span>
+        <span className="text-[#F8F7F4]/60 text-sm font-medium" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>{engels ? "Loading..." : "Even laden..."}</span>
       </div>
     </div>
   );
