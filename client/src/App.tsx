@@ -3,7 +3,6 @@ import { queryClient } from "@/lib/queryClient";
 import { useState, useEffect, lazy, Suspense, Component, ReactNode } from "react";
 import { ROUTE_META_BY_PATH, SITE_ORIGIN } from "@shared/routeMeta";
 import { isEngelsPad } from "@shared/taal";
-import { serverHtmlVoorDezePagina } from "@/lib/serverHtml";
 
 import { maakFragmentRoute } from "@/design3/fragmentRoute";
 const Home = lazy(() => import("@/pages/d3/Home"));
@@ -227,11 +226,6 @@ const PUBLIC_PATHS = [
 ];
 
 function PageLoader() {
-  // Eerste weergave van een pagina in design 3.0: laat de inhoud van de server
-  // staan tot de pagina zelf geladen is, in plaats van een laadscherm ertussen
-  // (zie client/src/lib/serverHtml.ts).
-  const server = serverHtmlVoorDezePagina();
-  if (server) return <div style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: server }} />;
   // Dit is het allereerste wat een bezoeker ziet, op élke pagina — dus ook op
   // de Engelse. "Even laden..." op /en/hotel-staffing-amsterdam is precies het
   // verkeerde welkom. window.location in plaats van useLocation: de loader
