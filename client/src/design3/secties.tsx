@@ -71,7 +71,7 @@ function SectieView({ s, ctx }: { s: Sectie; ctx: Ctx }) {
     case "hoe": return <Hoe s={s} />;
     case "data": return <Data s={s} />;
     case "portaal": return <Portaal s={s} />;
-    case "loon": return <Loon s={s} />;
+    case "loon": return <Loon s={s} sector={ctx.sector} />;
     case "vorm": return <Vorm />;
     case "faq": return <Faq s={s} />;
     case "slot": return <Slot s={s} ctx={ctx} />;
@@ -454,17 +454,18 @@ export function BeloningenBand() {
   return <div className="loon-band" aria-label="Beloningen"><div className="loon-rij">{set(false)}{set(true)}</div></div>;
 }
 
-export function TelefoonExtraatje() {
+/** Schermafbeelding van EXTRAATJE: de logistiekversie op logistiekpagina's, anders die voor de horeca. */
+export function TelefoonExtraatje({ sector }: { sector?: Sector } = {}) {
   return (
     <div className="loon-podium">
       <span className="lp-badge lb1" aria-hidden="true"><i>&#9733;</i><span><small>Beloning</small>Pathé Bon · 2.500 ptn</span></span>
       <span className="lp-badge lb2" aria-hidden="true"><i>3</i><span><small>Op tijd-reeks</small>diensten op rij</span></span>
-      <div className="tel"><div className="tel-scherm"><img src="/d3/app-extraatje.webp" alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
+      <div className="tel"><div className="tel-scherm"><img src={sector === "logistiek" ? "/d3/app-extraatje-logistiek.webp" : "/d3/app-extraatje-2.webp"} alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
     </div>
   );
 }
 
-function Loon({ s }: { s: S<"loon"> }) {
+function Loon({ s, sector }: { s: S<"loon">; sector?: Sector }) {
   const [a, b, c] = s.h2;
   return (
     <section className="vlak loon hloon">
@@ -476,7 +477,7 @@ function Loon({ s }: { s: S<"loon"> }) {
           <ul className="hl-voordelen">{s.voordelen.map((v) => <li key={v}>{v}</li>)}</ul>
           <a className="knop vol" href={s.knop?.href ?? "/extraatje"} style={{ marginTop: "34px" }}>{s.knop?.tekst ?? "Lees meer over EXTRAATje"} <Pijl /></a>
         </div>
-        <TelefoonExtraatje />
+        <TelefoonExtraatje sector={sector} />
       </div>
       <BeloningenBand />
     </section>

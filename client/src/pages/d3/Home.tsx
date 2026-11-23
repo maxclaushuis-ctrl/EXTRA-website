@@ -166,7 +166,7 @@ export default function Home() {
             <div className="loon-podium">
               <span className="lp-badge lb1" aria-hidden="true"><i>&#9733;</i><span><small>Beloning</small>Pathé Bon · 2.500 ptn</span></span>
               <span className="lp-badge lb2" aria-hidden="true"><i>3</i><span><small>Op tijd-reeks</small>diensten op rij</span></span>
-              <div className="tel"><div className="tel-scherm"><img src="/d3/app-extraatje.webp" alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
+              <div className="tel"><div className="tel-scherm"><img src="/d3/app-extraatje-2.webp" alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
             </div>
           </div>
           <BeloningenBand />
