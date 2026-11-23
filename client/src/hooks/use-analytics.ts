@@ -11,6 +11,8 @@ interface TrackEvent {
   properties?: Record<string, any>;
 }
 
+let eerstePaginaGeteld = false;
+
 export function useAnalytics() {
   // Track page view
   const trackPageView = useCallback((data: PageViewEvent) => {
@@ -18,6 +20,9 @@ export function useAnalytics() {
     console.log("Page View:", data);
     
     // Example implementation with Google Analytics (if it was added to the page)
+    // De eerste paginaweergave stuurt Tag Manager al (configuratietag op All Pages).
+    // Hier alleen de volgende navigaties binnen de app, anders telt GA4 die eerste dubbel.
+    if (!eerstePaginaGeteld) { eerstePaginaGeteld = true; return; }
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('config', 'G-097EFEQ8YN', {
         page_path: data.path,
