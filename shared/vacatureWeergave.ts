@@ -56,11 +56,14 @@ export function isBranche(w: unknown): w is VacBranche {
  * Korte titel voor de lijst en de kop. De titels in het CMS zijn lange
  * SEO-titels ("Housekeeping medewerker Amsterdam – Grand Hotel Amrâth gezocht
  * (Fulltime)"). Op de pagina staat de functie, met de opdrachtgever eronder.
- * Regel: het deel vóór het eerste streepje, zonder de plaatsnaam aan het eind
- * en zonder "(Fulltime)" of "(Parttime)". Valt er niets over, dan de hele titel.
+ * Regel: het deel vóór het eerste streepje of de eerste komma, zonder de
+ * plaatsnaam aan het eind, zonder "(Fulltime)" of "(Parttime)" en zonder de naam
+ * van de opdrachtgever (die staat er op de pagina al achter: "bij Dailycool").
+ * Valt er niets over, dan de hele titel. De komma telt mee omdat er op de site
+ * geen streepjes als leesteken horen; titels gebruiken daarvoor een komma.
  */
-export function korteTitel(title: string, location?: string | null): string {
-  let t = (title || "").split(/\s+[–—-]\s+/)[0].replace(/\s*\((fulltime|parttime|bijbaan|oproep)\)\s*$/i, "").trim();
+export function korteTitel(title: string, location?: string | null, client?: string | null): string {
+  let t = (title || "").split(/\s+[–—-]\s+|,\s+/)[0].replace(/\s*\((fulltime|parttime|bijbaan|oproep)\)\s*$/i, "").trim();
   const plaatsen = (location || "")
     .split(/[()/,]/)
     .map((p) => p.trim())
@@ -68,6 +71,12 @@ export function korteTitel(title: string, location?: string | null): string {
   for (const p of plaatsen) {
     const re = new RegExp(`\\s+${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
     if (re.test(t)) { t = t.replace(re, "").trim(); break; }
+  }
+  const naam = (client || "").trim();
+  if (naam) {
+    const re = new RegExp(`(^|\\s)${naam.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=\\s|$)`, "i");
+    const zonder = t.replace(re, " ").replace(/\s+/g, " ").trim();
+    if (zonder) t = zonder;
   }
   return t || (title || "").trim();
 }

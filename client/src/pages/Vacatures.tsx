@@ -253,7 +253,7 @@ export function naarRij(p: any): VacatureRij {
   return {
     slug: p.slug,
     title: p.title,
-    kort: korteTitel(p.title, p.location),
+    kort: korteTitel(p.title, p.location, p.client),
     client: p.client || null,
     plaats: plaats(p.location) || p.location || "",
     location: p.location || "",

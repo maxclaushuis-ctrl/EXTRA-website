@@ -38,6 +38,12 @@ is("plaats met toevoeging", korteTitel("Housekeeping medewerker Scheveningen –
 is("zonder streepje", korteTitel("Ontbijtchef", "Amsterdam"), "Ontbijtchef");
 is("dienstverband tussen haakjes weg", korteTitel("Kok (Fulltime)", "Utrecht"), "Kok");
 is("lege titel blijft leeg", korteTitel("", "Amsterdam"), "");
+is("komma in plaats van streepje", korteTitel("Housekeeping medewerker Amsterdam, Grand Hotel Amrâth gezocht (Fulltime)", "Amsterdam"), "Housekeeping medewerker");
+is("opdrachtgever niet dubbel", korteTitel("Warehousemedewerker dagdienst Dailycool Amsterdam Westpoort", "Amsterdam Westpoort", "Dailycool"), "Warehousemedewerker dagdienst");
+is("opdrachtgever midden in de titel", korteTitel("Warehousemedewerker avonddienst Dailycool Amsterdam Westpoort", "Amsterdam Westpoort", "Dailycool"), "Warehousemedewerker avonddienst");
+is("zonder opdrachtgever ongewijzigd", korteTitel("Parttime medewerker FEBO Nieuwendijk", "Amsterdam", null), "Parttime medewerker FEBO Nieuwendijk");
+is("opdrachtgever niet in de titel", korteTitel("Zelfstandig werkend kok Amsterdam, ervaren kok gezocht (Parttime)", "Amsterdam", "Marriott Amsterdam"), "Zelfstandig werkend kok");
+is("alleen opdrachtgever valt terug op titel", korteTitel("Dailycool", "Amsterdam", "Dailycool"), "Dailycool");
 is("plaats", plaats("Scheveningen (Den Haag)"), "Scheveningen");
 
 console.log("loonLabel");
