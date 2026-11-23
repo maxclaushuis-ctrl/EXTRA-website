@@ -38,7 +38,7 @@ Laatst volledig nagelopen: 25 augustus 2026.
 | `/onze-werkwijze` | I | hoe werkt het / werkwijze | B | Personeel aanvragen | Zie hierboven. Deze URL is korter en generieker; voorkeur om deze te houden. |
 | `/over-extra` | N | over extra uitzendbureau | B | Contact | Merkpagina. E-E-A-T-drager: hier horen oprichtingsjaar en SNA-nummer te komen. |
 | `/ons-team` | N | team extra | B | Contact | Ondersteunt E-E-A-T. Wordt nu nergens vanaf commerciële pagina's gelinkt. |
-| `/contact` | N | contact extra | B | Bellen / formulier | Formulier werkte tot 24-08 niet; gerepareerd in de branch `contactfix`. |
+| `/contact` | N | contact extra | B | Bellen / formulier | Formulier werkte tot 24-08 niet; gerepareerd in de branch `contactfix`. 23-11-2026: "horeca uitzendbureau Amsterdam" uit de title gehaald, want de pagina kreeg 1.472 vertoningen op plek 20 en concurreerde zo met `/`. |
 | `/klantcases-horeca` | C | klantcases horeca / referenties | WG | Personeel aanvragen | Bevat quotes, geen echte cases met resultaat. Grootste bewijskans van de site. |
 | `/nen-4400-1-certificering` | I | nen 4400-1 uitzendbureau | WG | Personeel aanvragen | Sterkste juridische argument tegenover zzp-platforms. Verdient een link vanaf elke sectorpagina. |
 | `/extraatje` | I | extraatje beloningssysteem | B | Aanmelden | Publieke tegenhanger van het interne `/rewards`. Blogs linken hierheen, nooit naar `/rewards`. |
@@ -83,7 +83,7 @@ Laatst volledig nagelopen: 25 augustus 2026.
 
 | URL | Intentie | Keywordcluster (eigenaar) | Doel | CTA | Opmerkingen |
 |---|---|---|---|---|---|
-| `/horeca-vacatures-amsterdam` | T | horeca vacatures amsterdam | WZ | Aanmelden | |
+| `/horeca-vacatures-amsterdam` | T | horeca vacatures amsterdam | WZ | Aanmelden | 23-11-2026: title noemde het eigen zoekwoord niet ("Extra werk in de horeca Amsterdam"); nu "Horeca vacatures Amsterdam". Meetpunt: positie op "horeca vacatures amsterdam" (was 24,8). |
 | `/horeca-werk-amsterdam` | T+L | horeca werk amsterdam | WZ | Aanmelden | |
 | `/horeca-werk` | T | horeca werk | WZ | Aanmelden | Landelijke variant naast de Amsterdamse. Zwak onderscheid. |
 | `/housekeeping-vacatures-amsterdam` | T | housekeeping vacatures | WZ | Aanmelden | |

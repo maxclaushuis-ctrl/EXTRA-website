@@ -320,7 +320,7 @@ export const ROUTE_META: RouteMeta[] = [
   // ── KANDIDATEN (NL) ────────────────────────────────────────────────
   {
     path: "/horeca-vacatures-amsterdam",
-    title: "Extra werk in de horeca Amsterdam | EXTRA",
+    title: "Horeca vacatures Amsterdam | Dagbetaling mogelijk | EXTRA",
     description:
       "Via EXTRA werk je bij hotels, restaurants en events in Amsterdam wanneer het jou uitkomt. Dagbetaling mogelijk, iedereen in loondienst. Schrijf je in.",
     prerender: true,
@@ -430,7 +430,7 @@ export const ROUTE_META: RouteMeta[] = [
   },
   {
     path: "/front-office-vacatures-amsterdam",
-    title: "Front office vacatures Amsterdam | EXTRA",
+    title: "Receptionist en front office vacatures Amsterdam | EXTRA",
     description:
       "Front office vacatures of receptionist werk in Amsterdam? Via EXTRA werk je in tophotels met flexibele diensten en dagbetaling. Solliciteer direct.",
     prerender: true,
@@ -520,7 +520,7 @@ export const ROUTE_META: RouteMeta[] = [
   // ── SEO-LANDINGSPAGINA'S (P10, juli 2026) ──────────────────────────
   {
     path: "/horeca-personeel-inhuren",
-    title: "Horeca personeel inhuren | Snel geregeld | EXTRA",
+    title: "Horeca personeel inhuren in Amsterdam | Vaak binnen 48 uur",
     description:
       "Horeca personeel inhuren in Amsterdam? EXTRA levert gescreende medewerkers in loondienst, vaak binnen 48 uur. Eén tarief, één factuur. Vraag direct aan.",
     prerender: true,
@@ -645,7 +645,7 @@ export const ROUTE_META: RouteMeta[] = [
   // — sinds P14 een echte server-side 301, zelfde reden als hierboven.
   {
     path: "/contact",
-    title: "Contact | EXTRA horeca uitzendbureau Amsterdam",
+    title: "Contact | EXTRA Uitzendbureau, Herengracht Amsterdam",
     description:
       "Neem contact op met EXTRA in Amsterdam: bel, mail of loop binnen op de Herengracht. Voor personeelsaanvragen reageren we binnen één werkdag.",
     prerender: true,
