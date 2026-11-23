@@ -166,7 +166,7 @@ export default function Home() {
             <div className="loon-podium">
               <span className="lp-badge lb1" aria-hidden="true"><i>&#9733;</i><span><small>Beloning</small>Pathé Bon · 2.500 ptn</span></span>
               <span className="lp-badge lb2" aria-hidden="true"><i>3</i><span><small>Op tijd-reeks</small>diensten op rij</span></span>
-              <div className="tel"><div className="tel-scherm"><img src="/d3/app-extraatje-2.webp" alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
+              <div className="tel"><div className="tel-scherm"><img src="/d3/app-extraatje-2.webp" srcSet="/d3/app-extraatje-2-480.webp 480w, /d3/app-extraatje-2.webp 640w" sizes="(max-width: 900px) 270px, 340px" alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
             </div>
           </div>
           <BeloningenBand />
@@ -284,14 +284,21 @@ export default function Home() {
   );
 }
 
-/** Kleinere versie voor de branchekaarten (getoond op 570 px breed). Zie ook client/public/prerender/index.html. */
-const TAK_KLEIN: Record<string, [klein: string, breed: number]> = {
-  "/d3/h-barista.webp": ["/d3/h-barista-600.webp", 1200],
-  "/d3/ev-hero-m.webp": ["/d3/ev-hero-m-600.webp", 900],
+/**
+ * Kleinere versies voor de branchekaarten. Zie ook client/public/prerender/index.html.
+ * De foto vult de kaart (object-fit: cover). Tot 900 px is de kaart 620 px hoog, dus
+ * een staande 3:4-foto wordt minstens 465 px breed getoond, ook op een smal scherm;
+ * daarboven 760 px hoog, dus 570 px. Vandaar deze sizes: zo kiest de browser nooit
+ * een kleinere versie dan hij nodig heeft, en ook geen grotere.
+ */
+const TAK_KLEIN: Record<string, [w: number, pad: string][]> = {
+  "/d3/h-barista.webp": [[600, "/d3/h-barista-600.webp"], [900, "/d3/h-barista-900.webp"], [1200, "/d3/h-barista.webp"]],
+  "/d3/ev-hero-m.webp": [[600, "/d3/ev-hero-m-600.webp"], [900, "/d3/ev-hero-m.webp"]],
 };
+const TAK_SIZES = "(max-width: 489px) 465px, (max-width: 900px) calc(100vw - 24px), 570px";
 function takSrcset(foto: string): { srcSet?: string; sizes?: string } {
   const k = TAK_KLEIN[foto];
-  return k ? { srcSet: `${k[0]} 600w, ${foto} ${k[1]}w`, sizes: "(max-width: 760px) 90vw, 570px" } : {};
+  return k ? { srcSet: k.map(([w, pad]) => `${pad} ${w}w`).join(", "), sizes: TAK_SIZES } : {};
 }
 
 function Tak({ kleur, foto, pos, label, kop, tekst, k1, k2 }: { kleur: string; foto: string; pos: string; label: [string, string]; kop: string; tekst: string; k1: [string, string]; k2: [string, string] }) {

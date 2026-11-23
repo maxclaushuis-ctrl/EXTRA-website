@@ -460,7 +460,7 @@ export function TelefoonExtraatje({ sector }: { sector?: Sector } = {}) {
     <div className="loon-podium">
       <span className="lp-badge lb1" aria-hidden="true"><i>&#9733;</i><span><small>Beloning</small>Pathé Bon · 2.500 ptn</span></span>
       <span className="lp-badge lb2" aria-hidden="true"><i>3</i><span><small>Op tijd-reeks</small>diensten op rij</span></span>
-      <div className="tel"><div className="tel-scherm"><img src={sector === "logistiek" ? "/d3/app-extraatje-logistiek.webp" : "/d3/app-extraatje-2.webp"} alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
+      <div className="tel"><div className="tel-scherm"><img {...telScherm(sector === "logistiek" ? "app-extraatje-logistiek" : "app-extraatje-2")} alt="EXTRAATJE in de EXTRA-app: puntensaldo, status en op tijd-reeks" loading="lazy" /><span className="eiland"></span></div></div>
     </div>
   );
 }
@@ -544,4 +544,13 @@ function Stapel({ s, ctx }: { s: S<"stapel" | "stapel2">; ctx: Ctx }) {
       ))}
     </div>
   );
+}
+
+/**
+ * Schermafbeelding in de telefoon (.tel). Het scherm is op mobiel hooguit 270 px breed
+ * en op desktop hooguit 340 px, dus een 480 px-versie volstaat op de meeste telefoons;
+ * schermen met een hogere pixeldichtheid krijgen nog steeds de 640 px-versie.
+ */
+function telScherm(naam: string): { src: string; srcSet: string; sizes: string } {
+  return { src: `/d3/${naam}.webp`, srcSet: `/d3/${naam}-480.webp 480w, /d3/${naam}.webp 640w`, sizes: "(max-width: 900px) 270px, 340px" };
 }

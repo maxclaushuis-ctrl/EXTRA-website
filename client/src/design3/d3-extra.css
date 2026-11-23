@@ -283,3 +283,9 @@
 /* Team: vijf kaarten naast elkaar (Max, Eveline, Charlotte, Lea, Tommy) */
 @media (min-width:1101px){.d3.css-pagina .tm-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media (min-width:761px) and (max-width:1100px){.d3.css-pagina .tm-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Footerkoppen zijn h3 in plaats van h4, zodat de koppenvolgorde na de h2's van de pagina
+   klopt (toegankelijkheid). Uiterlijk exact gelijk aan de oude h4: de algemene h3-regel
+   (gewicht 800, letter-spacing, line-height .9) wordt hier teruggezet. */
+.d3.d3 .ftr h3{font-size:14px;font-weight:650;color:var(--accent);margin-bottom:18px;letter-spacing:inherit;line-height:inherit}
+.d3.d3 .f3 h3{font-size:13px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:rgba(248,247,244,.5);margin-bottom:28px}

@@ -292,7 +292,7 @@ function Voet({ taal }: { taal: Taal }) {
       </div>
       <div className="f3-rij">
         <div className="f3-contact">
-          <h4>Contact</h4>
+          <h3>Contact</h3>
           <a className="f3-tel" href={TELEFOON_HREF}><Ic n="tel" />{t.tel}</a>
           <a className="f3-mail" href={`mailto:${EMAIL}`}>{EMAIL}</a>
           <p>Herengracht 372<br />1016 CH Amsterdam</p>
@@ -300,7 +300,7 @@ function Voet({ taal }: { taal: Taal }) {
         </div>
         {voet.map((k) => (
           <div key={k.kop}>
-            <h4>{k.kop}</h4>
+            <h3>{k.kop}</h3>
             <ul>{k.links.map((l) => <li key={l.href + l.label}><a href={l.href}>{l.label}</a></li>)}</ul>
           </div>
         ))}
