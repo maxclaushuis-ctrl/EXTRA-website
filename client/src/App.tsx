@@ -467,6 +467,8 @@ function Router() {
 }
 
 function App() {
+  // React draait: het laadvlak uit index.html mag weg, het laadscherm van de app neemt het over.
+  useEffect(() => { document.documentElement.classList.add("app-klaar"); }, []);
   return (
     <ErrorBoundary>
       <AuthProvider>
