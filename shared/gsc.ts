@@ -61,9 +61,19 @@ export function kiesSite(sites: GscSite[] | null | undefined): string | null {
 export const ENGELS_REGEX = "^https?://[^/]+/en(/|\\?|#|$)";
 
 /** Het pad van een volledige URL, zoals in de rest van het dashboard. */
+/**
+ * Het pad van een URL uit Search Console. De domeinproperty bevat ook de
+ * varianten zonder www en via http. Die tonen we met hun adres erbij, anders
+ * staan er twee keer "/" in de lijst zonder dat je ziet waarom.
+ */
 export function padVan(url: string): string {
-  const p = String(url || "").replace(/^https?:\/\/[^/]+/i, "");
-  return p || "/";
+  const s = String(url || "");
+  const m = s.match(/^(https?):\/\/([^/?#]+)(.*)$/i);
+  if (!m) return s || "/";
+  const schema = m[1].toLowerCase();
+  const host = m[2].toLowerCase();
+  const pad = m[3] || "/";
+  return schema === "https" && host === "www.doehetextra.nl" ? pad : `${schema}://${host}${pad}`;
 }
 
 /** Procentuele verandering, of null als er niets te vergelijken valt. */

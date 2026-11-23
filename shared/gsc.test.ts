@@ -41,6 +41,9 @@ test("homepage telt niet", !re.test("https://www.doehetextra.nl/"));
 
 console.log("Opmaak en vergelijken");
 test("pad van url", padVan("https://www.doehetextra.nl/dagbetaling") === "/dagbetaling" && padVan("https://www.doehetextra.nl") === "/");
+test("variant zonder www toont het adres", padVan("https://doehetextra.nl/") === "https://doehetextra.nl/");
+test("variant via http toont het adres", padVan("http://www.doehetextra.nl/dagbetaling") === "http://www.doehetextra.nl/dagbetaling");
+test("hoofdletters in de host tellen niet", padVan("https://WWW.doehetextra.nl/blog") === "/blog");
 test("verschil", Math.round(verschil(112, 100)!) === 12 && verschil(5, 0) === null && verschil(5, null) === null);
 test("positieklassen", positieKlasse(1.2) === "top" && positieKlasse(5.7) === "top" && positieKlasse(6.9) === "pagina1" && positieKlasse(20) === "pagina1" && positieKlasse(24.5) === "ver");
 test("cijfers zonder rij zijn nul", JSON.stringify(cijfers(undefined)) === JSON.stringify({ klikken: 0, vertoningen: 0, ctr: 0, positie: 0 }));
