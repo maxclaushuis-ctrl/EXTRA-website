@@ -32,18 +32,18 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom"],
-          "vendor-ui": [
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-select",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-toast",
-            "@radix-ui/react-tabs",
-          ],
-          "vendor-motion": ["framer-motion"],
-          "vendor-charts": ["recharts"],
-          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+        // Alleen de pakketten zelf in een vaste vendor-chunk, niet hun
+        // afhankelijkheden. Met de lijstvorm trok Rollup gedeelde kleine
+        // pakketten (clsx, zod, radix-basis) mee in vendor-charts, -forms en
+        // -ui, waardoor de homepage die hele chunks laadde (PageSpeed:
+        // "niet-gebruikt JavaScript"). Al het andere deelt Rollup zelf op.
+        manualChunks(id: string) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return "vendor-react";
+          if (/node_modules[\\/](recharts|recharts-scale|react-smooth|victory-vendor|d3-[^\\/]+)[\\/]/.test(id)) return "vendor-charts";
+          if (/node_modules[\\/]framer-motion[\\/]/.test(id)) return "vendor-motion";
+          if (/node_modules[\\/](react-hook-form|@hookform[\\/]resolvers)[\\/]/.test(id)) return "vendor-forms";
+          return undefined;
         },
       },
     },
