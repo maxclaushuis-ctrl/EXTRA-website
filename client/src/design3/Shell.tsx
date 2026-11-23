@@ -233,7 +233,7 @@ function Kop({ werkzoekende, knopHref, telKnop, vast, taal }: { werkzoekende: bo
         </nav>
         <a className="taal" href={anderePagina} lang={t.andereLang} aria-label={t.andereLabel}>{t.andereTaal}</a>
         {telKnop ? (
-          <a className="knop" href="tel:0851305915" aria-label={t.tel}><Ic n="tel" /><span>{t.tel}</span></a>
+          <a className="knop" href="tel:0854012373" aria-label={t.tel}><Ic n="tel" /><span>{t.tel}</span></a>
         ) : werkzoekende ? (
           <a className="knop" href={t.solliciteerHref} aria-label={t.solliciteer}><Ic n="koffer" /><span>{t.solliciteer}</span></a>
         ) : (

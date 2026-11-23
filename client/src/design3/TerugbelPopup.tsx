@@ -26,7 +26,7 @@ const TB = {
   nl: { anders: "Anders", fout: "Vul je bedrijfsnaam, naam en een geldig telefoonnummer in.", mislukt: "Versturen lukte niet.", bel: "Bel ons gerust op", tel: TELEFOON, dank: "/aanvraag-ontvangen",
     sluit: "Sluiten", titel: "Bel mij terug", uitleg: "Laat je gegevens achter. Op werkdagen bellen we je meestal binnen een uur terug.",
     bedrijf: "Bedrijfsnaam", bedrijfPh: "Naam van je bedrijf", naam: "Naam", naamPh: "Voor en achternaam", telefoon: "Telefoon", functie: "Functie", kies: "Kies een functie", bezig: "Even geduld", liever: "Liever zelf bellen?" },
-  en: { anders: "Other", fout: "Please enter your company, name and a valid phone number.", mislukt: "Sending failed.", bel: "Feel free to call us on", tel: "+31 85 130 59 15", dank: "/en/request-received",
+  en: { anders: "Other", fout: "Please enter your company, name and a valid phone number.", mislukt: "Sending failed.", bel: "Feel free to call us on", tel: "+31 85 401 2373", dank: "/en/request-received",
     sluit: "Close", titel: "Call me back", uitleg: "Leave your details. On working days we usually call back within the hour.",
     bedrijf: "Company", bedrijfPh: "Your company name", naam: "Name", naamPh: "First and last name", telefoon: "Phone", functie: "Role", kies: "Choose a role", bezig: "One moment", liever: "Rather call us?" },
 };

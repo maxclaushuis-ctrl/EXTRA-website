@@ -63,7 +63,7 @@ function geldigTijdstip(s: unknown): s is string {
 async function gesprekVoorKandidaat(req: Request, res: Response) {
   const g = await job.gesprekVanToken(String(req.params.token || ""));
   if (!g) {
-    res.status(404).json({ message: "Deze link werkt niet (meer). Bel ons gerust op 085 130 59 15." });
+    res.status(404).json({ message: "Deze link werkt niet (meer). Bel ons gerust op 085 401 2373." });
     return null;
   }
   return g;

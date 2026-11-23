@@ -965,12 +965,12 @@ export default function BrochureEN() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <a 
-                  href="tel:+31851305915"
+                  href="tel:+31854012373"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-semibold rounded-full px-8 py-4 transition-all"
                   style={{ fontFamily: 'Poppins' }}
                 >
                   <Phone className="w-5 h-5" />
-                  +31 85 130 59 15
+                  +31 85 401 2373
                 </a>
                 <a 
                   href="mailto:eveline@doehetextra.nl"

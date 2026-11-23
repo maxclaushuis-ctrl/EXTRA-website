@@ -853,11 +853,11 @@ export default function BHGGroupPage() {
                 </motion.p>
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
                   className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
-                  <a href="tel:0851305915" onClick={(e) => e.stopPropagation()}
+                  <a href="tel:0854012373" onClick={(e) => e.stopPropagation()}
                     className="flex items-center justify-center gap-2.5 bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5 transition-all"
                     style={{ boxShadow: "0 0 30px rgba(168,85,247,0.25), 0 8px 32px rgba(0,0,0,0.2)" }}>
                     <Phone className="w-4 h-4" />
-                    085 130 59 15
+                    085 401 2373
                   </a>
                   <a href="mailto:max@doehetextra.nl" onClick={(e) => e.stopPropagation()}
                     className="flex items-center justify-center gap-2.5 border-2 border-white/25 text-white font-bold px-8 py-4 rounded-full text-base hover:bg-white/10 hover:-translate-y-0.5 transition-all">

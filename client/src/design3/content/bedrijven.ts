@@ -40,8 +40,8 @@ export const hotels: PaginaContent = {
           "tel": false
         },
         {
-          "tekst": "085 130 59 15",
-          "href": "tel:0851305915",
+          "tekst": "085 401 2373",
+          "href": "tel:0854012373",
           "vol": false,
           "tel": true
         }
@@ -617,8 +617,8 @@ export const events: PaginaContent = {
           "tel": false
         },
         {
-          "tekst": "085 130 59 15",
-          "href": "tel:0851305915",
+          "tekst": "085 401 2373",
+          "href": "tel:0854012373",
           "vol": false,
           "tel": true
         }
@@ -1267,8 +1267,8 @@ export const logistiek: PaginaContent = {
           "tel": false
         },
         {
-          "tekst": "085 130 59 15",
-          "href": "tel:0851305915",
+          "tekst": "085 401 2373",
+          "href": "tel:0854012373",
           "vol": false,
           "tel": true
         }

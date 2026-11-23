@@ -564,7 +564,7 @@ export const ROUTE_META: RouteMeta[] = [
     path: "/last-minute-horecapersoneel",
     title: "Last-minute horecapersoneel Amsterdam | 24/7 | EXTRA",
     description:
-      "Uitval, een onverwacht volle zaal of een extra event? EXTRA is 24/7 bereikbaar voor spoed en kijkt direct wie er kan komen. Bel 085 130 59 15.",
+      "Uitval, een onverwacht volle zaal of een extra event? EXTRA is 24/7 bereikbaar voor spoed en kijkt direct wie er kan komen. Bel 085 401 2373.",
     prerender: true,
     priority: "0.85",
     changefreq: "weekly",

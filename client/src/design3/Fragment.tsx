@@ -62,7 +62,7 @@ const FT = {
     kandidaatFout: "Please enter your name and a valid phone number.", aanmelden: "/en/apply",
     contactFout: "Please enter your name, a valid email address and your message.",
     contactKlaar: `<div class="form-klaar" role="status"><b>Thank you, your message has been sent.</b><span>We reply as soon as we can, usually the same working day.</span></div>`,
-    mislukt: "Sending failed.", bel: "Feel free to call us on", tel: "+31 85 130 59 15",
+    mislukt: "Sending failed.", bel: "Feel free to call us on", tel: "+31 85 401 2373",
     terugbelFout: "Please enter your company, name and a valid phone number.", dank: "/en/request-received", notitie: "Callback request (English site) via",
   },
 };

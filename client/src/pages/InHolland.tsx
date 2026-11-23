@@ -631,7 +631,7 @@ export default function InHolland() {
             <ArrowRight className="h-4 w-4" />
           </a>
           <p className="mt-5 text-sm text-purple-200">
-            Vragen? Bel of app 085 130 59 15 — ma t/m vr 9:00–18:00.
+            Vragen? Bel 085 401 2373 of app 085 130 59 15 — ma t/m vr 9:00–18:00.
           </p>
         </div>
       </section>

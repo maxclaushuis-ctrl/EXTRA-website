@@ -9013,7 +9013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(201).json({ success: true, id: rij.id });
     } catch (error) {
       console.error("[Contact] Fout bij verwerken contactbericht:", error);
-      return res.status(500).json({ message: "Er ging iets mis bij het versturen. Bel ons gerust op 085 130 59 15." });
+      return res.status(500).json({ message: "Er ging iets mis bij het versturen. Bel ons gerust op 085 401 2373." });
     }
   });
 

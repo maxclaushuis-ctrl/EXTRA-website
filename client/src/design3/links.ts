@@ -36,7 +36,7 @@ export const MENU: MenuGroep[] = [
       { label: "Logistiek", href: "/logistiek-personeel-inhuren", sub: "Orderpickers, heftruck, inpak", kleur: "pistachio" },
       { label: "Events", href: "/eventpersoneel-inhuren", sub: "Bediening, bar, hosts, catering", kleur: "sky" },
     ],
-    cta: { kop: "Morgen iemand nodig?", knop: { label: "Bel mij terug", href: "/personeelsaanvraag" }, onder: { label: "085 130 59 15", href: "tel:0851305915", tel: true } },
+    cta: { kop: "Morgen iemand nodig?", knop: { label: "Bel mij terug", href: "/personeelsaanvraag" }, onder: { label: "085 401 2373", href: "tel:0854012373", tel: true } },
   },
   {
     label: "Ik zoek extra werk",
@@ -144,7 +144,7 @@ export const MENU_EN: MenuGroep[] = [
       { label: "Logistics", href: "/en/logistics-staff-amsterdam", sub: "Order pickers, forklift, packing", kleur: "pistachio" },
       { label: "Events", href: "/en/event-staff-amsterdam", sub: "Waiting staff, bar, hosts, catering", kleur: "sky" },
     ],
-    cta: { kop: "Need someone tomorrow?", knop: { label: "Call me back", href: "/en/request-staff" }, onder: { label: "+31 85 130 59 15", href: "tel:0851305915", tel: true } },
+    cta: { kop: "Need someone tomorrow?", knop: { label: "Call me back", href: "/en/request-staff" }, onder: { label: "+31 85 401 2373", href: "tel:0854012373", tel: true } },
   },
   {
     label: "I want extra work",
@@ -255,8 +255,8 @@ export const TAALKNOP_NAAR_EN: Record<string, string> = {
   "/aanvraag-ontvangen": "/en/request-received",
 };
 
-export const TELEFOON = "085 130 59 15";
-export const TELEFOON_EN = "+31 85 130 59 15";
-export const TELEFOON_HREF = "tel:0851305915";
+export const TELEFOON = "085 401 2373";
+export const TELEFOON_EN = "+31 85 401 2373";
+export const TELEFOON_HREF = "tel:0854012373";
 export const WHATSAPP_HREF = "https://wa.me/31851305915";
 export const EMAIL = "info@doehetextra.nl";

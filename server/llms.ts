@@ -88,7 +88,7 @@ const GROUPS: { heading: string; paths: string[] }[] = [
 
 const HEADER = `# EXTRA, uitzendbureau Amsterdam voor hotels, events en logistiek
 
-> EXTRA levert flexibel personeel voor hotels, restaurants, events, cateraars en logistiek in Amsterdam. Iedereen werkt in loondienst (geen zzp-constructies) en dagbetaling is mogelijk: salaris staat de ochtend na een shift klaar. Kantoor: Herengracht 372, 1016 CH Amsterdam · +31 85 130 5915 · info@doehetextra.nl
+> EXTRA levert flexibel personeel voor hotels, restaurants, events, cateraars en logistiek in Amsterdam. Iedereen werkt in loondienst (geen zzp-constructies) en dagbetaling is mogelijk: salaris staat de ochtend na een shift klaar. Kantoor: Herengracht 372, 1016 CH Amsterdam · +31 85 401 2373 · info@doehetextra.nl
 `;
 
 function metaFor(p: string) {
