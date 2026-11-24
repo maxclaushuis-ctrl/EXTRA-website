@@ -13,6 +13,7 @@ import { Pijl } from "@/design3/basis";
 import { useLevendeLinks, useReus } from "@/design3/gedrag";
 import { TELEFOON, TELEFOON_HREF } from "@/design3/links";
 import { verwanteItems } from "@shared/verwanteLinks";
+import { GETEKEND, Getekend } from "@/design3/omslagen";
 
 interface Post {
   slug: string;
@@ -51,6 +52,8 @@ const lees = (p: Post) => (p.readTime ? String(p.readTime).replace(/\s*(leestijd
 function Omslag({ p, extra = "" }: { p: Post; extra?: string }) {
   const o = OMSLAG[p.slug];
   const cat = <span className={`cat c-${kleur(p.category)}`}>{p.category}</span>;
+  const g = GETEKEND[p.slug];
+  if (g) return <Getekend g={g} cat={cat} extra={extra} />;
   if (o) {
     return (
       <div className={`img bcover ${o.klasse}${extra}`} role="img" aria-label={o.label}>

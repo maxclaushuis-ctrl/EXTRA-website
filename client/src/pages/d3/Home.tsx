@@ -7,6 +7,7 @@ import Shell from "@/design3/Shell";
 import { Ic, Pijl, Woorden, initialen } from "@/design3/basis";
 import { useCarrousel, useConfetti, useDekking, useReus, useStapelTop } from "@/design3/gedrag";
 import { BeloningenBand, Faq, ReviewScore } from "@/design3/secties";
+import { GETEKEND, Getekend } from "@/design3/omslagen";
 import { useLiveReviews } from "@/hooks/useLiveReviews";
 import { useAnalytics } from "@/hooks/use-analytics";
 
@@ -344,10 +345,13 @@ function Dienst({ naam, sub, kop, punten, knop, open = false }: { naam: string; 
 
 function ArtikelKaart({ a }: { a: Artikel }) {
   const o = OMSLAG[a.slug];
+  const g = GETEKEND[a.slug];
   const catKleur = a.cat === "Housekeeping" ? "c-rose" : "c-sky";
   return (
     <a className="artikel" href={`/blog/${a.slug}`} data-cat={a.cat}>
-      {o ? (
+      {g ? (
+        <Getekend g={g} cat={<span className={`cat ${catKleur}`}>{a.cat}</span>} />
+      ) : o ? (
         <div className={`img bcover ${o.klasse}`} role="img" aria-label={o.label}>
           <span className="bc-letters" aria-hidden="true"></span>
           <span className="bc-woord" aria-hidden="true"><b>{o.woord}</b><span className="serif">{o.sub}</span></span>
