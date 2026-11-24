@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-// @ts-ignore
-import confetti from 'canvas-confetti';
+// canvas-confetti wordt pas geladen als er echt confetti komt (PageSpeed: niet mee in index.js).
 
 interface ConfettiEffectProps {
   trigger: boolean;
@@ -15,7 +14,9 @@ export function ConfettiEffect({
   duration = 3000,
   type = 'default'
 }: ConfettiEffectProps) {
-  const fireConfetti = useCallback(() => {
+  const fireConfetti = useCallback(async () => {
+    // @ts-ignore
+    const { default: confetti } = await import('canvas-confetti');
     // Configuratie op basis van het type mijlpaal
     const config: any = {
       particleCount: 100,

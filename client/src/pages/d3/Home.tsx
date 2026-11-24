@@ -12,10 +12,12 @@ import { useAnalytics } from "@/hooks/use-analytics";
 
 const v = (o: Record<string, string>) => o as CSSProperties;
 
-const LOGOS: [string, number, string][] = [
-  ["/d3/logo-mercure.webp", 40, "Mercure"], ["/d3/Logo_Pulitzer_1773389329669.webp", 43, "Pulitzer"], ["/d3/Logo_FcUtrecht_1771267205959.webp", 66, "FC Utrecht"],
-  ["/d3/Logo_funda_1771267205959.webp", 45, "Funda"], ["/d3/logo-hart.webp", 47, "H'ART Museum"], ["/d3/Logo_hetepeper_1771267205959.webp", 18, "Hete Peper"],
-  ["/d3/Logo_Hilton_1771267205959.webp", 60, "Hilton"], ["/d3/Logo_Marriott_1771267205959.webp", 66, "Marriott"],
+/** [bestand, hoogte in px, naam, breedte in px bij die hoogte]. Breedte en hoogte gaan als attributen mee,
+ *  zodat de browser de ruimte al kent voor het logo binnen is; de CSS (width:auto) bepaalt de weergave. */
+const LOGOS: [string, number, string, number][] = [
+  ["/d3/logo-mercure.webp", 40, "Mercure", 142], ["/d3/Logo_Pulitzer_1773389329669.webp", 43, "Pulitzer", 130], ["/d3/Logo_FcUtrecht_1771267205959.webp", 66, "FC Utrecht", 61],
+  ["/d3/Logo_funda_1771267205959.webp", 45, "Funda", 123], ["/d3/logo-hart.webp", 47, "H'ART Museum", 119], ["/d3/Logo_hetepeper_1771267205959.webp", 18, "Hete Peper", 172],
+  ["/d3/Logo_Hilton_1771267205959.webp", 60, "Hilton", 92], ["/d3/Logo_Marriott_1771267205959.webp", 66, "Marriott", 84],
 ];
 
 const KLANTEN = [
@@ -133,7 +135,7 @@ export default function Home() {
         <div className="takken">
           <Tak kleur="var(--rose)" foto="/d3/h-barista.webp" pos="50% 30%" label={["Hospitality", "experts"]} kop="Hotels" tekst="Van housekeeping tot banqueting, van front office tot F&B."
             k1={["Ik zoek hotelpersoneel", "/hotels"]} k2={["Ik zoek werk in hotels", "/horeca-vacatures-amsterdam"]} />
-          <Tak kleur="var(--pistachio)" foto="/d3/strip-logistiek.webp" pos="50% 25%" label={["Logistic", "professionals"]} kop="Logistiek" tekst="Van orderpicken tot heftruck."
+          <Tak kleur="var(--pistachio)" foto="/d3/strip-logistiek-tak.webp" pos="50% 25%" label={["Logistic", "professionals"]} kop="Logistiek" tekst="Van orderpicken tot heftruck."
             k1={["Ik zoek logistiek personeel", "/logistiek"]} k2={["Ik zoek werk in de logistiek", "/logistiek-werk"]} />
           <Tak kleur="var(--sky)" foto="/d3/ev-hero-m.webp" pos="30% 18%" label={["Event", "manpower"]} kop="Events" tekst="Bediening, bar, catering, hosts en logistiek."
             k1={["Ik zoek eventpersoneel", "/evenementen"]} k2={["Ik zoek werk bij events", "/events-werk"]} />
@@ -142,7 +144,7 @@ export default function Home() {
           <div className="logoband"><div className="logorij">
             {[0, 1].map((n) => (
               <div className="set" key={n} aria-hidden={n === 1 || undefined}>
-                {[...LOGOS, ...LOGOS].map(([src, h, alt], i) => <img key={i} src={src} style={{ height: `${h}px` }} alt={n === 0 && i < LOGOS.length ? alt : ""} loading="lazy" />)}
+                {[...LOGOS, ...LOGOS].map(([src, h, alt, b], i) => <img key={i} src={src} width={b} height={h} style={{ height: `${h}px` }} alt={n === 0 && i < LOGOS.length ? alt : ""} loading="lazy" />)}
               </div>
             ))}
           </div></div>
@@ -187,7 +189,7 @@ export default function Home() {
             </div>
             <div className="dag-beeld">
               <div className="confetti" aria-hidden="true" ref={confetti}></div>
-              <figure className="dag-bon" aria-hidden="true"><span className="db-label"><i></i>Voorschot klaar in Jixbee</span><img src="/d3/jix-bon.webp" alt="" loading="lazy" /></figure>
+              <figure className="dag-bon" aria-hidden="true"><span className="db-label"><i></i>Voorschot klaar in Jixbee</span><img src="/d3/jix-bon.webp" srcSet="/d3/jix-bon-600.webp 600w, /d3/jix-bon.webp 786w" sizes="calc(88vw - 35px)" width={786} height={820} alt="" loading="lazy" /></figure>
               <img className="dag-tel" src="/d3/jix-transactie.webp" alt="Jixbee: je transactie wordt verwerkt" loading="lazy" />
             </div>
           </div>

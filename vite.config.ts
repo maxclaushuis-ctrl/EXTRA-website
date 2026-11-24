@@ -30,6 +30,9 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // dist/public/.vite/manifest.json: de server zoekt daarin per pad de chunk van
+    // de pagina op en laat de browser die alvast ophalen (server/routePreload.ts).
+    manifest: true,
     rollupOptions: {
       output: {
         // Alleen React krijgt een vaste vendor-chunk; die heeft elke pagina

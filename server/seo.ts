@@ -33,6 +33,7 @@ import { TtlCache, metCache } from "./paginaCache";
 import type { BlogPost, VacancyPost } from "@shared/schema";
 import { veiligeJsonLd } from "@shared/jsonLd";
 import { buigDodeLinksOm, lopendeVacatures, vacatureGeldigTot, type LevendeSlugs } from "@shared/levendeLinks";
+import { preloadTags, voegPreloadToe, type ViteManifest } from "./routePreload";
 
 interface PageMeta {
   title: string;
@@ -405,6 +406,20 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
     return shellCache;
   };
 
+  // Vite-manifest voor het alvast laden van de paginacode (server/routePreload.ts).
+  // Ontbreekt het, dan gaat alles door zoals voorheen.
+  let manifestCache: ViteManifest | null = null;
+  const loadManifest = (): ViteManifest => {
+    if (manifestCache === null) {
+      try {
+        manifestCache = JSON.parse(fs.readFileSync(path.resolve(distPublicDir, ".vite", "manifest.json"), "utf-8"));
+      } catch {
+        manifestCache = {};
+      }
+    }
+    return manifestCache!;
+  };
+
   const fragmentDir = path.resolve(distPublicDir, "prerender");
   const fragmentFor = (normalizedPath: string): string | undefined => {
     const name = normalizedPath === "/" ? "index" : normalizedPath.slice(1).replace(/\//g, "__");
@@ -431,7 +446,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
       res
         .status(status)
         .set({ "Content-Type": "text/html; charset=utf-8" })
-        .send(injectMeta(loadShell(), meta, schoon));
+        .send(voegPreloadToe(injectMeta(loadShell(), meta, schoon), status === 200 ? preloadTags(normalized, loadManifest()) : ""));
     };
 
     // 1. Statische route uit het manifest

@@ -3,7 +3,6 @@ import App from "./App";
 import "./index.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { bewaarHerkomstEenmalig } from "@/lib/herkomst";
 
@@ -21,10 +20,10 @@ window.addEventListener('unhandledrejection', (e) => {
 bewaarHerkomstEenmalig();
 
 createRoot(document.getElementById("root")!).render(
+  // Geen TooltipProvider hier: elke plek met tooltips (sidebar, e-mailsjablonen)
+  // heeft er zelf een. Zo hoeft de tooltipcode niet mee op elke publieke pagina.
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <App />
-    </TooltipProvider>
+    <Toaster />
+    <App />
   </QueryClientProvider>
 );

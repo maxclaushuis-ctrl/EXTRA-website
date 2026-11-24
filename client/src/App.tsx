@@ -132,7 +132,8 @@ const ExtraatjeAdmin = lazy(() => import("@/pages/ExtraatjeAdmin"));
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MilestoneProvider } from "@/contexts/MilestoneContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import NotificationToast from "@/components/NotificationToast";
+// Alleen voor ingelogde medewerkers; lazy zodat de toast- en websocketcode niet mee hoeft op publieke pagina's.
+const NotificationToast = lazy(() => import("@/components/NotificationToast"));
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -280,7 +281,7 @@ function Router() {
   return (
     <>
       {isAuthenticated && !isPlanningPage && !isDashboardMockup && !isPublicPage && (
-        <NotificationToast />
+        <Suspense fallback={null}><NotificationToast /></Suspense>
       )}
 
       <Suspense fallback={<PageLoader />}>

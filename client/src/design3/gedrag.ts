@@ -43,7 +43,10 @@ export function useCarrousel(ref: RefObject<HTMLElement>, deps: unknown[] = []) 
       if (teller) teller.innerHTML = `<b>${i + 1}</b> / ${aantal()}`;
       if (stw) Array.from(stw.children).forEach((d, j) => d.classList.toggle("aan", i === j));
     };
-    bij();
+    // Eerste meting in het volgende frame: direct na het toevoegen van de stippen
+    // meten dwingt de browser midden in het opbouwen van de pagina tot een extra layout.
+    const eersteBij = window.requestAnimationFrame(bij);
+    opruimen.push(() => window.cancelAnimationFrame(eersteBij));
     const vorige = c.querySelector(".vorige");
     const volgende = c.querySelector(".volgende");
     const v = () => ga(nu() - 1);
@@ -132,13 +135,16 @@ export function useReus(ref: RefObject<HTMLElement>, factor = 0.55) {
       h.querySelectorAll("span").forEach((s) => { w = Math.max(w, s.getBoundingClientRect().width); });
       if (w) h.style.fontSize = (100 * doel) / w + "px";
     };
-    fit();
+    // Eerste keer in het volgende frame (de kop staat onderaan de pagina): zo valt
+    // de meting niet midden in het opbouwen van de pagina (PageSpeed: geforceerde layout).
+    const eerste = window.requestAnimationFrame(fit);
     window.addEventListener("resize", fit);
     // De lettertypen komen met de CSS van de pagina mee en kunnen dus na de
     // eerste meting binnenkomen: dan opnieuw passen.
     document.fonts?.ready.then(fit).catch(() => {});
     document.fonts?.addEventListener?.("loadingdone", fit);
     return () => {
+      window.cancelAnimationFrame(eerste);
       window.removeEventListener("resize", fit);
       document.fonts?.removeEventListener?.("loadingdone", fit);
     };
@@ -177,10 +183,14 @@ export function useDekking(ref: RefObject<HTMLElement>, deps: unknown[] = []) {
     const zet = () => {
       wacht = 0;
       const vh = window.innerHeight;
-      paren.forEach((p) => {
+      // Eerst alles meten, dan pas schrijven: meten na een wijziging kost elke keer een extra layout.
+      const waarden = paren.map((p) => {
         const b = p.dekker.getBoundingClientRect();
         const entry = (vh - b.top) / Math.max(1, Math.min(b.height, vh));
-        const v = Math.min(1, Math.max(0, (entry - p.van) / (p.tot - p.van)));
+        return Math.min(1, Math.max(0, (entry - p.van) / (p.tot - p.van)));
+      });
+      paren.forEach((p, k) => {
+        const v = waarden[k];
         p.doelen.forEach((el) => {
           if (v > 0) { el.setAttribute(p.attr, ""); el.style.setProperty(p.varNaam, v.toFixed(3)); }
           else { el.removeAttribute(p.attr); el.style.removeProperty(p.varNaam); }
@@ -188,7 +198,7 @@ export function useDekking(ref: RefObject<HTMLElement>, deps: unknown[] = []) {
       });
     };
     const plan = () => { if (!wacht) wacht = window.requestAnimationFrame(zet); };
-    zet();
+    plan();
     window.addEventListener("scroll", plan, { passive: true });
     window.addEventListener("resize", plan);
     return () => {
@@ -206,11 +216,11 @@ export function useStapelTop(ref: RefObject<HTMLElement>) {
     const el = ref.current;
     if (!el) return;
     const zet = () => { el.style.top = Math.min(0, window.innerHeight - el.offsetHeight) + "px"; };
-    zet();
+    const eerste = window.requestAnimationFrame(zet);
     window.addEventListener("resize", zet);
     document.fonts?.ready.then(zet).catch(() => {});
     const t = window.setTimeout(zet, 600);
-    return () => { window.removeEventListener("resize", zet); window.clearTimeout(t); };
+    return () => { window.cancelAnimationFrame(eerste); window.removeEventListener("resize", zet); window.clearTimeout(t); };
   }, [ref]);
 }
 
@@ -253,7 +263,10 @@ function haalLevend(): Promise<LevendeSlugs> {
 export function useLevendeLinks(ref: RefObject<HTMLElement>, deps: unknown[] = []) {
   useEffect(() => {
     let weg = false;
-    haalLevend().then((levend) => {
+    // Pas ophalen als de pagina geladen en rustig is: tijdens het laden concurreren
+    // deze twee verzoeken met de foto's en scripts van de pagina.
+    const straks = (f: () => void) => (typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(f, { timeout: 2500 }) : window.setTimeout(f, 1200));
+    straks(() => { if (!weg) haalLevend().then((levend) => {
       const r = ref.current;
       if (weg || !r) return;
       r.querySelectorAll<HTMLAnchorElement>('a[href*="/vacatures/"], a[href*="/blog/"], a[href*="/nieuws/"]').forEach((a) => {
@@ -262,7 +275,7 @@ export function useLevendeLinks(ref: RefObject<HTMLElement>, deps: unknown[] = [
         const nieuw = levendPad(pad, levend);
         if (nieuw !== pad) a.setAttribute("href", nieuw);
       });
-    });
+    }); });
     return () => { weg = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);

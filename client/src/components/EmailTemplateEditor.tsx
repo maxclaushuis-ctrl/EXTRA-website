@@ -310,7 +310,9 @@ const EmailTemplateEditor = ({
     }
   }, [htmlContent, activeTab]);
   
+  // Eigen TooltipProvider: de app-brede provider in main.tsx is weg (PageSpeed).
   return (
+    <TooltipProvider>
     <div className="border rounded-md">
       <div className="p-2 bg-gray-50 border-b flex flex-wrap gap-1">
         <p className="text-sm text-gray-500 flex items-center mr-2">Variabelen:</p>
@@ -848,6 +850,7 @@ const EmailTemplateEditor = ({
         }
       `}} />
     </div>
+    </TooltipProvider>
   );
 };
 
