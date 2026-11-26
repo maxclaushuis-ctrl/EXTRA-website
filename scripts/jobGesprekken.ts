@@ -21,7 +21,9 @@ export interface Verwachting {
   eindstatus?: string[];
   taal?: "nl" | "en";
   /** Na het kandidaatbericht dat dit bevat, moet het antwoord van Job hieraan voldoen. */
-  reactie?: { na: RegExp; moet?: RegExp; nietMoet?: RegExp; geenBericht?: boolean; puntLeeg?: string; puntGevuld?: string }[];
+  reactie?: { na: RegExp; moet?: RegExp; nietMoet?: RegExp; geenBericht?: boolean; puntLeeg?: string; puntGevuld?: string;
+    /** De plannerkaart direct na deze beurt moet dit bevatten, of mag dit niet bevatten. */
+    planner?: RegExp; plannerNiet?: RegExp }[];
   /** Vraagversie 2: functiepunten die (gedeeltelijk) moeten kloppen, of nooit gezet mogen zijn. */
   punten?: Record<string, RegExp>;
   puntenLeeg?: string[];
@@ -92,6 +94,14 @@ export const STANDAARD: Record<"nl" | "en", Partial<Record<Onderwerp, string>>> 
 /** Vraagversie 2 (afspraken Max 25 nov 2026): een nieuw gesprek met de functievragen per functie. */
 const v2 = (functieCode: string, functie: string, label: "hotels" | "events" | "logistiek", extra: Record<string, unknown> = {}): JobContext =>
   nlCtx(functie, { functieCode, label, vraagversie2: true, begrijpen: true, ...extra } as Partial<JobContext>);
+
+/** Rustig doorvragen: een kandidaat voor bediening bij events, de ervaring is al besproken. */
+const rustig: JobContext = nlCtx("horecamedewerker", { label: "events", functieNaam: { nl: "bediening", en: "waiting staff" } } as Partial<JobContext>);
+const RUSTIG_VOOR = [{ kandidaat: "Twee jaar bediening op bruiloften en recepties", job: "Hoeveel diensten per week zou je willen werken?" }];
+const RUSTIG_VELDEN = { ervaring: "twee jaar bediening op bruiloften en recepties", ervaringNiveau: "ervaren", functievraag: "bedienen en drankjes rondbrengen", specialisatie: "nee" };
+/** Met vraagversie 2: de drie functievragen zijn al gesteld, dus Job gaat verder met de werkvoorkeuren. */
+const rustigV2: JobContext = v2("bediening", "horecamedewerker", "events");
+const RUSTIG_VELDEN_V2 = { ervaring: "twee jaar bediening op bruiloften en recepties", ervaringNiveau: "ervaren", functievraag: "bedienen en drankjes rondbrengen", functievragen: 3, punten: { drieBorden: "ja" } };
 
 /** De gesprekken voor vraagversie 2: de situaties uit de opdracht van 25 november, per functie. */
 // Gesprekken zonder sleutel draaien alleen op vraagversie 2; op de oude versie: "niet uitgevoerd".
@@ -181,6 +191,90 @@ export const GESPREKKEN_V2: Gesprek[] = ([
     vast: ["Twee jaar op bruiloften en galadiners", "Eigenlijk vooral dinerloper"],
     puntAntwoorden: { voorkeur: "Eigenlijk vooral dinerloper", drieBorden: "Ja, bij de galadiners altijd met drie borden", etiquette: "Van rechts uitserveren en per tafel tegelijk, de gastheer als laatste" },
     verwacht: { punten: { voorkeur: /dinerloper/, drieBorden: /ja/, etiquette: /ja/ }, puntWelGevraagd: ["drieBorden"], collega: false },
+  },
+  // Rustig doorvragen (afspraak Max 26 nov 2026): direct door bij een duidelijk antwoord, eerst afhandelen bij een
+  // vraag of correctie. Midden in het gesprek, bij de werkvoorkeuren, zonder vraagversie 2 (zoals in zijn test).
+  {
+    naam: "Rustig: reeks knopantwoorden", sleutel: true, herhaal: 2, ctx: rustig, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN, startOnderwerp: "diensten",
+    vast: ["5 of meer", "Tot 25 km", "Flexibel", "Direct", "Als hoofdbaan", "Ja"],
+    verwacht: {
+      velden: { diensten: /5\+/, werkgebied: /25/, werkmoment: /flexibel/, startdatum: /direct/, werkvorm: /hoofdbaan/, cvParaat: /ja/ },
+      reactie: [
+        { na: /^5 of meer$/, nietMoet: /^(helder|top|duidelijk|mooi)\b|fulltime/i },
+        { na: /^Tot 25 km$/, nietMoet: /25 km|^(helder|top|duidelijk|mooi)\b/i },
+        { na: /^Flexibel$/, nietMoet: /flexibel|^(helder|top|duidelijk|mooi)\b|doordeweeks/i },
+        { na: /^Direct$/, nietMoet: /direct beschikbaar|^(helder|top|duidelijk|mooi)\b/i },
+        { na: /^Als hoofdbaan$/, nietMoet: /hoofdbaan|^(helder|top|duidelijk|mooi)\b/i },
+        { na: /^Ja$/, moet: /cv/i, nietMoet: /^(helder|top|duidelijk|mooi)\b/i },
+      ],
+    },
+  },
+  {
+    naam: "Rustig: knop met een getypte aanvulling", sleutel: true, herhaal: 2, ctx: rustig, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN, startOnderwerp: "diensten",
+    vast: ["5 of meer", "maar alleen in de avond", "Tot 25 km"],
+    verwacht: { velden: { diensten: /5\+/, werkgebied: /25/ }, nietGevraagd: ["werkmoment"], reactie: [{ na: /alleen in de avond/i, moet: /reizen|regio|km/i, planner: /5 of meer.*avond/i, plannerNiet: /weekend|flexibel/i }] },
+  },
+  {
+    naam: "Rustig: correctie en loonvraag tussendoor", sleutel: true, herhaal: 2, ctx: rustig, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN, startOnderwerp: "diensten",
+    vast: ["3 tot 4", "Tot 25 km", "Nee, ik bedoelde 25 km enkele reis", "Wat verdien ik eigenlijk?"],
+    verwacht: {
+      velden: { diensten: /3-4/, werkgebied: /enkele reis/i },
+      reactie: [
+        { na: /enkele reis/i, moet: /25 km enkele reis/i, planner: /25 km enkele reis/i },
+        { na: /wat verdien ik/i, moet: /hangt af van de functie en de opdracht/i, nietMoet: /€|euro|per uur/i },
+      ],
+    },
+  },
+  {
+    // Eerst Flexibel, later toch alleen 's avonds: daarna zien Job en de planner alleen nog de avond.
+    naam: "Rustig: eerst Flexibel, later toch alleen 's avonds", sleutel: true, herhaal: 2, ctx: rustig, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN, startOnderwerp: "diensten",
+    vast: ["3 tot 4", "Tot 25 km", "Flexibel", "Direct", "Nee, toch alleen 's avonds"],
+    verwacht: {
+      velden: { werkmomentTekst: /avond/i },
+      nooit: [{ veld: "werkmoment", bevat: /flexibel|avond_weekend/ }],
+      plannerNooit: [/flexibel/i, /weekend/i],
+      reactie: [{ na: /toch alleen/i, moet: /avond/i, nietMoet: /flexibel|weekend/i, planner: /alleen 's avonds/i, plannerNiet: /flexibel|weekend/i }],
+    },
+  },
+  {
+    // Een beperking in eigen woorden: de planner moet meteen lezen dat het weekend niet kan.
+    naam: "Rustig: 's avonds, maar niet in het weekend", sleutel: true, herhaal: 2, ctx: rustig, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN, startOnderwerp: "diensten",
+    vast: ["3 tot 4", "Tot 25 km", "Ik kan 's avonds, maar in het weekend kan ik niet."],
+    verwacht: {
+      velden: { werkmomentTekst: /weekend kan ik niet/i },
+      nooit: [{ veld: "werkmoment", bevat: /avond_weekend|flexibel/ }],
+      reactie: [{ na: /weekend kan ik niet/i, nietMoet: /avond en weekend|flexibel/i, planner: /avonds, maar in het weekend kan ik niet/i, plannerNiet: /avond en weekend|flexibel/i }],
+    },
+  },
+  // Dezelfde situaties met vraagversie 2 aan (de functievragen zijn al gesteld).
+  {
+    naam: "Rustig v2: knop met een getypte aanvulling", sleutel: true, herhaal: 2, ctx: rustigV2, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN_V2, startOnderwerp: "diensten",
+    vast: ["5 of meer", "maar alleen in de avond", "Tot 25 km"],
+    verwacht: { velden: { diensten: /5\+/, werkgebied: /25/ }, nietGevraagd: ["werkmoment"], reactie: [{ na: /alleen in de avond/i, moet: /reizen|regio|km/i, planner: /5 of meer.*avond/i, plannerNiet: /weekend|flexibel/i }] },
+  },
+  {
+    naam: "Rustig v2: eerst Flexibel, later toch alleen 's avonds", sleutel: true, herhaal: 2, ctx: rustigV2, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN_V2, startOnderwerp: "diensten",
+    vast: ["3 tot 4", "Tot 25 km", "Flexibel", "Direct", "Nee, toch alleen 's avonds"],
+    verwacht: {
+      velden: { werkmomentTekst: /avond/i }, nooit: [{ veld: "werkmoment", bevat: /flexibel|avond_weekend/ }], plannerNooit: [/flexibel/i, /weekend/i],
+      reactie: [{ na: /toch alleen/i, moet: /avond/i, nietMoet: /flexibel|weekend/i, planner: /alleen 's avonds/i, plannerNiet: /flexibel|weekend/i }],
+    },
+  },
+  {
+    naam: "Rustig v2: 's avonds, maar niet in het weekend", sleutel: true, herhaal: 2, ctx: rustigV2, taal: "nl",
+    antwoorden: {}, voorgeschiedenis: RUSTIG_VOOR, startVelden: RUSTIG_VELDEN_V2, startOnderwerp: "diensten",
+    vast: ["3 tot 4", "Tot 25 km", "Ik kan 's avonds, maar in het weekend kan ik niet."],
+    verwacht: {
+      velden: { werkmomentTekst: /weekend kan ik niet/i }, nooit: [{ veld: "werkmoment", bevat: /avond_weekend|flexibel/ }],
+      reactie: [{ na: /weekend kan ik niet/i, nietMoet: /avond en weekend|flexibel/i, planner: /avonds, maar in het weekend kan ik niet/i, plannerNiet: /avond en weekend|flexibel/i }],
+    },
   },
   {
     naam: "V2 communicatie: front office, Engels met gasten", cv: { periodes: [{ functie: "Receptionist", werkgever: "Hotel De Fictieve Gracht", soort: "zelfde", kerntaken: [0, 1], begin: "2024-10", einde: "heden", bron: "cv" }] }, groep: "communicatie front office", ctx: v2("frontoffice", "frontoffice", "hotels"), taal: "nl",

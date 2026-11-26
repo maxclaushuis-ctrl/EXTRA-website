@@ -4,7 +4,7 @@
  */
 process.env.TESTOMGEVING = "1";
 import { gelijkeInhoud, verschillenInGroep, vingerafdruk, voerUit } from "./job-gesprekstest";
-import { VERWACHT, vergelijk } from "./job-gesprekstest-vergelijk";
+import { AANTAL_VAST, VERWACHT, vergelijk } from "./job-gesprekstest-vergelijk";
 import { GESPREKKEN_V2 } from "./jobGesprekken";
 
 let geslaagd = 0, gefaald = 0;
@@ -36,19 +36,19 @@ const v3 = verschillenInGroep([
 ]);
 test("groep: zelfde punten maar andere matchscore en functie-eis zijn verschillen", v3.length === 2 && /matchscore: 72 tegenover 64/.test(v3[0]) && /functie-eis/.test(v3[1]), v3.join(" | "));
 test("groep: zelfde punten, zelfde uitkomst: geen verschil", verschillenInGroep([{ naam: "a", punten: { systeem: "Opera" }, collega: false, uitkomst: u1 }, { naam: "b", punten: { systeem: "opera" }, collega: false, uitkomst: { ...u1 } }]).length === 0);
-// Vergelijking voor en na: alle vijf verwachte gesprekken, volledige reeks, plannerweergave, beide afgerond.
+// Vergelijking voor en na: alle verwachte gesprekken, volledige reeks, plannerweergave, beide afgerond.
 const V = VERWACHT;
 const gv = (naam: string, reeks: string[], model = "m") => ({ naam, model, status: "gefaald", fouten: [], vasteReeks: reeks, naReeks: { velden: {}, planner: ["Samenvatting: x"], status: "bezig" }, beurten: reeks.map((k) => ({ kandidaat: k, job: ["?"] })), velden: {}, planner: [], collega: [] });
 const meting = (gs: any[], klaar = true) => ({ klaar, afgebroken: null, gesprekken: gs });
 const alleVijf = () => V.map((v) => gv(v.naam, v.vast));
-test("voor en na: vijf volledige reeksen, beide afgerond: geen fout", vergelijk(meting(alleVijf()), meting(alleVijf())).fouten.length === 0, vergelijk(meting(alleVijf()), meting(alleVijf())).fouten.join(" | "));
+test("voor en na: alle reeksen volledig, beide afgerond: geen fout", vergelijk(meting(alleVijf()), meting(alleVijf())).fouten.length === 0, vergelijk(meting(alleVijf()), meting(alleVijf())).fouten.join(" | "));
 test("voor en na: aan beide kanten hetzelfde gesprek weg is een fout", vergelijk(meting(alleVijf().slice(1)), meting(alleVijf().slice(1))).fouten.length === 2);
 const afgebroken = () => alleVijf().map((g, i) => (i === 0 ? { ...g, vasteReeks: g.vasteReeks.slice(0, 1) } : g));
 test("voor en na: beide op hetzelfde punt afgebroken is een fout", V[0].vast.length > 1 && vergelijk(meting(afgebroken()), meting(afgebroken())).fouten.length === 2);
 test("voor en na: een ander bericht in de reeks is een fout", vergelijk(meting(alleVijf()), meting(alleVijf().map((g, i) => (i === 1 ? { ...g, vasteReeks: ["iets anders"] } : g)))).fouten.length === 1);
 test("voor en na: geen plannerweergave is een fout", vergelijk(meting(alleVijf()), meting(alleVijf().map((g, i) => (i === 2 ? { ...g, naReeks: null } : g)))).fouten.length === 1);
 test("voor en na: een meting die niet is afgerond is een fout", vergelijk(meting(alleVijf(), false), meting(alleVijf())).fouten.length === 1);
-test("voor en na: per model, een model dat in de nameting ontbreekt telt vijf keer", vergelijk(meting([...alleVijf(), ...V.map((v) => gv(v.naam, v.vast, "m2"))]), meting(alleVijf())).fouten.length === 5);
+test("voor en na: per model, een model dat in de nameting ontbreekt telt per gesprek", vergelijk(meting([...alleVijf(), ...V.map((v) => gv(v.naam, v.vast, "m2"))]), meting(alleVijf())).fouten.length === AANTAL_VAST);
 test("vingerafdruk: zelfde reeks, zelfde afdruk; andere reeks, andere afdruk", vingerafdruk(["a", "b"]) === vingerafdruk(["a", "b"]) && vingerafdruk(["a", "b"]) !== vingerafdruk(["ab"]));
 
 // Laat vasteReeks intact om uitsluitend het werkelijke beurtlog te toetsen.
@@ -88,7 +88,7 @@ async function main() {
   test("vaste reeks: housekeeping leren krijgt precies de twee vastgelegde berichten, wat Job ook vraagt", uh.beurten.slice(0, 2).map((b) => b.kandidaat).join("|") === hk.vast!.join("|"), uh.beurten.slice(0, 2).map((b) => b.kandidaat).join("|"));
   test("status volgt de controles", (u.status === "gefaald") === !u.ok && u.status !== "niet uitgevoerd", u.status);
   test("alleen v2 gemarkeerd: gesprekken zonder sleutel", GESPREKKEN_V2.every((x) => x.alleenVersie2 === !x.sleutel));
-  test("vijf voor-en-nagesprekken, elk met een vaste reeks", GESPREKKEN_V2.filter((x) => x.sleutel).length === 5 && GESPREKKEN_V2.filter((x) => x.sleutel).every((x) => x.vast?.length), GESPREKKEN_V2.filter((x) => x.sleutel).map((x) => x.naam).join(", "));
+  test("dertien voor-en-nagesprekken, elk met een vaste reeks", GESPREKKEN_V2.filter((x) => x.sleutel).length === AANTAL_VAST && AANTAL_VAST === 13 && GESPREKKEN_V2.filter((x) => x.sleutel).every((x) => x.vast?.length), GESPREKKEN_V2.filter((x) => x.sleutel).map((x) => x.naam).join(", "));
   test("spellingparen hebben per paar hetzelfde fictieve cv", (() => { const m = new Map<string, string>(); for (const x of GESPREKKEN_V2.filter((y) => y.groep)) { const c = JSON.stringify(x.cv || null); if (c === "null" || (m.has(x.groep!) && m.get(x.groep!) !== c)) return false; m.set(x.groep!, c); } return m.size === 2; })());
   console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
   process.exit(gefaald > 0 ? 1 : 0);

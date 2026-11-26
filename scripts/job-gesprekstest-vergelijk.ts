@@ -1,21 +1,24 @@
 /**
- * Legt de voor- en nameting van de gesprekstest naast elkaar: de vijf voor-en-nagesprekken met de letterlijke
+ * Legt de voor- en nameting van de gesprekstest naast elkaar: de voor-en-nagesprekken (AANTAL_VAST) met de letterlijke
  * berichten van kandidaat en Job, wat Job opsloeg en wat de planner ziet.
  *
  *   npx tsx scripts/job-gesprekstest-vergelijk.ts gesprekstest-voor.json gesprekstest-na.json > vergelijking.txt
  *
- * Eisen, per model: beide metingen zijn afgerond; alle vijf verwachte gesprekken staan in beide; elke vaste reeks is
+ * Eisen, per model: beide metingen zijn afgerond; alle verwachte gesprekken staan in beide; elke vaste reeks is
  * volledig en letterlijk zoals vastgelegd verstuurd; de plannerweergave direct na de reeks is opgeslagen.
  * Foutcode 0: aan alles voldaan; 1: iets ontbreekt of verschilt, of een bestand is onleesbaar.
  */
 import { readFileSync } from "fs";
 import { GESPREKKEN_V2 } from "./jobGesprekken";
 
-interface Beurt { kandidaat: string; job: string[]; opgeslagen?: string; vraagWas?: string | null; punt?: string | null; bron?: string }
+interface Beurt { kandidaat: string; job: string[]; opgeslagen?: string; vraagWas?: string | null; punt?: string | null; bron?: string; planner?: string[] }
 interface Gesprek { naam: string; model: string; status: string; fouten: string[]; vasteReeks: string[] | null; naReeks: { velden: Record<string, unknown>; planner: string[]; status: string } | null; beurten: Beurt[]; velden: Record<string, unknown>; planner: string[]; collega: string[] }
 export interface Meting { klaar: boolean; afgebroken: string | null; instellingen?: Record<string, unknown> | null; gesprekken: Gesprek[] }
 
-/** De vijf voor-en-nagesprekken met hun vaste reeks, zoals vastgelegd in scripts/jobGesprekken.ts. */
+/** Zoveel voor-en-nagesprekken zijn er: vijf van 25 november plus acht voor rustig doorvragen (26 november, vijf zonder en drie met vraagversie 2). */
+export const AANTAL_VAST = 13;
+
+/** De voor-en-nagesprekken met hun vaste reeks, zoals vastgelegd in scripts/jobGesprekken.ts. */
 export const VERWACHT: { naam: string; vast: string[] }[] = GESPREKKEN_V2.filter((g) => g.sleutel && g.vast).map((g) => ({ naam: g.naam, vast: g.vast! }));
 
 function lees(pad: string): Meting {
@@ -38,7 +41,7 @@ export function vergelijk(voor: Meting, na: Meting, verwacht = VERWACHT): { rege
     regels.push(`Instellingen voor: ${a}`, `Instellingen na:   ${b}`, "");
     if (a !== b) fouten.push("de modelinstellingen van voor- en nameting verschillen");
   }
-  if (verwacht.length !== 5) fouten.push(`${verwacht.length} voor-en-nagesprekken vastgelegd, verwacht vijf`);
+  if (verwacht.length !== AANTAL_VAST) fouten.push(`${verwacht.length} voor-en-nagesprekken vastgelegd, verwacht ${AANTAL_VAST}`);
   const modellen = Array.from(new Set([...voor.gesprekken, ...na.gesprekken].map((g) => g.model))).sort();
   if (!modellen.length) fouten.push("geen gesprekken gevonden");
   for (const model of modellen) {
@@ -65,7 +68,9 @@ export function vergelijk(voor: Meting, na: Meting, verwacht = VERWACHT): { rege
         const ba = a?.beurten[i], bb = b?.beurten[i];
         regels.push(`Beurt ${i + 1}, kandidaat: ${v.vast[i]}`);
         regels.push(`  VOOR  Job${ba?.bron ? ` [${ba.bron === "terugval" ? "TERUGVAL, vaste regels" : ba.bron}]` : ""}: ${ba ? ba.job.join(" / ") || "(geen bericht)" : "(niet verstuurd)"}`, `        opgeslagen: ${ba?.opgeslagen ?? "-"}${ba && ba.kandidaat !== v.vast[i] ? `  [kreeg: ${ba.kandidaat}]` : ""}`);
-        regels.push(`  NA    Job${bb?.bron ? ` [${bb.bron === "terugval" ? "TERUGVAL, vaste regels" : bb.bron}]` : ""}: ${bb ? bb.job.join(" / ") || "(geen bericht)" : "(niet verstuurd)"}`, `        opgeslagen: ${bb?.opgeslagen ?? "-"}${bb && bb.kandidaat !== v.vast[i] ? `  [kreeg: ${bb.kandidaat}]` : ""}`, "");
+        regels.push(`  NA    Job${bb?.bron ? ` [${bb.bron === "terugval" ? "TERUGVAL, vaste regels" : bb.bron}]` : ""}: ${bb ? bb.job.join(" / ") || "(geen bericht)" : "(niet verstuurd)"}`, `        opgeslagen: ${bb?.opgeslagen ?? "-"}${bb && bb.kandidaat !== v.vast[i] ? `  [kreeg: ${bb.kandidaat}]` : ""}`);
+        if (ba?.planner?.length || bb?.planner?.length) regels.push(`  Planner na deze beurt, voor: ${(ba?.planner || []).join(" | ") || "-"}`, `  Planner na deze beurt, na:   ${(bb?.planner || []).join(" | ") || "-"}`);
+        regels.push("");
       }
       regels.push("Direct na de vaste reeks ziet de planner:");
       regels.push("  VOOR:", ...(a?.naReeks?.planner || ["(niet opgeslagen)"]).map((p) => `    ${p}`));
@@ -81,7 +86,7 @@ if (/job-gesprekstest-vergelijk\.ts$/.test(process.argv[1] || "")) {
     const [pv, pn] = process.argv.slice(2);
     if (!pv || !pn) throw new Error("Gebruik: npx tsx scripts/job-gesprekstest-vergelijk.ts voor.json na.json");
     const { regels, fouten } = vergelijk(lees(pv), lees(pn));
-    console.log([...regels, `Controle: ${fouten.length ? `${fouten.length} probleem(en)` : "beide metingen afgerond, alle vijf vaste reeksen volledig en gelijk, plannerweergave aanwezig"}`, ...fouten.map((f) => `  - ${f}`)].join("\n"));
+    console.log([...regels, `Controle: ${fouten.length ? `${fouten.length} probleem(en)` : `beide metingen afgerond, alle ${AANTAL_VAST} vaste reeksen volledig en gelijk, plannerweergave aanwezig`}`, ...fouten.map((f) => `  - ${f}`)].join("\n"));
     process.exit(fouten.length ? 1 : 0);
   } catch (e: any) {
     console.log(`Vergelijking mislukt: ${e?.message || e}`);

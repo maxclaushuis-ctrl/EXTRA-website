@@ -25,7 +25,7 @@ import { berichtControle } from "../shared/jobBeurt";
 import { GESPREKKEN, GESPREKKEN_V2, STANDAARD, type Gesprek } from "./jobGesprekken";
 import { gesprekAan, gesprekModel } from "../shared/jobGesprek";
 
-interface Beurtlog { kandidaat: string; job: string[]; onderwerpVoor: Onderwerp | null; ms: number; bron: string; soorten: string; tokens?: { in: number; uit: number }; opgeslagen?: string; punt?: string; punten?: Record<string, string> }
+interface Beurtlog { kandidaat: string; job: string[]; onderwerpVoor: Onderwerp | null; ms: number; bron: string; soorten: string; tokens?: { in: number; uit: number }; opgeslagen?: string; punt?: string; punten?: Record<string, string>; planner?: string[] }
 type Status = "geslaagd" | "gefaald" | "niet uitgevoerd";
 /** Wat de kandidaat er met hetzelfde fictieve cv aan overhoudt: score, functie-eis en of een collega meekijkt. */
 interface Kandidaatuitkomst { toestand: string; score: number | null; eis: string; eisTekst: string; collega: boolean }
@@ -97,7 +97,7 @@ export async function voerUit(g: Gesprek, ai: AiAanroep, model: string): Promise
     if (!bericht) break;
     const u = await verwerkBeurt({ state, ctx: g.ctx, tekst: bericht, laatsteVraag: laatsteJob, geschiedenis: geschiedenis.slice(-24).join("\n"), nu, ai });
     const teksten = u.r.berichten.map((b) => b.tekst);
-    beurten.push({ kandidaat: bericht, job: teksten, onderwerpVoor: o, ms: u.ai?.ms ?? 0, bron: u.bron, soorten: u.beurt?.soorten.join("+") || "-", tokens: u.ai?.tokens, opgeslagen: verschil(state.velden, u.r.state.velden), punt, punten: { ...(vv(u.r.state).punten || {}) } });
+    beurten.push({ kandidaat: bericht, job: teksten, onderwerpVoor: o, ms: u.ai?.ms ?? 0, bron: u.bron, soorten: u.beurt?.soorten.join("+") || "-", tokens: u.ai?.tokens, opgeslagen: verschil(state.velden, u.r.state.velden), punt, punten: { ...(vv(u.r.state).punten || {}) }, planner: plannerVan(u.r.state, g.ctx) });
     geschiedenis.push(`Kandidaat: ${bericht}`);
     for (const t of teksten) { geschiedenis.push(`Job: ${t}`); if (t.includes("?")) vragen++; }
     if (teksten.length) laatsteJob = teksten[teksten.length - 1];
@@ -162,6 +162,10 @@ export async function voerUit(g: Gesprek, ai: AiAanroep, model: string): Promise
       const t = x.job.join(" ");
       if (rv.moet && !rv.moet.test(t)) fouten.push(`na "${x.kandidaat.slice(0, 40)}": antwoord "${t.slice(0, 90)}" mist ${rv.moet}`);
       if (rv.nietMoet && rv.nietMoet.test(t)) fouten.push(`na "${x.kandidaat.slice(0, 40)}": antwoord "${t.slice(0, 90)}" bevat ${rv.nietMoet}`);
+      // De plannerkaart direct na deze beurt, niet pas aan het eind van het gesprek.
+      const kaart = (x.planner || []).join(" | ");
+      if (rv.planner && !rv.planner.test(kaart)) fouten.push(`na "${x.kandidaat.slice(0, 40)}": de planner ziet "${kaart.slice(0, 160)}" en mist ${rv.planner}`);
+      if (rv.plannerNiet && rv.plannerNiet.test(kaart)) fouten.push(`na "${x.kandidaat.slice(0, 40)}": de planner ziet "${kaart.slice(0, 160)}" met ${rv.plannerNiet}`);
     }
   }
   if (beurten.some((b) => b.bron === "terugval")) fouten.push(`AI viel ${beurten.filter((b) => b.bron === "terugval").length} keer uit (terugval gebruikt)`);
@@ -387,7 +391,7 @@ function verslagVan(u: Uitslag, alle: Gesprek[]): string[] {
   const uit = [kop, ...u.fouten.map((f) => `   - ${f}`), ...(u.nietBeoordeeld || []).map((n) => `   ~ niet beoordeeld op deze versie: ${n}`), ...(u.rechter?.opmerkingen || []).map((o) => `   * rechter ${o}`)];
   if (u.vasteReeks) uit.push(`   Vaste reeks (${u.vasteReeks.length} berichten, vingerafdruk ${vingerafdruk(u.vasteReeks)}):`, ...u.vasteReeks.map((b, i) => `     ${i + 1}. ${b}`),
     ...(u.naReeks ? ["   Direct na de vaste reeks ziet de planner:", ...u.naReeks.planner.map((p) => `     ${p}`)] : []));
-  u.beurten.forEach((b, i) => uit.push(`   K${i + 1}: ${b.kandidaat}`, ...b.job.map((t) => `   J: ${t}`), `      opgeslagen: ${b.opgeslagen}`, `      (${b.bron} ${b.soorten} ${b.ms} ms, vraag was ${b.onderwerpVoor ?? "-"}${b.punt ? ` over ${b.punt}` : ""})`));
+  u.beurten.forEach((b, i) => uit.push(`   K${i + 1}: ${b.kandidaat}`, ...b.job.map((t) => `   J: ${t}`), `      opgeslagen: ${b.opgeslagen}`, `      (${b.bron} ${b.soorten} ${b.ms} ms, vraag was ${b.onderwerpVoor ?? "-"}${b.punt ? ` over ${b.punt}` : ""})`, ...(b.planner?.length ? [`      planner na deze beurt: ${b.planner.join(" | ")}`] : [])));
   uit.push(`   Velden: ${JSON.stringify(u.state.velden)}`, `   Status: ${u.state.status}, taal ${u.state.taal}, ${u.vragen} vragen`, `   Collega kijkt mee: ${u.collega.length ? `ja (${u.collega.join(" ")})` : "nee"}`);
   if (u.uitkomst) uit.push(`   Met het fictieve cv: match ${u.uitkomst.score ?? u.uitkomst.toestand}, eis ${u.uitkomst.eis} (${u.uitkomst.eisTekst})`);
   uit.push("   De planner ziet:", ...u.planner.map((p) => `     ${p}`), "");
@@ -429,7 +433,7 @@ export function vingerafdruk(berichten: string[]): string {
 /** Wat de vergelijking van voor- en nameting nodig heeft (scripts/job-gesprekstest-vergelijk.ts). */
 function alsJson(u: Uitslag) {
   return { naam: u.naam, model: u.model, status: u.status, fouten: u.fouten, nietBeoordeeld: u.nietBeoordeeld || [], vasteReeks: u.vasteReeks || null, naReeks: u.naReeks || null,
-    beurten: u.beurten.map((b) => ({ kandidaat: b.kandidaat, job: b.job, opgeslagen: b.opgeslagen, vraagWas: b.onderwerpVoor, punt: b.punt || null, bron: b.bron })),
+    beurten: u.beurten.map((b) => ({ kandidaat: b.kandidaat, job: b.job, opgeslagen: b.opgeslagen, vraagWas: b.onderwerpVoor, punt: b.punt || null, bron: b.bron, planner: b.planner || [] })),
     velden: u.state.velden, status_gesprek: u.state.status, collega: u.collega, planner: u.planner, uitkomst: u.uitkomst || null };
 }
 
