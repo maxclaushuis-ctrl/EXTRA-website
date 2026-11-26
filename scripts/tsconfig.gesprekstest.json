@@ -1,0 +1,6 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["job-gesprekstest.ts", "jobGesprekken.ts", "job-gesprekstest-vergelijk.ts", "job-gesprekstest.test.ts"],
+  "exclude": [],
+  "compilerOptions": { "noEmit": true, "incremental": false, "tsBuildInfoFile": null }
+}
