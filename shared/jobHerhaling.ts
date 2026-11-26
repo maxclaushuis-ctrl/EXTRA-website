@@ -23,9 +23,10 @@
  * opnieuw), stuurt hij een commando (MENS, ENGLISH) of wisselt de taal, dan is dat geen herhaling.
  */
 import {
-  herkenCommando, teksten, verwerk, vervalt, vraag, ervaringWerk,
+  herkenCommando, teksten, verwerk, vervalt, vraag, ervaringWerk, versie2,
   type Actie, type JobContext, type JobState, type JobTaal, type JobVelden, type Lezing, type Onderwerp, type Resultaat, type Uitgaand,
 } from "./jobRegels";
+import { puntVraag, volgendPunt } from "./jobProfielen";
 
 const BEZIG = ["bezig", "wacht_cv", "geen_reactie", "gestopt"];
 
@@ -122,9 +123,16 @@ const GEEN_HERKANSING: Onderwerp[] = ["werkautorisatie", "geldigheid"];
 const ANDERS = { nl: "Ik vraag het even anders.", en: "Let me put it differently." };
 
 /** De tweede keer dezelfde vraag, met andere woorden en een duidelijke uitweg. */
-export function herkansing(o: Onderwerp, taal: JobTaal, ctx: JobContext): Uitgaand | null {
+export function herkansing(o: Onderwerp, taal: JobTaal, ctx: JobContext, velden?: JobVelden): Uitgaand | null {
   const t = teksten(taal);
   const nl = taal === "nl";
+  // Vraagversie 2: de functievraag gaat over een bepaald punt; dan dat punt, niet de algemene vraag.
+  if (o === "functievraag" && versie2(velden)) {
+    const pt = volgendPunt(ctx, velden!);
+    if (!pt) return null;
+    const v = puntVraag(pt, ctx, velden!.punten || {}, taal);
+    return { ...v, tekst: `${nl ? "Nog even over mijn vraag:" : "Just to come back to my question:"} ${v.tekst.charAt(0).toLowerCase()}${v.tekst.slice(1)}` };
+  }
   switch (o) {
     case "ervaring": return { tekst: nl ? `Heb je al eens ${ervaringWerk(ctx.functie, "nl")} gewerkt, en zo ja, hoe lang ongeveer?` : `Have you worked ${ervaringWerk(ctx.functie, "en")} before, and if so, for how long?`, keuzes: [nl ? "Nog niet" : "Not yet"] };
     case "hotels": return { tekst: nl ? "Heb je al eens in een hotel gewerkt, en zo ja, in welk hotel?" : "Have you worked in a hotel before, and if so, which one?", keuzes: [nl ? "Nog niet" : "Not yet"] };
@@ -218,8 +226,17 @@ function splitsVraag(t: string): { voor: string; vraag: string } {
 export function zonderHerhaling(voor: JobState, na: Resultaat, ctx: JobContext, tekst: string, nu: Date, info: HerhaalInfo): Resultaat {
   const o = voor.laatsteOnderwerp;
   if (!o || !BEZIG.includes(voor.status)) return na;
-  if (herkenCommando(tekst, o) || na.state.taal !== voor.taal) return na;
+  if (herkenCommando(tekst, o, voor.velden.puntGevraagd) || na.state.taal !== voor.taal) return na;
   if (!["bezig", "wacht_cv"].includes(na.state.status) || na.state.laatsteOnderwerp !== o || !na.berichten.length) return na;
+  // Vraagversie 2: de functievraag telt per punt in de regels (puntPogingen); een volgend punt is een nieuwe vraag.
+  // Hetzelfde punt opnieuw: andere woorden (herkansing over dat punt), maar geen teller over alle functievragen heen.
+  if (o === "functievraag" && versie2(voor.velden)) {
+    if (voor.velden.puntGevraagd !== na.state.velden.puntGevraagd || !na.berichten.length) return na;
+    const laatste = na.berichten[na.berichten.length - 1];
+    if (normaal(laatste.tekst) !== normaal(info.laatsteVraag)) return na;
+    const h = herkansing(o, na.state.taal, ctx, na.state.velden);
+    return h ? { ...na, berichten: [...na.berichten.slice(0, -1), { ...laatste, tekst: h.tekst, keuzes: laatste.keuzes?.length ? laatste.keuzes : h.keuzes }] } : na;
+  }
 
   // Job stelt dezelfde vraag (of een doorvraag over hetzelfde veld) opnieuw.
   const taal = na.state.taal;
@@ -278,7 +295,7 @@ export function zonderHerhaling(voor: JobState, na: Resultaat, ctx: JobContext, 
   const isDoorvraag = !!info.doorvraag && laatste.tekst === info.doorvraag;
   const nieuweWoorden = !zelfdeVraag(laatste.tekst, info.laatsteVraag) && (isDoorvraag || !zelfdeVraag(laatste.tekst, standaard));
   if (!nieuweWoorden) {
-    const h = herkansing(o, taal, ctx);
+    const h = herkansing(o, taal, ctx, state.velden);
     if (!h || zelfdeVraag(h.tekst, info.laatsteVraag)) {
       if (!gevuld) maakOnbekend(state.velden, o);
       return verder(state, gevuld ? undefined : onbekendVerder);

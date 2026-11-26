@@ -65,7 +65,7 @@ export function bereken(i: Invoer): Uitkomst {
 
 // ─── Functies en eisen (hoofdstuk 8) ─────────────────────────────────────────
 
-export type EisRegel = "ervaring" | "kerntaak0" | "certificaat" | "geen";
+export type EisRegel = "ervaring" | "kerntaak0" | "certificaat" | "drieBorden" | "geen";
 export interface FunctieModel {
   sleutel: string;
   naam: string;
@@ -76,10 +76,21 @@ export interface FunctieModel {
   kerntaken: string[];
   /** Wat als verwante ervaring telt (voor de AI en op de kaart). */
   verwant: string;
+  /** Alleen in vraagversie 2 (JOB_FUNCTIEVRAGEN): een model dat daar nieuw of anders is. */
+  versie2?: boolean;
 }
 
 /** Minimale ervaring in maanden bij housekeeping, front office en kok (besluit Max 16 nov 2026). */
 export const EIS_MAANDEN = 6;
+/** Alleen voor deze modellen; een ander model met "ervaring vereist" krijgt die grens niet vanzelf. */
+export const EIS_MAANDEN_VOOR = ["housekeeping", "frontoffice", "kok"];
+
+/**
+ * Front office: bevestigd Nederlands voor gastcontact (door de kandidaat verteld). Voorstel V2: tot
+ * 3 punten erbij, met 100 als plafond; geen Nederlands of onbekend: niets erbij of eraf. Staat op 0
+ * tot Max de weging kiest (afspraak 25 nov 2026): de kaart toont het gegeven wel, de score verandert niet.
+ */
+export const NL_BONUS_FRONT_OFFICE = 0;
 
 export const FUNCTIE_MODELLEN: Record<string, FunctieModel> = {
   housekeeping: { sleutel: "housekeeping", naam: "Housekeeping", soort: "vereist", eisRegel: "ervaring",
@@ -90,12 +101,22 @@ export const FUNCTIE_MODELLEN: Record<string, FunctieModel> = {
     eisTekst: "minimaal zes maanden receptie-ervaring",
     kerntaken: ["in- en uitchecken", "reserveringen", "gasten te woord staan"],
     verwant: "klantenservice, baliewerk" },
+  dinerloper: { sleutel: "dinerloper", naam: "Dinerloper", soort: "vereist", eisRegel: "drieBorden", versie2: true,
+    eisTekst: "relevante ervaring als dinerloper: zelf met drie borden tegelijk aan tafel uitserveren en de serveeretiquette kennen",
+    kerntaken: ["met drie borden tegelijk aan tafel uitserveren", "uitserveren volgens de serveeretiquette", "afstemmen met keuken en bediening"],
+    verwant: "bediening, banqueting, catering (dienbladen lopen of borden tot aan de zaal brengen telt niet als uitserveren aan tafel)" },
   kok: { sleutel: "kok", naam: "Zelfstandig werkend kok", soort: "vereist", eisRegel: "kerntaak0",
     eisTekst: "minimaal zes maanden koken, zelfstandig op een post",
     kerntaken: ["zelfstandig een post draaien", "mise-en-place", "bestellingen afwerken tijdens de service"],
     verwant: "keukenassistent of keukenhulp, cateringkeuken" },
   heftruck: { sleutel: "heftruck", naam: "Heftruck of reachtruck", soort: "vereist", eisRegel: "certificaat",
     eisTekst: "geldig certificaat",
+    kerntaken: ["rijden", "laden en lossen", "in- en uitslaan in stellingen"],
+    verwant: "magazijnwerk" },
+  // Vraagversie 2, besluit Max 25 nov 2026: zelf op de truck gereden is de relevante ervaring; een ontbrekend of
+  // verlopen certificaat is geen reden voor een controle vooraf. Het certificaat controleert de planner per opdracht.
+  heftruck2: { sleutel: "heftruck", naam: "Heftruck of reachtruck", soort: "vereist", eisRegel: "ervaring", versie2: true,
+    eisTekst: "zelf op de heftruck of reachtruck gereden; het certificaat wordt per opdracht gecontroleerd",
     kerntaken: ["rijden", "laden en lossen", "in- en uitslaan in stellingen"],
     verwant: "magazijnwerk" },
   keukenassistent: { sleutel: "keukenassistent", naam: "Keukenassistent", soort: "gewenst", eisRegel: "geen",
@@ -120,9 +141,12 @@ export const FUNCTIE_MODELLEN: Record<string, FunctieModel> = {
  * makkelijk aan te passen is. Keuken zonder nadere keuze is zelfstandig werkend kok
  * (Job behandelt keuken al als functie waarvoor ervaring nodig is).
  */
-export function modelVoor(functieEersteKeus: string | null | undefined, functionType: string | null | undefined, label?: string | null): FunctieModel {
+export function modelVoor(functieEersteKeus: string | null | undefined, functionType: string | null | undefined, label?: string | null, versie2 = false): FunctieModel {
   const k = (functieEersteKeus || "").toLowerCase();
   const t = (functionType || "").toLowerCase();
+  // Vraagversie 2: de modellen van 25 november. Zonder vraagversie 2 rekent alles zoals het was.
+  if (versie2 && k === "heftruck") return FUNCTIE_MODELLEN.heftruck2;
+  if (versie2 && k === "dinerloper") return FUNCTIE_MODELLEN.dinerloper;
   if (k === "housekeeping" || t === "housekeeping") return FUNCTIE_MODELLEN.housekeeping;
   if (k === "frontoffice" || t === "frontoffice") return FUNCTIE_MODELLEN.frontoffice;
   if (k === "afwas") return FUNCTIE_MODELLEN.afwas;
@@ -157,6 +181,36 @@ export interface Periode {
 export interface GesprekKennis {
   /** Uit het gesprek met Job: "geen" als de kandidaat zelf zei nooit zulk werk te hebben gedaan. */
   ervaringNiveau?: "geen" | "starter" | "ervaren" | null;
+  /** Dinerloper, door de kandidaat aan Job verteld: zelf met drie borden aan tafel uitgeserveerd, en de etiquette. */
+  drieBorden?: "ja" | "nee" | null;
+  etiquette?: "ja" | "nee" | null;
+  /** Front office en host, door de kandidaat aan Job verteld: kan gasten in het Engels of het Nederlands helpen. */
+  engels?: "ja" | "nee" | null;
+  nederlands?: "ja" | "nee" | null;
+  /** Heftruck, door de kandidaat aan Job verteld: zelf gereden (heftruck, reachtruck, allebei) en het certificaat per truck. */
+  gereden?: string | null;
+  certHeftruck?: string | null;
+  certReachtruck?: string | null;
+}
+
+/**
+ * Wat het gesprek met Job aan de match meegeeft. Eén plek, zodat cv-analyse, kaart en cv-vragen
+ * hetzelfde gebruiken. Taal komt alleen uit wat de kandidaat zegt (nooit uit de taal van de chat)
+ * en alleen uit het gesprek: het cv-onderdeel Talen wordt afgeschermd, dus niets telt dubbel.
+ */
+/** De functie voor de match: wat met de kandidaat is vastgesteld (de voorkeur bij Job), anders de keuze op het formulier. */
+export function matchFunctie(functieEersteKeus: string | null | undefined, velden: { punten?: Record<string, string>; vraagversie?: number } | null | undefined): string | null {
+  return (velden?.vraagversie === 2 && velden.punten?.voorkeur) || functieEersteKeus || null;
+}
+
+export function gesprekKennisUit(v: { ervaringNiveau?: string | null; punten?: Record<string, string> } | null | undefined, geenErvaring: boolean): GesprekKennis {
+  const p = v?.punten || {};
+  const jn = (x: string | undefined) => (x === "ja" || x === "nee" ? x : null);
+  return {
+    ervaringNiveau: geenErvaring ? "geen" : v?.ervaringNiveau === "geen" ? null : ((v?.ervaringNiveau as GesprekKennis["ervaringNiveau"]) ?? null),
+    drieBorden: jn(p.drieBorden), etiquette: jn(p.etiquette), engels: jn(p.engels), nederlands: jn(p.nederlands),
+    gereden: p.gereden ?? null, certHeftruck: p.certHeftruck ?? null, certReachtruck: p.certReachtruck ?? null,
+  };
 }
 
 type Bereik = [number, number];
@@ -261,15 +315,21 @@ export function invoerVan(model: FunctieModel, periodes: Periode[], certificaten
     if (A === 0 || (zelfGeen && !heeftZelfde)) eis = "niet_voldaan";
     else if (heeftZelfde) {
       if (model.eisRegel === "certificaat") eis = certificaten.some((c) => CERTIFICAAT.test(c)) ? "voldaan" : "onbekend";
+      else if (model.eisRegel === "drieBorden") eis = gesprek.drieBorden === "ja" && gesprek.etiquette === "ja" ? "voldaan" : "onbekend";
       else if (model.eisRegel === "kerntaak0") eis = [...zelfdeCv, ...zelfdeGesprek].some((p) => p.kerntaken.includes(0)) ? "voldaan" : "onbekend";
       else eis = "voldaan";
       // Minimaal zes maanden in de functie (besluit Max 16 nov 2026). Niet bij heftruck: daar telt het certificaat.
       // Zeker te kort: niet voldaan. Kan het allebei zijn (datums onvolledig): onbekend, een mens kijkt.
-      if (model.eisRegel !== "certificaat" && A && typeof A === "object") {
+      if (EIS_MAANDEN_VOOR.includes(model.sleutel) && A && typeof A === "object") {
         if (A.max < EIS_MAANDEN) eis = "niet_voldaan";
         else if (A.min < EIS_MAANDEN && eis === "voldaan") eis = "onbekend";
       }
     } else eis = verwant.length ? "af_te_wegen" : "onbekend";
+    // Dinerloper: drie borden en etiquette zijn allebei vereist. Zegt de kandidaat zelf een van beide niet te doen, dan is de eis niet gehaald.
+    if (model.eisRegel === "drieBorden" && (gesprek.drieBorden === "nee" || gesprek.etiquette === "nee")) eis = "niet_voldaan";
+    // Heftruck (vraagversie 2): zelf rijden is de ervaring. Zegt de kandidaat nooit zelf te hebben gereden: niet gehaald,
+    // tenzij het cv wel rijwerk toont; dan spreken ze elkaar tegen en weegt een collega het af.
+    if (model.versie2 && model.sleutel === "heftruck" && gesprek.gereden === "geen") eis = zelfdeCv.length ? "af_te_wegen" : "niet_voldaan";
   }
   const schatting = !!(A && typeof A === "object" && A.min !== A.max) || !!(C && C.min !== C.max);
   return { invoer: { soort: model.soort, eis, A, B, C, D }, feiten: { A: feitA, B: feitB, C: feitC, D: feitD }, schatting };
@@ -293,6 +353,29 @@ export function duurTekst(min: number, max: number): string {
 }
 
 const GEWICHT_PUBLIEK = (s: Soort) => GEWICHT[s];
+
+/** Heftruck: per truck wat de kandidaat zelf reed en welk certificaat er is, voor de planner. */
+function truckTekst(g: GesprekKennis, certificaten: string[]): string {
+  const gereden = g.gereden === "allebei" ? "heftruck en reachtruck" : g.gereden === "geen" ? "geen van beide" : g.gereden || "onbekend";
+  const cert = (x: string | null | undefined) => (x === "opgegeven" ? "opgegeven" : x === "verlopen" ? "verlopen" : x === "geen" ? "geen" : "onbekend");
+  const cv = certificaten.filter((c) => CERTIFICAAT.test(c));
+  return `Zelf gereden volgens de kandidaat: ${gereden}. Certificaat volgens de kandidaat: heftruck ${cert(g.certHeftruck)}, reachtruck ${cert(g.certReachtruck)}${cv.length ? `; op het cv: ${cv.join(", ")}` : ""}. Per opdracht controleren.`;
+}
+
+const labelVoor = (soort: Soort, starter: boolean, score: number) => (soort === "starters" && starter ? "Past als starter (geen ervaring vereist)"
+  : score >= 85 ? "Sterke match op basis van beschikbare informatie"
+  : score >= 70 ? "Goede match, met aandachtspunten" : score >= 50 ? "Gedeeltelijke match" : "Zwakke match voor deze functie");
+
+/**
+ * Front office: bevestigd Nederlands voor gastcontact geeft NL_BONUS_FRONT_OFFICE punten erbij (plafond 100).
+ * Dekking en "voorlopig" veranderen niet: het is een voorkeur, geen onderdeel van de ervaring.
+ */
+export function metNederlands(u: Uitkomst, model: FunctieModel, gesprek: GesprekKennis, bonus = NL_BONUS_FRONT_OFFICE): Uitkomst {
+  if (model.sleutel !== "frontoffice" || gesprek.nederlands !== "ja" || !bonus || u.toestand !== "score") return u;
+  const op = (x: number | undefined) => Math.min(100, (x ?? 0) + bonus);
+  const score = op(u.score);
+  return { ...u, score, laag: op(u.laag), hoog: op(u.hoog), label: labelVoor(model.soort, false, score) };
+}
 const NIVEAU_TEKST = (n: number | null) => (n === null ? "onbekend" : String(n).replace(".", ","));
 
 export interface MatchKaart {
@@ -306,10 +389,15 @@ export interface MatchKaart {
   aandacht: { t: string; d: string; soort: "open" | "onbekend" | "schatting" }[];
 }
 
-/** Alles wat de kaart toont, uit dezelfde regels. */
-export function matchKaart(model: FunctieModel, periodes: Periode[], certificaten: string[], gesprek: GesprekKennis, peil: Date): MatchKaart {
+/**
+ * Alles wat de kaart toont, uit dezelfde regels. Opties: versie2 = het gesprek liep op vraagversie 2 (alleen dan de
+ * taalregels en de punten uit het gesprek); formulierKeuze = de functie zoals gekozen op het formulier, als die
+ * afwijkt van de functie die met de kandidaat is vastgesteld.
+ */
+export function matchKaart(model: FunctieModel, periodes: Periode[], certificaten: string[], gesprek: GesprekKennis, peil: Date, opties: { versie2?: boolean; functie?: string | null; formulierKeuze?: string | null } = {}): MatchKaart {
+  const v2 = !!opties.versie2 || !!model.versie2;
   const { invoer, feiten, schatting } = invoerVan(model, periodes, certificaten, gesprek, peil);
-  const u = bereken(invoer);
+  const u = v2 ? metNederlands(bereken(invoer), model, gesprek) : bereken(invoer);
   const w = GEWICHT_PUBLIEK(model.soort);
   const A = invoer.A === null ? null : invoer.A === 0 ? 0 : duurNiveau((invoer.A.min + invoer.A.max) / 2);
   const B = invoer.B === "titel" ? 0.5 : invoer.B === 1 ? 0.75 : invoer.B === 2 ? 1 : invoer.B === 0 ? 0 : null;
@@ -321,17 +409,32 @@ export function matchKaart(model: FunctieModel, periodes: Periode[], certificate
     ["C Verwante ervaring", w.C, NIVEAU_TEKST(C) + (invoer.C && invoer.C.min !== invoer.C.max ? " (schatting)" : ""), feiten.C],
     ["D Recent", w.D, w.D === 0 ? "telt niet" : NIVEAU_TEKST(D), w.D === 0 ? "geen gewicht bij starters welkom" : feiten.D],
   ];
+  // Vraagversie 2, front office en host: de taal voor gastcontact staat erbij, met de bron. Engels is de basis
+  // (geen punten, een collega kijkt bij nee); Nederlands telt bij front office pas mee als de weging gekozen is.
+  const bronTekst = (x: "ja" | "nee" | null | undefined) => (x === "ja" ? "ja · door kandidaat verteld" : x === "nee" ? "nee · door kandidaat verteld" : "onbekend");
+  if (v2 && (model.sleutel === "frontoffice" || opties.functie === "host")) {
+    berekening.push(["E Engels voor gastcontact", 0, "basis, geen punten", bronTekst(gesprek.engels)]);
+  }
+  if (v2 && model.sleutel === "frontoffice") {
+    const nl = gesprek.nederlands;
+    berekening.push(["F Nederlands voor gastcontact", NL_BONUS_FRONT_OFFICE, NL_BONUS_FRONT_OFFICE ? (nl === "ja" ? `+${NL_BONUS_FRONT_OFFICE}` : "0") : "telt nog niet", bronTekst(nl)]);
+  }
   const soortTekst = { starters: "Starters welkom", gewenst: "Ervaring gewenst", vereist: "Ervaring vereist" }[model.soort];
   const som = u.toestand === "score"
     ? `${soortTekst}, startpunt ${w.start} · score ${u.score}${u.laag !== u.hoog ? ` · bandbreedte ${u.laag} tot ${u.hoog}` : ""} · dekking ${u.dekking}%`
     : u.toestand === "eis_niet_voldaan" ? "Ervaringseis niet voldaan: geen score. De beslissing ligt bij de beoordelaar."
       : `${soortTekst} · dekking ${u.dekking}%: geen score (een score vraagt bekende ervaring en minstens 70% dekking)`;
-  const eisTekst = model.soort !== "vereist" ? `Geen ervaringseis: ${model.soort === "starters" ? "starters zijn welkom" : "ervaring is gewenst, niet vereist"}.`
-    : ({ voldaan: "Voldaan", niet_voldaan: "Niet voldaan", onbekend: "Onbekend", af_te_wegen: "Af te wegen door de beoordelaar", geen: "" } as Record<Eis, string>)[invoer.eis] + `: ${model.eisTekst}.`;
+  const jnTekst = (x: "ja" | "nee" | null | undefined) => (x === "ja" ? "ja (door kandidaat verteld)" : x === "nee" ? "nee (door kandidaat verteld)" : "onbekend");
+  const eisTekst = (model.soort !== "vereist" ? `Geen ervaringseis: ${model.soort === "starters" ? "starters zijn welkom" : "ervaring is gewenst, niet vereist"}.`
+    : ({ voldaan: "Voldaan", niet_voldaan: "Niet voldaan", onbekend: "Onbekend", af_te_wegen: "Af te wegen door de beoordelaar", geen: "" } as Record<Eis, string>)[invoer.eis] + `: ${model.eisTekst}.`)
+    + (model.eisRegel === "drieBorden" ? ` Drie borden aan tafel: ${jnTekst(gesprek.drieBorden)}. Serveeretiquette: ${jnTekst(gesprek.etiquette)}.` : "")
+    + (model.versie2 && model.sleutel === "heftruck" ? ` ${truckTekst(gesprek, certificaten)}` : "");
   const zelfde = periodes.filter((p) => p.soort === "zelfde");
   const sterk: [string, string][] = zelfde.slice(0, 3).map((p) => [`${p.functie}${p.werkgever ? `, ${p.werkgever}` : ""}${p.begin || p.einde ? `, ${datumTekst(p.begin)} tot ${datumTekst(p.einde)}` : p.duurMaanden ? `, ${p.duurMaanden} maanden` : ""}`, p.bron]);
   const aandacht: MatchKaart["aandacht"] = [];
   const cvZelfde = periodes.some((p) => p.soort === "zelfde" && p.bron === "cv");
+  if (v2 && opties.formulierKeuze && opties.functie && opties.formulierKeuze !== opties.functie) aandacht.push({ t: "Functie gewisseld", d: `Op het formulier als eerste gekozen: ${opties.formulierKeuze}. Met Job vastgesteld: ${opties.functie}; de score gaat over ${model.naam}.`, soort: "open" });
+  if (model.versie2 && model.sleutel === "heftruck" && gesprek.gereden === "geen" && cvZelfde) aandacht.push({ t: "Gesprek en cv verschillen over zelf rijden", d: "De kandidaat zei tegen Job nog niet zelf te hebben gereden; het cv toont wel rijwerk. Vraag het na.", soort: "open" });
   if (gesprek.ervaringNiveau === "geen" && cvZelfde) aandacht.push({ t: "Gesprek en cv verschillen", d: "In het gesprek gaf de kandidaat aan geen ervaring te hebben; het cv toont wel ervaring in de functie. Vraag het bij de kennismaking.", soort: "open" });
   if (invoer.eis === "onbekend") aandacht.push({ t: "Ervaringseis onbekend", d: `Niet aangetoond: ${model.eisTekst}. Vraag het bij de kennismaking.`, soort: "open" });
   if (invoer.eis === "af_te_wegen") aandacht.push({ t: "Alleen verwante ervaring", d: `Verwant (${model.verwant}) telt niet vanzelf als ervaring in de functie. Weeg het af.`, soort: "open" });
@@ -339,7 +442,10 @@ export function matchKaart(model: FunctieModel, periodes: Periode[], certificate
   if (schatting) aandacht.push({ t: "Datums onvolledig", d: "Een of meer periodes staan er alleen met jaartallen; de score gebruikt een schatting.", soort: "schatting" });
   if (invoer.A === null) aandacht.push({ t: "Ervaring in de functie onbekend", d: "Het cv en het gesprek noemen geen ervaring in deze functie. Onbekend is geen nul.", soort: "onbekend" });
   if (invoer.C === null && invoer.A !== 0 && aandacht.length < 3) aandacht.push({ t: "Verwante ervaring niet vermeld", d: "Onbekend, telt niet mee en geeft geen aftrek.", soort: "onbekend" });
-  const uitleg = u.toestand === "eis_niet_voldaan" ? "De kandidaat geeft zelf aan geen ervaring in deze functie te hebben."
+  const uitleg = u.toestand === "eis_niet_voldaan" ? (model.eisRegel === "drieBorden" && gesprek.drieBorden === "nee" ? "De kandidaat geeft zelf aan niet met drie borden tegelijk aan tafel te hebben uitgeserveerd."
+      : model.eisRegel === "drieBorden" && gesprek.etiquette === "nee" ? "De kandidaat geeft zelf aan de serveeretiquette aan tafel niet te kennen."
+      : model.versie2 && model.sleutel === "heftruck" && gesprek.gereden === "geen" ? "De kandidaat geeft zelf aan nog niet op een heftruck of reachtruck te hebben gereden."
+      : "De kandidaat geeft zelf aan geen ervaring in deze functie te hebben.")
     : invoer.A === null ? "Geen ervaring in deze functie gevonden in het cv of het gesprek."
       : invoer.A === 0 ? "Geen ervaring in deze functie; voor deze functie zijn starters welkom."
         : `${invoer.A && typeof invoer.A === "object" ? duurTekst(invoer.A.min, invoer.A.max) : feiten.A.split(" · ")[0]} ervaring in de functie; ${invoer.B === "titel" ? "werkzaamheden niet beschreven" : invoer.B === 2 ? "kerntaken beschreven" : invoer.B === 1 ? "één kerntaak beschreven" : "geen kerntaken"}.`;

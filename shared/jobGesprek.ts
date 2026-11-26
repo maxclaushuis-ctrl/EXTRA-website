@@ -38,6 +38,8 @@ export const MAX_POGINGEN = 2;
 export interface Gesprek extends Beurt {
   /** Over welk veld de vraag van het model gaat, of "klaar". */
   vraagt: Onderwerp | "klaar" | null;
+  /** Vraagversie 2: over welk functiepunt de vraag van het model gaat. */
+  vraagtPunt: string | null;
 }
 
 /** De eerdere berichten van de kandidaat uit de geschiedenis ("Kandidaat: ..."), nieuwste laatst. */
@@ -49,17 +51,22 @@ export function eerdereAntwoorden(geschiedenis: string, max = 8): string[] {
  * Controleert wat het model teruggeeft. Zoals Job 4 (valideerBeurt), met één verschil: verwijst de
  * kandidaat terug ("zeg ik net"), dan mag het citaat ook uit een eerder bericht van hem komen.
  */
-export function valideerGesprek(ruw: any, bericht: string, onderwerp: Onderwerp | null, eerdere: string[]): Gesprek {
-  const b = valideerBeurt(ruw, bericht, onderwerp);
+export function valideerGesprek(ruw: any, bericht: string, onderwerp: Onderwerp | null, eerdere: string[], huidigPunt?: string | null): Gesprek {
+  const b = valideerBeurt(ruw, bericht, onderwerp, huidigPunt);
   let velden = b.velden;
   const draagt = b.soorten.includes("antwoord") || b.soorten.includes("correctie");
   if (draagt && eerdere.length) {
     const l = valideerLezing({ velden: ruw?.velden || {}, taal: ruw?.taal, twijfel: ruw?.twijfel, nvt: ruw?.nvt });
-    velden = { ...bewijsCheck(l.velden, ruw?.bewijs, [...eerdere, bericht].join(" | "), onderwerp), ...velden };
+    const eerder = bewijsCheck(l.velden, ruw?.bewijs, [...eerdere, bericht].join(" | "), onderwerp, huidigPunt);
+    // Punten uit een eerder bericht ("dat zei ik toch") komen erbij; wat dit bericht zelf draagt, gaat voor.
+    const punten = eerder.punten || velden.punten ? { ...(eerder.punten || {}), ...(velden.punten || {}) } : undefined;
+    const puntBewijs = eerder.puntBewijs || velden.puntBewijs ? { ...(eerder.puntBewijs || {}), ...(velden.puntBewijs || {}) } : undefined;
+    velden = { ...eerder, ...velden, ...(punten ? { punten } : {}), ...(puntBewijs ? { puntBewijs } : {}) };
   }
   const v = ruw?.vraagt;
   const vraagt = v === "klaar" ? "klaar" : typeof v === "string" && (ONDERWERPEN as string[]).includes(v) ? (v as Onderwerp) : b.volgende;
-  return { ...b, velden, vraagt };
+  const vp = ruw?.vraagtPunt;
+  return { ...b, velden, vraagt, vraagtPunt: typeof vp === "string" && /^[a-zA-Z]{2,30}$/.test(vp) ? vp : null };
 }
 
 // ─── Harde grenzen voor wat Job verstuurt ────────────────────────────────────
@@ -105,10 +112,17 @@ export function vormFouten(t: string, maxZinnen = 4): string[] {
   return f;
 }
 
-/** Een reactie van het model: geen vraag, hooguit twee korte zinnen, binnen de grenzen. */
-export function reactieMag(t: string, taal: JobTaal): boolean {
+/** Een reactie van het model: geen vraag, hooguit twee korte zinnen (één als er een vraag volgt), binnen de grenzen. */
+export function reactieMag(t: string, taal: JobTaal, maxZinnen = 2): boolean {
   const s = (t || "").trim();
-  return !!s && !s.includes("?") && s.length <= 220 && grensFouten(s, taal, 2).length === 0;
+  return !!s && !s.includes("?") && s.length <= 220 && grensFouten(s, taal, maxZinnen).length === 0;
+}
+
+const eersteWoord = (t: string) => ((t || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[a-z0-9']+/) || [""])[0];
+/** Begint de reactie met hetzelfde woord als het vorige bericht van Job? Dan voelt het als een riedel. */
+export function zelfdeOpening(reactie: string, vorig: string | null | undefined): boolean {
+  const a = eersteWoord(reactie);
+  return !!a && !!vorig && a === eersteWoord(vorig);
 }
 
 /** Een vraag van het model: eindigt met het enige vraagteken, kort, binnen de grenzen. */
@@ -140,6 +154,18 @@ export function stelGesprekSamen(i: {
   taal: JobTaal;
   /** Vaste reactie die voorgaat (bijvoorbeeld als Job na twee pogingen verder gaat). */
   vasteReactie?: string;
+  /** Het vorige bericht van Job: een reactie die met hetzelfde woord begint, valt weg. */
+  vorigBericht?: string;
+  /** Het loon van een gekoppelde vacature; vervangt bij een loonvraag de algemene tekst. */
+  loonTekst?: string;
+  /**
+   * Vraagversie 2: het functiepunt waar de vaste vraag over gaat. Bij een functiepunt verstuurt Job altijd de
+   * vraag uit het profiel (met de knoppen van dat punt); de persoonlijke aansluiting zit in de korte reactie.
+   * Zo kan een vraagtekst nooit over iets anders gaan dan het veld waarin het antwoord terechtkomt.
+   */
+  punt?: string | null;
+  /** Vraagversie 2: de schrijfregels van 25 november (één zin reactie vóór een vraag, zachte voorkeur voor afwisseling). */
+  versie2?: boolean;
 }): GesprekSamenstelling {
   const g = i.gesprek;
   const gebruikt: GesprekSamenstelling["gebruikt"] = { reactie: false, vraag: false, kennis: null };
@@ -149,9 +175,16 @@ export function stelGesprekSamen(i: {
   let voor = i.vasteReactie || "";
   if (!voor && g.kennis) {
     const k = g.kennis === "onbekend" ? null : kennis(g.kennis);
-    voor = k ? k[i.taal] : ONBEKENDE_VRAAG[i.taal];
+    voor = g.kennis === "loon" && i.loonTekst ? i.loonTekst : k ? k[i.taal] : ONBEKENDE_VRAAG[i.taal];
     gebruikt.kennis = g.kennis;
   }
+  // Hetzelfde openingswoord als het vorige bericht is een zachte voorkeur: alleen een kale bevestiging
+  // ("Helder.", "Top!") valt weg; een inhoudelijke reactie, of een reactie op een correctie of ergernis, blijft.
+  const kaal = (t: string) => t.trim().split(/\s+/).length <= 3;
+  const inhoudelijk = g.soorten.includes("correctie") || g.soorten.includes("frustratie");
+  // Zonder vraagversie 2 (punt undefined) zoals het was: hooguit twee zinnen, geen controle op het openingswoord.
+  const v2 = i.punt !== undefined || !!i.loonTekst || i.versie2;
+  const reactieOk = (max: number) => v2 ? reactieMag(g.reactie, i.taal, max) && (inhoudelijk || !kaal(g.reactie) || !zelfdeOpening(g.reactie, i.vorigBericht)) : reactieMag(g.reactie, i.taal);
 
   const laatste = berichten[berichten.length - 1];
   if (i.onderwerp && i.standaard) {
@@ -159,10 +192,12 @@ export function stelGesprekSamen(i: {
     const regelsVoor = laatste.tekst !== i.standaard && laatste.tekst.endsWith(i.standaard) ? laatste.tekst.slice(0, -i.standaard.length).trim() : "";
     const regelsVraag = regelsVoor ? i.standaard : laatste.tekst;
     if (!voor && regelsVoor) voor = regelsVoor;
-    if (!voor && reactieMag(g.reactie, i.taal)) { voor = g.reactie.trim(); gebruikt.reactie = true; }
+    // Met een vraag erna: hooguit één zin reactie, zodat het bericht bij twee korte zinnen blijft.
+    if (!voor && reactieOk(1)) { voor = g.reactie.trim(); gebruikt.reactie = true; }
     let vraagTekst = regelsVraag;
     const zelfdeVeld = g.vraagt === i.onderwerp;
-    if (!LETTERLIJK.includes(i.onderwerp) && zelfdeVeld && vraagMag(g.vraag, i.taal)) { vraagTekst = g.vraag.trim(); gebruikt.vraag = true; }
+    const profielvraag = i.punt !== undefined;
+    if (!LETTERLIJK.includes(i.onderwerp) && zelfdeVeld && !profielvraag && vraagMag(g.vraag, i.taal)) { vraagTekst = g.vraag.trim(); gebruikt.vraag = true; }
     const samen = voor ? `${voor} ${vraagTekst}` : vraagTekst;
     if (vormFouten(samen).length === 0) laatste.tekst = samen;
     else {
@@ -175,7 +210,7 @@ export function stelGesprekSamen(i: {
   }
 
   // Job vraagt niets meer (cv, collega, klaar): de vaste berichten, met vooraan het antwoord of de reactie.
-  if (!voor && reactieMag(g.reactie, i.taal)) { voor = g.reactie.trim(); gebruikt.reactie = true; }
+  if (!voor && reactieOk(2)) { voor = g.reactie.trim(); gebruikt.reactie = true; }
   if (voor) {
     const eerste = berichten[0];
     const samen = `${voor} ${eerste.tekst}`;

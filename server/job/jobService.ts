@@ -25,9 +25,10 @@ import { randomBytes } from "crypto";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { storage } from "../storage";
-import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, type JobGesprek } from "@shared/schema";
+import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, vacancyPosts, type JobGesprek } from "@shared/schema";
+import { loonLabel } from "@shared/vacatureWeergave";
 import { agendaKnopAan, bevestigingWhatsapp, planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
-  ervaringWerk, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herinneringSchema, binnenVerstuurvenster, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
+  ervaringWerkVoor, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herinneringSchema, binnenVerstuurvenster, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type Onderwerp, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
@@ -220,6 +221,31 @@ function functieNaamVan(c: { functieEersteKeus?: string | null; bronDetails?: un
   const MET_LIDWOORD: Record<string, { nl: string; en: string }> = { bar: { nl: "de bar", en: "the bar" }, keuken: { nl: "de keuken", en: "the kitchen" }, afwas: { nl: "de afwas", en: "dishwashing" } };
   return MET_LIDWOORD[c.functieEersteKeus] || { nl: klein(f.nl), en: klein(f.en) };
 }
+/** Vraagversie 2, de functievragen per functie: in de testomgeving vanzelf aan, uit met =0; elders alleen met JOB_FUNCTIEVRAGEN=1. */
+export function functievragenAan(): boolean {
+  const w = process.env.JOB_FUNCTIEVRAGEN;
+  return w === "1" || (process.env.TESTOMGEVING === "1" && w !== "0");
+}
+/** Alle gekozen functies met hun naam (events, meer dan één); anders undefined. */
+function gekozenFuncties(c: { bronDetails?: unknown }): { code: string; nl: string; en: string }[] | undefined {
+  const b = c.bronDetails && typeof c.bronDetails === "object" ? (c.bronDetails as Record<string, unknown>) : {};
+  const label = ingangLabel(c.bronDetails);
+  if (!label || !Array.isArray(b.functies) || b.functies.length < 2) return undefined;
+  const uit = (b.functies as unknown[]).filter((x): x is string => typeof x === "string").map((code) => {
+    const f = functieVan(code, label);
+    return f ? { code, nl: f.nl, en: f.en } : null;
+  }).filter((x): x is { code: string; nl: string; en: string } => !!x);
+  return uit.length > 1 ? uit : undefined;
+}
+/** Het loon van de vacature waaraan de aanmelding gekoppeld is (bron_details.vacature), zoals op de vacature. */
+async function vacatureLoon(bron: unknown): Promise<string | undefined> {
+  const slug = bron && typeof bron === "object" ? (bron as Record<string, unknown>).vacature : null;
+  if (typeof slug !== "string" || !slug.trim()) return undefined;
+  try {
+    const [v] = await db.select({ salaryMin: vacancyPosts.salaryMin }).from(vacancyPosts).where(eq(vacancyPosts.slug, slug.trim())).limit(1);
+    return loonLabel(v?.salaryMin ?? null) ?? undefined;
+  } catch { return undefined; }
+}
 /** Meer dan één functie aangevinkt op het formulier (events). */
 function meerFunctiesGekozen(bron: unknown): boolean {
   const f = bron && typeof bron === "object" ? (bron as Record<string, unknown>).functies : null;
@@ -246,6 +272,10 @@ async function context(candidateId: number, taal: JobTaal): Promise<JobContext |
     cvVragen: matchAan(),
     begrijpen: begrijpenAan(),
     meerFuncties: meerFunctiesGekozen(c.bronDetails),
+    functieCode: c.functieEersteKeus || undefined,
+    functies: gekozenFuncties(c),
+    vraagversie2: functievragenAan(),
+    vacatureLoon: await vacatureLoon(c.bronDetails),
   };
 }
 
@@ -505,7 +535,9 @@ async function meldPlanner(candidateId: number, reden: string) {
   }
 }
 
-async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
+/** Voert de acties uit. Geeft terug of de cv-mail echt verstuurd is (null als er geen cv-mail bij zat). */
+async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]): Promise<{ cvMail: boolean | null }> {
+  let cvMail: boolean | null = null;
   for (const a of acties) {
     if (a.soort === "planner" || a.soort === "nogo") await meldPlanner(g.candidateId, a.reden);
     if (a.soort === "profiel") {
@@ -539,10 +571,12 @@ async function voerUit(g: JobGesprek, s: JobState, acties: Actie[]) {
       const c = await kandidaat(g.candidateId);
       // Kreeg de kandidaat al de cv-mail van de aanmeldflow, dan geen tweede.
       if (c?.email && !c.cvReminderSentAt) {
-        stuurCvMail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, gesprekToken: g.token }).catch(() => {});
-      }
+        // Afwachten: Job zegt alleen dat er een mail is als die echt verstuurd is.
+        cvMail = await stuurCvMail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, gesprekToken: g.token }).then((x) => x !== false).catch(() => false);
+      } else cvMail = !!c?.cvReminderSentAt;
     }
   }
+  return { cvMail };
 }
 
 // ─── Starten ─────────────────────────────────────────────────────────────────
@@ -598,7 +632,7 @@ export async function startGesprek(candidateId: number, opties: { voorkeur?: "wh
     const eersteVraag = r.berichten[r.berichten.length - 1].tekst;
     const { startParameters } = await import("./jobSjablonen");
     const ok = await verstuurSjabloon(candidateId, waNummer(c), sjabloon, taal,
-      startParameters(sjabloon, c.firstName, ctx.meerFuncties ? (taal === "en" ? "work at EXTRA" : "werk bij EXTRA") : functieLabel(c.functionType, taal), eersteVraag, ervaringWerk(ctx.functie, taal), ctx.functie, taal),
+      startParameters(sjabloon, c.firstName, ctx.meerFuncties ? (taal === "en" ? "work at EXTRA" : "werk bij EXTRA") : functieLabel(c.functionType, taal), eersteVraag, ervaringWerkVoor(ctx, taal, r.state.velden), ctx.functie, taal),
       `${r.berichten[0].tekst}\n\n${eersteVraag}`);
     if (!ok) {
       await db.update(jobGesprekken).set({ kanaal: "web" }).where(eq(jobGesprekken.id, g.id));
@@ -688,7 +722,7 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
   }
   const gevuld = delen.filter(Boolean);
   // Meerdere berichten: een commando (MENS, VERZETTEN, ...) gaat voor, anders alles samen.
-  let tekst = gevuld.length > 1 ? (gevuld.find((d) => herkenCommando(d, s.laatsteOnderwerp)) || gevuld.join("\n")) : (gevuld[0] || "");
+  let tekst = gevuld.length > 1 ? (gevuld.find((d) => herkenCommando(d, s.laatsteOnderwerp, s.velden.puntGevraagd)) || gevuld.join("\n")) : (gevuld[0] || "");
   const privacy: PrivacyUitkomst | null = gevonden.size ? { tekst, gevonden: Array.from(gevonden), leeg: allesLeeg } : null;
   if (privacy) console.log(`[Job] privacyfilter: ${privacy.gevonden.join(", ")} weggelaten (gesprek ${g.id})`);
   if (gevuld.length > 1) for (const d of gevuld) await bewaarInkomend(g, d, null, invoer.kanaal);
@@ -708,7 +742,7 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
   let vervolg: Vervolg | null = null;
   // De knop "Kies een moment" van het uitnodigingssjabloon: Job stuurt nu de keuzelijst.
   let kiesMoment = false;
-  if (tekst && g.kanaal === "whatsapp" && s.status === "plannen" && !invoer.cvOntvangen && !herkenCommando(tekst, s.laatsteOnderwerp)) {
+  if (tekst && g.kanaal === "whatsapp" && s.status === "plannen" && !invoer.cvOntvangen && !herkenCommando(tekst, s.laatsteOnderwerp, s.velden.puntGevraagd)) {
     const ms = await momenten();
     kiesMoment = gevuld.some((d) => ["kies een moment", "choose a moment"].includes(d.trim().toLowerCase()));
     for (const d of gevuld) planKeuze = gekozenMoment(d, ms) ?? planKeuze;
@@ -749,7 +783,7 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
     r = uit.r;
     console.log(`[Job] beurt gesprek ${g.id}: ${uit.bron}${uit.beurt ? ` ${uit.beurt.soorten.join("+")} velden=${Object.keys(uit.beurt.velden).join(",") || "-"}` : ""}${uit.gebruikt ? ` reactie=${uit.gebruikt.reactie} vraag=${uit.gebruikt.vraag} kennis=${uit.gebruikt.kennis ?? "-"}` : ""}${uit.ai ? ` ${uit.ai.model} ${uit.ai.ms}ms` : ""}`);
   } else {
-    const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp);
+    const leesbaar = tekst && wachtOpKandidaat && !herkenCommando(tekst, s.laatsteOnderwerp, s.velden.puntGevraagd);
     const gesprek = tekst ? await gesprekVoorAi(g.id, tekst) : null;
     const lezing = leesbaar ? await lees(tekst, s.laatsteOnderwerp, ctx, s.velden, s.taal, ctx.begrijpen && gesprek ? gesprek : undefined) : null;
     r = verwerk(s, ctx, { tekst, cvOntvangen: invoer.cvOntvangen }, lezing, nu);
@@ -765,7 +799,12 @@ export async function verwerkBericht(g: JobGesprek, invoer: { tekst?: string; de
 
   const klaar = ["plannen", "planner", "gepland"].includes(s.status) && !g.afgerondAt;
   await bewaarState(g.id, s, klaar ? { afgerondAt: nu } : {});
-  await voerUit(g, s, r.acties);
+  const uitgevoerd = await voerUit(g, s, r.acties);
+  // Lukte de cv-mail niet (of is er geen e-mailadres), dan zegt Job ook niet dat hij er een stuurde.
+  if (uitgevoerd.cvMail === false) {
+    const t = teksten(s.taal);
+    r = { ...r, berichten: r.berichten.map((b) => (b.tekst === t.cvLater ? { ...b, tekst: t.cvLaterZonderMail } : b)) };
+  }
   await bewaarEnVerstuur(g, s, r.berichten, nu, wasGestopt && !!tekst && !!ctx.stopV3);
 
   // Twijfel of geen planner nodig: de bevestigingsmail met "een collega bekijkt je aanmelding" volgt alleen bij planner.
@@ -811,14 +850,14 @@ export async function naCvAnalyse(candidateId: number): Promise<void> {
   const c = await kandidaat(candidateId);
   if (!c) return;
   const { cvVraagVoor } = await import("@shared/cvVragen");
-  const { modelVoor } = await import("@shared/kandidaatMatch");
+  const { modelVoor, gesprekKennisUit, matchFunctie } = await import("@shared/kandidaatMatch");
   const { laatsteAnalyses } = await import("./cvAnalyse");
   const a = (await laatsteAnalyses([candidateId])).get(candidateId);
   const gesteld = (v.cvVragen || []).map((x) => x.soort);
   const vraag = a ? cvVraagVoor({
-    status: a.status, model: modelVoor(c.functieEersteKeus, c.functionType, (c.bronDetails as any)?.branche ?? null),
+    status: a.status, model: modelVoor(matchFunctie(c.functieEersteKeus, v), c.functionType, (c.bronDetails as any)?.branche ?? null, v.vraagversie === 2),
     periodes: (a.periodes || []) as any, certificaten: (a.certificaten || []) as string[],
-    gesprek: { ervaringNiveau: v.ervaringNiveau ?? null }, gesteld, peil: nu,
+    gesprek: gesprekKennisUit(v, v.ervaringNiveau === "geen"), gesteld, peil: nu,
   }) : null;
   let tekst: string;
   if (vraag) {

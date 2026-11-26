@@ -30,6 +30,8 @@ import { modelVoor } from "@shared/kandidaatMatch";
 import { VELD_DOEL } from "./jobAi";
 import { eerdereAntwoorden, gesprekAan, MAX_POGINGEN, stelGesprekSamen, valideerGesprek, type Gesprek } from "@shared/jobGesprek";
 import { LETTERLIJK } from "@shared/jobBeurt";
+import { profielPrompt, profielVoor, volgendPunt } from "@shared/jobProfielen";
+import { versie2 } from "@shared/jobRegels";
 
 /** In de testomgeving vanzelf aan, uit met JOB_V4=0; elders alleen met JOB_V4=1. */
 export function beurtAan(): boolean {
@@ -70,6 +72,7 @@ function bekendLeesbaar(v: JobVelden): string {
   zet("werkautorisatie", v.werkautorisatie); zet("geldig tot", v.geldigTot); zet("diensten per week", v.diensten); zet("werkgebied", v.werkgebied);
   zet("vervoer", v.vervoer); zet("wanneer", v.werkmoment); zet("beginnen", v.startdatum); zet("naast", v.werkvorm); zet("talen", v.talen);
   zet("cv paraat", v.cvParaat);
+  if (v.punten && Object.keys(v.punten).length) zet("functiepunten", v.punten);
   return delen.length ? delen.join("; ") : "(nog niets)";
 }
 
@@ -95,11 +98,39 @@ const BEURT_VELDEN = `
 - nlOfEn: false alleen als duidelijk is dat de kandidaat geen Nederlands en geen Engels spreekt
 - cvParaat: "ja" of "nee", alleen als antwoord op de vraag of het cv paraat is`;
 
+/** Vraagversie 2: de punten per functie (shared/jobProfielen.ts) en hoe Job ermee omgaat. */
+function puntenUitleg(ctx: JobContext, v: JobVelden): string {
+  if (!versie2(v)) return "";
+  const pt = volgendPunt(ctx, v);
+  return `
+${profielPrompt(ctx, v)}
+- startdatumTekst: een concreet startmoment in de woorden van de kandidaat ("vanaf maandag", "na 1 januari"); zet dan geen startdatum.
+- werkmomentTekst: wanneer de kandidaat wil werken in eigen woorden als het niet precies een knop is ("liefst avonden", "alleen in het weekend"); zet dan geen werkmoment.
+- punten: object met per punt hierboven wat de kandidaat echt zei, met de toegestane waarde of een korte tekst. Vul elk punt dat het bericht beantwoordt, ook als Job er nog niet naar vroeg ("Ik reed op allebei, maar mijn certificaat is alleen voor de heftruck" vult gereden, certHeftruck en certReachtruck). Onbekend laat je weg; onbekend is nooit nee. Zet in bewijs.punten per punt het letterlijke citaat; zonder citaat telt een punt niet. Een vraag of opmerking van de kandidaat (zoals over loon) is nooit een citaat voor een punt.
+- Bij een functievraag zet Job zelf de vaste vraag van het punt, met de knoppen. Schrijf dan alleen je korte reactie die aansluit op wat de kandidaat zei; vraag mag leeg blijven, vraagt = "functievraag".${pt ? `
+De functievraag die nu aan de beurt is gaat over: ${pt.doel}.` : ""}`;
+}
+
+/** Hoe Job schrijft en antwoorden verwerkt (afspraken Max 25 nov 2026). */
+const SCHRIJVEN = `Hoe je schrijft:
+- Warm, direct, gewone spreektaal, je-vorm, zoals een goede recruiter van EXTRA in WhatsApp. Hooguit twee korte zinnen per bericht en één vraag: een korte reactie (mag leeg) en je vraag.
+- Laat merken dat je het antwoord begreep door aan te haken op het concrete detail ("daar", "die bruiloften"). Een bevestiging alleen als die iets toevoegt. Wissel af: begin niet steeds met "Top", "Helder", "Mooi" of de voornaam, en niet twee berichten achter elkaar met hetzelfde woord. Geen opvulzinnen als "bedankt voor je antwoord", geen emoji, geen overdreven lof.
+- Kijk vóór je antwoordt naar de vraag die Job stelde, het antwoord dat je nu krijgt en wat er eerder al gezegd is.
+- Duidelijk antwoord: verwerk het en ga door.
+- Gedeeltelijk antwoord: haak aan op het detail en vraag alleen het ontbrekende stuk. "Ik werkte in een hotel" zegt bij housekeeping nog niet wat iemand deed.
+- Meer antwoorden tegelijk: leg elk genoemd feit vast en sla beantwoorde vragen over. Bewaar wat iemand echt zei, maak er niets anders van: "Ik kan vanaf maandag, liefst twee avonden per week" geeft startdatumTekst "vanaf maandag" (geen startdatum-knop), diensten "1-2" (twee per week) en werkmomentTekst "liefst avonden"; de precieze dagen zijn nog onbekend.
+- "Ik wil het leren" is een wens, geen ervaring: laat ervaringNiveau dan leeg. Vul nooit iets in wat de kandidaat niet zelf zei.
+- Een vraag van de kandidaat: zet kennis (zie onder) en laat reactie leeg; Job zet het goedgekeurde antwoord voor je vraag. Pak daarna de open vraag weer op. Noem zelf nooit bedragen, loon, uren, contracten, data of beloftes, en suggereer nooit dat iemand zeker wordt uitgenodigd.
+- Een correctie: leg het juiste gegeven vast (soort "correctie") en schrijf de volledige bijgewerkte samenvatting. Let op wie wat deed: "Nee, ik hielp in de keuken, mijn collega stond zelfstandig op de warme kant" betekent dat zelfstandig koken bij de collega hoort. De eerdere aanname mag nergens blijven staan.
+- Onverwacht, vaag of geïrriteerd: reageer op wat iemand bedoelt. "Dit heb ik toch net gezegd?": kijk terug, neem het eerdere antwoord over (met dat bericht als bewijs), zeg kort sorry en ga door. Blijft iets wezenlijks onduidelijk, één gerichte verduidelijking (doorvragen). Een klacht, grap, wedervraag of typefout is op zichzelf geen antwoord.
+- De manier waarop iemand appt (spelling, emoji, korte antwoorden, de taal van de chat) gebruik je alleen om beter te reageren. Leid daar nooit taalniveau, motivatie of persoonlijkheid uit af, en het geeft geen punten.
+- Bij keuzevragen zet Job knoppen onder je vraag; noem dus niet alle opties.`;
+
 /** De instructie voor de AI. Puur, zodat de test hem ook kan bekijken. */
 export function beurtPrompt(i: { ctx: JobContext; state: JobState; laatsteVraag: string; geschiedenis: string; modus: "vragen" | "na" }): string {
   const { ctx, state } = i;
   const taal = state.taal === "en" ? "Engels" : "Nederlands";
-  const model = modelVoor(ctx.functie, ctx.functie, ctx.label ?? null);
+  const model = modelVoor(versie2(state.velden) ? profielVoor(ctx, state.velden.punten)?.code || ctx.functieCode || ctx.functie : ctx.functie, ctx.functie, ctx.label ?? null, versie2(state.velden));
   const open = openOnderwerpenOpVolgorde(state.velden, ctx).filter((o) => !state.velden.onbekend?.includes(o));
   const functie = ctx.meerFuncties ? "werk bij EXTRA (meerdere functies)" : ctx.functieNaam?.nl || functieLabel(ctx.functie, "nl");
   const statusUitleg: Record<string, string> = {
@@ -112,7 +143,7 @@ export function beurtPrompt(i: { ctx: JobContext; state: JobState; laatsteVraag:
 
 Wat de functie vraagt: ${model.naam} (${model.soort === "vereist" ? "ervaring vereist" : model.soort === "gewenst" ? "ervaring gewenst" : "starters welkom"}); kerntaken: ${model.kerntaken.join(", ")}; verwant: ${model.verwant}.
 Uit het formulier: paspoort ${ctx.nationalityZone === "NL" ? "Nederlands" : ctx.nationalityZone === "EU" ? "ander EU-land" : ctx.nationalityZone === "NON_EU" ? "buiten de EU" : "onbekend"}; cv ${ctx.hasCv ? "ontvangen" : "nog niet ontvangen"}.
-Al bekend uit het gesprek: ${bekendLeesbaar(state.velden)}
+Al bekend uit het gesprek: ${bekendLeesbaar(state.velden)}${puntenUitleg(ctx, state.velden)}
 
 Het gesprek tot nu toe (oudste eerst):
 ${i.geschiedenis || "(nog niets)"}`;
@@ -167,13 +198,15 @@ export interface BeurtUitkomst {
 }
 
 /** Gecontroleerde terugval zonder AI: alleen duidelijke antwoorden, anders verduidelijken. */
-function terugvalLezing(tekst: string, onderwerp: Onderwerp | null): Lezing {
+function terugvalLezing(tekst: string, onderwerp: Onderwerp | null, eenWoordMag = false): Lezing {
   const r = reserveLezing(tekst, onderwerp);
   const vrij: Onderwerp[] = ["ervaring", "functievraag", "hotels", "restaurant", "geldigheid"];
   const lijktVraag = /\?|^(wat|waar|wanneer|hoe|waarom|wie|kan|mag|moet|what|where|when|how|why|who|can|do|is)\b/i.test(tekst.trim());
   if (onderwerp && vrij.includes(onderwerp)) {
     const woorden = tekst.trim().split(/\s+/).length;
-    if (lijktVraag || woorden < 2) return { ...r, velden: {}, geenAntwoord: true, ack: "" };
+    // Vraagversie 2: bij een functiepunt is één woord vaak het hele antwoord ("Opera", "Mews"). De regels
+    // slaan het alleen op als het op een antwoord lijkt (geen vraag, loon of klacht), zie lijktAntwoord.
+    if (lijktVraag || (woorden < 2 && !eenWoordMag)) return { ...r, velden: {}, geenAntwoord: true, ack: "" };
     return { ...r, ack: "" };
   }
   // Keuzevragen: alleen als de reserve-lezer het veld echt vond.
@@ -213,7 +246,7 @@ export async function verwerkBeurtV4(i: BeurtInvoer): Promise<BeurtUitkomst> {
   const s0 = i.state;
   const tekst = i.tekst;
   // Commando's (MENS, ENGLISH, VERZETTEN...) en het antwoord op een open cv-vraag: de vaste regels.
-  if (herkenCommando(tekst, s0.laatsteOnderwerp) || s0.velden.cvVraag) {
+  if (herkenCommando(tekst, s0.laatsteOnderwerp, s0.velden.puntGevraagd) || s0.velden.cvVraag) {
     return { r: verwerk(s0, ctx, { tekst }, null, i.nu), beurt: null, gebruikt: null, bron: "regels", ai: null };
   }
   const modus: "vragen" | "na" = BEZIG.includes(s0.status) ? "vragen" : "na";
@@ -227,7 +260,7 @@ export async function verwerkBeurtV4(i: BeurtInvoer): Promise<BeurtUitkomst> {
     if (ai?.inhoud) {
       try {
         const json = ai.inhoud.slice(ai.inhoud.indexOf("{"), ai.inhoud.lastIndexOf("}") + 1);
-        if (json) beurt = valideerBeurt(JSON.parse(json), tekst, onderwerp);
+        if (json) beurt = valideerBeurt(JSON.parse(json), tekst, onderwerp, s0.velden.puntGevraagd);
       } catch { beurt = null; }
     }
   }
@@ -272,7 +305,7 @@ export async function verwerkBeurtV4(i: BeurtInvoer): Promise<BeurtUitkomst> {
     return grensStop(state, beurt, taal, ai);
   }
 
-  let lezing: Lezing = beurt ? alsLezing(beurt) : terugvalLezing(tekst, onderwerp);
+  let lezing: Lezing = beurt ? alsLezing(beurt) : terugvalLezing(tekst, onderwerp, onderwerp === "functievraag" && versie2(s0.velden));
   // De AI noemt het een antwoord maar vult het open veld niet: dan de gecontroleerde terugval voor
   // dat veld (een duidelijk antwoord gaat door, anders telt het als onduidelijk). Zo ontstaat geen lus.
   let zonderVeld = false;
@@ -305,7 +338,8 @@ export async function verwerkBeurtV4(i: BeurtInvoer): Promise<BeurtUitkomst> {
   const std = standaardVraag(r.state, ctx);
   // Frustratie wordt altijd kort erkend; komt de reactie van de AI niet door de controle, dan een vaste korte zin.
   if (beurt && beurt.soorten.includes("frustratie") && !beurt.kennis && !reactieGoed(beurt.reactie, r.state.taal)) beurt = { ...beurt, reactie: T[r.state.taal].frustratie };
-  const sam = stelSamen({ beurt, regels: r.berichten, onderwerp: r.state.status === "bezig" || r.state.status === "wacht_cv" ? r.state.laatsteOnderwerp : null, standaard: std, taal: r.state.taal });
+  const sam = stelSamen({ beurt, regels: r.berichten, onderwerp: r.state.status === "bezig" || r.state.status === "wacht_cv" ? r.state.laatsteOnderwerp : null, standaard: std, taal: r.state.taal,
+    vastePuntvraag: r.state.laatsteOnderwerp === "functievraag" && versie2(r.state.velden) });
   // Nooit dezelfde vraag opnieuw met dezelfde woorden, en hooguit twee keer (shared/jobHerhaling.ts).
   // Een eigen vraag van de kandidaat is geen herhaling: Job antwoordt en stelt zijn vraag terug.
   const eigenVraag = !!beurt?.kennis;
@@ -322,7 +356,8 @@ const GESPREK_STATUS = ["bezig", "geen_reactie"];
  * De instructie voor het model in Job 5. Het model schrijft zelf de reactie en de vraag; de code
  * bewaakt alleen de grenzen (shared/jobGesprek.ts). De toon komt uit de mock-up die Max goedkeurde.
  */
-export function gesprekPrompt(i: { ctx: JobContext; state: JobState; laatsteVraag: string; geschiedenis: string }): string {
+/** De instructie van vóór vraagversie 2, ongewijzigd: lopende gesprekken en de schakelaar uit krijgen precies deze. */
+function gesprekPromptOud(i: { ctx: JobContext; state: JobState; laatsteVraag: string; geschiedenis: string }): string {
   const { ctx, state } = i;
   const taal = state.taal === "en" ? "Engels" : "Nederlands";
   const model = modelVoor(ctx.functie, ctx.functie, ctx.label ?? null);
@@ -371,6 +406,50 @@ ${kennisOverzicht()}
 Antwoord uitsluitend met JSON: {"soort": [], "velden": {}, "bewijs": {}, "kennis": null, "vraagKandidaat": null, "grens": null, "taal": null, "nvt": [], "twijfel": null, "doorvragen": null, "reactie": "", "vraag": "", "vraagt": ""}`;
 }
 
+export function gesprekPrompt(i: { ctx: JobContext; state: JobState; laatsteVraag: string; geschiedenis: string }): string {
+  if (!versie2(i.state.velden)) return gesprekPromptOud(i);
+  const { ctx, state } = i;
+  const taal = state.taal === "en" ? "Engels" : "Nederlands";
+  const model = modelVoor(versie2(state.velden) ? profielVoor(ctx, state.velden.punten)?.code || ctx.functieCode || ctx.functie : ctx.functie, ctx.functie, ctx.label ?? null, versie2(state.velden));
+  const open = openOnderwerpenOpVolgorde(state.velden, ctx).filter((o) => !state.velden.onbekend?.includes(o));
+  const functie = ctx.meerFuncties ? "werk bij EXTRA (meerdere functies)" : ctx.functieNaam?.nl || functieLabel(ctx.functie, "nl");
+  const openTekst = open.length ? open.map((o, n) => `${n + 1}. ${o}: ${VELD_DOEL[o] || o}${LETTERLIJK.includes(o) ? " (vaste tekst: zet alleen vraagt, Job gebruikt de vaste vraag)" : ""}`).join("\n") : "(geen: alles is bekend)";
+  return `Je bent Job, de recruiter van uitzendbureau EXTRA in Amsterdam. Je appt met ${ctx.voornaam}, die zich aanmeldde voor ${functie}${ctx.label ? ` (via ${ctx.label})` : ""}. Je bent een AI en zegt dat eerlijk als iemand het vraagt, maar je praat als een fijne, ervaren recruiter: je luistert, snapt wat iemand bedoelt (ook bij tikfouten, korte antwoorden of verwijzingen naar wat hij eerder zei) en reageert daarop. De gesprekstaal is ${taal}; Job spreekt alleen Nederlands en Engels.
+
+Wat de functie vraagt: ${model.naam} (${model.soort === "vereist" ? "ervaring vereist" : model.soort === "gewenst" ? "ervaring gewenst" : "starters welkom"}); kerntaken: ${model.kerntaken.join(", ")}; verwant: ${model.verwant}.
+Uit het formulier: paspoort ${ctx.nationalityZone === "NL" ? "Nederlands" : ctx.nationalityZone === "EU" ? "ander EU-land" : ctx.nationalityZone === "NON_EU" ? "buiten de EU" : "onbekend"}; cv ${ctx.hasCv ? "ontvangen" : "nog niet ontvangen"}.
+Al bekend: ${bekendLeesbaar(state.velden)}
+
+Het gesprek tot nu toe (oudste eerst):
+${i.geschiedenis || "(nog niets)"}
+
+Job vroeg zojuist (over ${state.laatsteOnderwerp ?? "onbekend"}): "${i.laatsteVraag}"
+Wat Job nog moet weten, in deze volgorde:
+${openTekst}
+
+${SCHRIJVEN}
+- Een groet ("hi", "hoi"): groet kort terug en stel de open vraag eenvoudig.
+- Vraag nooit iets wat al bekend is of al gezegd is. Stel één vraag: de eerstvolgende uit de lijst, of een andere open vraag uit de lijst als die logischer aansluit op wat de kandidaat net zei.
+- Ergernis: erken het kort en ga door.${puntenUitleg(ctx, state.velden)}
+
+Wat je teruggeeft (alleen JSON):
+- soort: lijst, een of meer van "antwoord", "correctie", "vraag" (kandidaat vraagt zelf iets), "hulp", "verwarring", "frustratie", "bedankje", "onduidelijk", "andere_taal", "mens" (wil een mens spreken of gebeld worden), "grens". Een groet zonder antwoord is "onduidelijk". Een verwijzing naar een eerder antwoord is "antwoord".
+- velden: alles wat de kandidaat echt zei, ook antwoorden op vragen die nog komen. Een kort antwoord ("2 jaar", "5", "nh", "maakt niet uit") is een gewoon antwoord op de vraag die Job stelde. Een vraag, groet of klacht is nooit een gegeven. Velden:${BEURT_VELDEN}${versie2(state.velden) ? "\n- punten: zie de functiepunten hierboven" : ""}
+- bewijs: per ingevuld veld het letterlijke stukje tekst van de kandidaat (uit dit bericht, of uit een eerder bericht als hij daarnaar verwijst); voor punten in bewijs.punten.
+- kennis: bij soort "vraag" het onderwerp uit deze lijst dat de vraag beantwoordt, anders "onbekend":
+${kennisOverzicht()}
+- vraagKandidaat: de vraag van de kandidaat in een paar woorden, anders null.
+- grens: alleen bij een concrete dreiging, seksuele intimidatie, discriminatie of een gerichte zware belediging: {"regel": "G1"|"G2"|"G3"|"G4", "bewijs": "letterlijk"}; anders null. Frustratie of een krachtterm is geen grens.
+- taal: de taal van dit bericht: "nl", "en", "anders" of null als het te kort of neutraal is.
+- nvt: vragen die niet meer van toepassing zijn, uit: hotels, sterren, restaurant, functievraag, specialisatie.
+- twijfel: alleen iets waar een collega naar moet kijken (kort, Nederlands), anders null.
+- doorvragen: het veld als je doorvraagt, anders null.
+- reactie: je korte reactie (geen vraag), of "".
+- vraag: je vraag (één zin, eindigt met een vraagteken), of "" als er niets meer open staat.
+- vraagt: het veld waar je vraag over gaat (uit de lijst hierboven), of "klaar".
+Antwoord uitsluitend met JSON: {"soort": [], "velden": {}, "bewijs": {}, "kennis": null, "vraagKandidaat": null, "grens": null, "taal": null, "nvt": [], "twijfel": null, "doorvragen": null, "reactie": "", "vraag": "", "vraagt": ""}`;
+}
+
 /**
  * Job 5: één bericht van de kandidaat tijdens de vragen. Het model schrijft, de regels beslissen.
  * Geeft null als Job 5 hier niet past of het model niet bruikbaar antwoordt; dan doet Job 4 de beurt.
@@ -380,7 +459,7 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
   const tekst = i.tekst;
   if (!i.ai || !GESPREK_STATUS.includes(s0.status) || !tekst.trim()) return null;
   // Commando's (MENS, STOP, ENGLISH...), een open cv-vraag of een bestand: de vaste regels via Job 4.
-  if (herkenCommando(tekst, s0.laatsteOnderwerp) || s0.velden.cvVraag || s0.velden.bestandVraag) return null;
+  if (herkenCommando(tekst, s0.laatsteOnderwerp, s0.velden.puntGevraagd) || s0.velden.cvVraag || s0.velden.bestandVraag) return null;
   const ctx: JobContext = { ...i.ctx, begrijpen: true };
   const onderwerp = s0.laatsteOnderwerp;
 
@@ -389,14 +468,17 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
   let g: Gesprek;
   try {
     const json = ai.inhoud.slice(ai.inhoud.indexOf("{"), ai.inhoud.lastIndexOf("}") + 1);
-    g = valideerGesprek(JSON.parse(json), tekst, onderwerp, eerdereAntwoorden(i.geschiedenis));
+    g = valideerGesprek(JSON.parse(json), tekst, onderwerp, eerdereAntwoorden(i.geschiedenis), s0.velden.puntGevraagd);
   } catch { return null; }
   // Een mens, een grens of een andere taal: Job 4 heeft daar de vaste afhandeling voor.
   if (g.soorten.includes("mens") || g.grens || g.soorten.includes("andere_taal")) return null;
 
   let state: JobState = { ...s0, velden: { ...s0.velden }, twijfels: [...s0.twijfels] };
   let lezing: Lezing = alsLezing(g);
-  if (g.doorvragen && g.vraagt === g.doorvragen && g.vraag.trim().endsWith("?")) lezing = { ...lezing, doorvraag: { tekst: g.vraag.trim(), voor: g.doorvragen } };
+  // Vraagversie 2: geen vrije doorvraag van het model op de functievraag; de regels stellen het punt opnieuw,
+  // met de vaste vraag van dat punt. Zo hoort de verstuurde vraag altijd bij het veld waarin het antwoord komt.
+  const vrijeDoorvraag = g.doorvragen !== "functievraag" || !versie2(s0.velden);
+  if (g.doorvragen && g.vraagt === g.doorvragen && g.vraag.trim().endsWith("?") && vrijeDoorvraag) lezing = { ...lezing, doorvraag: { tekst: g.vraag.trim(), voor: g.doorvragen } };
   if (g.kennis === "onbekend") {
     const notitie = `Vraag van de kandidaat: ${g.vraagKandidaat || tekst.slice(0, 200)}`;
     if (!state.twijfels.includes(notitie)) state.twijfels.push(notitie);
@@ -407,7 +489,10 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
   // Geen lussen: komt dezelfde vraag voor de derde keer terug zonder antwoord, dan neemt een collega
   // die vraag over en gaat Job door. Een eigen vraag van de kandidaat telt niet als poging.
   const bezig = r.state.status === "bezig" || r.state.status === "wacht_cv";
-  if (bezig && onderwerp && r.state.laatsteOnderwerp === onderwerp && !g.kennis && !lezing.doorvraag) {
+  // Vraagversie 2: de functievraag telt per punt in de regels (puntPogingen); hier niet, anders telt een
+  // onduidelijk antwoord bij taken mee voor taal en valt de rest van de functievragen weg.
+  const perPunt = onderwerp === "functievraag" && versie2(s0.velden);
+  if (bezig && onderwerp && !perPunt && r.state.laatsteOnderwerp === onderwerp && !g.kennis && !lezing.doorvraag) {
     const pogingen = { ...(r.state.velden.pogingen || {}) };
     pogingen[onderwerp] = (pogingen[onderwerp] || 0) + 1;
     r = { ...r, state: { ...r.state, velden: { ...r.state.velden, pogingen } } };
@@ -440,15 +525,35 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
   }
 
   const standaard = na ? (lezing.doorvraag && r.state.laatsteOnderwerp === lezing.doorvraag.voor ? r.berichten[r.berichten.length - 1]?.tekst ?? null : vraag(na, r.state.taal, ctx, r.state.velden).tekst) : null;
-  const sam = stelGesprekSamen({ gesprek: g, regels: r.berichten, onderwerp: na, standaard, taal: r.state.taal, vasteReactie });
+  const sam = stelGesprekSamen({ gesprek: g, regels: r.berichten, onderwerp: na, standaard, taal: r.state.taal, vasteReactie, vorigBericht: i.laatsteVraag, loonTekst: versie2(r.state.velden) ? loonVoorVacature(ctx.vacatureLoon, r.state.taal) : undefined,
+    punt: na === "functievraag" && versie2(r.state.velden) ? r.state.velden.puntGevraagd ?? null : undefined, versie2: versie2(r.state.velden) });
   // Nooit twee keer precies hetzelfde bericht achter elkaar: dan dezelfde vraag in andere woorden.
   let berichten = geenDubbelBericht(sam.berichten, i.laatsteVraag, r.state.taal);
   const laatste = berichten[berichten.length - 1];
   if (na && laatste && i.laatsteVraag && zelfdeVraag(laatste.tekst, i.laatsteVraag)) {
-    const h = herkansing(na, r.state.taal, ctx);
-    if (h && !zelfdeVraag(h.tekst, i.laatsteVraag)) berichten = [...berichten.slice(0, -1), { ...laatste, tekst: h.tekst, keuzes: laatste.keuzes?.length ? laatste.keuzes : h.keuzes }];
+    const h = herkansing(na, r.state.taal, ctx, r.state.velden);
+    if (h && !zelfdeVraag(h.tekst, i.laatsteVraag)) {
+      // Vraagversie 2: een antwoord op de vraag van de kandidaat (loon, kantoor) dat voor de vraag stond, blijft staan.
+      const voor = versie2(r.state.velden) && sam.gebruikt.kennis ? voorDeVraag(laatste.tekst) : "";
+      berichten = [...berichten.slice(0, -1), { ...laatste, tekst: voor ? `${voor} ${h.tekst}` : h.tekst, keuzes: laatste.keuzes?.length ? laatste.keuzes : h.keuzes }];
+    }
   }
   return { r: { ...r, berichten }, beurt: g, gebruikt: sam.gebruikt, bron: "gesprek", ai };
+}
+
+/** Wat in een bericht voor de laatste vraag staat (bijvoorbeeld het antwoord uit de kennisbank). */
+function voorDeVraag(t: string): string {
+  const zinnen = t.split(/(?<=[.!?])\s+/);
+  const i = zinnen.map((z) => z.includes("?")).lastIndexOf(true);
+  return i <= 0 ? "" : zinnen.slice(0, i).join(" ").trim();
+}
+
+/** Het loon van de gekoppelde vacature, zoals op de vacature staat; zonder vacature de goedgekeurde algemene tekst. */
+export function loonVoorVacature(loon: string | undefined, taal: JobTaal): string | undefined {
+  if (!loon) return undefined;
+  return taal === "nl"
+    ? `Voor deze vacature staat een uurloon ${loon.includes(" tot ") ? "van" : "vanaf"} ${loon}. De rest bespreekt een collega met je bij de kennismaking.`
+    : `This vacancy lists an hourly wage ${loon.includes(" tot ") ? "of" : "from"} ${loon.replace(" tot ", " to ")}. A colleague will go through the rest with you at the meeting.`;
 }
 
 function grensStop(state: JobState, beurt: Beurt, taal: JobTaal, ai: AiUitkomst | null): BeurtUitkomst {

@@ -54,10 +54,10 @@ const VELD_ONDERWERP: Partial<Record<keyof JobVelden, Onderwerp>> = {
  * alleen als het citaat echt in het bericht staat (of het is het antwoord op de eigen vraag);
  * is het bericht geen antwoord en geen correctie, dan wordt er niets opgeslagen.
  */
-export function valideerBeurt(ruw: any, bericht: string, onderwerp: Onderwerp | null): Beurt {
+export function valideerBeurt(ruw: any, bericht: string, onderwerp: Onderwerp | null, huidigPunt?: string | null): Beurt {
   const soorten = (Array.isArray(ruw?.soort) ? ruw.soort : [ruw?.soort]).filter((s: unknown): s is Soort => (SOORTEN as readonly string[]).includes(s as string));
   const l = valideerLezing({ velden: ruw?.velden || {}, taal: ruw?.taal, twijfel: ruw?.twijfel, nvt: ruw?.nvt });
-  let velden: JobVelden = bewijsCheck(l.velden, ruw?.bewijs, bericht, onderwerp);
+  let velden: JobVelden = bewijsCheck(l.velden, ruw?.bewijs, bericht, onderwerp, huidigPunt);
   // Een citaat moet ook echt iets met dat veld te maken hebben: een vraag of klacht is nooit ervaring of een hotelnaam.
   const draagt = soorten.includes("antwoord") || soorten.includes("correctie");
   if (!draagt) velden = {};
@@ -99,6 +99,8 @@ export function alsLezing(b: Beurt): Lezing {
     ack: "",
     ...(b.nvt.length ? { nvt: b.nvt } : {}),
     ...(b.soorten.includes("correctie") ? { correctie: true } : {}),
+    bron: "ai" as const,
+    ...(b.soorten.includes("vraag") ? { eigenVraag: true } : {}),
     ...(!antwoord && !b.soorten.includes("andere_taal") ? { geenAntwoord: true } : {}),
   };
 }
@@ -162,6 +164,8 @@ export function stelSamen(i: {
   /** De standaardtekst van die vraag. */
   standaard: string | null;
   taal: JobTaal;
+  /** Vraagversie 2: bij de functievraag blijft de vaste vraag van het punt staan (met zijn knoppen). */
+  vastePuntvraag?: boolean;
 }): Samenstelling {
   const b = i.beurt;
   const gebruikt: Samenstelling["gebruikt"] = { reactie: false, vraag: false, kennis: null };
@@ -184,7 +188,7 @@ export function stelSamen(i: {
   const isVraag = !!laatste && !!i.onderwerp && !!i.standaard && laatste.tekst === i.standaard;
   // Een doorvraag van de AI staat al als vraag in de berichten (de regels namen hem over).
   const isDoorvraag = !!laatste && !!b.vraag && laatste.tekst === b.vraag.trim();
-  if (isVraag && b.volgende === i.onderwerp && vraagGoed(b.vraag, i.onderwerp!, i.taal)) {
+  if (isVraag && !i.vastePuntvraag && b.volgende === i.onderwerp && vraagGoed(b.vraag, i.onderwerp!, i.taal)) {
     laatste.tekst = b.vraag;
     gebruikt.vraag = true;
   }

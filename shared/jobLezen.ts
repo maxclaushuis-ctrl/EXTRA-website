@@ -11,7 +11,7 @@
  *    Grover dan de AI, maar het gesprek loopt altijd door.
  */
 import type { Diensten, JobTaal, JobVelden, Lezing, Onderwerp, Werkautorisatie } from "./jobRegels";
-import { DOORVRAAG_VOOR, KAN_VERVALLEN } from "./jobRegels";
+import { DOORVRAAG_VOOR, KAN_VERVALLEN, lijktAntwoord } from "./jobRegels";
 
 const DIENSTEN: Diensten[] = ["1-2", "3-4", "5+"];
 const AUTORISATIE: Werkautorisatie[] = ["vrij", "twv", "onbekend", "anders"];
@@ -41,10 +41,19 @@ export function valideerLezing(ruw: any): Lezing {
   const hotels = tekstOf(v.hotels, 300); if (hotels) velden.hotels = hotels;
   if (["3", "4", "5"].includes(String(v.sterren))) velden.sterren = String(v.sterren) as JobVelden["sterren"];
   if (["direct", "twee_weken", "later"].includes(v.startdatum)) velden.startdatum = v.startdatum;
+  // Vraagversie 2: wat de kandidaat letterlijk zei, als dat niet in een knop past.
+  const st = tekstOf(v.startdatumTekst, 120); if (st) velden.startdatumTekst = st;
+  const wt = tekstOf(v.werkmomentTekst, 160); if (wt) velden.werkmomentTekst = wt;
   if (["studie", "ander_werk", "hoofdbaan"].includes(v.werkvorm)) velden.werkvorm = v.werkvorm;
   if (v.nlOfEn === true || v.nlOfEn === false) velden.nlOfEn = v.nlOfEn;
   if (v.cvParaat === "ja" || v.cvParaat === "nee") velden.cvParaat = v.cvParaat;
   const zoekt = tekstOf(v.zoekt, 200); if (zoekt) velden.zoekt = zoekt;
+  // Vraagversie 2: punten per functie; welke sleutels en waarden mogen, bepaalt het profiel (jobProfielen.ts).
+  if (v.punten && typeof v.punten === "object" && !Array.isArray(v.punten)) {
+    const punten: Record<string, string> = {};
+    for (const [k, w] of Object.entries(v.punten)) { const t = tekstOf(w, 300); if (t && /^[a-zA-Z]{2,30}$/.test(k)) punten[k] = t; }
+    if (Object.keys(punten).length) velden.punten = punten;
+  }
 
   const taal = ruw?.taal === "nl" || ruw?.taal === "en" || ruw?.taal === "anders" ? ruw.taal : null;
   const twijfel = tekstOf(ruw?.twijfel, 300) || null;
@@ -97,6 +106,7 @@ const VELD_VAN: Partial<Record<keyof JobVelden, Onderwerp>> = {
   ervaring: "ervaring", ervaringNiveau: "ervaring", functievraag: "functievraag", hotels: "hotels", sterren: "sterren",
   diensten: "diensten", werkgebied: "werkgebied", werkmoment: "werkmoment", startdatum: "startdatum", werkvorm: "werkvorm",
   werkautorisatie: "werkautorisatie", geldigTot: "geldigheid", specialisatie: "specialisatie", cvParaat: "cv",
+  startdatumTekst: "startdatum", werkmomentTekst: "werkmoment",
 };
 const schoon = (x: string) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 
@@ -104,11 +114,30 @@ const schoon = (x: string) => x.toLowerCase().normalize("NFD").replace(/[\u0300-
  * Laat alleen velden door die het antwoord echt draagt: met een citaat dat in het antwoord staat,
  * of als antwoord op hun eigen vraag. Zo vult de AI geen velden in op basis van een bijzin of een gok.
  */
-export function bewijsCheck(velden: JobVelden, bewijs: unknown, antwoord: string, onderwerp: Onderwerp | null): JobVelden {
+export function bewijsCheck(velden: JobVelden, bewijs: unknown, antwoord: string, onderwerp: Onderwerp | null, huidigPunt?: string | null): JobVelden {
   const b = bewijs && typeof bewijs === "object" ? (bewijs as Record<string, unknown>) : {};
   const tekst = schoon(antwoord);
   const uit: JobVelden = {};
+  const draagtCitaat = (c: string) => (c.length >= 2 ? tekst.includes(c) : !!c && (tekst === c || tekst.split(" ").includes(c)));
   for (const [k, w] of Object.entries(velden) as [keyof JobVelden, unknown][]) {
+    // Punten: elk punt met een eigen citaat; zonder citaat alleen het punt waar Job net naar vroeg.
+    if (k === "punten") {
+      const bp = b.punten && typeof b.punten === "object" ? (b.punten as Record<string, unknown>) : {};
+      const punten: Record<string, string> = {};
+      const citaten: Record<string, string> = {};
+      for (const [pk, pw] of Object.entries(w as Record<string, string>)) {
+        const ruw = typeof bp[pk] === "string" ? String(bp[pk]) : typeof b[`punten.${pk}`] === "string" ? String(b[`punten.${pk}`]) : "";
+        const c = schoon(ruw);
+        // Met citaat: het citaat staat echt in het bericht en is zelf een antwoord (geen vraag of opmerking over loon).
+        // Zonder citaat: alleen bij het gevraagde punt, en alleen als de waarde zelf letterlijk in een bericht staat
+        // dat op een antwoord lijkt ("Opera" bij "Opera"). Een ja/nee of knop zonder citaat zetten de regels zelf.
+        const metCitaat = !!c && draagtCitaat(c) && lijktAntwoord(ruw);
+        const zonderCitaat = !c && onderwerp === "functievraag" && pk === huidigPunt && schoon(pw).length >= 2 && tekst.includes(schoon(pw)) && lijktAntwoord(antwoord);
+        if (metCitaat || zonderCitaat) { punten[pk] = pw; if (c) citaten[pk] = ruw.trim().slice(0, 150); }
+      }
+      if (Object.keys(punten).length) { uit.punten = punten; if (Object.keys(citaten).length) uit.puntBewijs = citaten; }
+      continue;
+    }
     const eigen = VELD_VAN[k];
     const citaat = typeof b[k] === "string" ? schoon(String(b[k])) : "";
     // Een kort antwoord ("5", "3") is zelf het citaat: dan moet het het hele bericht of een los woord zijn.

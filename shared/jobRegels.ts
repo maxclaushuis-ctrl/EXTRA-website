@@ -22,6 +22,7 @@
  *    kiest de kandidaat zelf een moment.
  */
 import { taalWissel } from "./jobTaal";
+import { geldigePunten, jaNee, keuzeWaarde, tegenspraak, tegenspraakRegel, waardeGedragen, openingVoor, profielVoor, puntenSamenvatting, puntenUitKnop, puntVraag, volgendPunt, type Punten } from "./jobProfielen";
 import type { AndereTijden } from "./andereTijden";
 import type { LijstSectie } from "./jobPlanning";
 
@@ -124,6 +125,27 @@ export interface JobVelden {
   doorvragen?: Partial<Record<Onderwerp, number>>;
   cvVraag?: { soort: string; tekst: string };
   cvVragen?: { soort: string; vraag: string; antwoord?: string }[];
+  /**
+   * Vraagversie 2 (shared/jobProfielen.ts, afspraken Max 25 nov 2026): de functievragen per functie.
+   * Alleen nieuwe gesprekken krijgen 2; zonder dit veld loopt het gesprek zoals het begon.
+   * punten = wat de kandidaat per functiepunt vertelde (met citaat in puntBewijs); puntenGevraagd =
+   * punten die Job vroeg en die beantwoord zijn (ook als het antwoord onduidelijk bleef);
+   * puntGevraagd = het punt van de functievraag die nu openstaat; functievragen = aantal gestelde
+   * functievragen (hoogstens drie).
+   */
+  vraagversie?: number;
+  punten?: Punten;
+  puntBewijs?: Record<string, string>;
+  puntenGevraagd?: string[];
+  puntGevraagd?: string;
+  functievragen?: number;
+  /** Vraagversie 2: hoe vaak een punt zonder bruikbaar antwoord bleef (na twee keer is het een open punt). */
+  puntPogingen?: Record<string, number>;
+  /** Vraagversie 2: de kandidaat zegt het werk te willen leren; dat zegt nog niets over ervaring (onbekend, niet "geen"). */
+  wilLeren?: boolean;
+  /** Vraagversie 2: wat de kandidaat letterlijk zei over het startmoment of de werktijden, als dat niet in een knop past. */
+  startdatumTekst?: string;
+  werkmomentTekst?: string;
 }
 
 /** Wat Job vooraf weet uit de aanmelding. */
@@ -146,6 +168,14 @@ export interface JobContext {
   cvVragen?: boolean;
   /** Job 3.0 fase 2: begrijpen, doorvragen en vervallen vragen (schakelaar JOB_V3_BEGRIJPEN). */
   begrijpen?: boolean;
+  /** De functie zoals gekozen op het formulier (functie_eerste_keus), bijvoorbeeld "dinerloper". */
+  functieCode?: string;
+  /** Alle gekozen functies (events, meer dan één): de eerste is de hoofdfunctie. */
+  functies?: { code: string; nl: string; en: string }[];
+  /** Nieuwe gesprekken starten met vraagversie 2 (schakelaar JOB_FUNCTIEVRAGEN). */
+  vraagversie2?: boolean;
+  /** Het loon van de vacature waaraan de aanmelding gekoppeld is, zoals op de vacature ("€20,76"). */
+  vacatureLoon?: string;
 }
 
 export interface JobState {
@@ -269,6 +299,14 @@ export function isHotelPad(ctx: JobContext): boolean {
 export function ervaringWerk(functie: string, taal: JobTaal): string {
   return (ERVARING_WERK[functie] || ERVARING_WERK.horecamedewerker)[taal];
 }
+/** Het vrije stuk van de openingsvraag: per functie in vraagversie 2, anders zoals het was. */
+export function ervaringWerkVoor(ctx: JobContext, taal: JobTaal, velden?: JobVelden): string {
+  return (versie2(velden) && openingVoor(ctx, taal)) || ervaringWerk(ctx.functie, taal);
+}
+/** Loopt dit gesprek op vraagversie 2? */
+export function versie2(v: JobVelden | null | undefined): boolean {
+  return v?.vraagversie === 2;
+}
 
 // ─── Teksten ─────────────────────────────────────────────────────────────────
 
@@ -277,7 +315,7 @@ const T = {
     welkom: (v: string, f: string) => `Hi ${v},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je je hebt aangemeld voor ${f}! Ik stel je een paar korte vragen.`,
     welkomAlgemeen: (v: string) => `Hi ${v},\n\nIk ben Job, de AI-recruiter van EXTRA. Leuk dat je interesse hebt om bij EXTRA te werken! Ik stel je een paar korte vragen.`,
     disclaimer: "Je praat met Job, een AI. Typ MENS voor een collega of ENGLISH om te wisselen.",
-    ervaring: (functie: string) => `Vertel eens: hoeveel jaar ervaring heb je ${ervaringWerk(functie, "nl")} tot nu toe?`,
+    ervaring: (werk: string) => `Vertel eens: hoeveel jaar ervaring heb je ${ERVARING_WERK[werk]?.nl ?? werk} tot nu toe?`,
     hotels: "Bij welke hotels heb je gewerkt?",
     hotelsOfRestaurants: "Waar heb je gewerkt? Noem gerust de restaurants of hotels.",
     restaurant: "Wat voor restaurant was dat?",
@@ -304,8 +342,9 @@ const T = {
     cvKeuzes: ["Ja", "Nee"],
     cvUpload: "Upload je cv hier als pdf of Word-bestand.",
     cvUploadWa: "Stuur je cv hier in WhatsApp als pdf of Word-bestand: tik op + of het paperclipje en kies Document.",
-    cvLaterWa: "Geen probleem! Stuur je cv later gewoon hier in WhatsApp als pdf of Word-bestand: tik op + of het paperclipje en kies Document. Zodra het binnen is, kun je meteen een kennismaking plannen.",
-    cvLater: "Geen probleem! Ik heb je een mail gestuurd met een knop om je cv te uploaden. Zodra het binnen is, kun je meteen een kennismaking plannen.",
+    cvLaterWa: "Geen probleem! Stuur je cv later gewoon hier in WhatsApp als pdf of Word-bestand: tik op + of het paperclipje en kies Document. Zodra het binnen is, bekijkt een collega je aanmelding.",
+    cvLater: "Geen probleem! Ik heb je een mail gestuurd met een knop om je cv te uploaden. Zodra het binnen is, bekijkt een collega je aanmelding.",
+    cvLaterZonderMail: "Geen probleem! Upload je cv later gewoon hier in dit gesprek als pdf of Word-bestand. Zodra het binnen is, bekijkt een collega je aanmelding.",
     cvOntvangen: "Je cv is binnen, dank je.",
     cvBekijken: "Ik kijk er even naar.",
     cvVraagEerste: (vraag: string) => `Ik heb je cv bekeken, dank je. Een vraag daarover: ${vraag}`,
@@ -348,7 +387,7 @@ const T = {
     bestandVraag: "Dank je, ik heb je bestand ontvangen. Is dit je cv?",
     bestandKeuzes: ["Ja, mijn cv", "Nee"],
     cvBinnenKort: "Je cv is binnen.",
-    herinnering1: (v: string) => `Hoi ${v}, je was bijna klaar. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen. Zullen we verder?`,
+    herinnering1: (v: string) => `Hoi ${v}, je was bijna klaar. Nog een paar korte vragen, dan bekijkt een collega je aanmelding. Zullen we verder?`,
     herinnering2: (v: string) => `Hoi ${v}, je aanmelding bij EXTRA staat nog open. Wil je verder? Stuur gerust een bericht, ik ga verder waar we gebleven waren.`,
     herinnering3: (v: string) => `Hoi ${v}, we hoorden nog niets van je over je aanmelding bij EXTRA. Wil je nog verder? Stuur gerust een bericht, dan ga ik verder waar we gebleven waren. Anders sluiten we je aanmelding over een paar dagen af.`,
     herinneringKeuzes: ["Verder", "Liever bellen"],
@@ -362,7 +401,7 @@ const T = {
     welkom: (v: string, f: string) => `Hi ${v},\n\nI'm Job, the AI recruiter at EXTRA. Great that you signed up for ${f}! I have a few quick questions for you.`,
     welkomAlgemeen: (v: string) => `Hi ${v},\n\nI'm Job, the AI recruiter at EXTRA. Great that you're interested in working at EXTRA! I have a few quick questions for you.`,
     disclaimer: "You're chatting with Job, an AI. Type HUMAN for a colleague or NEDERLANDS to switch.",
-    ervaring: (functie: string) => `Tell me: how many years of experience do you have ${ervaringWerk(functie, "en")} so far?`,
+    ervaring: (werk: string) => `Tell me: how many years of experience do you have ${ERVARING_WERK[werk]?.en ?? werk} so far?`,
     hotels: "Which hotels have you worked at?",
     hotelsOfRestaurants: "Where did you work? Feel free to name the restaurants or hotels.",
     restaurant: "What kind of restaurant was it?",
@@ -389,8 +428,9 @@ const T = {
     cvKeuzes: ["Yes", "No"],
     cvUpload: "Upload your CV here as a PDF or Word file.",
     cvUploadWa: "Send your CV here in WhatsApp as a PDF or Word file: tap + or the paperclip and choose Document.",
-    cvLaterWa: "No problem! Just send your CV here in WhatsApp later as a PDF or Word file: tap + or the paperclip and choose Document. As soon as it's in, you can book a short meeting at our office.",
-    cvLater: "No problem! I've sent you an email with a button to upload your CV. As soon as it's in, you can book a short meeting at our office.",
+    cvLaterWa: "No problem! Just send your CV here in WhatsApp later as a PDF or Word file: tap + or the paperclip and choose Document. As soon as it's in, a colleague will look at your application.",
+    cvLater: "No problem! I've sent you an email with a button to upload your CV. As soon as it's in, a colleague will look at your application.",
+    cvLaterZonderMail: "No problem! Just upload your CV later here in this chat as a PDF or Word file. As soon as it's in, a colleague will look at your application.",
     cvOntvangen: "Your CV is in, thank you.",
     cvBekijken: "Let me take a quick look.",
     cvVraagEerste: (vraag: string) => `I've looked at your CV, thanks. A question about it: ${vraag}`,
@@ -433,7 +473,7 @@ const T = {
     bestandVraag: "Thanks, I've received your file. Is this your CV?",
     bestandKeuzes: ["Yes, my CV", "No"],
     cvBinnenKort: "Your CV is in.",
-    herinnering1: (v: string) => `Hi ${v}, you were almost done. A few more quick questions, then you can book a meeting right away. Shall we continue?`,
+    herinnering1: (v: string) => `Hi ${v}, you were almost done. A few more quick questions, then a colleague will look at your application. Shall we continue?`,
     herinnering2: (v: string) => `Hi ${v}, your application at EXTRA is still open. Want to continue? Just send a message and I'll pick up where we left off.`,
     herinnering3: (v: string) => `Hi ${v}, we haven't heard from you about your application at EXTRA. Do you still want to continue? Just send a message and I'll pick up where we left off. Otherwise we'll close your application in a few days.`,
     herinneringKeuzes: ["Continue", "Call me instead"],
@@ -461,7 +501,10 @@ export function volgendeOnderwerp(v: JobVelden, ctx: JobContext): Onderwerp | nu
 export function openOnderwerpenOpVolgorde(v: JobVelden, ctx: JobContext): Onderwerp[] {
   const uit: Onderwerp[] = [];
   if (!v.ervaring) uit.push("ervaring");
-  if (isHotelPad(ctx)) {
+  if (versie2(v)) {
+    // Vraagversie 2: alleen de functievragen uit het profiel; geen hotels, restaurant of specialisatie meer.
+    if (v.ervaring && volgendPunt(ctx, v)) uit.push("functievraag");
+  } else if (isHotelPad(ctx)) {
     // Hotels: alleen een verduidelijking als de AI die nodig vond, dan hotels en sterren.
     if (v.ervaringNiveau !== "geen") {
       if (v.verduidelijking && v.functievraag === undefined) uit.push("functievraag");
@@ -470,13 +513,13 @@ export function openOnderwerpenOpVolgorde(v: JobVelden, ctx: JobContext): Onderw
       else if (v.geenHotel && v.restaurantWerk && !v.restaurantSoort) uit.push("restaurant");
     }
   } else if (v.functievraag === undefined && v.ervaringNiveau !== "geen" && FUNCTIEVRAAG[ctx.functie]) uit.push("functievraag");
-  if (ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) uit.push("specialisatie");
+  if (!versie2(v) && ctx.functie === "horecamedewerker" && v.specialisatieHint && !v.specialisatie) uit.push("specialisatie");
   if (ctx.nationalityZone === "NON_EU" && !v.werkautorisatie) uit.push("werkautorisatie");
   if (ctx.nationalityZone === "NON_EU" && v.werkautorisatie === "vrij" && v.geldigTot === undefined) uit.push("geldigheid");
   if (!v.diensten) uit.push("diensten");
   if (!v.werkgebied) uit.push("werkgebied");
-  if (!v.werkmoment) uit.push("werkmoment");
-  if (!v.startdatum) uit.push("startdatum");
+  if (!v.werkmoment && !v.werkmomentTekst) uit.push("werkmoment");
+  if (!v.startdatum && !v.startdatumTekst) uit.push("startdatum");
   if (!v.werkvorm) uit.push("werkvorm");
   if (!ctx.hasCv && !v.cvParaat) uit.push("cv");
   return uit;
@@ -485,11 +528,15 @@ export function openOnderwerpenOpVolgorde(v: JobVelden, ctx: JobContext): Onderw
 export function vraag(onderwerp: Onderwerp, taal: JobTaal, ctx: JobContext, velden?: JobVelden): Uitgaand {
   const t = T[taal];
   switch (onderwerp) {
-    case "ervaring": return { tekst: t.ervaring(ctx.functie) };
+    case "ervaring": return { tekst: t.ervaring(ervaringWerkVoor(ctx, taal, velden)) };
     case "functievraag":
+      if (versie2(velden)) {
+        const pt = volgendPunt(ctx, velden!);
+        if (pt) return puntVraag(pt, ctx, velden!.punten || {}, taal);
+      }
       if (velden?.verduidelijking) return { tekst: velden.verduidelijking };
       if (ctx.functie === "horecamedewerker" && FESTIVAL.test(velden?.ervaring || "")) return { tekst: FUNCTIEVRAAG_FESTIVAL[taal] };
-      return { tekst: FUNCTIEVRAAG[ctx.functie]?.[taal] ?? t.ervaring(ctx.functie) };
+      return { tekst: FUNCTIEVRAAG[ctx.functie]?.[taal] ?? t.ervaring(ervaringWerk(ctx.functie, taal)) };
     case "specialisatie": return { tekst: t.specialisatie, keuzes: t.specialisatieKeuzes };
     case "werkautorisatie": return { tekst: t.werkautorisatie, keuzes: t.werkautorisatieKeuzes };
     case "geldigheid": return { tekst: t.geldigheid };
@@ -517,7 +564,7 @@ export function openOnderwerpen(v: JobVelden, ctx: JobContext): { vragen: number
     if (o === "cv") { cv = true; break; }
     vragen++;
     if (o === "ervaring") kopie.ervaring = "x";
-    else if (o === "functievraag") kopie.functievraag = "x";
+    else if (o === "functievraag") { kopie.functievraag = "x"; kopie.functievragen = 99; delete kopie.puntGevraagd; }
     else if (o === "specialisatie") kopie.specialisatie = "nee";
     else if (o === "werkautorisatie") kopie.werkautorisatie = "vrij" as any;
     else if (o === "geldigheid") kopie.geldigTot = "x";
@@ -546,6 +593,26 @@ export function plannerRedenen(v: JobVelden, ctx: JobContext, twijfels: string[]
   if (FUNCTIES_MET_ERVARING.includes(ctx.functie) && v.ervaringNiveau === "geen") {
     r.push(`Functie ${ctx.functie} vraagt ervaring en die ontbreekt.`);
   }
+  // Vraagversie 2 (afspraken Max 25 nov 2026). Job wijst nooit af: een collega kijkt.
+  if (versie2(v)) {
+    const code = profielVoor(ctx, v.punten)?.code;
+    const p = v.punten || {};
+    const gevraagd = v.puntenGevraagd || [];
+    if (code === "dinerloper") {
+      // Drie borden en serveeretiquette zijn allebei vereist (gelijk aan de match).
+      if (v.ervaringNiveau === "geen") r.push("Dinerloper vraagt relevante ervaring en die ontbreekt.");
+      else if (p.drieBorden === "nee") r.push("Dinerloper: zegt zelf niet met drie borden tegelijk aan tafel te hebben uitgeserveerd.");
+      else if (p.etiquette === "nee") r.push("Dinerloper: zegt zelf de serveeretiquette aan tafel niet te kennen.");
+    }
+    // Heftruck: zelf rijden is de relevante ervaring; een ontbrekend of verlopen certificaat is geen reden (besluit Max 25 nov).
+    if (code === "heftruck" && (p.gereden === "geen" || v.ervaringNiveau === "geen")) r.push("Heftruck: zegt zelf nog niet op een heftruck of reachtruck te hebben gereden.");
+    if (code === "host") {
+      if (p.engels === "nee") r.push("Host: geeft aan gasten niet goed in het Engels te kunnen helpen.");
+      else if (!p.engels && gevraagd.includes("engels")) r.push("Host: goed Engels is nog niet vastgesteld (open punt).");
+    }
+    // Besluit Max 25 nov 2026: goed Engels is de basis; geen Engels voor gastcontact, dan kijkt eerst een collega.
+    if (code === "frontoffice" && p.engels === "nee") r.push("Front office: geeft aan gasten niet in het Engels te kunnen helpen; een uitnodiging ligt niet voor de hand.");
+  }
   for (const t of twijfels) if (!r.includes(t)) r.push(t);
   return r;
 }
@@ -558,10 +625,12 @@ export type Commando = "mens" | "english" | "nederlands" | "verzetten" | "bellen
  * Herkent de vaste woorden uit het ontwerp. Bij de vraag naar talen is
  * "Nederlands" of "Engels" een antwoord, geen verzoek om te wisselen.
  */
-export function herkenCommando(tekst: string | null | undefined, onderwerp: Onderwerp | null = null): Commando | null {
+export function herkenCommando(tekst: string | null | undefined, onderwerp: Onderwerp | null = null, punt?: string | null): Commando | null {
   const s = (tekst || "").trim().toLowerCase().replace(/[.!?]+$/, "");
   if (!s) return null;
-  if (onderwerp === "talen" && ["english", "engels", "nederlands", "dutch"].includes(s)) return null;
+  // Bij een vraag over talen (ook de taalvraag van front office en host) is "Engels" of "Nederlands" een antwoord.
+  const taalvraag = onderwerp === "talen" || (onderwerp === "functievraag" && !!punt && ["taal", "engels", "engelsCheck"].includes(punt));
+  if (taalvraag && ["english", "engels", "nederlands", "dutch"].includes(s)) return null;
   if (["mens", "human", "collega", "medewerker", "een mens", "a human"].includes(s)) return "mens";
   if (["english", "engels", "in english", "english please"].includes(s)) return "english";
   if (["nederlands", "dutch", "in het nederlands"].includes(s)) return "nederlands";
@@ -609,6 +678,7 @@ export function nieuweState(taal: JobTaal, nu: Date): JobState {
 /** Het eerste bericht van Job, plus de eerste vraag. */
 export function start(ctx: JobContext, taal: JobTaal, nu: Date): Resultaat {
   const state = nieuweState(taal, nu);
+  if (ctx.vraagversie2) state.velden.vraagversie = 2;
   const t = T[taal];
   const onderwerp = volgendeOnderwerp(state.velden, ctx)!;
   state.laatsteOnderwerp = onderwerp;
@@ -616,7 +686,7 @@ export function start(ctx: JobContext, taal: JobTaal, nu: Date): Resultaat {
     state,
     berichten: [
       { tekst: ctx.meerFuncties ? t.welkomAlgemeen(ctx.voornaam) : t.welkom(ctx.voornaam, ctx.functieNaam?.[taal] ?? functieLabel(ctx.functie, taal)) },
-      vraag(onderwerp, taal, ctx),
+      vraag(onderwerp, taal, ctx, state.velden),
     ],
     acties: [],
   };
@@ -644,6 +714,10 @@ export interface Lezing {
   geenAntwoord?: boolean;
   /** Job 4: de kandidaat verbetert of vult iets eerder gezegds aan (met citaat). */
   correctie?: boolean;
+  /** Waar de lezing vandaan komt: "ai" als het model het bericht las (dan slaan de regels geen ruwe tekst op). */
+  bron?: "ai" | "regels";
+  /** Het bericht is (ook) een eigen vraag van de kandidaat; dat telt niet als poging. */
+  eigenVraag?: boolean;
 }
 
 /** Velden waar Job op mag doorvragen, en welke vragen door een antwoord kunnen vervallen. */
@@ -692,8 +766,10 @@ const ONTKENNING = /\b(niet|nooit|geen|not|never|no|haven'?t|hasn'?t)\b/i;
  * - Anders komt het antwoord erbij in plaats van eroverheen.
  * - Het niveau "ervaren" gaat niet stilletjes omlaag; wijkt het af, dan een twijfel voor de beoordelaar.
  */
-export function vervolgOpErvaring(nieuw: JobVelden, bekend: JobVelden, vorig: Onderwerp | null, tekst: string): { velden: JobVelden; twijfel?: string } {
+export function vervolgOpErvaring(nieuw: JobVelden, bekend: JobVelden, vorig: Onderwerp | null, tekst: string, correctie = false): { velden: JobVelden; twijfel?: string } {
   if (vorig !== "ervaring") return { velden: nieuw };
+  // Een correctie vervangt de eerdere samenvatting: de oude aanname mag nergens blijven staan.
+  if (correctie && bekend.ervaring && nieuw.ervaring) return { velden: nieuw };
   if (!bekend.ervaring) {
     // Eerste antwoord "ik heb nog niet in een hotel gewerkt": dat is hotelinformatie, geen "geen ervaring".
     // Zonder ander werk in het antwoord blijft de ervaring open, zodat Job er (anders verwoord) naar vraagt.
@@ -766,6 +842,27 @@ export function geenHotelervaring(tekst: string): boolean {
   return ANDER_WERK.test(tekst) && !/hotel|hostel|resort/i.test(tekst);
 }
 
+/** "Ik wil het leren": een wens, geen ervaring. */
+/** Noemt het bericht zelf ervaring (een duur, "al ... gedaan", "meer leren")? */
+const HEEFT_ERVARING = /\b(\d+|een|twee|drie|vier|vijf|zes|zeven|acht|negen|tien|half|halve|paar|anderhalf|one|two|three|four|five|six|a few|several)\s+(jaar|jaren|maand|maanden|zomer|zomers|seizoen|seizoenen|years?|months?|summers?|seasons?)\b|\b(al jaren|al een tijd|doe al|maak al|werk al|heb al|ik werkte|ik heb .{0,40}gewerkt|worked|i have been|i've been|meer leren|verder leren|learn more)\b/i;
+const WIL_LEREN = /\b(wil|zou graag|wil graag|ga graag)\b.{0,30}\b(leren|proberen)\b|\b(want to|would like to|i'?d like to)\b.{0,30}\b(learn|try)\b/i;
+/** Zegt de kandidaat er zelf uitdrukkelijk bij dat hij het nog nooit deed? */
+const EXPLICIET_GEEN = /\b(nog nooit|nooit gedaan|geen ervaring|nog niet gedaan|never (done|worked)|no experience)\b/i;
+
+/** Lijkt een bericht op een antwoord? Geen vraag, groet, klacht of verwijzing ("dat zei ik toch"). Voor de regels zonder AI. */
+export function lijktAntwoord(tekst: string): boolean {
+  const t = tekst.trim();
+  if (!t || t.includes("?")) return false;
+  if (/^(wat|waar|wanneer|hoe|waarom|wie|kan ik|mag ik|moet ik|what|where|when|how|why|who|can i|do i)\b/i.test(t)) return false;
+  // Een vraag zonder vraagteken ("Ik ben benieuwd naar het uurloon") of een onderwerp uit de kennisbank (loon, contract,
+  // reiskosten) is geen antwoord op een functievraag.
+  if (/\b(benieuwd|vraag me af|wil (graag )?weten|zou graag weten|i wonder|curious|want to know)\b/i.test(t)) return false;
+  if (/\b(verdien|verdienen|uurloon|loon|salaris|reiskosten|pay|salary|wage|earn)\b/i.test(t)) return false;
+  if (/^(hoi|hallo|hey|hi|hello|dag)\b[!.,]*$/i.test(t)) return false;
+  if (/\b(zei ik toch|zeg ik net|heb ik (toch )?(net|al) gezegd|already (told|said)|i just said)\b/i.test(t)) return false;
+  return true;
+}
+
 /** Geen antwoord maar verwarring: Job stelt dezelfde vraag opnieuw. */
 const VERWARD = /^\s*(\?+|huh\?*|hè\?*|wat bedoel je\?*|wat\?+|sorry\?+|what do you mean\?*|what\?+)\s*$/i;
 
@@ -779,6 +876,8 @@ function samenvoegen(oud: JobVelden, nieuw: JobVelden): JobVelden {
   const uit: JobVelden = { ...oud };
   for (const [k, w] of Object.entries(nieuw) as [keyof JobVelden, any][]) {
     if (w === undefined || w === null || w === "") continue;
+    // Punten en hun citaten komen erbij, ze vervangen de eerdere niet in hun geheel.
+    if (k === "punten" || k === "puntBewijs") { (uit as any)[k] = { ...((oud as any)[k] || {}), ...w }; continue; }
     // Wat de kandidaat zelf al eerder vertelde, overschrijft Job niet met een afleiding.
     if (k === "specialisatieHint" && oud.specialisatie) continue;
     (uit as any)[k] = w;
@@ -949,13 +1048,13 @@ function verwerkLos(
     }
   }
 
-  const commando = herkenCommando(invoer.tekst, vorige.laatsteOnderwerp);
+  const commando = herkenCommando(invoer.tekst, vorige.laatsteOnderwerp, vorige.velden.puntGevraagd);
 
   // Taal wisselen
   if (commando === "english" || commando === "nederlands") {
     state.taal = commando === "english" ? "en" : "nl";
     berichten.push({ tekst: commando === "english" ? T.en.wisselNl : T.nl.wisselNl });
-    if (state.status === "bezig" && state.laatsteOnderwerp) berichten.push(vraag(state.laatsteOnderwerp, state.taal, ctx));
+    if (state.status === "bezig" && state.laatsteOnderwerp) berichten.push(vraag(state.laatsteOnderwerp, state.taal, ctx, state.velden));
     return { state, berichten, acties };
   }
 
@@ -973,7 +1072,7 @@ function verwerkLos(
   if (commando === "verder") {
     if (state.status === "geen_reactie") state.status = "bezig";
     if ((state.status === "bezig" || state.status === "wacht_cv") && state.laatsteOnderwerp) {
-      berichten.push(vraag(state.laatsteOnderwerp, state.taal, ctx));
+      berichten.push(vraag(state.laatsteOnderwerp, state.taal, ctx, state.velden));
       return { state, berichten, acties };
     }
   }
@@ -1066,11 +1165,132 @@ function verwerkLos(
     const verward = VERWARD.test(invoer.tekst || "") || !!lezing.geenAntwoord;
     lezing = verward ? { ...lezing, velden: {}, ack: "", vervolgvraag: undefined } : { ...lezing, velden: alleenBijEigenVraag(lezing.velden, vorigOnderwerp, ctx, state.velden, !!lezing.correctie) };
     if (!verward) {
-      const vo = vervolgOpErvaring(lezing.velden, state.velden, vorigOnderwerp, invoer.tekst || "");
+      const vo = vervolgOpErvaring(lezing.velden, state.velden, vorigOnderwerp, invoer.tekst || "", !!lezing.correctie);
       lezing = { ...lezing, velden: vo.velden };
       if (vo.twijfel && !state.twijfels.includes(vo.twijfel)) state.twijfels.push(vo.twijfel);
     }
+    // Vraagversie 2: "ik wil het leren" zegt niets over ervaring. Ook als het model "geen ervaring" las, blijft het
+    // onbekend en vraagt Job ernaar (bij housekeeping: "Heb je al eens hotelkamers schoongemaakt?").
+    // Alleen als het bericht geen ervaring noemt: "Ik maak al twee jaar hotelkamers schoon en wil meer leren" is ervaring.
+    const ervaringGenoemd = HEEFT_ERVARING.test(invoer.tekst || "") || ["starter", "ervaren"].includes(String(lezing.velden.ervaringNiveau || ""));
+    if (versie2(state.velden) && !verward && vorigOnderwerp === "ervaring" && WIL_LEREN.test(invoer.tekst || "") && !EXPLICIET_GEEN.test(invoer.tekst || "") && !ervaringGenoemd) {
+      state.velden.wilLeren = true;
+      if (lezing.velden.ervaringNiveau === "geen") { const { ervaringNiveau: _g, ...rest } = lezing.velden; lezing = { ...lezing, velden: rest }; }
+      // De samenvatting van het model ("nog geen ervaring, wil het leren") gaat naar de planner en de cv-analyse;
+      // daarom staat er wat de kandidaat zei, met erbij dat de ervaring nog onbekend is.
+      const gezegd = (invoer.tekst || "").trim().replace(/\s+/g, " ").slice(0, 200);
+      lezing = { ...lezing, velden: { ...lezing.velden, ervaring: `Wil het werk leren; ervaring nog onbekend ("${gezegd}")` } };
+    }
+    // Vraagversie 2: alleen punten die bij het profiel horen, met een toegestane waarde.
+    const tegengesproken: string[] = [];
+    if (versie2(state.velden)) {
+      const ruw = lezing.velden.punten;
+      const punten = verward ? {} : geldigePunten(ctx, state.velden.punten || {}, ruw);
+      const bewijs: Record<string, string> = {};
+      // Een gelezen waarde die het bericht duidelijk tegenspreekt (Engels ja bij "Engels lukt nog niet"), komt niet in het
+      // dossier: het punt blijft open en de planner ziet de letterlijke zin. Geldt ook als het model zich vergist.
+      for (const k of Object.keys(punten)) {
+        const zin = tegenspraak(k, punten[k], invoer.tekst || "");
+        if (!zin) continue;
+        const regel = tegenspraakRegel(k, punten[k], zin);
+        if (!state.twijfels.includes(regel)) state.twijfels.push(regel);
+        tegengesproken.push(k);
+        delete punten[k];
+      }
+      // Ook wat eerder is opgeslagen: spreekt dit bericht het duidelijk tegen (een correctie die het model miste),
+      // dan staat de oude waarde niet langer als feit in het dossier, de samenvatting of op de kaart.
+      // Alleen bij een correctie of bij de vraag over dat punt: een terloopse vermelding heropent niets.
+      const opgeslagen = { ...(state.velden.punten || {}) };
+      const herzien = !!lezing.correctie || /\b(sorry|ik bedoel(de)?|eigenlijk|toch niet|toch wel|correctie|klopt niet|i mean|actually|correction)\b/i.test(invoer.tekst || "");
+      const bijPunt: Record<string, string[]> = { taal: ["engels", "nederlands"], engelsCheck: ["engels"], drieBorden: ["drieBorden"], gereden: ["gereden"], certificaat: ["certHeftruck", "certReachtruck"] };
+      const nuGevraagd = vorigOnderwerp === "functievraag" ? bijPunt[state.velden.puntGevraagd || ""] || [] : [];
+      let heropend = false;
+      for (const [k, oud] of Object.entries(opgeslagen)) {
+        if (k in punten || tegengesproken.includes(k) || !(herzien || nuGevraagd.includes(k))) continue;
+        const zin = tegenspraak(k, oud, invoer.tekst || "");
+        if (!zin) continue;
+        const regel = tegenspraakRegel(k, oud, zin, true);
+        if (!state.twijfels.includes(regel)) state.twijfels.push(regel);
+        tegengesproken.push(k);
+        delete opgeslagen[k];
+        heropend = true;
+        if (state.velden.puntBewijs) { const { [k]: _weg, ...rest } = state.velden.puntBewijs; state.velden.puntBewijs = rest; }
+      }
+      if (heropend) state.velden.punten = opgeslagen;
+      for (const k of Object.keys(punten)) if (lezing.velden.puntBewijs?.[k]) bewijs[k] = lezing.velden.puntBewijs[k];
+      // Een vrije tekst (systeem, taken) moet uit het citaat volgen. Zegt de kandidaat "Wij gebruikten Mews" en
+      // schrijft het model Opera, dan komen de woorden van de kandidaat in het dossier, niet die van het model.
+      const profielNu = profielVoor(ctx, { ...(state.velden.punten || {}), ...punten });
+      for (const k of Object.keys(punten)) {
+        const pt = profielNu?.punten.find((x) => x.sleutel === k);
+        if (pt && !pt.waarden && bewijs[k] && !waardeGedragen(punten[k], bewijs[k])) punten[k] = bewijs[k].trim().slice(0, 300);
+      }
+      lezing = { ...lezing, velden: { ...lezing.velden, punten, ...(Object.keys(bewijs).length ? { puntBewijs: bewijs } : {}) } };
+      if (!Object.keys(bewijs).length) delete lezing.velden.puntBewijs;
+      if (!Object.keys(punten).length) { delete lezing.velden.punten; delete lezing.velden.puntBewijs; }
+    } else { delete lezing.velden.punten; delete lezing.velden.puntBewijs; }
     state.velden = samenvoegen(state.velden, lezing.velden);
+    // Vraagversie 2: het antwoord op de functievraag die openstond.
+    if (versie2(state.velden) && vorigOnderwerp === "functievraag" && state.velden.puntGevraagd) {
+      const sleutel = state.velden.puntGevraagd;
+      const profiel = profielVoor(ctx, state.velden.punten);
+      const pt = sleutel === "voorkeur" ? null : profiel?.punten.find((x) => x.sleutel === sleutel);
+      const p = state.velden.punten || {};
+      // Een onduidelijk antwoord of ergernis telt als poging voor dit punt; een eigen vraag van de kandidaat niet.
+      if (verward && !lezing.eigenVraag && (invoer.tekst || "").trim()) {
+        const pogingen = { ...(state.velden.puntPogingen || {}) };
+        pogingen[sleutel] = (pogingen[sleutel] || 0) + 1;
+        state.velden.puntPogingen = pogingen;
+        if ((pogingen[sleutel] || 0) >= (pt?.maxPogingen ?? 2)) {
+          state.velden.puntenGevraagd = Array.from(new Set([...(state.velden.puntenGevraagd || []), sleutel]));
+          delete state.velden.puntGevraagd;
+        }
+      }
+      if (!verward) {
+        // Een knop, of bij een tekstpunt het antwoord zelf als de AI het niet vastlegde.
+        const knopWaarde = sleutel === "voorkeur" ? keuzeWaarde({ sleutel: "voorkeur", doel: "", vraag: { nl: "", en: "" } }, ctx, p, invoer.tekst || "")
+          : pt ? keuzeWaarde(pt, ctx, p, invoer.tekst || "") : null;
+        const jn = !knopWaarde && pt && !p[pt.vult || sleutel] ? jaNee(pt, invoer.tekst || "") : null;
+        if (knopWaarde) state.velden.punten = { ...p, ...(pt ? puntenUitKnop(pt, p, knopWaarde) : { voorkeur: knopWaarde }) };
+        else if (jn && pt) state.velden.punten = { ...p, [pt.vult || sleutel]: jn };
+        // Ruwe tekst alleen zonder AI, en alleen als het bericht op een antwoord lijkt (geen vraag, groet of klacht).
+        // Met AI geldt alleen wat het model met citaat vastlegde: "Wat verdien ik eigenlijk?" wordt nooit een systeem.
+        else if (pt && !pt.waarden && !pt.klaarAls && !p[sleutel] && lezing.bron !== "ai" && lijktAntwoord(invoer.tekst || "")) state.velden.punten = { ...p, [sleutel]: (invoer.tekst || "").trim().slice(0, 300) };
+        const pn = state.velden.punten || {};
+        const ingevuldNu = sleutel === "voorkeur" ? !!pn.voorkeur : !!pt && (pt.beantwoordAls ? pt.beantwoordAls(pn) : pt.klaarAls ? pt.klaarAls(pn) : !!pn[pt.vult || sleutel]);
+        const pogingen = { ...(state.velden.puntPogingen || {}) };
+        if (!ingevuldNu) pogingen[sleutel] = (pogingen[sleutel] || 0) + 1;
+        state.velden.puntPogingen = pogingen;
+        // Housekeeping, wie het wil leren: het antwoord op "al eens hotelkamers schoongemaakt?" komt ook in de ervaring.
+        if (sleutel === "eerderKamers" && ingevuldNu && state.velden.wilLeren) {
+          const w = state.velden.punten?.eerderKamers;
+          // De ervaring is nu bekend: "nog onbekend" verdwijnt, wat de kandidaat eerst zei blijft erbij.
+          const wilTekst = (state.velden.ervaring || "").match(/ervaring nog onbekend \("(.*?)"\)/)?.[1];
+          const leren = wilTekst ? `, wil het werk leren ("${wilTekst}")` : ", wil het werk leren";
+          state.velden.ervaring = (w === "ja" ? `Al eens hotelkamers schoongemaakt ("${(invoer.tekst || "").trim().slice(0, 150)}")${leren}` : `Nog geen hotelkamers schoongemaakt${leren}`).slice(0, 1000);
+          if (w === "nee") state.velden.ervaringNiveau = "geen";
+          // "Ja" op "Heb je al eens hotelkamers schoongemaakt?" bevestigt kamers: dan niet nog eens vragen wat iemand
+          // deed, wel wat nog relevant is (kamers per dienst, sterren).
+          if (w === "ja" && !state.velden.punten?.soort) state.velden.punten = { ...(state.velden.punten || {}), soort: "kamers" };
+        }
+        // Beantwoord, of twee keer zonder bruikbaar antwoord: klaar (dan een open punt voor het gesprek).
+        // Een tegengesproken antwoord sluit het punt ook: de kandidaat antwoordde, een collega kijkt naar de zin.
+        const tegen = !!pt && tegengesproken.includes(pt.vult || sleutel) && !(pt.beantwoordAls ? pt.beantwoordAls(pn) : false);
+        if (ingevuldNu || tegen || (pogingen[sleutel] || 0) >= (pt?.maxPogingen ?? 2)) {
+          state.velden.puntenGevraagd = Array.from(new Set([...(state.velden.puntenGevraagd || []), sleutel]));
+          delete state.velden.puntGevraagd;
+        }
+      }
+    }
+    if (versie2(state.velden) && state.velden.punten) {
+      // Het bestaande veld voor de kaart en het profiel: een leesbare samenvatting van de punten.
+      const sam = puntenSamenvatting(ctx, state.velden);
+      // Leeg (alles weer open): dan ook geen oude samenvatting op de kaart.
+      if (sam) state.velden.functievraag = sam; else delete state.velden.functievraag;
+      // Hotelfuncties: de sterren ook in het bestaande veld, zodat de kaart ze toont.
+      const st = state.velden.punten.sterren;
+      if (st === "3" || st === "4" || st === "5") state.velden.sterren = st;
+    }
     // Fase 2: vragen die door dit antwoord vervallen (sterren zonder hotelervaring en dergelijke).
     if (ctx.begrijpen) for (const o of lezing.nvt || []) vervalt(state.velden, o);
     // Barwerk spreekt voor zich: geen vraag meer wat iemand achter de bar deed.
@@ -1117,7 +1337,7 @@ function verwerkLos(
     }
     if (!verward && vorigOnderwerp === "restaurant" && !state.velden.restaurantSoort) state.velden.restaurantSoort = (invoer.tekst || "").trim().slice(0, 100) || "-";
     if (!verward && vorigOnderwerp === "hotels" && !state.velden.hotels) state.velden.hotels = (invoer.tekst || "").trim().slice(0, 300) || "-";
-    if (!verward && vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
+    if (!verward && !versie2(state.velden) && vorigOnderwerp === "functievraag" && state.velden.functievraag === undefined) {
       state.velden.functievraag = (invoer.tekst || "").trim() || "-";
     }
     if (!verward && vorigOnderwerp === "geldigheid" && state.velden.geldigTot === undefined) {
@@ -1136,7 +1356,16 @@ function verwerkLos(
       state.velden.doorvragen = teller;
       // Het antwoord op de doorvraag hoort bij dat veld: een eerder noodantwoord wordt weer open.
       if (dv.voor === "hotels" && state.velden.hotels && !state.velden.geenHotel) delete state.velden.hotels;
-      if (dv.voor === "functievraag") delete state.velden.functievraag;
+      if (dv.voor === "functievraag" && !versie2(state.velden)) delete state.velden.functievraag;
+      // Vraagversie 2: een doorvraag op de functievraag telt als functievraag en hoort bij hetzelfde punt.
+      if (dv.voor === "functievraag" && versie2(state.velden)) {
+        state.velden.functievragen = (state.velden.functievragen || 0) + 1;
+        const vorigPunt = (state.velden.puntenGevraagd || []).slice(-1)[0];
+        if (!state.velden.puntGevraagd && vorigPunt) {
+          state.velden.puntGevraagd = vorigPunt;
+          state.velden.puntenGevraagd = (state.velden.puntenGevraagd || []).filter((k) => k !== vorigPunt);
+        }
+      }
       state.status = "bezig";
       state.laatsteOnderwerp = dv.voor;
       berichten.push({ tekst: dv.tekst });
@@ -1149,6 +1378,14 @@ function verwerkLos(
   if (onderwerp) {
     state.status = "bezig";
     state.laatsteOnderwerp = onderwerp;
+    // Vraagversie 2: welk punt Job nu vraagt; een nieuw punt telt als functievraag.
+    if (onderwerp === "functievraag" && versie2(state.velden)) {
+      const pt = volgendPunt(ctx, state.velden);
+      if (pt && pt.sleutel !== state.velden.puntGevraagd) {
+        state.velden.puntGevraagd = pt.sleutel;
+        state.velden.functievragen = (state.velden.functievragen || 0) + 1;
+      }
+    }
     const v = vraag(onderwerp, state.taal, ctx, state.velden);
     if (onderwerp === "functievraag" && lezing?.vervolgvraag && !isHotelPad(ctx)) v.tekst = lezing.vervolgvraag;
     berichten.push(v);
@@ -1347,7 +1584,9 @@ export function samenvatting(v: JobVelden, ctx: JobContext, taal: JobTaal = "nl"
   if (v.diensten) delen.push(taal === "nl" ? DIENSTEN_TEKST[v.diensten] : { "1-2": "1 to 2 shifts a week", "3-4": "3 to 4 shifts a week", "5+": "5 or more shifts a week" }[v.diensten]);
   if (v.werkgebied) delen.push(v.werkgebied);
   if (v.werkmoment) delen.push(WERKMOMENT_TEKST[v.werkmoment][taal].toLowerCase());
+  else if (v.werkmomentTekst) delen.push(v.werkmomentTekst);
   if (v.startdatum) delen.push(taal === "nl" ? `beginnen: ${STARTDATUM_TEKST[v.startdatum].nl.toLowerCase()}` : `start: ${STARTDATUM_TEKST[v.startdatum].en.toLowerCase()}`);
+  else if (v.startdatumTekst) delen.push(taal === "nl" ? `beginnen: ${v.startdatumTekst}` : `start: ${v.startdatumTekst}`);
   return delen.join(" · ");
 }
 
@@ -1359,10 +1598,14 @@ export function profielVelden(v: JobVelden): Record<string, string> {
   const uit: Record<string, string> = {};
   if (v.ervaring) {
     const hotel = [v.hotels && v.hotels !== "-" ? `Hotels: ${v.hotels}` : "", v.sterren ? `beste hotel ${STERREN_TEKST[v.sterren].nl}` : ""].filter(Boolean).join(", ");
-    uit.previousExperience = (hotel ? `${v.ervaring}. ${hotel}` : v.ervaring).slice(0, 2000);
+    const functie = versie2(v) && v.functievraag && v.functievraag !== "-" ? v.functievraag : "";
+    uit.previousExperience = [hotel ? `${v.ervaring}. ${hotel}` : v.ervaring, functie].filter(Boolean).join(". ").slice(0, 2000);
   }
-  const beschikbaar = [v.diensten ? DIENSTEN_TEKST[v.diensten] : "", v.werkmoment ? WERKMOMENT_TEKST[v.werkmoment].nl.toLowerCase() : ""].filter(Boolean).join(", ");
+  const beschikbaar = [v.diensten ? DIENSTEN_TEKST[v.diensten] : "", v.werkmoment ? WERKMOMENT_TEKST[v.werkmoment].nl.toLowerCase() : v.werkmomentTekst || "", v.startdatumTekst ? `beginnen: ${v.startdatumTekst}` : ""].filter(Boolean).join(", ");
   if (beschikbaar) uit.availability = beschikbaar;
-  if (v.talen) uit.language = v.talen.slice(0, 500);
+  // Vraagversie 2: taal voor gastcontact zoals de kandidaat het vertelde (front office, host).
+  const gast = [v.punten?.engels ? `Engels voor gastcontact: ${v.punten.engels}` : "", v.punten?.nederlands ? `Nederlands voor gastcontact: ${v.punten.nederlands}` : ""].filter(Boolean).join(", ");
+  const taal = [v.talen || "", gast ? `${gast} (door kandidaat verteld)` : ""].filter(Boolean).join(". ");
+  if (taal) uit.language = taal.slice(0, 500);
   return uit;
 }

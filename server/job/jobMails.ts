@@ -55,11 +55,11 @@ export async function stuurHerinneringsmail(o: { voornaam: string; email: string
     titel: en ? `You're almost done, ${o.voornaam}` : `Je bent bijna klaar, ${o.voornaam}`,
     voorkop: en ? "Almost done" : "Bijna klaar",
     kop: en ? `You're almost done, ${escapeHtml(o.voornaam)}` : `Je bent bijna klaar, ${escapeHtml(o.voornaam)}`,
-    preheader: en ? "A few more quick questions, then you can book a meeting." : "Nog een paar korte vragen, dan kun je meteen een kennismaking plannen.",
+    preheader: en ? "A few more quick questions, then a colleague will look at your application." : "Nog een paar korte vragen, dan bekijkt een collega je aanmelding.",
     inhoud: [
       alinea(en
-        ? `Great that you signed up for ${escapeHtml(functieLabel(o.functie, "en"))}! Your conversation with Job isn't finished yet. A few more quick questions, then you can book a meeting right away.`
-        : `Leuk dat je je hebt aangemeld voor ${escapeHtml(functieLabel(o.functie, "nl"))}! Je gesprek met Job is nog niet af. Nog een paar korte vragen, dan kun je meteen een kennismaking plannen.`),
+        ? `Great that you signed up for ${escapeHtml(functieLabel(o.functie, "en"))}! Your conversation with Job isn't finished yet. A few more quick questions, then a colleague will look at your application.`
+        : `Leuk dat je je hebt aangemeld voor ${escapeHtml(functieLabel(o.functie, "nl"))}! Je gesprek met Job is nog niet af. Nog een paar korte vragen, dan bekijkt een collega je aanmelding.`),
       stappen(brancheVanFunctie(o.functie), en
         ? ["Apply: done", "Questions from Job: almost done", "Meet us at the office"]
         : ["Aanmelden: klaar", "Vragen van Job: bijna klaar", "Kennismaken op kantoor"]),
@@ -132,14 +132,14 @@ export async function stuurCvMail(o: { voornaam: string; email: string; functie:
     titel: en ? "Upload your CV" : "Upload je cv",
     voorkop: en ? "One more step" : "Nog één stap",
     kop: en ? "One more step: your CV" : "Nog één stap: je cv",
-    preheader: en ? "As soon as your CV is in, you can book a meeting." : "Zodra je cv binnen is, kun je een kennismaking plannen.",
+    preheader: en ? "As soon as your CV is in, a colleague will look at your application." : "Zodra je cv binnen is, bekijkt een collega je aanmelding.",
     inhoud: [
       alinea(en ? `Hi ${escapeHtml(o.voornaam)},` : `Hoi ${escapeHtml(o.voornaam)},`),
       alinea(en
         ? "Thanks for your conversation with Job! The only thing missing is your CV. A PDF or a photo is fine."
         : "Dank je voor je gesprek met Job! Alleen je cv ontbreekt nog. Een pdf of een foto is prima."),
       knoppen(knop(en ? "Upload your CV" : "Upload je cv", uploadUrl, "vol")),
-      alinea(en ? "As soon as it's in, you can book a meeting at our office right away." : "Zodra het binnen is, kun je meteen een kennismaking op ons kantoor plannen.", { klein: true }),
+      alinea(en ? "As soon as it's in, a colleague will look at your application and let you know how things continue." : "Zodra het binnen is, bekijkt een collega je aanmelding en hoor je hoe het verder gaat.", { klein: true }),
       afsluiting(o.taal),
     ].join(""),
   });

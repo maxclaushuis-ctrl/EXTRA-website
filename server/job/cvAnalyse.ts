@@ -17,10 +17,15 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { candidates, cvAnalyses, jobGesprekken, kandidaatMatches, type CvAnalyse } from "@shared/schema";
 import { afschermen } from "@shared/cvAfschermen";
-import { matchKaart, modelVoor, type FunctieModel, type MatchKaart, type Periode } from "@shared/kandidaatMatch";
+import { gesprekKennisUit, matchFunctie, matchKaart, modelVoor, type FunctieModel, type MatchKaart, type Periode } from "@shared/kandidaatMatch";
 import { soortVan, valideerAnalyse } from "@shared/cvLezen";
 export { soortVan, valideerAnalyse };
-import { geenErvaringTelt, type JobVelden } from "@shared/jobRegels";
+import { geenErvaringTelt, versie2, type JobVelden } from "@shared/jobRegels";
+
+/** Voor de kaart: vraagversie 2, de vastgestelde functie en de keuze op het formulier. */
+function kaartOpties(formulier: string | null | undefined, velden: JobVelden | undefined) {
+  return { versie2: versie2(velden), functie: matchFunctie(formulier, velden), formulierKeuze: formulier ?? null };
+}
 
 export function matchAan(): boolean {
   const w = process.env.JOB_V3_MATCH;
@@ -67,6 +72,7 @@ Haal per werkperiode uit het cv:
 Certificaten: alleen wat er letterlijk staat.
 Gesprek: alleen als het gesprek ervaring in deze functie noemt die NIET al als periode in het cv staat: {"functie": "...", "duurMaanden": getal, "kerntaken": [...], "citaat": "..."}; anders null.
 
+Wat volgens het gesprek een collega deed (bijvoorbeeld "mijn collega stond zelfstandig op de warme kant"), telt niet als werk van de kandidaat.
 Verzin niets. Wat niet in het cv staat, laat je weg. Seizoen-, stage- en uitzendwerk telt gewoon als werk. Naam, leeftijd, afkomst, opmaak en spelling doen niet mee.
 Antwoord uitsluitend met JSON: {"periodes": [...], "certificaten": [...], "gesprek": null}`;
 }
@@ -96,9 +102,11 @@ export async function analyseerCv(candidateId: number): Promise<CvAnalyse | null
   if (!c || !c.hasCv || !c.cvFilename) return null;
   const bestand = String(c.cvFilename);
   const soort = soortVan(bestand);
-  const model = modelVoor(c.functieEersteKeus, c.functionType, (c.bronDetails as any)?.branche ?? null);
   const [g] = await db.select().from(jobGesprekken).where(eq(jobGesprekken.candidateId, candidateId));
   const velden = (g?.velden || {}) as JobVelden;
+  // De functie die met de kandidaat is vastgesteld (voorkeur bij Job), anders die van het formulier.
+  const functie = matchFunctie(c.functieEersteKeus, velden);
+  const model = modelVoor(functie, c.functionType, (c.bronDetails as any)?.branche ?? null, versie2(velden));
   const bewaar = async (v: Partial<typeof cvAnalyses.$inferInsert>) => {
     const [a] = await db.insert(cvAnalyses).values({ candidateId, bestand, soort, status: "fout", ...v }).returning();
     return a;
@@ -117,7 +125,7 @@ export async function analyseerCv(candidateId: number): Promise<CvAnalyse | null
     if (uit === "geen_ai") return bewaar({ status: "geen_ai", tekens: af.tekst.length });
     const a = await bewaar({ status: "klaar", tekens: af.tekst.length, periodes: uit.periodes, certificaten: uit.certificaten, model: "gpt-4o-mini" });
     // Momentopname van de match, voor de geschiedenis en de consistentie
-    const k = matchKaart(model, uit.periodes, uit.certificaten, { ervaringNiveau: geenErvaringTelt(velden) ? "geen" : velden.ervaringNiveau === "geen" ? null : velden.ervaringNiveau ?? null }, peil);
+    const k = matchKaart(model, uit.periodes, uit.certificaten, gesprekKennisUit(velden, geenErvaringTelt(velden)), peil, kaartOpties(c.functieEersteKeus, velden));
     await db.insert(kandidaatMatches).values({
       candidateId, cvAnalyseId: a.id, functie: model.sleutel, toestand: k.uitkomst.toestand, score: k.uitkomst.score ?? null, laag: k.uitkomst.laag ?? null, hoog: k.uitkomst.hoog ?? null,
       dekking: k.uitkomst.dekking, voorlopig: k.uitkomst.voorlopig, onzekerheid: k.uitkomst.onzekerheid, eis: k.eis.status, label: k.uitkomst.label, invoer: k.berekening,
@@ -164,8 +172,8 @@ export function matchUit(c: { hasCv: boolean | null; cvFilename: string | null; 
   if (bezig.has(c.id)) return { status: "bezig" };
   if (!a || a.bestand !== c.cvFilename) return { status: "nog_niet" };
   if (a.status !== "klaar") return { status: a.status, op: a.aangemaaktOp ? String(a.aangemaaktOp) : null, melding: MELDING[a.status] || MELDING.fout };
-  const model = modelVoor(c.functieEersteKeus, c.functionType, (c.bronDetails as any)?.branche ?? null);
-  const kaart = matchKaart(model, (a.periodes || []) as Periode[], (a.certificaten || []) as string[], { ervaringNiveau: geenErvaringTelt(velden) ? "geen" : velden?.ervaringNiveau === "geen" ? null : velden?.ervaringNiveau ?? null }, nu);
+  const model = modelVoor(matchFunctie(c.functieEersteKeus, velden), c.functionType, (c.bronDetails as any)?.branche ?? null, versie2(velden));
+  const kaart = matchKaart(model, (a.periodes || []) as Periode[], (a.certificaten || []) as string[], gesprekKennisUit(velden, geenErvaringTelt(velden)), nu, kaartOpties(c.functieEersteKeus, velden));
   return { status: "klaar", op: a.aangemaaktOp ? String(a.aangemaaktOp) : null, kaart };
 }
 
