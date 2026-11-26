@@ -332,11 +332,11 @@ const T = {
     werkgebied: "In welke regio wil je werken? Kies hoe ver je wilt reizen vanaf je huis, of typ een regio.",
     werkgebiedKeuzes: ["Tot 25 km", "Tot 35 km", "Tot 50 km"],
     talen: "Welke talen spreek je?",
-    werkmoment: "Wanneer kun je werken?",
-    werkmomentKeuzes: ["Doordeweeks", "Avond en weekend", "Wanneer nodig"],
+    werkmoment: "Wanneer kun je meestal werken?",
+    werkmomentKeuzes: ["Doordeweeks", "Avond en weekend", "Flexibel"],
     startdatum: "Wanneer kun je beginnen?",
     startdatumKeuzes: ["Direct", "Binnen 2 weken", "Later"],
-    werkvorm: "Doe je dit naast je studie, naast ander werk of als hoofdbaan?",
+    werkvorm: "Is dit een bijbaan of je hoofdbaan?",
     werkvormKeuzes: ["Naast mijn studie", "Naast ander werk", "Als hoofdbaan"],
     cv: "Laatste vraag: heb je je cv paraat?",
     cvKeuzes: ["Ja", "Nee"],
@@ -418,11 +418,11 @@ const T = {
     werkgebied: "Which area would you like to work in? Choose how far you'd travel from home, or type an area.",
     werkgebiedKeuzes: ["Up to 25 km", "Up to 35 km", "Up to 50 km"],
     talen: "Which languages do you speak?",
-    werkmoment: "When can you work?",
-    werkmomentKeuzes: ["Weekdays", "Evenings and weekends", "Whenever needed"],
+    werkmoment: "When are you usually available?",
+    werkmomentKeuzes: ["Weekdays", "Evenings and weekends", "Flexible"],
     startdatum: "When can you start?",
     startdatumKeuzes: ["Right away", "Within 2 weeks", "Later"],
-    werkvorm: "Would you do this alongside your studies, alongside another job or as your main job?",
+    werkvorm: "Is this a side job or your main job?",
     werkvormKeuzes: ["Alongside studies", "Alongside other job", "As my main job"],
     cv: "Last question: do you have your CV ready?",
     cvKeuzes: ["Yes", "No"],
@@ -882,6 +882,12 @@ function samenvoegen(oud: JobVelden, nieuw: JobVelden): JobVelden {
     if (k === "specialisatieHint" && oud.specialisatie) continue;
     (uit as any)[k] = w;
   }
+  // Een knop en eigen woorden over hetzelfde sluiten elkaar uit; de nieuwste telt. Zo ziet niemand nog "Flexibel"
+  // als de kandidaat daarna zegt dat het toch alleen 's avonds kan.
+  if (nieuw.werkmomentTekst && !nieuw.werkmoment) delete uit.werkmoment;
+  if (nieuw.werkmoment && !nieuw.werkmomentTekst) delete uit.werkmomentTekst;
+  if (nieuw.startdatumTekst && !nieuw.startdatum) delete uit.startdatum;
+  if (nieuw.startdatum && !nieuw.startdatumTekst) delete uit.startdatumTekst;
   return uit;
 }
 
@@ -1554,12 +1560,12 @@ export function herinnering(s: JobState, ctx: JobContext, soort: Herinnering, nu
 
 // ─── Velden naar het kandidaatprofiel ────────────────────────────────────────
 
-const DIENSTEN_TEKST: Record<Diensten, string> = { "1-2": "1 tot 2 diensten per week", "3-4": "3 tot 4 diensten per week", "5+": "5 of meer diensten per week" };
+export const DIENSTEN_TEKST: Record<Diensten, string> = { "1-2": "1 tot 2 diensten per week", "3-4": "3 tot 4 diensten per week", "5+": "5 of meer diensten per week" };
 /** Leesbare tekst voor de planner (kaart, profiel). */
 export const WERKMOMENT_TEKST: Record<Werkmoment, { nl: string; en: string }> = {
   doordeweeks: { nl: "Doordeweeks", en: "Weekdays" },
   avond_weekend: { nl: "Avond en weekend", en: "Evenings and weekends" },
-  flexibel: { nl: "Wanneer nodig", en: "Whenever needed" },
+  flexibel: { nl: "Flexibel", en: "Flexible" },
 };
 export const STERREN_TEKST: Record<Sterren, { nl: string; en: string }> = {
   "3": { nl: "3 sterren of minder", en: "3 stars or fewer" },

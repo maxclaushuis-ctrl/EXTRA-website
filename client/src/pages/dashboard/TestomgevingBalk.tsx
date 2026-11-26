@@ -23,6 +23,8 @@ interface TestMail {
   html: string;
   attachments: string[];
   timestamp: string;
+  /** Naar een fictief adres (voorbeeld.nl): niet verstuurd, alleen hier te zien. */
+  afgeschermd?: boolean;
 }
 
 const GEEL = "#F2B866";
@@ -148,6 +150,7 @@ export function TestomgevingBalk() {
                   </span>
                   <span style={{ display: "block", fontSize: 14, fontWeight: 700, marginTop: 2 }}>{m.subject || "(geen onderwerp)"}</span>
                   {m.attachments.length > 0 && <span style={{ display: "block", fontSize: 12, color: "#6B665C", marginTop: 2 }}>Bijlage: {m.attachments.join(", ")}</span>}
+                  {m.afgeschermd && <span style={{ display: "block", fontSize: 12, color: "#6B665C", marginTop: 2 }}>Afgeschermd: fictief adres, niet verstuurd</span>}
                 </button>
               ))}
             </div>
@@ -158,6 +161,7 @@ export function TestomgevingBalk() {
                   <div><b>Aan:</b> {ontvanger(gekozen.to)}</div>
                   {gekozen.from && <div><b>Van:</b> {gekozen.from}</div>}
                   <div><b>Onderwerp:</b> {gekozen.subject}</div>
+                  {gekozen.afgeschermd && <div><b>Afgeschermd:</b> fictief adres (voorbeeld.nl), deze mail is niet verstuurd</div>}
                 </div>
                 {gekozen.html ? (
                   <iframe title="Inhoud van de mail" sandbox="" srcDoc={gekozen.html} style={{ width: "100%", height: "100%", border: 0, background: "#fff" }} />

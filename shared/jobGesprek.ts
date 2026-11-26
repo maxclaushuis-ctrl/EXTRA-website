@@ -12,7 +12,8 @@
  *   - de vaste regels (shared/jobRegels.ts) blijven de status, de verplichte vragen en de acties bepalen.
  * Puur, getest in shared/jobGesprek.test.ts. De AI-aanroep staat in server/job/jobBeurt.ts.
  */
-import type { JobTaal, Onderwerp, Uitgaand } from "./jobRegels";
+import type { JobTaal, JobVelden, Onderwerp, Uitgaand } from "./jobRegels";
+import { DIENSTEN_TEKST, STARTDATUM_TEKST, STERREN_TEKST, WERKMOMENT_TEKST, WERKVORM_TEKST } from "./jobRegels";
 import { LETTERLIJK, valideerBeurt, type Beurt } from "./jobBeurt";
 import { bewijsCheck, valideerLezing } from "./jobLezen";
 import { kennis, ONBEKENDE_VRAAG } from "./jobKennis";
@@ -125,6 +126,136 @@ export function zelfdeOpening(reactie: string, vorig: string | null | undefined)
   return !!a && !!vorig && a === eersteWoord(vorig);
 }
 
+// ─── Rustig doorvragen (afspraak Max 26 nov 2026) ────────────────────────────
+// De hoofdregel: is het antwoord duidelijk, dan gaat Job direct door met de volgende vraag, zonder het antwoord
+// te herhalen of te bevestigen. Vraagt of corrigeert de kandidaat iets, dan handelt Job dat eerst af. Het
+// vangnet daaronder: een stopwoord als "top" of "helder" opent hooguit één bericht per gesprek.
+
+/** De eerdere berichten van Job uit de geschiedenis ("Job: ..."), nieuwste laatst. */
+export function eerdereJobBerichten(geschiedenis: string, max = 16): string[] {
+  return geschiedenis.split("\n").filter((r) => r.startsWith("Job: ")).map((r) => r.slice(5).trim()).filter(Boolean).slice(-max);
+}
+
+export const STOPWOORDEN = ["top", "helder", "duidelijk", "mooi", "prima", "fijn", "super", "perfect", "oke", "ok", "okay", "goed", "great", "clear", "nice", "lovely", "alright"];
+
+/** Het stopwoord waarmee een tekst opent, of null. */
+export function openendStopwoord(t: string): string | null {
+  const w = eersteWoord(t);
+  return STOPWOORDEN.includes(w) ? w : null;
+}
+
+/**
+ * Opent de tekst met een stopwoord dat Job eerder in dit gesprek al als opening gebruikte, dan gaat dat woord eraf
+ * ("Helder, fulltime dus." wordt "Fulltime dus."). Blijft er bijna niets over, dan leeg.
+ */
+export function zonderHerhaaldStopwoord(t: string, eerder: string[]): string {
+  const s = (t || "").trim();
+  const w = openendStopwoord(s);
+  if (!w || !eerder.some((e) => openendStopwoord(e) === w)) return s;
+  const rest = s.replace(/^[^\s,.!:;]+[\s,.!:;]*/, "").trim();
+  if (rest.split(/\s+/).filter(Boolean).length < 2) return "";
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+}
+
+/** Welke velden bij welke vraag horen (voor het verschil tussen een antwoord en een aanvulling). */
+export const VELDEN_VAN: Partial<Record<Onderwerp, (keyof JobVelden)[]>> = {
+  ervaring: ["ervaring", "ervaringNiveau"], functievraag: ["functievraag", "punten", "puntBewijs"], hotels: ["hotels"], sterren: ["sterren"],
+  restaurant: ["restaurantSoort"], specialisatie: ["specialisatie"], werkautorisatie: ["werkautorisatie"], geldigheid: ["geldigTot"],
+  diensten: ["diensten"], werkgebied: ["werkgebied", "vervoer"], werkmoment: ["werkmoment", "werkmomentTekst"],
+  startdatum: ["startdatum", "startdatumTekst"], werkvorm: ["werkvorm"], talen: ["talen"], cv: ["cvParaat"],
+};
+
+/** Een opgeslagen waarde zoals de kandidaat hem terugleest; null als die zich niet leent voor een korte bevestiging. */
+export function veldTekst(k: keyof JobVelden, v: unknown, taal: JobTaal): string | null {
+  if (v === undefined || v === null || v === "" || v === "-") return null;
+  const nl = taal === "nl";
+  const tekst = typeof v === "string" ? v.trim() : "";
+  switch (k) {
+    case "diensten": return nl ? (DIENSTEN_TEKST as any)[v as string] ?? null : ({ "1-2": "1 to 2 shifts a week", "3-4": "3 to 4 shifts a week", "5+": "5 or more shifts a week" } as any)[v as string] ?? null;
+    case "werkgebied": return tekst || null;
+    case "werkmoment": return (WERKMOMENT_TEKST as any)[v as string]?.[taal]?.toLowerCase() ?? null;
+    case "werkmomentTekst": return tekst || null;
+    case "startdatum": { const l = (STARTDATUM_TEKST as any)[v as string]?.[taal]?.toLowerCase(); return l ? (nl ? `starten ${l}` : `start ${l}`) : null; }
+    case "startdatumTekst": return tekst ? (nl ? `starten ${tekst}` : `start ${tekst}`) : null;
+    case "werkvorm": return (WERKVORM_TEKST as any)[v as string]?.[taal]?.toLowerCase() ?? null;
+    case "sterren": return (STERREN_TEKST as any)[v as string]?.[taal]?.toLowerCase() ?? null;
+    case "hotels": case "restaurantSoort": case "talen": case "vervoer": return tekst || null;
+    case "geldigTot": return tekst ? (nl ? `geldig tot ${tekst}` : `valid until ${tekst}`) : null;
+    default: return null;
+  }
+}
+
+/**
+ * Een korte bevestiging uit het dossier zelf, zodat wat Job zegt altijd klopt met wat er is opgeslagen.
+ * Bij een correctie: wat er nu staat ("Ik heb het aangepast naar 25 km enkele reis."). Bij een losse aanvulling
+ * (iets dat bij een andere vraag hoort, terwijl de open vraag onbeantwoord bleef): wat erbij kwam ("Genoteerd: alleen in de avond.").
+ * Leeg als er niets kort te bevestigen is.
+ */
+export function wijzigingBevestiging(oud: JobVelden, nieuw: JobVelden, i: { correctie: boolean; gevraagd: Onderwerp | null; taal: JobTaal }): string {
+  const nl = i.taal === "nl";
+  const eigen = new Set<string>(i.gevraagd ? VELDEN_VAN[i.gevraagd] || [] : []);
+  const kandidaten: (keyof JobVelden)[] = ["diensten", "werkgebied", "werkmoment", "werkmomentTekst", "startdatum", "startdatumTekst", "werkvorm", "sterren", "hotels", "restaurantSoort", "talen", "geldigTot"];
+  const veranderd = (k: keyof JobVelden) => JSON.stringify(oud[k] ?? null) !== JSON.stringify(nieuw[k] ?? null) && nieuw[k] !== undefined;
+  // Een aanvulling alleen bevestigen als de open vraag zelf niet beantwoord is (bijvoorbeeld "maar alleen in de avond"
+  // na de vraag over reisafstand): anders gaat Job gewoon door en slaat hij de beantwoorde vragen over.
+  if (!i.correctie && Array.from(eigen).some((k) => veranderd(k as keyof JobVelden))) return "";
+  const delen = kandidaten.filter((k) => veranderd(k) && (i.correctie || !eigen.has(k))).map((k) => veldTekst(k, nieuw[k], i.taal)).filter((x): x is string => !!x);
+  const uniek = Array.from(new Set(delen));
+  let zin = "";
+  if (uniek.length) {
+    const lijst = uniek.length === 1 ? uniek[0] : `${uniek.slice(0, -1).join(", ")} ${nl ? "en" : "and"} ${uniek[uniek.length - 1]}`;
+    zin = i.correctie ? (nl ? `Ik heb het aangepast naar ${lijst}.` : `I've updated it to ${lijst}.`) : (nl ? `Genoteerd: ${lijst}.` : `Noted: ${lijst}.`);
+  } else if (i.correctie && (veranderd("ervaring") || veranderd("functievraag"))) {
+    zin = nl ? "Ik heb je ervaring aangepast." : "I've updated your experience.";
+  }
+  return zin && grensFouten(zin, i.taal, 2).length === 0 ? zin : "";
+}
+
+const WERKMOMENT_KNOPPEN = /^(doordeweeks|avond en weekend|flexibel|wanneer nodig|weekdays|evenings and weekends|evenings, weekends|flexible|whenever needed)$/i;
+/** Een beperking in eigen woorden: "in het weekend kan ik niet", "geen avonden", "not on weekends". */
+const MOMENT = "(?:avond|avonden|'s avonds|weekend|weekenden|doordeweeks|overdag|ochtend|ochtenden|middag|middagen|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|evening|evenings|weekends?|weekdays|daytime|mornings?|afternoons?|monday|tuesday|wednesday|thursday|friday|saturday|sunday)";
+const BEPERKING = new RegExp(`\\b(?:niet|geen|nooit|behalve|uitgezonderd|not|no|never|except)\\b[^.;?]{0,25}${MOMENT}|${MOMENT}[^.;?]{0,30}\\b(?:niet|geen|nooit|not|never)\\b`, "i");
+
+/** De woorden van de kandidaat zonder de aanloop: "Nee, toch alleen 's avonds" wordt "alleen 's avonds". */
+function eigenWoorden(t: string): string {
+  let e = t.trim().replace(/[.!]+$/, "");
+  for (let i = 0; i < 3; i++) e = e.replace(/^(nee|ja|oh|sorry|oke|ok)[,!.]?\s+/i, "").replace(/^(toch|maar|eigenlijk|dan|ik kan|i can)\s+/i, "");
+  return (e || t.trim()).slice(0, 160);
+}
+
+/**
+ * Wanneer iemand kan werken, precies zoals hij het zei. Twee gevallen waarin een knopwaarde van het model te grof is:
+ *  - een beperking ("Ik kan 's avonds, maar in het weekend kan ik niet"): de volledige beperking in werkmomentTekst;
+ *  - alleen de avond, zonder weekend: geen "avond en weekend" maar de eigen woorden.
+ * Een aangetikte knop blijft de knop; zonder werkmoment van het model verandert er niets.
+ */
+export function preciezerWerkmoment(velden: JobVelden, bericht: string, bewijs?: string | null): JobVelden {
+  if (!velden.werkmoment && !velden.werkmomentTekst) return velden;
+  const t = (bericht || "").trim();
+  if (WERKMOMENT_KNOPPEN.test(t)) return velden;
+  const { werkmoment: _weg, ...rest } = velden;
+  // Alleen de zinnen over wanneer iemand kan werken: geen vraag ("Wat verdien ik eigenlijk?") en niet de rest van het bericht.
+  const zinnen = t.split(/(?<=[.!?])\s+/).filter((z) => !z.trim().endsWith("?") && new RegExp(MOMENT, "i").test(z));
+  const over = zinnen.join(" ");
+  if (over && BEPERKING.test(over)) return { ...rest, werkmomentTekst: eigenWoorden(over) };
+  if (velden.werkmoment === "avond_weekend" && /avond|evening/i.test(over) && !/weekend/i.test(over)) return { ...rest, werkmomentTekst: eigenWoorden((bewijs && bewijs.trim()) || over) };
+  return velden;
+}
+
+/**
+ * Een correctie die niets veranderde omdat de gewenste waarde er al stond: dan mag Job dat kort zeggen
+ * ("Dat staat al zo genoteerd: 1 tot 2 diensten per week."). Staat er iets anders, dan zegt Job niets toe.
+ */
+export function alGenoteerd(voorgesteld: JobVelden, dossier: JobVelden, taal: JobTaal): string {
+  const delen = (Object.keys(voorgesteld) as (keyof JobVelden)[])
+    .filter((k) => voorgesteld[k] !== undefined && JSON.stringify(voorgesteld[k]) === JSON.stringify(dossier[k]))
+    .map((k) => veldTekst(k, dossier[k], taal)).filter((x): x is string => !!x);
+  if (!delen.length) return "";
+  const lijst = delen.length === 1 ? delen[0] : `${delen.slice(0, -1).join(", ")} ${taal === "nl" ? "en" : "and"} ${delen[delen.length - 1]}`;
+  const zin = taal === "nl" ? `Dat staat al zo genoteerd: ${lijst}.` : `That's already noted: ${lijst}.`;
+  return grensFouten(zin, taal, 2).length === 0 ? zin : "";
+}
+
 /** Een vraag van het model: eindigt met het enige vraagteken, kort, binnen de grenzen. */
 export function vraagMag(t: string, taal: JobTaal): boolean {
   const s = (t || "").trim();
@@ -133,8 +264,13 @@ export function vraagMag(t: string, taal: JobTaal): boolean {
 
 export interface GesprekSamenstelling {
   berichten: Uitgaand[];
-  gebruikt: { reactie: boolean; vraag: boolean; kennis: Beurt["kennis"] };
+  gebruikt: { reactie: boolean; vraag: boolean; kennis: Beurt["kennis"]; bevestiging?: boolean };
 }
+
+/** Soorten berichten waar Job eerst op ingaat; bij alleen een duidelijk antwoord gaat Job direct door. */
+const AFHANDELEN = ["correctie", "frustratie", "verwarring", "hulp", "onduidelijk", "bedankje"];
+/** De kandidaat verwijst naar wat hij al zei: Job erkent dat kort (bijvoorbeeld met sorry) en gaat door. */
+const VERWIJZING = /\b(net|al|toch|eerder)\s+(gezegd|verteld|genoemd|geantwoord)\b|\bzei ik\b|\bzeg ik\b|\bsaid that\b|\btold you\b|\balready (said|told|answered)\b/i;
 
 /**
  * Het bericht dat Job verstuurt. De vaste regels kozen wat er gebeurt (welke vraag, of het gesprek
@@ -166,6 +302,12 @@ export function stelGesprekSamen(i: {
   punt?: string | null;
   /** Vraagversie 2: de schrijfregels van 25 november (één zin reactie vóór een vraag, zachte voorkeur voor afwisseling). */
   versie2?: boolean;
+  /** Een korte bevestiging uit het dossier na een correctie of aanvulling (wijzigingBevestiging). Gaat vóór de reactie van het model. */
+  bevestiging?: string;
+  /** De eerdere berichten van Job in dit gesprek: een stopwoord dat daar al een bericht opende, komt niet nog eens vooraan. */
+  eerder?: string[];
+  /** Het bericht van de kandidaat: een wedervraag of een verwijzing ("zei ik toch") vraagt om een reactie. */
+  bericht?: string;
 }): GesprekSamenstelling {
   const g = i.gesprek;
   const gebruikt: GesprekSamenstelling["gebruikt"] = { reactie: false, vraag: false, kennis: null };
@@ -178,13 +320,22 @@ export function stelGesprekSamen(i: {
     voor = g.kennis === "loon" && i.loonTekst ? i.loonTekst : k ? k[i.taal] : ONBEKENDE_VRAAG[i.taal];
     gebruikt.kennis = g.kennis;
   }
+  // Een correctie of aanvulling: eerst de bevestiging uit het dossier, dan pas het antwoord op een eigen vraag.
+  if (i.bevestiging && !i.vasteReactie) { voor = voor ? `${i.bevestiging} ${voor}` : i.bevestiging; gebruikt.bevestiging = true; }
+  const eerder = [...(i.eerder || []), ...(i.vorigBericht ? [i.vorigBericht] : [])];
+  // De reactie van het model alleen als er iets af te handelen is (correctie zonder bevestiging uit het dossier,
+  // ergernis, verwarring, een doorvraag). Een duidelijk antwoord, getypt of met een knop, krijgt geen reactie.
+  const afhandelen = g.soorten.some((x) => AFHANDELEN.includes(x)) || !!g.doorvragen || (!!i.bericht && (i.bericht.includes("?") || VERWIJZING.test(i.bericht)));
+  // Een correctie bevestigt Job alleen uit het dossier (i.bevestiging), nooit in de woorden van het model: dan kan
+  // Job geen "1 tot 2" toezeggen terwijl er nog "5 of meer" staat.
+  const modelReactie = afhandelen && !gebruikt.bevestiging && !g.soorten.includes("correctie") ? zonderHerhaaldStopwoord(g.reactie, eerder) : "";
   // Hetzelfde openingswoord als het vorige bericht is een zachte voorkeur: alleen een kale bevestiging
   // ("Helder.", "Top!") valt weg; een inhoudelijke reactie, of een reactie op een correctie of ergernis, blijft.
   const kaal = (t: string) => t.trim().split(/\s+/).length <= 3;
   const inhoudelijk = g.soorten.includes("correctie") || g.soorten.includes("frustratie");
   // Zonder vraagversie 2 (punt undefined) zoals het was: hooguit twee zinnen, geen controle op het openingswoord.
   const v2 = i.punt !== undefined || !!i.loonTekst || i.versie2;
-  const reactieOk = (max: number) => v2 ? reactieMag(g.reactie, i.taal, max) && (inhoudelijk || !kaal(g.reactie) || !zelfdeOpening(g.reactie, i.vorigBericht)) : reactieMag(g.reactie, i.taal);
+  const reactieOk = (max: number) => !!modelReactie && (v2 ? reactieMag(modelReactie, i.taal, max) && (inhoudelijk || !kaal(modelReactie) || !zelfdeOpening(modelReactie, i.vorigBericht)) : reactieMag(modelReactie, i.taal));
 
   const laatste = berichten[berichten.length - 1];
   if (i.onderwerp && i.standaard) {
@@ -193,29 +344,32 @@ export function stelGesprekSamen(i: {
     const regelsVraag = regelsVoor ? i.standaard : laatste.tekst;
     if (!voor && regelsVoor) voor = regelsVoor;
     // Met een vraag erna: hooguit één zin reactie, zodat het bericht bij twee korte zinnen blijft.
-    if (!voor && reactieOk(1)) { voor = g.reactie.trim(); gebruikt.reactie = true; }
+    if (!voor && reactieOk(1)) { voor = modelReactie; gebruikt.reactie = true; }
     let vraagTekst = regelsVraag;
     const zelfdeVeld = g.vraagt === i.onderwerp;
     const profielvraag = i.punt !== undefined;
-    if (!LETTERLIJK.includes(i.onderwerp) && zelfdeVeld && !profielvraag && vraagMag(g.vraag, i.taal)) { vraagTekst = g.vraag.trim(); gebruikt.vraag = true; }
+    // Een vraag met knoppen blijft de korte vaste vraag: de opties staan al in de knoppen.
+    const metKnoppen = !!laatste.keuzes?.length;
+    const eigenVraag = zonderHerhaaldStopwoord(g.vraag, voor ? [] : eerder);
+    if (!LETTERLIJK.includes(i.onderwerp) && zelfdeVeld && !profielvraag && !metKnoppen && eigenVraag.endsWith("?") && vraagMag(eigenVraag, i.taal)) { vraagTekst = eigenVraag; gebruikt.vraag = true; }
     const samen = voor ? `${voor} ${vraagTekst}` : vraagTekst;
     if (vormFouten(samen).length === 0) laatste.tekst = samen;
     else {
       laatste.tekst = regelsVoor && voor !== regelsVoor ? `${regelsVoor} ${vraagTekst}` : vraagTekst;
       // Het antwoord op de vraag van de kandidaat valt nooit weg: dan als eigen bericht ervoor.
-      if (gebruikt.kennis) berichten.splice(berichten.length - 1, 0, { tekst: voor });
+      if (gebruikt.kennis || gebruikt.bevestiging) berichten.splice(berichten.length - 1, 0, { tekst: voor });
       gebruikt.reactie = false;
     }
     return { berichten, gebruikt };
   }
 
   // Job vraagt niets meer (cv, collega, klaar): de vaste berichten, met vooraan het antwoord of de reactie.
-  if (!voor && reactieOk(2)) { voor = g.reactie.trim(); gebruikt.reactie = true; }
+  if (!voor && reactieOk(2)) { voor = modelReactie; gebruikt.reactie = true; }
   if (voor) {
     const eerste = berichten[0];
     const samen = `${voor} ${eerste.tekst}`;
     if (vormFouten(samen, 6).length === 0) eerste.tekst = samen;
-    else if (gebruikt.kennis) berichten.unshift({ tekst: voor });
+    else if (gebruikt.kennis || gebruikt.bevestiging) berichten.unshift({ tekst: voor });
     else gebruikt.reactie = false;
   }
   return { berichten, gebruikt };

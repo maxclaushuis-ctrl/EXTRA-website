@@ -2,7 +2,7 @@
  * Huistests: keuzes van Job als WhatsApp-knoppen.
  * Run met:  npx tsx shared/jobWhatsapp.test.ts
  */
-import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "./jobWhatsapp";
+import { knopTitel, whatsappKnoppen, keuzeUitNummer, cvInstructieWhatsapp } from "./jobWhatsapp";
 import { teksten } from "./jobRegels";
 
 let geslaagd = 0;
@@ -38,6 +38,14 @@ test("Vrije tekst blijft vrije tekst", keuzeUitNummer("Amsterdam en Haarlem", nl
 for (const [t, naam] of [[nl, "nl"], [en, "en"]] as const) {
   test(`Cv-vraag WhatsApp zonder link (${naam})`, !/https?:\/\//.test(t.cvUploadWa) && !/https?:\/\//.test(t.cvLaterWa));
   test(`Cv-teksten noemen pdf en Word, geen foto (${naam})`, [t.cvUpload, t.cvUploadWa, t.cvLaterWa].every((x) => /pdf/i.test(x) && /word/i.test(x) && !/foto|photo/i.test(x)));
+}
+
+for (const taal of ["nl", "en"] as const) {
+  const t = teksten(taal);
+  test(`cv ja in WhatsApp: de paperclip-instructie (${taal})`, cvInstructieWhatsapp(t.cvUpload, t) === t.cvUploadWa);
+  test(`cv ja met iets ervoor: alleen de instructie wordt WhatsApp (${taal})`, cvInstructieWhatsapp(`Top, dank je! ${t.cvUpload}`, t) === `Top, dank je! ${t.cvUploadWa}`);
+  test(`cv nee in WhatsApp: uitleg hoe het cv later kan (${taal})`, cvInstructieWhatsapp(t.cvLater, t) === t.cvLaterWa && cvInstructieWhatsapp(t.cvLaterZonderMail, t) === t.cvLaterWa);
+  test(`andere tekst blijft (${taal})`, cvInstructieWhatsapp("Iets anders.", t) === "Iets anders.");
 }
 
 console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);

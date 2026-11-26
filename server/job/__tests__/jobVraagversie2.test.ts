@@ -62,7 +62,7 @@ async function main() {
   const su = ctx("supervisor", "horecamedewerker", { label: "events" });
   const sv = begin(su);
   x = await stap(sv, su, "Vijf jaar festivals", { soort: ["antwoord"], velden: { ervaring: "vijf jaar festivals", ervaringNiveau: "ervaren" }, bewijs: { ervaring: "Vijf jaar festivals" }, reactie: "Vijf jaar festivals, dan heb je wat drukte gezien.", vraag: "Heb je op die festivals zelf weleens een team aangestuurd?", vraagt: "functievraag", vraagtPunt: "leiding" });
-  test("functiepunt: altijd de vraag uit het profiel met de knoppen; de aansluiting zit in de reactie", /^Vijf jaar festivals, dan heb je wat drukte gezien\. Heb je tijdens een evenement zelf een team aangestuurd\?$/.test(x.job) && (x.u.r.berichten[x.u.r.berichten.length - 1].keuzes || []).join("|") === "Ja|Een enkele keer|Nog niet", x.job);
+  test("functiepunt: altijd de vraag uit het profiel met de knoppen; een duidelijk antwoord krijgt geen herhaling", /^Heb je tijdens een evenement zelf een team aangestuurd\?$/.test(x.job) && (x.u.r.berichten[x.u.r.berichten.length - 1].keuzes || []).join("|") === "Ja|Een enkele keer|Nog niet", x.job);
   x = await stap(sv, su, "Vijf jaar festivals", { soort: ["antwoord"], velden: { ervaring: "vijf jaar festivals", ervaringNiveau: "ervaren" }, bewijs: { ervaring: "Vijf jaar festivals" }, reactie: "", vraag: "Wat regelde jij zelf tijdens een druk evenement?", vraagt: "functievraag", vraagtPunt: "regelde" });
   test("model springt naar een ander punt: de vaste vraag met de juiste knoppen", /Heb je tijdens een evenement zelf een team aangestuurd\?/.test(x.job) && (x.u.r.berichten[x.u.r.berichten.length - 1].keuzes || []).length === 3, x.job);
 
@@ -80,7 +80,7 @@ async function main() {
   let k = await stap(begin(ku), ku, "Twee jaar, ik stond op de warme kant", { soort: ["antwoord"], velden: { ervaring: "twee jaar, warme kant", ervaringNiveau: "ervaren", punten: { zelfstandig: "ja" } }, bewijs: { ervaring: "Twee jaar", punten: { zelfstandig: "ik stond op de warme kant" } }, reactie: "Helder.", vraag: "Wat deed je zelf tijdens een drukke dienst?", vraagt: "functievraag", vraagtPunt: "taken" });
   k = await stap(k.s, ku, "Nee, ik hielp in de keuken, mijn collega stond zelfstandig op de warme kant", { soort: ["correctie"], velden: { ervaring: "twee jaar meegeholpen; de collega stond zelfstandig op de warme kant", punten: { zelfstandig: "nee", taken: "meehelpen in de keuken" } }, bewijs: { ervaring: "ik hielp in de keuken", punten: { zelfstandig: "mijn collega stond zelfstandig op de warme kant", taken: "ik hielp in de keuken" } }, reactie: "Helder, dan heb ik dat aangepast.", vraag: "", vraagt: "functievraag", vraagtPunt: "richting" });
   test("correctie: zelfstandig is nee en de ervaring is vervangen", k.s.state.velden.punten?.zelfstandig === "nee" && /collega/.test(k.s.state.velden.ervaring || "") && !/^twee jaar, warme kant$/.test(k.s.state.velden.ervaring || ""), k.s.state.velden.ervaring);
-  test("correctie: de bevestiging blijft staan, ook al begint die met hetzelfde woord", /^Helder, dan heb ik dat aangepast\./.test(k.job), k.job);
+  test("correctie: Job bevestigt de aanpassing uit het dossier, niet met een stopwoord", /^Ik heb je ervaring aangepast\./.test(k.job) && !/^Helder/.test(k.job), k.job);
   test("correctie: daarna de vraag over keukenhulp als richting", /keukenhulp/.test(k.job), k.job);
 
   // ─── Voorkeur dinerloper bij bediening aangevinkt ───
@@ -95,7 +95,7 @@ async function main() {
   // ─── Zonder vraagversie 2 (schakelaar uit): het oude gesprek ───
   const oud = { ...hk, vraagversie2: false };
   const o = await stap(begin(oud), oud, "Twee jaar kamers in het Hilton", { soort: ["antwoord"], velden: { ervaring: "twee jaar kamers in het Hilton", ervaringNiveau: "ervaren", hotels: "Hilton" }, bewijs: { ervaring: "Twee jaar kamers", hotels: "Hilton" }, reactie: "Twee jaar, mooi.", vraag: "Hoeveel sterren had het Hilton?", vraagt: "sterren" });
-  test("schakelaar uit: geen vraagversie, oude flow (sterren na hotels)", o.s.state.velden.vraagversie === undefined && o.s.state.laatsteOnderwerp === "sterren" && /Twee jaar, mooi/.test(o.job), o.job);
+  test("schakelaar uit: geen vraagversie, oude flow (sterren na hotels)", o.s.state.velden.vraagversie === undefined && o.s.state.laatsteOnderwerp === "sterren" && !/Twee jaar, mooi/.test(o.job) && /sterren/.test(o.job), o.job);
 
   // ─── Nalooppunten 25 november, tweede ronde ───
   // 1. Herkansing per functiepunt: onduidelijk en duidelijk bij taken, dan hetzelfde bij taal; systeem blijft bereikbaar.

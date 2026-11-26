@@ -28,7 +28,7 @@ import { kennisOverzicht } from "@shared/jobKennis";
 import { VELD_VAN_ONDERWERP, geenDubbelBericht, herkansing, veldGevuld as veldGevuldDeel, zelfdeVraag, zonderHerhaling } from "@shared/jobHerhaling";
 import { modelVoor } from "@shared/kandidaatMatch";
 import { VELD_DOEL } from "./jobAi";
-import { eerdereAntwoorden, gesprekAan, MAX_POGINGEN, stelGesprekSamen, valideerGesprek, type Gesprek } from "@shared/jobGesprek";
+import { alGenoteerd, eerdereAntwoorden, eerdereJobBerichten, gesprekAan, MAX_POGINGEN, preciezerWerkmoment, stelGesprekSamen, valideerGesprek, wijzigingBevestiging, type Gesprek } from "@shared/jobGesprek";
 import { LETTERLIJK } from "@shared/jobBeurt";
 import { profielPrompt, profielVoor, volgendPunt } from "@shared/jobProfielen";
 import { versie2 } from "@shared/jobRegels";
@@ -70,7 +70,7 @@ function bekendLeesbaar(v: JobVelden): string {
   zet("ervaring", v.ervaring); zet("ervaringsniveau", v.ervaringNiveau); zet("wat deed je precies", v.functievraag);
   zet("hotels", v.hotels); zet("sterren", v.sterren); zet("restaurant", v.restaurantSoort); zet("evenementen ook", v.specialisatie);
   zet("werkautorisatie", v.werkautorisatie); zet("geldig tot", v.geldigTot); zet("diensten per week", v.diensten); zet("werkgebied", v.werkgebied);
-  zet("vervoer", v.vervoer); zet("wanneer", v.werkmoment); zet("beginnen", v.startdatum); zet("naast", v.werkvorm); zet("talen", v.talen);
+  zet("vervoer", v.vervoer); zet("wanneer", v.werkmoment); zet("wanneer in eigen woorden", v.werkmomentTekst); zet("beginnen", v.startdatum); zet("beginnen in eigen woorden", v.startdatumTekst); zet("naast", v.werkvorm); zet("talen", v.talen);
   zet("cv paraat", v.cvParaat);
   if (v.punten && Object.keys(v.punten).length) zet("functiepunten", v.punten);
   return delen.length ? delen.join("; ") : "(nog niets)";
@@ -107,14 +107,15 @@ ${profielPrompt(ctx, v)}
 - startdatumTekst: een concreet startmoment in de woorden van de kandidaat ("vanaf maandag", "na 1 januari"); zet dan geen startdatum.
 - werkmomentTekst: wanneer de kandidaat wil werken in eigen woorden als het niet precies een knop is ("liefst avonden", "alleen in het weekend"); zet dan geen werkmoment.
 - punten: object met per punt hierboven wat de kandidaat echt zei, met de toegestane waarde of een korte tekst. Vul elk punt dat het bericht beantwoordt, ook als Job er nog niet naar vroeg ("Ik reed op allebei, maar mijn certificaat is alleen voor de heftruck" vult gereden, certHeftruck en certReachtruck). Onbekend laat je weg; onbekend is nooit nee. Zet in bewijs.punten per punt het letterlijke citaat; zonder citaat telt een punt niet. Een vraag of opmerking van de kandidaat (zoals over loon) is nooit een citaat voor een punt.
-- Bij een functievraag zet Job zelf de vaste vraag van het punt, met de knoppen. Schrijf dan alleen je korte reactie die aansluit op wat de kandidaat zei; vraag mag leeg blijven, vraagt = "functievraag".${pt ? `
+- Bij een functievraag zet Job zelf de vaste vraag van het punt, met de knoppen. Schrijf dan alleen een korte reactie als die iets afhandelt (anders leeg); vraag mag leeg blijven, vraagt = "functievraag".${pt ? `
 De functievraag die nu aan de beurt is gaat over: ${pt.doel}.` : ""}`;
 }
 
 /** Hoe Job schrijft en antwoorden verwerkt (afspraken Max 25 nov 2026). */
 const SCHRIJVEN = `Hoe je schrijft:
-- Warm, direct, gewone spreektaal, je-vorm, zoals een goede recruiter van EXTRA in WhatsApp. Hooguit twee korte zinnen per bericht en één vraag: een korte reactie (mag leeg) en je vraag.
-- Laat merken dat je het antwoord begreep door aan te haken op het concrete detail ("daar", "die bruiloften"). Een bevestiging alleen als die iets toevoegt. Wissel af: begin niet steeds met "Top", "Helder", "Mooi" of de voornaam, en niet twee berichten achter elkaar met hetzelfde woord. Geen opvulzinnen als "bedankt voor je antwoord", geen emoji, geen overdreven lof.
+- Warm, direct, gewone spreektaal, je-vorm, zoals een goede recruiter van EXTRA in WhatsApp. Hooguit twee korte zinnen per bericht en één vraag.
+- De belangrijkste regel: is het antwoord duidelijk, ga dan direct door met de volgende vraag en laat reactie leeg. Herhaal of bevestig het antwoord niet ("Helder, fulltime dus." of "Tot 25 km, genoteerd." hoeft niet). Vraagt of corrigeert de kandidaat iets, handel dat dan eerst af. Een reactie alleen als die iets oplost (een correctie, ergernis, een verwijzing naar een eerder antwoord); laat anders reactie leeg.
+- Een stopwoord als "top", "helder", "duidelijk" of "mooi" hooguit één keer per gesprek; begin ook niet steeds met de voornaam. Geen opvulzinnen als "bedankt voor je antwoord", geen emoji, geen overdreven lof.
 - Kijk vóór je antwoordt naar de vraag die Job stelde, het antwoord dat je nu krijgt en wat er eerder al gezegd is.
 - Duidelijk antwoord: verwerk het en ga door.
 - Gedeeltelijk antwoord: haak aan op het detail en vraag alleen het ontbrekende stuk. "Ik werkte in een hotel" zegt bij housekeeping nog niet wat iemand deed.
@@ -378,19 +379,23 @@ Wat Job nog moet weten, in deze volgorde:
 ${openTekst}
 
 Hoe je schrijft:
-- Kort en warm, je-vorm, gewone spreektaal zoals in WhatsApp. Samen hooguit twee zinnen: een korte reactie op wat de kandidaat zei en één vraag.
-- Reageer op wat er echt staat ("Twee jaar, mooi.", "Achter de bar in een café, dan ken je drukte wel.", "Helder."). Af en toe "top", "mooi" of "helder" mag; geen overdreven lof, geen opvulzinnen als "bedankt voor je antwoord", geen emoji.
+- Kort en warm, je-vorm, gewone spreektaal zoals in WhatsApp. Hooguit twee korte zinnen en één vraag.
+- De belangrijkste regel: is het antwoord duidelijk, ga dan direct door met de volgende vraag en laat reactie leeg. Herhaal of bevestig het antwoord niet ("Helder, fulltime dus." of "Tot 25 km, genoteerd." hoeft niet). Vraagt of corrigeert de kandidaat iets, handel dat dan eerst af. Een reactie alleen als die iets oplost: een correctie bevestigen, ergernis kort erkennen, een verwijzing naar een eerder antwoord ("Je hebt gelijk, sorry.").
+- Een stopwoord als "top", "helder", "duidelijk" of "mooi" hooguit één keer per gesprek. Geen overdreven lof, geen opvulzinnen als "bedankt voor je antwoord", geen emoji.
+- Stuurt de kandidaat iets erachteraan dat bij een andere vraag hoort ("maar alleen in de avond"), leg het vast in het juiste veld; die vraag stelt Job dan niet meer. Vraag daarna alleen wat nog openstaat.
 - Een groet ("hi", "hoi"): groet kort terug met de naam en stel de open vraag eenvoudig ("Hoi ${ctx.voornaam}! Heb je al eens in de horeca gewerkt?").
 - Verwijst de kandidaat naar iets wat hij al zei ("zeg ik net", "dat zei ik toch"): dat is een antwoord. Neem het over uit zijn eerdere bericht, met dat bericht als bewijs, zeg kort sorry ("Je hebt gelijk, sorry.") en ga door met de volgende vraag.
 - Vraag nooit iets wat al bekend is of al gezegd is. Stel één vraag: de eerstvolgende uit de lijst, of een andere open vraag uit de lijst als die logischer aansluit op wat de kandidaat net zei.
 - Een te vaag antwoord op ervaring of een andere open vraag: één concrete doorvraag (zet doorvragen op dat veld). Niet vaker dan nodig.
-- Bij keuzevragen (diensten, werkgebied, werkmoment, startdatum, werkvorm, sterren) zet Job knoppen onder je vraag; noem dus niet alle opties.
+- Bij keuzevragen (diensten, werkgebied, werkmoment, startdatum, werkvorm, sterren) zet Job zelf de korte vaste vraag met knoppen; noem dus geen opties.
 - Vraagt de kandidaat zelf iets: zet kennis (zie onder) en laat reactie leeg; Job zet het goedgekeurde antwoord voor je vraag. Noem zelf nooit bedragen, loon, uren, contracten, data of beloftes.
 - Ergernis: erken het kort ("Snap ik, nog een paar korte vragen.") en ga door.
 
 Wat je teruggeeft (alleen JSON):
 - soort: lijst, een of meer van "antwoord", "correctie", "vraag" (kandidaat vraagt zelf iets), "hulp", "verwarring", "frustratie", "bedankje", "onduidelijk", "andere_taal", "mens" (wil een mens spreken of gebeld worden), "grens". Een groet zonder antwoord is "onduidelijk". Een verwijzing naar een eerder antwoord is "antwoord".
 - velden: alles wat de kandidaat echt zei, ook antwoorden op vragen die nog komen. Een kort antwoord ("2 jaar", "5", "nh", "maakt niet uit") is een gewoon antwoord op de vraag die Job stelde. Een vraag, groet of klacht is nooit een gegeven. Velden:${BEURT_VELDEN}
+- werkmomentTekst: wanneer de kandidaat wil werken in eigen woorden als het niet precies een knop is ("alleen in de avond", "liefst in het weekend"); zet dan geen werkmoment. Ook bij een correctie van een knop ("Flexibel", later "toch alleen 's avonds"): dan werkmomentTekst, de knop vervalt.
+- startdatumTekst: een concreet startmoment in de woorden van de kandidaat ("vanaf maandag", "na 1 januari"); zet dan geen startdatum.
 - bewijs: per ingevuld veld het letterlijke stukje tekst van de kandidaat (uit dit bericht, of uit een eerder bericht als hij daarnaar verwijst).
 - kennis: bij soort "vraag" het onderwerp uit deze lijst dat de vraag beantwoordt, anders "onbekend":
 ${kennisOverzicht()}
@@ -475,6 +480,7 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
 
   let state: JobState = { ...s0, velden: { ...s0.velden }, twijfels: [...s0.twijfels] };
   let lezing: Lezing = alsLezing(g);
+  lezing = { ...lezing, velden: preciezerWerkmoment(lezing.velden, tekst, typeof (g as any).bewijs?.werkmoment === "string" ? (g as any).bewijs.werkmoment : null) };
   // Vraagversie 2: geen vrije doorvraag van het model op de functievraag; de regels stellen het punt opnieuw,
   // met de vaste vraag van dat punt. Zo hoort de verstuurde vraag altijd bij het veld waarin het antwoord komt.
   const vrijeDoorvraag = g.doorvragen !== "functievraag" || !versie2(s0.velden);
@@ -525,8 +531,23 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
   }
 
   const standaard = na ? (lezing.doorvraag && r.state.laatsteOnderwerp === lezing.doorvraag.voor ? r.berichten[r.berichten.length - 1]?.tekst ?? null : vraag(na, r.state.taal, ctx, r.state.velden).tekst) : null;
+  // Een correctie of aanvulling bevestigt Job uit het dossier zelf, zodat wat hij zegt klopt met wat er staat.
+  const correctie = g.soorten.includes("correctie");
+  let bevestiging = r.state.status === "bezig" || r.state.status === "wacht_cv" || correctie
+    ? wijzigingBevestiging(s0.velden, r.state.velden, { correctie, gevraagd: onderwerp, taal: r.state.taal }) : "";
+  if (correctie && !bevestiging) {
+    // Niets veranderd: stond de gewenste waarde er al, dan zegt Job dat; anders zegt hij niets toe en kijkt een collega mee.
+    bevestiging = alGenoteerd(lezing.velden, r.state.velden, r.state.taal);
+    // Ook als de controle alle voorgestelde velden afkeurde ("Sorry, ik bedoelde minder diensten"): de wens van de
+    // kandidaat verdwijnt nooit stil. De planner ziet hem letterlijk en kijkt mee.
+    if (!bevestiging) {
+      const notitie = `De kandidaat wil iets aanpassen dat Job niet kon verwerken: "${tekst.slice(0, 160)}". Vraag het even na.`;
+      if (!r.state.twijfels.includes(notitie)) r = { ...r, state: { ...r.state, twijfels: [...r.state.twijfels, notitie] } };
+    }
+  }
   const sam = stelGesprekSamen({ gesprek: g, regels: r.berichten, onderwerp: na, standaard, taal: r.state.taal, vasteReactie, vorigBericht: i.laatsteVraag, loonTekst: versie2(r.state.velden) ? loonVoorVacature(ctx.vacatureLoon, r.state.taal) : undefined,
-    punt: na === "functievraag" && versie2(r.state.velden) ? r.state.velden.puntGevraagd ?? null : undefined, versie2: versie2(r.state.velden) });
+    punt: na === "functievraag" && versie2(r.state.velden) ? r.state.velden.puntGevraagd ?? null : undefined, versie2: versie2(r.state.velden),
+    bevestiging, eerder: eerdereJobBerichten(i.geschiedenis), bericht: tekst });
   // Nooit twee keer precies hetzelfde bericht achter elkaar: dan dezelfde vraag in andere woorden.
   let berichten = geenDubbelBericht(sam.berichten, i.laatsteVraag, r.state.taal);
   const laatste = berichten[berichten.length - 1];
@@ -534,7 +555,7 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
     const h = herkansing(na, r.state.taal, ctx, r.state.velden);
     if (h && !zelfdeVraag(h.tekst, i.laatsteVraag)) {
       // Vraagversie 2: een antwoord op de vraag van de kandidaat (loon, kantoor) dat voor de vraag stond, blijft staan.
-      const voor = versie2(r.state.velden) && sam.gebruikt.kennis ? voorDeVraag(laatste.tekst) : "";
+      const voor = (versie2(r.state.velden) && sam.gebruikt.kennis) || sam.gebruikt.bevestiging ? voorDeVraag(laatste.tekst) : "";
       berichten = [...berichten.slice(0, -1), { ...laatste, tekst: voor ? `${voor} ${h.tekst}` : h.tekst, keuzes: laatste.keuzes?.length ? laatste.keuzes : h.keuzes }];
     }
   }

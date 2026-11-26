@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { AFZENDER, AFZENDER_NAAM } from '@shared/aanvraagMails';
 import { downloadCvFile } from './objectStorageFiles';
+import { metAfscherming } from '@shared/testAfscherming';
 import {
   mailOpmaak, bannerUrl, brancheVanFunctie, escapeHtml,
   alinea, tussenkop, knop, knoppen, link, infoBlok, stappen, gegevens, melding, afsluiting,
@@ -120,7 +121,17 @@ export interface SendEmailResult {
 // Gebruik dit voor prospect-campagnes zodat je de message-id in mail_sends
 // kunt opslaan voor latere event-correlatie. Voor bestaande callers is sendEmail()
 // hieronder een dunne wrapper die de boolean blijft teruggeven.
+/** Wat het mailvenster van een afgeschermde mail bewaart (fictieve ontvanger, zie shared/testAfscherming.ts). */
+function bewaarAfgeschermd(m: EmailParams & { afgeschermd: true; timestamp: string }) {
+  bewaarMockMail({ to: m.to, from: m.from, subject: m.subject, text: m.text, html: m.html, attachments: m.attachments?.map(a => a.filename), timestamp: m.timestamp, afgeschermd: true });
+}
+
+/** Elke mail gaat door de verzendpoort: met een fictieve ontvanger wordt SendGrid niet aangeroepen. */
 export async function sendEmailWithResult(params: EmailParams): Promise<SendEmailResult> {
+  return metAfscherming(params, bewaarAfgeschermd, () => sendEmailWithResultEcht(params), { ok: true, messageId: `afgeschermd-${Date.now()}` } as SendEmailResult);
+}
+
+async function sendEmailWithResultEcht(params: EmailParams): Promise<SendEmailResult> {
   if (useMockService) {
     const mockId = `mock-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     bewaarMockMail({
@@ -174,7 +185,12 @@ export async function sendEmailWithResult(params: EmailParams): Promise<SendEmai
 }
 
 // Verzend een e-mail met opgegeven parameters
+/** Elke mail gaat door de verzendpoort: met een fictieve ontvanger wordt SendGrid niet aangeroepen. */
 export async function sendEmail(params: EmailParams): Promise<boolean> {
+  return metAfscherming(params, bewaarAfgeschermd, () => sendEmailEcht(params), true);
+}
+
+async function sendEmailEcht(params: EmailParams): Promise<boolean> {
   // Check of we in mock-modus zijn
   if (useMockService) {
     // Log de e-mail in console en in-memory voor debugging

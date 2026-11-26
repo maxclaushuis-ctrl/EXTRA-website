@@ -44,7 +44,7 @@ import { landcodes, starttaal } from "@shared/jobTaal";
 import { beurtAan, echteAi, verwerkBeurt } from "./jobBeurt";
 import { gesprekAan, gesprekModel } from "@shared/jobGesprek";
 import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
-import { knopTitel, whatsappKnoppen, keuzeUitNummer } from "@shared/jobWhatsapp";
+import { knopTitel, whatsappKnoppen, keuzeUitNummer, cvInstructieWhatsapp } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
 import { stuurBevestigingsmail, stuurHerinneringsmail, stuurStartmail, stuurCvMail } from "./jobMails";
 
@@ -295,7 +295,8 @@ export function whatsappTekst(b: Uitgaand, token: string, taal: JobTaal, metKnop
   const t = teksten(taal);
   let tekst = b.tekst;
   // Het cv komt in WhatsApp zelf binnen (pdf of Word via de paperclip), zonder link naar het webgesprek.
-  if (b.cvUpload) tekst = b.tekst === t.cvUpload ? t.cvUploadWa : b.tekst === t.cvLater ? t.cvLaterWa : b.tekst;
+  // Ook met iets ervoor (een bevestiging of het antwoord op een vraag): alleen de instructie wordt de WhatsApp-versie.
+  if (b.cvUpload) tekst = cvInstructieWhatsapp(b.tekst, t);
   if (b.planning) {
     if (b.tekst === t.plannen) tekst = t.plannenWa(gesprekLink(token, "&plannen=1"));
     else if (b.tekst === t.verzetten) tekst = t.verzettenWa(gesprekLink(token, "&plannen=1"));

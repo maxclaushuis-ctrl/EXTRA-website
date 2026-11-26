@@ -35,3 +35,15 @@ export function keuzeUitNummer(tekst: string, keuzes: string[] | null | undefine
   const k = keuzes[Number(m[1]) - 1];
   return k || tekst;
 }
+
+/**
+ * De cv-instructie voor WhatsApp: het cv komt daar via de paperclip binnen, niet via een uploadknop of mail.
+ * Staat er iets voor de vaste tekst (een bevestiging, het antwoord op een vraag), dan blijft dat staan.
+ */
+export function cvInstructieWhatsapp(tekst: string, t: { cvUpload: string; cvLater: string; cvLaterZonderMail: string; cvUploadWa: string; cvLaterWa: string }): string {
+  const voor = (vast: string) => (tekst.endsWith(vast) ? tekst.slice(0, -vast.length) : null);
+  const ja = voor(t.cvUpload);
+  if (ja !== null) return `${ja}${t.cvUploadWa}`;
+  const later = voor(t.cvLater) ?? voor(t.cvLaterZonderMail);
+  return later !== null ? `${later}${t.cvLaterWa}` : tekst;
+}

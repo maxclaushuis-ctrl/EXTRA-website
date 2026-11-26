@@ -11,7 +11,18 @@
  * alleen het geheugen van server/mail.ts.
  */
 import type { Express, Request, Response, NextFunction } from "express";
+import { existsSync, readFileSync } from "fs";
+import path from "path";
 import { getMockMailLog, isMailMock } from "./mail";
+
+/** Welke commit er draait (dist/versie.json, geschreven door scripts/build-versie.ts bij de build). */
+function versie(): unknown {
+  const kandidaten = [path.resolve(import.meta.dirname, "versie.json"), path.resolve(process.cwd(), "dist", "versie.json")];
+  for (const p of kandidaten) {
+    try { if (existsSync(p)) return JSON.parse(readFileSync(p, "utf8")); } catch { /* onleesbaar: volgende */ }
+  }
+  return null;
+}
 
 /** Alleen 'TESTOMGEVING=1' telt; elke andere waarde is productie. */
 export function isTestomgeving(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -26,6 +37,8 @@ export function registerTestomgevingRoutes(app: Express, adminMiddleware: Middle
     res.json({
       testomgeving: isTestomgeving(),
       mailMock: isMailMock(),
+      // Alleen in de testomgeving: de gebouwde commit, om na publicatie te controleren wat er draait.
+      ...(isTestomgeving() ? { versie: versie() } : {}),
     });
   });
 
@@ -43,6 +56,8 @@ export function registerTestomgevingRoutes(app: Express, adminMiddleware: Middle
       html: m.html || "",
       attachments: m.attachments || [],
       timestamp: m.timestamp,
+      // Fictief adres (voorbeeld.nl): nooit verstuurd, ook niet als de mail live staat.
+      afgeschermd: m.afgeschermd === true,
     }));
     res.json({ mailMock: isMailMock(), aantal: mails.length, mails });
   });
