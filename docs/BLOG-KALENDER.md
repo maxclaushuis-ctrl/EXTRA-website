@@ -45,6 +45,7 @@ Nee op één ervan betekent: niet schrijven, of een bestaande pagina uitbreiden.
 | `perfecte-catering-bedrijfsevent` | Events & Catering | catering bedrijfsevent |
 | `barista-als-visitekaartje` | Horeca | barista horeca kwaliteit |
 | `medewerker-van-de-maand-priya` | EXTRA Nieuws | EXTRAATje beloningssysteem |
+| `beste-horeca-uitzendbureaus-amsterdam` | Branche | beste horeca uitzendbureau amsterdam (top 10 2027) |
 | `test-blog-artikel-over-horeca-personeel-amsterdam` | — | testartikel — verwijderd via Blog & SEO |
 
 Categorieën die de site kent: Hospitality · Events & Catering · Horeca ·

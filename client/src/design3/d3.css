@@ -1834,6 +1834,7 @@
 .d3.css-blog .prose p+p{margin-top:20px}
 .d3.css-blog .prose h2{scroll-margin-top:110px;font-size:clamp(30px,2.8vw,44px);font-weight:800;letter-spacing:-.05em;line-height:1;color:var(--espresso);margin:72px 0 24px;padding-top:26px;border-top:2px solid var(--espresso)}
 .d3.css-blog .prose h3{font-size:23px;font-weight:800;letter-spacing:-.035em;color:var(--espresso);margin:40px 0 12px}
+.d3.css-blog .prose h4{font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--espresso);margin:32px 0 10px}
 .d3.css-blog .prose strong{color:var(--espresso)}
 .d3.css-blog .prose a{color:var(--espresso);text-decoration:underline;text-decoration-color:var(--rose);text-decoration-thickness:3px;text-underline-offset:4px;cursor:pointer}
 .d3.css-blog .prose a:hover{text-decoration-color:var(--espresso)}
@@ -2037,6 +2038,8 @@
 .d3.css-blog .bc-hk{background:var(--rose)}
 .d3.css-blog .bc-tekort .bc-woord b{font-size:17cqw}
 .d3.css-blog .bc-hk .bc-woord b{font-size:18cqw}
+.d3.css-blog .bc-top10{background:var(--pistachio)}
+.d3.css-blog .bc-top10 .bc-woord b{font-size:17cqw}
 .d3.css-blog .bh-cover .bc-woord b{font-size:12cqw}
 .d3.css-blog .bh-cover .bc-woord .serif{font-size:4cqw}
 .d3.css-blog .prose figure img{display:block;width:100%;height:auto;border-radius:22px}

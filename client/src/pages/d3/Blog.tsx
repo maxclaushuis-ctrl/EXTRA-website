@@ -38,6 +38,7 @@ const OMSLAG: Record<string, { klasse: string; woord: string; sub: string; label
   "zzp-inhuren-horeca": { klasse: "bc-zzp", woord: "€38", sub: "per uur", label: "Kalenderblad van 31 december 2026, de datum waarop het rechtsvermoeden op basis van uurtarief ingaat" },
   "personeelstekort-horeca": { klasse: "bc-tekort", woord: "26.400", sub: "vacatures in de horeca", label: "Het getal 26.400, het aantal openstaande vacatures in de horeca in het tweede kwartaal van 2026" },
   "housekeeping-standaard-verhogen": { klasse: "bc-hk", woord: "Schoon.", sub: "fris en opgeruimd", label: "De woorden schoon, fris en opgeruimd, de drie dingen waaraan gasten netheid afmeten" },
+  "beste-horeca-uitzendbureaus-amsterdam": { klasse: "bc-top10", woord: "Top 10", sub: "horeca uitzendbureaus 2027", label: "De woorden top 10 en horeca uitzendbureaus 2027, de titel van het overzicht" },
 };
 
 const KLEUR: Record<string, string> = { Branche: "sky", Housekeeping: "rose", Hospitality: "pistachio", "Events & Catering": "pistachio", Horeca: "pistachio", "EXTRA Nieuws": "rose" };
