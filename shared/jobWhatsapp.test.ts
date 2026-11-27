@@ -44,6 +44,7 @@ for (const taal of ["nl", "en"] as const) {
   const t = teksten(taal);
   test(`cv ja in WhatsApp: de paperclip-instructie (${taal})`, cvInstructieWhatsapp(t.cvUpload, t) === t.cvUploadWa);
   test(`cv ja met iets ervoor: alleen de instructie wordt WhatsApp (${taal})`, cvInstructieWhatsapp(`Top, dank je! ${t.cvUpload}`, t) === `Top, dank je! ${t.cvUploadWa}`);
+  test(`alleen cv nog nodig in WhatsApp: de paperclip-instructie erachter (${taal})`, cvInstructieWhatsapp(`${t.cvAlleenVragen} ${t.cvUpload}`, t) === `${t.cvAlleenVragen} ${t.cvUploadWa}` && cvInstructieWhatsapp(`${t.herinneringCv1("Max")} ${t.cvUpload}`, t) === `${t.herinneringCv1("Max")} ${t.cvUploadWa}`);
   test(`cv nee in WhatsApp: uitleg hoe het cv later kan (${taal})`, cvInstructieWhatsapp(t.cvLater, t) === t.cvLaterWa && cvInstructieWhatsapp(t.cvLaterZonderMail, t) === t.cvLaterWa);
   test(`andere tekst blijft (${taal})`, cvInstructieWhatsapp("Iets anders.", t) === "Iets anders.");
 }

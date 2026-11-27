@@ -390,7 +390,16 @@ const T = {
     herinnering1: (v: string) => `Hoi ${v}, je was bijna klaar. Nog een paar korte vragen, dan bekijkt een collega je aanmelding. Zullen we verder?`,
     herinnering2: (v: string) => `Hoi ${v}, je aanmelding bij EXTRA staat nog open. Wil je verder? Stuur gerust een bericht, ik ga verder waar we gebleven waren.`,
     herinnering3: (v: string) => `Hoi ${v}, we hoorden nog niets van je over je aanmelding bij EXTRA. Wil je nog verder? Stuur gerust een bericht, dan ga ik verder waar we gebleven waren. Anders sluiten we je aanmelding over een paar dagen af.`,
-    herinneringKeuzes: ["Verder", "Liever bellen"],
+    // Alleen "Verder" (besluit Max, 27 nov 2026). Wie een oud bericht met "Liever bellen" aantikt, wordt nog steeds gebeld.
+    herinneringKeuzes: ["Verder"],
+    // Alle vragen zijn beantwoord, alleen het cv ontbreekt (besluit Max, 27 nov 2026): de herinnering gaat alleen
+    // over het cv, zonder knoppen en zonder een woord over vragen. Erachter komt de vaste uploadinstructie.
+    herinneringCv1: (v: string) => `Hoi ${v}, ik heb alleen je cv nog nodig, dan bekijkt een collega je aanmelding.`,
+    herinneringCv2: (v: string) => `Hoi ${v}, je cv ontbreekt nog bij je aanmelding bij EXTRA.`,
+    herinneringCv3: (v: string) => `Hoi ${v}, we hebben je cv nog niet ontvangen. Zonder cv sluiten we je aanmelding over een paar dagen af.`,
+    // Een bericht van de kandidaat terwijl alleen het cv nog ontbreekt.
+    cvAlleen: "Ik heb alleen je cv nog nodig, verder is je aanmelding compleet.",
+    cvAlleenVragen: "Je hebt alle vragen al beantwoord. Ik heb alleen je cv nog nodig.",
     afspraakHerinnering: (v: string, tijd: string, wie: string) => `Hoi ${v}, morgen om ${tijd} is je kennismaking met ${wie} bij EXTRA, Herengracht 372. Lukt het?`,
     afspraakKeuzes: ["Ik kom", "Verzetten"],
     ikKom: "Fijn, tot morgen!",
@@ -476,7 +485,12 @@ const T = {
     herinnering1: (v: string) => `Hi ${v}, you were almost done. A few more quick questions, then a colleague will look at your application. Shall we continue?`,
     herinnering2: (v: string) => `Hi ${v}, your application at EXTRA is still open. Want to continue? Just send a message and I'll pick up where we left off.`,
     herinnering3: (v: string) => `Hi ${v}, we haven't heard from you about your application at EXTRA. Do you still want to continue? Just send a message and I'll pick up where we left off. Otherwise we'll close your application in a few days.`,
-    herinneringKeuzes: ["Continue", "Call me instead"],
+    herinneringKeuzes: ["Continue"],
+    herinneringCv1: (v: string) => `Hi ${v}, I only need your CV, then a colleague will look at your application.`,
+    herinneringCv2: (v: string) => `Hi ${v}, your CV is still missing from your application at EXTRA.`,
+    herinneringCv3: (v: string) => `Hi ${v}, we haven't received your CV yet. Without a CV we'll close your application in a few days.`,
+    cvAlleen: "I only need your CV, the rest of your application is complete.",
+    cvAlleenVragen: "You've answered all the questions. I only need your CV.",
     afspraakHerinnering: (v: string, tijd: string, wie: string) => `Hi ${v}, tomorrow at ${tijd} you have your meeting with ${wie} at EXTRA, Herengracht 372. Does that still work?`,
     afspraakKeuzes: ["I'll be there", "Reschedule"],
     ikKom: "Great, see you tomorrow!",
@@ -1401,9 +1415,14 @@ function verwerkLos(
 
   // Alles gevraagd. Cv?
   if (!ctx.hasCv) {
-    const wasAl = vorige.status === "wacht_cv";
+    // Wachtte Job al op het cv (ook als de herinneringen daarna op rood kwamen), dan zegt hij niet opnieuw
+    // "Geen probleem!" maar wat er nog nodig is: alleen het cv. Er komen geen vragen meer.
+    const wasAl = alleenCvOpen(vorige);
     state.status = "wacht_cv";
-    if (state.velden.cvParaat === "ja") {
+    if (wasAl) {
+      const overVragen = /\bvra(ag|gen)\b|\bquestions?\b/i.test(invoer.tekst || "");
+      berichten.push({ tekst: `${overVragen ? t().cvAlleenVragen : t().cvAlleen} ${t().cvUpload}`, cvUpload: true });
+    } else if (state.velden.cvParaat === "ja") {
       berichten.push({ tekst: t().cvUpload, cvUpload: true });
     } else {
       if (!wasAl) acties.push({ soort: "cv_mail" });
@@ -1536,24 +1555,37 @@ export function planHerinnering(s: JobState, ctx: JobContext, nu: Date): Resulta
   return { state, berichten: [{ tekst: T[s.taal].planHerinnering(ctx.voornaam), planning: true }], acties: [] };
 }
 
+/**
+ * Zijn alle vragen beantwoord en ontbreekt alleen het cv nog? Dat is zo in "wacht_cv", en ook als de
+ * herinneringen daarna op rood kwamen: tijdens de vragen staat er altijd een open onderwerp.
+ */
+export function alleenCvOpen(s: { status: string; laatsteOnderwerp?: string | null }): boolean {
+  return s.status === "wacht_cv" || (s.status === "geen_reactie" && !s.laatsteOnderwerp);
+}
+
 export function herinnering(s: JobState, ctx: JobContext, soort: Herinnering, nu: Date): Resultaat {
   const state: JobState = { ...s, herinneringAt: nu.toISOString() };
   const t = T[s.taal];
+  // Alleen het cv ontbreekt nog: de herinnering gaat over het cv, zonder knoppen. De planner ziet dat ook.
+  const cv = alleenCvOpen(s);
+  const cvBericht = (kop: string): Uitgaand => ({ tekst: `${kop} ${t.cvUpload}`, cvUpload: true });
+  const stand = cv ? "Alle vragen zijn beantwoord, alleen het cv ontbreekt. " : "";
   if (soort === "rood") {
     state.status = "geen_reactie";
     state.herinneringen = 3;
-    return { state, berichten: [], acties: [{ soort: "planner", reden: "Geen reactie na twee herinneringen. Kies: bellen, nog een bericht of laten rusten." }] };
+    return { state, berichten: [], acties: [{ soort: "planner", reden: `${stand}Geen reactie na twee herinneringen. Kies: bellen, nog een bericht of laten rusten.` }] };
   }
   if (soort === "derde") {
     state.status = "geen_reactie";
     state.herinneringen = 3;
     return {
       state,
-      berichten: [{ tekst: t.herinnering3(ctx.voornaam), keuzes: t.herinneringKeuzes }],
-      acties: [{ soort: "planner", reden: "Geen reactie na drie herinneringen. Kies: bellen, nog een bericht of laten rusten. Na 3 dagen gaat de aanmelding automatisch naar het archief." }],
+      berichten: [cv ? cvBericht(t.herinneringCv3(ctx.voornaam)) : { tekst: t.herinnering3(ctx.voornaam), keuzes: t.herinneringKeuzes }],
+      acties: [{ soort: "planner", reden: `${stand}Geen reactie na drie herinneringen. Kies: bellen, nog een bericht of laten rusten. Na 3 dagen gaat de aanmelding automatisch naar het archief.` }],
     };
   }
   state.herinneringen = soort === "eerste" ? 1 : 2;
+  if (cv) return { state, berichten: [cvBericht(soort === "eerste" ? t.herinneringCv1(ctx.voornaam) : t.herinneringCv2(ctx.voornaam))], acties: [] };
   const tekst = soort === "eerste" ? t.herinnering1(ctx.voornaam) : t.herinnering2(ctx.voornaam);
   return { state, berichten: [{ tekst, keuzes: t.herinneringKeuzes }], acties: [] };
 }

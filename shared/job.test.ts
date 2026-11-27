@@ -231,8 +231,42 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   c = antwoord(c, zonderCv, "Tot 35 km"); c = antwoord(c, zonderCv, "Doordeweeks"); c = antwoord(c, zonderCv, "Later"); c = antwoord(c, zonderCv, "Als hoofdbaan");
   c = antwoord(c, zonderCv, "Nee");
   test("Geen cv: mail met uploadknop, wachten", c.state.status === "wacht_cv" && c.acties.some((a) => a.soort === "cv_mail"));
+  const wacht = c;
   c = antwoord(c, zonderCv, "Ok, komt eraan");
   test("Geen cv: de mail gaat maar één keer", !c.acties.some((a) => a.soort === "cv_mail"));
+
+  // Alleen het cv ontbreekt nog (besluit Max, 27 nov 2026): geen woord meer over vragen.
+  const tn = teksten("nl");
+  test("Alleen cv: een bericht krijgt 'alleen je cv nog nodig', niet opnieuw 'Geen probleem!'",
+    alleTekst(c) === `${tn.cvAlleen} ${tn.cvUpload}` && laatste(c).cvUpload === true && !alleTekst(c).includes("Geen probleem"), alleTekst(c));
+  const vraagt = antwoord(wacht, zonderCv, "Wat zijn je vragen?");
+  test("Alleen cv: 'Wat zijn je vragen?' krijgt 'Je hebt alle vragen al beantwoord'",
+    alleTekst(vraagt) === `${tn.cvAlleenVragen} ${tn.cvUpload}` && vraagt.state.status === "wacht_cv", alleTekst(vraagt));
+  test("Alleen cv: Job stelt geen vraag meer", !alleTekst(vraagt).includes("?") && !alleTekst(c).includes("?"));
+  const u1 = new Date(NU.getTime() + 30 * UUR);
+  test("Alleen cv: er komt nog steeds een herinnering", herinneringNodig(wacht.state, u1) === "eerste");
+  const hc1 = herinnering(wacht.state, zonderCv, "eerste", u1);
+  test("Herinnering alleen cv: gaat over het cv, zonder knoppen en zonder 'vragen'",
+    hc1.berichten.length === 1 && hc1.berichten[0].tekst === `${tn.herinneringCv1(zonderCv.voornaam)} ${tn.cvUpload}` && !hc1.berichten[0].keuzes && hc1.berichten[0].cvUpload === true
+    && !/vra(ag|gen)|verder\?|bijna klaar/i.test(hc1.berichten[0].tekst), hc1.berichten[0].tekst);
+  const hc2 = herinnering(hc1.state, zonderCv, "tweede", new Date(u1.getTime() + 50 * UUR));
+  test("Herinnering 2 alleen cv: ook over het cv, zonder knoppen", hc2.berichten[0].tekst.startsWith(tn.herinneringCv2(zonderCv.voornaam)) && !hc2.berichten[0].keuzes && !/vragen|wil je verder/i.test(hc2.berichten[0].tekst));
+  const hc3 = herinnering(hc2.state, zonderCv, "derde", new Date(u1.getTime() + 100 * UUR));
+  test("Herinnering 3 alleen cv: zonder cv sluiten we af; de planner ziet dat alleen het cv ontbreekt",
+    hc3.berichten[0].tekst.startsWith(tn.herinneringCv3(zonderCv.voornaam)) && !hc3.berichten[0].keuzes && hc3.state.status === "geen_reactie"
+    && hc3.acties.some((a) => a.soort === "planner" && a.reden.startsWith("Alle vragen zijn beantwoord, alleen het cv ontbreekt.")));
+  const roodCv = herinnering(hc2.state, zonderCv, "rood", new Date(u1.getTime() + 100 * UUR));
+  test("Rood alleen cv: de planner ziet dat alleen het cv ontbreekt", roodCv.acties.some((a) => a.soort === "planner" && a.reden.includes("alleen het cv ontbreekt")));
+  const naRood = antwoord({ state: roodCv.state, berichten: [], acties: [] }, zonderCv, "Sorry, ik stuur hem vanavond", 200 * 60);
+  test("Na rood alleen cv: weer wachten op het cv, zonder nieuwe mail en zonder 'Geen probleem!'",
+    naRood.state.status === "wacht_cv" && !naRood.acties.some((a) => a.soort === "cv_mail") && alleTekst(naRood) === `${tn.cvAlleen} ${tn.cvUpload}`, alleTekst(naRood));
+  const en = teksten("en");
+  test("Alleen cv: Engelse teksten zonder 'questions' in de herinnering", ![en.herinneringCv1("x"), en.herinneringCv2("x"), en.herinneringCv3("x")].some((x) => /question|continue/i.test(x)));
+  test("Alleen cv: geen gedachtestreepjes in de nieuwe teksten", ![tn.cvAlleen, tn.cvAlleenVragen, tn.herinneringCv1("x"), tn.herinneringCv2("x"), tn.herinneringCv3("x"), en.cvAlleen, en.cvAlleenVragen, en.herinneringCv1("x"), en.herinneringCv2("x"), en.herinneringCv3("x")].some((x) => /[\u2013\u2014]/.test(x)));
+  // Tijdens de vragen blijft de gewone herinnering, met de knop Verder.
+  const halverwege = antwoord(start(zonderCv, "nl", NU), zonderCv, "Twee jaar bediening");
+  const hg = herinnering(halverwege.state, zonderCv, "eerste", u1);
+  test("Tijdens de vragen: de gewone herinnering blijft", hg.berichten[0].tekst === tn.herinnering1(zonderCv.voornaam) && (hg.berichten[0].keuzes || []).join() === "Verder");
 }
 
 // ─── 6. Herinneringen ────────────────────────────────────────────────────────
@@ -243,7 +277,8 @@ const alleTekst = (r: Resultaat) => r.berichten.map((b) => b.tekst).join(" | ");
   test("Herinnering: niet na 21 uur", herinneringNodig(s, new Date(NU.getTime() + 21 * UUR)) === null);
   test("Herinnering: eerste na 22 uur", herinneringNodig(s, new Date(NU.getTime() + 22 * UUR)) === "eerste");
   const h1 = herinnering(s, ctx, "eerste", new Date(NU.getTime() + 22 * UUR));
-  test("Herinnering 1: tekst en knoppen Verder / Liever bellen", h1.berichten[0].tekst.includes("je was bijna klaar") && (h1.berichten[0].keuzes || []).includes("Liever bellen"));
+  test("Herinnering 1: tekst en alleen de knop Verder", h1.berichten[0].tekst.includes("je was bijna klaar") && (h1.berichten[0].keuzes || []).join() === "Verder");
+  test("Herinnering: Liever bellen staat er niet meer bij (ook Engels niet)", !teksten("nl").herinneringKeuzes.includes("Liever bellen") && teksten("en").herinneringKeuzes.join() === "Continue");
   test("Herinnering: tweede pas 48 uur na de eerste", herinneringNodig(h1.state, new Date(NU.getTime() + 69 * UUR)) === null && herinneringNodig(h1.state, new Date(NU.getTime() + 70 * UUR)) === "tweede");
   const h2 = herinnering(h1.state, ctx, "tweede", new Date(NU.getTime() + 70 * UUR));
   test("Herinnering: daarna rood voor de planner", herinneringNodig(h2.state, new Date(NU.getTime() + 118 * UUR)) === "rood");

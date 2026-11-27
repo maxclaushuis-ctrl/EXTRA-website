@@ -28,7 +28,7 @@ import { storage } from "../storage";
 import { candidates, jobAfspraken, jobBerichten, jobGesprekken, jobInterviewers, vacancyPosts, type JobGesprek } from "@shared/schema";
 import { loonLabel } from "@shared/vacatureWeergave";
 import { agendaKnopAan, bevestigingWhatsapp, planHerinneringNodig, planHerinnering, bestandTijdensVragen, spraakBericht, vraag,
-  ervaringWerkVoor, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herinneringSchema, binnenVerstuurvenster, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
+  alleenCvOpen, ervaringWerkVoor, cvAfrondingTekst, momentAntwoord, functieLabel, herinnering, herinneringNodig, herinneringSchema, binnenVerstuurvenster, herkenCommando, profielVelden, samenvatting, start, teksten, verwerk,
   type Actie, type JobContext, type Onderwerp, type JobState, type JobStatus, type JobTaal, type Uitgaand,
 } from "@shared/jobRegels";
 import {
@@ -1114,14 +1114,22 @@ export async function herinneringenRun(nu: Date = new Date()): Promise<{ herinne
     if (soort === "derde") rood++;
     aantal++;
     for (const b of r.berichten) {
-      await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, keuzes: b.keuzes || null, kanaal: g.kanaal });
+      await db.insert(jobBerichten).values({ gesprekId: g.id, richting: "uit", tekst: b.tekst, keuzes: b.keuzes || null, extra: b.cvUpload ? "cv_upload" : null, kanaal: g.kanaal });
     }
     const c = await kandidaat(g.candidateId);
     if (!c) continue;
+    // Alleen het cv ontbreekt (besluit Max, 27 nov 2026): de herinnering gaat over het cv. Buiten de 24 uur van
+    // WhatsApp past het herinneringssjabloon niet (dat gaat over vragen); dan gaat alleen de cv-mail.
+    const alleenCv = alleenCvOpen(s);
+    let viaWhatsapp = false;
     if (g.kanaal === "whatsapp" && c.phone && c.whatsappOptInStatus === "actief") {
       const tekst = r.berichten[0].tekst;
-      if (binnenVenster(s, nu)) await stuurJobBericht(c.id, waNummer(c), r.berichten[0], g.token, s.taal);
-      else await verstuurSjabloonInTaal(c.id, waNummer(c), "herinnering", s.taal, [c.firstName], tekst);
+      if (binnenVenster(s, nu)) viaWhatsapp = await stuurJobBericht(c.id, waNummer(c), r.berichten[0], g.token, s.taal);
+      else if (!alleenCv) await verstuurSjabloonInTaal(c.id, waNummer(c), "herinnering", s.taal, [c.firstName], tekst);
+    }
+    if (alleenCv) {
+      if (c.email && (soort === "eerste" || !viaWhatsapp)) stuurCvMail({ voornaam: c.firstName, email: c.email, functie: c.functionType, taal: s.taal, gesprekToken: g.token }).catch(() => {});
+      continue;
     }
     if (c.email && soort === "eerste") {
       const waNr = await (await import("./jobSjablonen")).jobNummer();

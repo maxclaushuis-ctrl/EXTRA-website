@@ -31,7 +31,7 @@ import { VELD_DOEL } from "./jobAi";
 import { alGenoteerd, eerdereAntwoorden, eerdereJobBerichten, gesprekAan, MAX_POGINGEN, preciezerWerkmoment, stelGesprekSamen, valideerGesprek, wijzigingBevestiging, type Gesprek } from "@shared/jobGesprek";
 import { LETTERLIJK } from "@shared/jobBeurt";
 import { profielPrompt, profielVoor, volgendPunt } from "@shared/jobProfielen";
-import { versie2 } from "@shared/jobRegels";
+import { alleenCvOpen, versie2 } from "@shared/jobRegels";
 
 /** In de testomgeving vanzelf aan, uit met JOB_V4=0; elders alleen met JOB_V4=1. */
 export function beurtAan(): boolean {
@@ -176,8 +176,12 @@ Antwoord uitsluitend met JSON: {"soort": [], "velden": {}, "bewijs": {}, "kennis
   }
 
   const openTekst = open.length ? open.map((o, n) => `${n + 1}. ${VELD_DOEL[o] || o}`).join("\n") : "(geen, dit is de laatste stap)";
+  // Alleen het cv ontbreekt: het model mag nooit doen alsof er nog vragen komen.
+  const alleenCv = alleenCvOpen(state) ? `
+Stand van zaken: alle vragen zijn beantwoord. Alleen het cv ontbreekt nog; Job zegt dat zelf met een vaste tekst. Er komen geen vragen meer: zeg nooit dat er nog vragen zijn of komen, en kies bij kennis niet "waarom_vraag". vraag is "" en volgende is "klaar".
+` : "";
   return `${kern}
-
+${alleenCv}
 Job vroeg zojuist (over ${state.laatsteOnderwerp ?? "onbekend"}): "${i.laatsteVraag}"
 Vragen die nog open staan, in deze volgorde:
 ${openTekst}
@@ -196,6 +200,18 @@ export interface BeurtUitkomst {
   gebruikt: Samenstelling["gebruikt"] | null;
   bron: "ai" | "terugval" | "regels" | "gesprek";
   ai: AiUitkomst | null;
+}
+
+const VRAGENPRAAT = /\bvra(ag|gen)\b|\bquestions?\b/i;
+/**
+ * Voor als alleen het cv nog ontbreekt: geen uitleg over vragen uit de kennisbank en geen reactie die
+ * over vragen gaat. Andere antwoorden uit de kennisbank (loon, kantoor) blijven gewoon staan.
+ */
+export function zonderVragenpraat<B extends { kennis?: unknown; reactie: string }>(b: B): B {
+  let uit = b;
+  if (uit.kennis === "waarom_vraag") uit = { ...uit, kennis: null };
+  if (VRAGENPRAAT.test(uit.reactie || "")) uit = { ...uit, reactie: "" };
+  return uit;
 }
 
 /** Gecontroleerde terugval zonder AI: alleen duidelijke antwoorden, anders verduidelijken. */
@@ -265,6 +281,9 @@ export async function verwerkBeurtV4(i: BeurtInvoer): Promise<BeurtUitkomst> {
       } catch { beurt = null; }
     }
   }
+  // Alleen het cv ontbreekt: het antwoord "met deze paar korte vragen..." klopt dan niet. De vaste tekst
+  // ("Je hebt alle vragen al beantwoord. Ik heb alleen je cv nog nodig.") is het antwoord.
+  if (beurt && alleenCvOpen(s0)) beurt = zonderVragenpraat(beurt);
   const taal: JobTaal = s0.taal;
   const t = T[taal];
 
@@ -338,7 +357,7 @@ export async function verwerkBeurtV4(i: BeurtInvoer): Promise<BeurtUitkomst> {
   const r = verwerk(state, ctx, { tekst }, lezing, i.nu);
   const std = standaardVraag(r.state, ctx);
   // Frustratie wordt altijd kort erkend; komt de reactie van de AI niet door de controle, dan een vaste korte zin.
-  if (beurt && beurt.soorten.includes("frustratie") && !beurt.kennis && !reactieGoed(beurt.reactie, r.state.taal)) beurt = { ...beurt, reactie: T[r.state.taal].frustratie };
+  if (beurt && beurt.soorten.includes("frustratie") && !beurt.kennis && !reactieGoed(beurt.reactie, r.state.taal) && r.state.status !== "wacht_cv") beurt = { ...beurt, reactie: T[r.state.taal].frustratie };
   const sam = stelSamen({ beurt, regels: r.berichten, onderwerp: r.state.status === "bezig" || r.state.status === "wacht_cv" ? r.state.laatsteOnderwerp : null, standaard: std, taal: r.state.taal,
     vastePuntvraag: r.state.laatsteOnderwerp === "functievraag" && versie2(r.state.velden) });
   // Nooit dezelfde vraag opnieuw met dezelfde woorden, en hooguit twee keer (shared/jobHerhaling.ts).
@@ -477,6 +496,8 @@ export async function verwerkGesprek(i: BeurtInvoer): Promise<BeurtUitkomst | nu
   } catch { return null; }
   // Een mens, een grens of een andere taal: Job 4 heeft daar de vaste afhandeling voor.
   if (g.soorten.includes("mens") || g.grens || g.soorten.includes("andere_taal")) return null;
+  // Alleen het cv ontbreekt (na de herinneringen op rood): geen uitleg over vragen die er niet meer zijn.
+  if (alleenCvOpen(s0)) g = zonderVragenpraat(g);
 
   let state: JobState = { ...s0, velden: { ...s0.velden }, twijfels: [...s0.twijfels] };
   let lezing: Lezing = alsLezing(g);

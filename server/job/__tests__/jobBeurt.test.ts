@@ -4,8 +4,9 @@
  * De echte AI wordt getest met scripts/job-gesprekstest.ts in de testomgeving.
  * Run met:  npx tsx server/job/__tests__/jobBeurt.test.ts
  */
-import { verwerkBeurt, beurtPrompt, BEURT_TEKSTEN, type AiAanroep } from "../jobBeurt";
-import { start, teksten, vraag, type JobContext, type JobState } from "@shared/jobRegels";
+import { verwerkBeurt, beurtPrompt, zonderVragenpraat, BEURT_TEKSTEN, type AiAanroep } from "../jobBeurt";
+import { start, teksten, verwerk, vraag, type JobContext, type JobState } from "@shared/jobRegels";
+import { reserveLezing } from "@shared/jobLezen";
 import { reactieGoed, vraagGoed, valideerBeurt, berichtControle } from "@shared/jobBeurt";
 import { kennis } from "@shared/jobKennis";
 
@@ -157,6 +158,35 @@ async function main() {
   u = await beurt(s, hk, "Pff wat een gedoe zeg", { soort: ["frustratie"], reactie: "", vraag: "", volgende: "diensten" });
   test("Frustratie zonder reactie van de AI: toch kort erkend", tekst(u.r).startsWith(BEURT_TEKSTEN.nl.frustratie), tekst(u.r));
   test("Opvulzin geweigerd", !reactieGoed("Dat is goed om te weten.", "nl"));
+
+  // ─── Alleen het cv ontbreekt nog (besluit Max, 27 nov 2026) ───
+  // Het gesprek uit de praktijk: na de herinnering vraagt de kandidaat "Wat zijn je vragen?".
+  // Eerst het hele gesprek met de vaste regels, tot alleen het cv nog ontbreekt.
+  const mark: JobContext = { voornaam: "Mark", functie: "horecamedewerker", nationalityZone: "NL", hasCv: false, stopV3: true };
+  let gesprek = start(mark, "nl", NU);
+  for (const a of ["Twee jaar bediening", "Allebei", "3 of 4", "Tot 35 km", "Doordeweeks", "Later", "Als hoofdbaan", "Nee"]) {
+    gesprek = verwerk(gesprek.state, mark, { tekst: a }, reserveLezing(a, gesprek.state.laatsteOnderwerp), NU);
+  }
+  const wachtCv: JobState = gesprek.state;
+  test("Alleen cv: het testgesprek wacht op het cv", wachtCv.status === "wacht_cv" && !wachtCv.laatsteOnderwerp);
+  u = await beurt(wachtCv, mark, "Wat zijn je vragen?", { soort: ["vraag"], kennis: "waarom_vraag", reactie: "", vraag: "", volgende: "klaar" });
+  test("Alleen cv: 'Wat zijn je vragen?' geeft geen uitleg over vragen maar 'alle vragen al beantwoord'",
+    tekst(u.r) === `${nl.cvAlleenVragen} ${nl.cvUpload}` && !tekst(u.r).includes(kennis("waarom_vraag")!.nl) && !tekst(u.r).includes("Geen probleem"), tekst(u.r));
+  test("Alleen cv: de status blijft wachten op het cv, zonder nieuwe mail", u.r.state.status === "wacht_cv" && !u.r.acties.some((a) => a.soort === "cv_mail"));
+  u = await beurt(wachtCv, mark, "Wat verdien ik eigenlijk?", { soort: ["vraag"], kennis: "loon", reactie: "", vraag: "", volgende: "klaar" });
+  test("Alleen cv: een andere vraag (loon) krijgt nog gewoon antwoord uit de kennisbank",
+    u.r.berichten[0].tekst === kennis("loon")!.nl && u.r.berichten[u.r.berichten.length - 1].tekst === `${nl.cvAlleen} ${nl.cvUpload}`, tekst(u.r));
+  u = await beurt(wachtCv, mark, "Pff wat een gedoe zeg", { soort: ["frustratie"], reactie: "", vraag: "", volgende: "klaar" });
+  test("Alleen cv: bij ergernis niet 'nog maar een paar korte vragen'", !tekst(u.r).includes("vragen") && tekst(u.r) === `${nl.cvAlleen} ${nl.cvUpload}`, tekst(u.r));
+  u = await beurt(wachtCv, mark, "ok", null);
+  test("Alleen cv: ook zonder AI de vaste tekst", tekst(u.r) === `${nl.cvAlleen} ${nl.cvUpload}`, tekst(u.r));
+  test("Alleen cv: de prompt zegt dat er geen vragen meer komen", (() => {
+    const p = beurtPrompt({ ctx: mark, state: wachtCv, laatsteVraag: "", geschiedenis: "", modus: "vragen" });
+    const gewoon = beurtPrompt({ ctx: hk, state: start(hk, "nl", NU).state, laatsteVraag: "", geschiedenis: "", modus: "vragen" });
+    return p.includes("Alleen het cv ontbreekt nog") && p.includes("Er komen geen vragen meer") && !gewoon.includes("Alleen het cv ontbreekt nog");
+  })());
+  test("zonderVragenpraat: haalt alleen de uitleg over vragen weg", zonderVragenpraat({ kennis: "waarom_vraag", reactie: "Nog een paar vragen." }).kennis === null
+    && zonderVragenpraat({ kennis: "waarom_vraag", reactie: "Nog een paar vragen." }).reactie === "" && zonderVragenpraat({ kennis: "loon", reactie: "Snap ik." }).kennis === "loon" && zonderVragenpraat({ kennis: null, reactie: "Snap ik." }).reactie === "Snap ik.");
 
   console.log(`\n${geslaagd} geslaagd, ${gefaald} gefaald`);
   process.exit(gefaald > 0 ? 1 : 0);
