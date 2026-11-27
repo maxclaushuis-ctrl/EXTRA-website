@@ -59,7 +59,8 @@ const td: React.CSSProperties = { padding: "10px", borderBottom: "1px solid #F0E
 interface JobStatusInfo { aan: boolean; testomgeving: boolean; handmatigStarten: boolean; ai: boolean; whatsapp: boolean; sjablonen: { start: boolean; herinnering: boolean; afspraak: boolean; uitnodiging?: boolean } }
 interface Rij { id: number; candidateId: number; voornaam: string; achternaam: string; functie: string; status: Status; kanaal: string; taal: string; twijfels: string[]; laatsteActiviteitAt: string; link: string }
 interface Interviewer { naam: string; dagen: number[]; van: string; tot: string; pauzeVan?: string | null; pauzeTot?: string | null; actief?: boolean }
-interface Afspraak { id: number; candidateId: number; voornaam: string; achternaam: string; functie: string; interviewer: string; datum: string; tijd: string }
+interface Afspraak { id: number; candidateId: number; voornaam: string; achternaam: string; functie: string; interviewer: string; datum: string; tijd: string; inAgenda?: boolean | null }
+interface AgendaKoppeling { aan: boolean; leesAgenda?: string; schrijfAgenda?: string; ok?: boolean; fout?: string | null; agendas?: string[]; afspraken?: number; perInterviewer?: Record<string, number>; gelezenAt?: string | null; gesyncAt?: string | null }
 interface Kandidaat { id: number; firstName: string; lastName: string; functionType: string; email: string | null }
 
 export function JobBeheer() {
@@ -73,6 +74,8 @@ export function JobBeheer() {
   const [melding, setMelding] = useState("");
   const [fout, setFout] = useState("");
   const [bewaren, setBewaren] = useState(false);
+  const [koppeling, setKoppeling] = useState<AgendaKoppeling | null>(null);
+  const [controleren, setControleren] = useState(false);
 
   async function laad() {
     try {
@@ -120,6 +123,13 @@ export function JobBeheer() {
       setMelding("Werktijden bewaard. Nieuwe momenten gelden meteen.");
     } catch (e: any) { setFout(e?.message || "Bewaren mislukt"); }
     finally { setBewaren(false); }
+  }
+
+  async function agendaControleren() {
+    setControleren(true); setFout("");
+    try { setKoppeling(await haal<AgendaKoppeling>("/api/admin/job/agenda-koppeling")); }
+    catch (e: any) { setFout(e?.message || "Controleren mislukt"); }
+    finally { setControleren(false); }
   }
 
   function wijzig(i: number, deel: Partial<Interviewer>) {
@@ -229,9 +239,28 @@ export function JobBeheer() {
               <span>{new Date(`${a.datum}T12:00:00`).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" })}</span>
               <b>{a.tijd}</b>
               <span>{a.voornaam} {a.achternaam} <span style={{ color: "#8A8478" }}>{a.functie}</span></span>
-              <span style={{ color: "#5C594F" }}>{a.interviewer}</span>
+              <span style={{ color: "#5C594F" }}>
+                {a.interviewer}
+                {a.inAgenda === true && <span title="Staat in de agenda" style={{ color: "#3E8E5A", marginLeft: 6, fontSize: 12 }}>in agenda</span>}
+                {a.inAgenda === false && <span title="Staat nog niet in de agenda" style={{ color: "#C2412D", marginLeft: 6, fontSize: 12 }}>niet in agenda</span>}
+              </span>
             </div>
           ))}
+        </section>
+
+        <section style={kaart}>
+          <h2 style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 800 }}>Gedeelde agenda</h2>
+          <p style={{ margin: "0 0 10px", fontSize: 12.5, color: "#8A8478" }}>Job biedt geen tijden aan die in de agenda bezet zijn en zet geboekte kennismakingen er zelf in. Controleren leest alleen, er verandert niets.</p>
+          <button type="button" style={knop()} disabled={controleren} onClick={() => void agendaControleren()}>{controleren ? "Controleren…" : "Agenda controleren"}</button>
+          {koppeling && !koppeling.aan && <p style={{ fontSize: 13.5, marginTop: 10 }}>De koppeling staat uit. Zet de Secrets ICLOUD_AGENDA_GEBRUIKER en ICLOUD_AGENDA_WACHTWOORD.</p>}
+          {koppeling?.aan && (
+            <div style={{ fontSize: 13.5, marginTop: 10, display: "grid", gap: 4 }}>
+              {vlag(!!koppeling.ok, `Verbonden. Leest uit "${koppeling.leesAgenda}", schrijft in "${koppeling.schrijfAgenda}".`, `Niet gelukt: ${koppeling.fout || "onbekende fout"}`)}
+              {koppeling.ok && <span>{koppeling.afspraken} afspraken in de komende twee weken. Bezette halfuren: {Object.entries(koppeling.perInterviewer || {}).map(([n, k]) => `${n} ${k}`).join(", ") || "geen"}.</span>}
+              {koppeling.agendas && <span style={{ color: "#8A8478" }}>Agenda's van het account: {koppeling.agendas.join(", ") || "geen"}</span>}
+              {koppeling.gesyncAt && <span style={{ color: "#8A8478" }}>Laatst bijgewerkt: {new Date(koppeling.gesyncAt).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}</span>}
+            </div>
+          )}
         </section>
 
         <section style={kaart}>
@@ -274,7 +303,7 @@ export function JobBeheer() {
 interface PaneelData {
   gesprek: null | { id: number; status: string; kanaal: string; taal: string; velden: Record<string, any>; twijfels: string[]; gestartAt: string; link: string };
   berichten?: { id: number; richting: string; tekst: string; aangemaaktAt: string }[];
-  afspraak?: { datum: string; tijd: string; interviewer: string } | null;
+  afspraak?: { datum: string; tijd: string; interviewer: string; inAgenda?: boolean | null } | null;
   magStarten: boolean;
 }
 
@@ -322,7 +351,7 @@ export function JobGesprekPaneel({ candidateId, kolom = false }: { candidateId: 
           {g.twijfels?.length > 0 && (
             <p style={{ margin: "0 0 8px", background: "#FFF6D6", color: "#7A6200", padding: "8px 10px", borderRadius: 10 }}><b>Waarom een collega moet kijken:</b> {g.twijfels.join(" ")}</p>
           )}
-          {data.afspraak && <p style={{ margin: "0 0 8px" }}><b>Kennismaking:</b> {new Date(`${data.afspraak.datum}T12:00:00`).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" })} om {data.afspraak.tijd} met {data.afspraak.interviewer}</p>}
+          {data.afspraak && <p style={{ margin: "0 0 8px" }}><b>Kennismaking:</b> {new Date(`${data.afspraak.datum}T12:00:00`).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" })} om {data.afspraak.tijd} met {data.afspraak.interviewer}{data.afspraak.inAgenda === true ? ". Staat in de agenda." : data.afspraak.inAgenda === false ? ". Nog niet in de agenda." : ""}</p>}
           {!kolom && Object.keys(VELD_LABEL).filter((k) => g.velden?.[k] !== undefined && g.velden?.[k] !== "").map((k) => [k, g.velden[k]] as const).map(([k, v]) => (
             <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "5px 0", borderBottom: "1px solid #F7F4EF" }}>
               <span style={{ color: "#8A8478" }}>{VELD_LABEL[k]}</span>

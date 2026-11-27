@@ -555,6 +555,7 @@ const OPSTART_DB_MAX_MS = 10_000;
     scheduleCrmMailSync();
     scheduleGoogleReviewsSync();
     scheduleJobHerinneringen();
+    scheduleJobAgenda();
     // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
     backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
     // WhatsApp Fase 1: 360dialog Cloud API met DB-persistentie. Zie server/whatsapp/README.md.
@@ -755,6 +756,31 @@ function scheduleJobHerinneringen() {
   setTimeout(run, 2 * 60 * 1000);
   setInterval(run, MS_PER_HOUR);
   log("[Job] herinneringen actief (elk uur)");
+}
+
+/**
+ * Job en de gedeelde agenda in iCloud: elke vijf minuten de eigen afspraken gelijk trekken
+ * (geplande erin, verzette en geannuleerde eruit). Alleen met de Secrets ICLOUD_AGENDA_GEBRUIKER
+ * en ICLOUD_AGENDA_WACHTWOORD, en niet met AGENDA_KOPPELING=0.
+ */
+function scheduleJobAgenda() {
+  if (process.env.AGENDA_KOPPELING === "0" || !process.env.ICLOUD_AGENDA_GEBRUIKER || !process.env.ICLOUD_AGENDA_WACHTWOORD) {
+    log("[Job] agendakoppeling uit");
+    return;
+  }
+  const MS_PER_5MIN = 5 * 60 * 1000;
+  async function run() {
+    try {
+      const { agendaBijwerken } = await import("./job/jobService");
+      const r = await agendaBijwerken();
+      if (r.geplaatst || r.verwijderd || r.fout) log(`[Job] agenda: ${r.geplaatst} erin, ${r.verwijderd} eruit${r.fout ? `, fout: ${r.fout}` : ""}`);
+    } catch (err) {
+      console.error("[Job] agenda bijwerken mislukt:", (err as any)?.message || err);
+    }
+  }
+  setTimeout(run, 60 * 1000);
+  setInterval(run, MS_PER_5MIN);
+  log("[Job] agendakoppeling actief (elke vijf minuten)");
 }
 
 function scheduleBlogAutoPublish() {

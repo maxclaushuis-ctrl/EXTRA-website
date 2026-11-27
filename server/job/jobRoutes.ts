@@ -19,6 +19,7 @@
  *   GET  /api/admin/job/interviewers     werktijden
  *   PUT  /api/admin/job/interviewers     werktijden bewaren (nooit verwijderen; uitzetten kan)
  *   GET  /api/admin/job/afspraken        geplande kennismakingen vanaf vandaag
+ *   GET  /api/admin/job/agenda-koppeling de gedeelde agenda in iCloud controleren (alleen lezen)
  *   POST /api/admin/job/herinneringen    herinneringen nu draaien; in de testomgeving met een klok vooruit
  */
 import type { Express, Request, Response, NextFunction } from "express";
@@ -29,6 +30,7 @@ import { storage } from "../storage";
 import { agendaBestand, amsterdam, dagTekst, type Interviewer } from "@shared/jobPlanning";
 import { teksten, type JobTaal } from "@shared/jobRegels";
 import * as job from "./jobService";
+import { staatInAgenda } from "./jobAgenda";
 
 type Middleware = (req: Request, res: Response, next: NextFunction) => unknown;
 
@@ -249,7 +251,7 @@ export function registerJobRoutes(express: Express, adminMiddleware: Middleware)
     res.json({
       gesprek: { id: g.id, status: g.status, kanaal: g.kanaal, taal: g.taal, velden: g.velden, twijfels: g.twijfels, gestartAt: g.gestartAt, laatsteActiviteitAt: g.laatsteActiviteitAt, link: job.gesprekLink(g.token) },
       berichten,
-      afspraak: a,
+      afspraak: a ? { ...a, inAgenda: staatInAgenda(a.id) } : a,
       magStarten: job.magHandmatigStarten(),
     });
   });
@@ -289,6 +291,11 @@ export function registerJobRoutes(express: Express, adminMiddleware: Middleware)
     }
     await job.bewaarInterviewers(schoon);
     res.json({ interviewers: await job.interviewers() });
+  });
+
+  // "Agenda controleren": leest de gedeelde agenda vers en telt per interviewer. Wijzigt niets in de agenda.
+  app.get("/api/admin/job/agenda-koppeling", adminMiddleware, async (_req: Request, res: Response) => {
+    res.json(await job.agendaControle());
   });
 
   app.get("/api/admin/job/afspraken", adminMiddleware, async (req: Request, res: Response) => {

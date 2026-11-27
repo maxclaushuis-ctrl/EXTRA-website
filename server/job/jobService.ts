@@ -47,6 +47,7 @@ import { brancheVan, isAfwas, ingangBranche } from "@shared/sollicitantRegels";
 import { knopTitel, whatsappKnoppen, keuzeUitNummer, cvInstructieWhatsapp } from "@shared/jobWhatsapp";
 export { knopTitel, whatsappKnoppen, keuzeUitNummer };
 import { stuurBevestigingsmail, stuurHerinneringsmail, stuurStartmail, stuurCvMail } from "./jobMails";
+import { agendaBezet, agendaStatus, agendaSync, staatInAgenda } from "./jobAgenda";
 
 export function jobAan(): boolean {
   return process.env.JOB_ENABLED === "1";
@@ -988,7 +989,26 @@ async function bezet(): Promise<Bezet[]> {
   const vandaag = amsterdam(new Date()).datum;
   const rijen = await db.select({ interviewer: jobAfspraken.interviewer, datum: jobAfspraken.datum, tijd: jobAfspraken.tijd })
     .from(jobAfspraken).where(and(eq(jobAfspraken.status, "gepland"), sql`${jobAfspraken.datum} >= ${vandaag}`));
-  return rijen.map((r) => ({ interviewer: r.interviewer, datum: String(r.datum), tijd: r.tijd }));
+  const uitDatabase = rijen.map((r) => ({ interviewer: r.interviewer, datum: String(r.datum), tijd: r.tijd }));
+  // De gedeelde agenda in iCloud (akkoord Max, 27 nov 2026): wat daar bezet is, biedt Job niet aan.
+  // Zonder koppeling, of als de agenda niet bereikbaar is, blijft het bij de vaste werktijden.
+  const uitAgenda = await agendaBezet(await interviewers());
+  return [...uitDatabase, ...uitAgenda.bezet.map(({ interviewer, datum, tijd }) => ({ interviewer, datum, tijd }))];
+}
+
+/** Seintje aan de planner als een kennismaking niet in de agenda kwam. */
+async function nietInAgenda(candidateId: number) {
+  await meldPlanner(candidateId, "De kennismaking staat niet in de agenda. Zet hem er zelf in.");
+}
+
+/** Trekt de agenda gelijk met de afspraken (na een boeking, verzetten of annuleren, en elke vijf minuten). */
+export function agendaBijwerken() {
+  return agendaSync(nietInAgenda);
+}
+
+/** "Agenda controleren" in het dashboard: leest vers, wijzigt niets. */
+export async function agendaControle() {
+  return agendaStatus(await interviewers());
 }
 
 export async function momenten(): Promise<Moment[]> {
@@ -1039,6 +1059,14 @@ export async function boek(g: JobGesprek, m: { datum: string; tijd: string; inte
       changeData: { description: `Job: kennismaking ${oud ? "verzet naar" : "gepland op"} ${vrij.datum} ${vrij.tijd} met ${vrij.interviewer}` }, ipAddress: null,
     } as any);
   } catch { /* geen ramp */ }
+
+  // De agenda: de nieuwe afspraak erin, een verzette eruit. Kon Job de agenda niet lezen, dan kijkt een planner even mee.
+  const gekozenInterviewer = vrij.interviewer;
+  void (async () => {
+    const st = await agendaBezet(await interviewers());
+    if (st.status === "fout") await meldPlanner(g.candidateId, `De agenda was niet bereikbaar bij deze boeking. Kijk even of ${gekozenInterviewer} dan vrij is.`);
+    await agendaBijwerken();
+  })().catch(() => {});
 
   const dag = dagTekst(vrij.datum, s.taal);
   const tekst = teksten(s.taal).gepland(dag, vrij.tijd, vrij.interviewer);
@@ -1162,6 +1190,11 @@ export async function overzicht() {
 }
 
 export async function afsprakenVanaf(vanaf: string) {
+  const rijen = await afsprakenVanafDb(vanaf);
+  return rijen.map((r) => ({ ...r, inAgenda: staatInAgenda(r.id) }));
+}
+
+async function afsprakenVanafDb(vanaf: string) {
   return db.select({
     id: jobAfspraken.id, candidateId: jobAfspraken.candidateId, interviewer: jobAfspraken.interviewer,
     datum: jobAfspraken.datum, tijd: jobAfspraken.tijd, status: jobAfspraken.status,
@@ -1198,9 +1231,12 @@ export async function kandidatenZonderGesprek() {
 export async function agendaOverzicht(candidateId?: number) {
   const nu = new Date();
   const afspraken = await afsprakenVanaf(amsterdam(nu).datum);
+  const lijst = await interviewers();
+  // Eerst wat in de gedeelde agenda staat, daarna Jobs eigen afspraken (die winnen bij hetzelfde halfuur).
+  const uitAgenda = (await agendaBezet(lijst, nu)).bezet.map((b) => ({ interviewer: b.interviewer, datum: b.datum, tijd: b.tijd, wie: `Agenda: ${b.titel}`.slice(0, 60) }));
   const dagen = agenda(
-    await interviewers(),
-    afspraken.map((a) => ({ interviewer: a.interviewer, datum: String(a.datum), tijd: a.tijd, wie: `${a.voornaam} ${(a.achternaam || "").charAt(0)}.`.trim() })),
+    lijst,
+    [...uitAgenda, ...afspraken.map((a) => ({ interviewer: a.interviewer, datum: String(a.datum), tijd: a.tijd, wie: `${a.voornaam} ${(a.achternaam || "").charAt(0)}.`.trim() }))],
     nu, DAGEN_VOORUIT, voorloopUur(process.env),
   );
   const g = candidateId ? await gesprekVanKandidaat(candidateId) : null;
